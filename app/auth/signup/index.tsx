@@ -76,7 +76,7 @@ const index = (props: Props) => {
 
   const handleContinueButton = () => {
     if (!referralCodeStatus) return;
-    router.push("/auth/signup/secondPhase");
+    router.push(`/auth/signup/secondPhase?referralCode=${referralCode}`);
   };
 
   return (

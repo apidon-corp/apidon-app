@@ -6,3 +6,14 @@ export type CheckThereIsLinkedAccountApiResponseBody = {
 export type CheckReferralCodeApiResponseBody = {
   referralCodeStatus: "invalid" | "valid";
 };
+
+export type VerificationCodeSendApiErrorResponseBody = {
+  cause:
+    | "server"
+    | "email"
+    | "password"
+    | "username"
+    | "fullname"
+    | "referralCode";
+  message: string;
+};
