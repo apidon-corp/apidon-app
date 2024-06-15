@@ -4,18 +4,17 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
+  Dimensions,
   Image,
-  KeyboardAvoidingView,
-  Platform,
+  Keyboard,
   Pressable,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
-
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const index = () => {
   const [emailUsername, setEmailUsername] = useState("");
@@ -27,13 +26,57 @@ const index = () => {
 
   const opacity = useRef(new Animated.Value(1)).current;
 
-  const changeOpacity = (toValue: number) => {
-    Animated.timing(opacity, {
-      toValue: toValue,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  };
+  const containerRef = useRef<null | View>(null);
+  const screenHeight = Dimensions.get("window").height;
+  const animatedTranslateValue = useRef(new Animated.Value(0)).current;
+
+  // Keyboard-Layout Change
+  useEffect(() => {
+    const keyboardWillShowListener = Keyboard.addListener(
+      "keyboardWillShow",
+      (event) => {
+        const keyboardHeight = event.endCoordinates.height;
+
+        if (containerRef.current) {
+          containerRef.current.measure((x, y, width, height, pageX, pageY) => {
+            const containerBottom = pageY + height;
+            const distanceFromBottom = screenHeight - containerBottom;
+
+            let toValue = 0;
+            if (distanceFromBottom > keyboardHeight) {
+              toValue = 0;
+            } else {
+              toValue = keyboardHeight - distanceFromBottom;
+            }
+
+            Animated.timing(animatedTranslateValue, {
+              toValue: -toValue,
+              duration: 250,
+              useNativeDriver: true,
+            }).start();
+          });
+        }
+      }
+    );
+
+    const keyboardWillHideListener = Keyboard.addListener(
+      "keyboardWillHide",
+      (event) => {
+        let toValue = 0;
+
+        Animated.timing(animatedTranslateValue, {
+          toValue: toValue,
+          duration: 250,
+          useNativeDriver: true,
+        }).start();
+      }
+    );
+
+    return () => {
+      keyboardWillShowListener.remove();
+      keyboardWillHideListener.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (error.length > 0) {
@@ -43,8 +86,19 @@ const index = () => {
     }
   }, [error]);
 
+  const changeOpacity = (toValue: number) => {
+    Animated.timing(opacity, {
+      toValue: toValue,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  };
+
   const handleLoginButton = async () => {
+    if (loading) return;
+
     setLoading(true);
+    Keyboard.dismiss();
 
     const userDataResult = await handleGetUserData(emailUsername, isEmail);
 
@@ -161,98 +215,103 @@ const index = () => {
     <SafeAreaView
       style={{
         flex: 1,
+        justifyContent: "center",
       }}
     >
-      {/* <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={10}
-      > */}
-      <KeyboardAwareScrollView
-        contentContainerStyle={styles.container}
-        extraHeight={150}
+      <ScrollView
+        contentContainerStyle={{
+          flex: 1,
+          justifyContent: "center",
+        }}
         keyboardShouldPersistTaps="handled"
       >
-        <Image
-          style={styles.logoImage}
-          source={require("@/assets/images/logo.png")}
-        />
-        <Text style={styles.welcome}>Welcome back to Apidon!</Text>
-        <Text style={styles.emailPasswordText}>
-          To continue, please enter your email address or username. You'll be
-          prompted for your password on the next screen.
-        </Text>
-        <TextInput
-          style={styles.emailOrUsernameInput}
-          placeholder="Email or Username"
-          placeholderTextColor="#808080"
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={emailUsername}
-          onChangeText={handleEmailUsernameChange}
-        />
         <Animated.View
+          ref={containerRef}
           style={{
-            width: "100%",
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: opacity,
+            ...styles.container,
+            transform: [{ translateY: animatedTranslateValue }],
           }}
         >
-          <Pressable
-            onPress={handleLoginButton}
-            style={styles.continueButton}
-            disabled={error.length > 0}
-          >
-            {loading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text
-                style={{
-                  color: "white",
-                  textAlign: "center",
-                  fontWeight: "bold",
-                }}
-              >
-                Continue
-              </Text>
-            )}
-          </Pressable>
-        </Animated.View>
-
-        {error.length !== 0 && error !== "regex" && (
-          <Text
+          <Image
+            style={styles.logoImage}
+            source={require("@/assets/images/logo.png")}
+          />
+          <Text style={styles.welcome}>Welcome back to Apidon!</Text>
+          <Text style={styles.emailPasswordText}>
+            To continue, please enter your email address or username. You'll be
+            prompted for your password on the next screen.
+          </Text>
+          <TextInput
+            style={styles.emailOrUsernameInput}
+            placeholder="Email or Username"
+            placeholderTextColor="#808080"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={emailUsername}
+            onChangeText={handleEmailUsernameChange}
+          />
+          <Animated.View
             style={{
-              color: "red",
-              textAlign: "center",
-              fontSize: 14,
+              width: "100%",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: opacity,
             }}
           >
-            {error}
-          </Text>
-        )}
+            <Pressable
+              onPress={handleLoginButton}
+              style={styles.continueButton}
+              disabled={error.length > 0}
+            >
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text
+                  style={{
+                    color: "white",
+                    textAlign: "center",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Continue
+                </Text>
+              )}
+            </Pressable>
+          </Animated.View>
 
-        <View style={styles.signUpView}>
-          <Text style={{ color: "white" }}>Don't have account?</Text>
-          <Link style={{ color: "#d53f8cd9" }} href="/auth/signup">
-            Sign Up!
-          </Link>
-        </View>
-      </KeyboardAwareScrollView>
+          {error.length !== 0 && error !== "regex" && (
+            <Text
+              style={{
+                color: "red",
+                textAlign: "center",
+                fontSize: 14,
+              }}
+            >
+              {error}
+            </Text>
+          )}
+
+          <View style={styles.signUpView}>
+            <Text style={{ color: "white" }}>Don't have account?</Text>
+            <Link style={{ color: "#d53f8cd9" }} href="/auth/signup">
+              Sign Up!
+            </Link>
+          </View>
+        </Animated.View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 15,
     gap: 20,
   },
   logoImage: {
-    height: "12%",
+    height: "20%",
     aspectRatio: 1,
   },
   welcome: {
