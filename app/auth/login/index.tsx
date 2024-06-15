@@ -15,6 +15,8 @@ import {
   View,
 } from "react-native";
 
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+
 const index = () => {
   const [emailUsername, setEmailUsername] = useState("");
 
@@ -161,7 +163,16 @@ const index = () => {
         flex: 1,
       }}
     >
-      <KeyboardAvoidingView style={styles.container}>
+      {/* <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={10}
+      > */}
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.container}
+        extraHeight={150}
+        keyboardShouldPersistTaps="handled"
+      >
         <Image
           style={styles.logoImage}
           source={require("@/assets/images/logo.png")}
@@ -227,7 +238,7 @@ const index = () => {
             Sign Up!
           </Link>
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 };

@@ -15,6 +15,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const password = () => {
   const [password, setPassword] = useState("");
@@ -62,9 +63,10 @@ const password = () => {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.container}
+        extraHeight={200}
+        keyboardShouldPersistTaps="handled"
       >
         <Image
           style={styles.logoImage}
@@ -123,7 +125,7 @@ const password = () => {
             <Text style={{ color: apidonPink }}>Reset!</Text>
           </View>
         </Pressable>
-      </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 };
