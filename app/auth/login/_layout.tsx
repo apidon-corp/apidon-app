@@ -20,6 +20,20 @@ const _layout = (props: Props) => {
           title: "",
         }}
       />
+      <Stack.Screen
+        name="passwordReset"
+        options={{
+          title: "",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="passwordResetSend"
+        options={{
+          title: "",
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 };

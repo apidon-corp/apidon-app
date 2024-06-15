@@ -1,7 +1,9 @@
 import { CheckThereIsLinkedAccountApiResponseBody } from "@/types/ApiResponses";
 import { Link, router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
+  Animated,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -16,16 +18,49 @@ import {
 const index = () => {
   const [emailUsername, setEmailUsername] = useState("");
 
-  const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("regex");
 
-  const handleLoginButton = () => {
-    if (!username || !email) return;
-    router.push(`/auth/login/password?email=${email}&username=${username}`);
+  const [isEmail, setIsEmail] = useState(false);
+
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  const changeOpacity = (toValue: number) => {
+    Animated.timing(opacity, {
+      toValue: toValue,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  useEffect(() => {
+    if (error.length > 0) {
+      changeOpacity(0.5);
+    } else {
+      changeOpacity(1);
+    }
+  }, [error]);
+
+  const handleLoginButton = async () => {
+    setLoading(true);
+
+    const userDataResult = await handleGetUserData(emailUsername, isEmail);
+
+    if (userDataResult) {
+      const encodedEmail = encodeURI(userDataResult.email);
+      const encodedUsername = encodeURI(userDataResult.username);
+
+      router.push(
+        `/auth/login/password?email=${encodedEmail}&username=${encodedUsername}`
+      );
+    }
+
+    setLoading(false);
   };
 
   const handleEmailUsernameChange = (input: string) => {
     setEmailUsername(input);
+    setError("");
 
     const emailRegex =
       /^[A-Za-z0-9._%+-]+@(gmail|yahoo|outlook|aol|icloud|protonmail|yandex|mail|zoho)\.(com|net|org)$/i;
@@ -34,24 +69,33 @@ const index = () => {
     const usernameRegex = /^[a-z0-9]{4,20}$/;
     const usernameRegexTestResult = usernameRegex.test(input);
 
-    if (emailRegexTestResult || usernameRegexTestResult) {
-      handleGetUserData(input);
-    } else {
-      resetStatesAfterFailure();
+    setIsEmail(emailRegexTestResult);
+
+    if (!(emailRegexTestResult || usernameRegexTestResult)) {
+      setError("regex");
     }
   };
 
-  const handleGetUserData = async (emailOrUsername: string) => {
+  const handleGetUserData = async (
+    emailOrUsername: string,
+    isEmail: boolean
+  ) => {
+    setError("");
+
     try {
       const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
       if (!userPanelBaseUrl) {
         console.error("User panel base url couldnt fetch from .env file");
+
+        setError("Internal Server Error");
         return false;
       }
 
       const userPanelApiKey = process.env.EXPO_PUBLIC_USER_PANEL_API_KEY;
       if (!userPanelApiKey) {
         console.error("User panel api key couldnt fetch from .env file");
+
+        setError("Internal Server Error");
         return false;
       }
 
@@ -75,7 +119,9 @@ const index = () => {
           " is not okay: ",
           await response.text()
         );
-        resetStatesAfterFailure();
+
+        setError("Internal Server Error");
+
         return false;
       }
 
@@ -85,23 +131,28 @@ const index = () => {
       const emailFetched = result.email;
       const usernameFetched = result.username;
 
-      setEmail(emailFetched);
-      setUsername(usernameFetched);
+      if (!emailFetched || !usernameFetched) {
+        if (isEmail) {
+          setError("No account found with this email.");
+        } else {
+          setError("No account found with this username.");
+        }
 
-      return true;
+        return false;
+      }
+
+      return {
+        email: emailFetched,
+        username: usernameFetched,
+      };
     } catch (error) {
-      resetStatesAfterFailure();
       console.error(
         "Error on fetching to checkThereIsLinkedAccount API from apidon-user side: ",
         error
       );
+      setError("Internal Server Error");
       return false;
     }
-  };
-
-  const resetStatesAfterFailure = () => {
-    setEmail("");
-    setUsername("");
   };
 
   return (
@@ -110,10 +161,7 @@ const index = () => {
         flex: 1,
       }}
     >
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
+      <KeyboardAvoidingView style={styles.container}>
         <Image
           style={styles.logoImage}
           source={require("@/assets/images/logo.png")}
@@ -132,16 +180,50 @@ const index = () => {
           value={emailUsername}
           onChangeText={handleEmailUsernameChange}
         />
-        <Pressable style={styles.continueButton} onPress={handleLoginButton}>
-          <Text
-            style={{ color: "white", textAlign: "center", fontWeight: "bold" }}
+        <Animated.View
+          style={{
+            width: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: opacity,
+          }}
+        >
+          <Pressable
+            onPress={handleLoginButton}
+            style={styles.continueButton}
+            disabled={error.length > 0}
           >
-            Continue
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text
+                style={{
+                  color: "white",
+                  textAlign: "center",
+                  fontWeight: "bold",
+                }}
+              >
+                Continue
+              </Text>
+            )}
+          </Pressable>
+        </Animated.View>
+
+        {error.length !== 0 && error !== "regex" && (
+          <Text
+            style={{
+              color: "red",
+              textAlign: "center",
+              fontSize: 14,
+            }}
+          >
+            {error}
           </Text>
-        </Pressable>
+        )}
+
         <View style={styles.signUpView}>
           <Text style={{ color: "white" }}>Don't have account?</Text>
-          <Link style={{ color: "cyan" }} href="/auth/signup">
+          <Link style={{ color: "#d53f8cd9" }} href="/auth/signup">
             Sign Up!
           </Link>
         </View>
@@ -186,19 +268,17 @@ const styles = StyleSheet.create({
   },
   continueButton: {
     width: "100%",
-    backgroundColor: "black",
     paddingHorizontal: 10,
     paddingVertical: 12,
-    borderWidth: 1,
     borderRadius: 10,
-    borderColor: "#d53f8cd9",
+    backgroundColor: "rgb(213,63,140)",
   },
   signUpView: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     gap: 5,
-    marginTop: 20,
+    marginTop: 10,
   },
 });
 

@@ -1,8 +1,10 @@
+import { apidonPink } from "@/constants/Colors";
 import { auth } from "@/firebase/client";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -24,6 +26,8 @@ const password = () => {
 
   const [error, setError] = useState("");
 
+  const [loading, setLoading] = useState(false);
+
   const handleLoginButton = async () => {
     if (!email || !username) {
       console.error("Email or username is missing");
@@ -32,19 +36,28 @@ const password = () => {
       return;
     }
 
+    if (loading) return;
+    setLoading(true);
+
+    const decodedEmail = decodeURI(email);
+
     try {
-      await signInWithEmailAndPassword(auth, email as string, password);
-      return;
+      await signInWithEmailAndPassword(auth, decodedEmail as string, password);
     } catch (error) {
       console.error("Error during login: ", error);
       setError("Invalid Password");
-      return;
     }
+
+    setLoading(false);
   };
 
   const handlePasswordChage = (input: string) => {
     setPassword(input);
     setError("");
+  };
+
+  const handleResetPasswordLink = () => {
+    router.push("/auth/login/passwordReset");
   };
 
   return (
@@ -57,11 +70,17 @@ const password = () => {
           style={styles.logoImage}
           source={require("@/assets/images/logo.png")}
         />
-        <View style={styles.helloAgainContainer}>
-          <Text style={styles.helloText}>Hello again</Text>
-          <Text style={styles.nameText}>{username}</Text>
-          <Text style={styles.helloText}>!</Text>
-        </View>
+        <Text style={styles.helloText}>
+          Hello Again{" "}
+          <Text
+            style={{
+              color: apidonPink,
+            }}
+          >
+            {username && decodeURI(username)}
+          </Text>
+          !
+        </Text>
         <Text style={styles.secureText}>
           Now, to securely access your Apidon account, please enter your
           password.
@@ -76,13 +95,33 @@ const password = () => {
           onChangeText={handlePasswordChage}
           secureTextEntry={true}
         />
+
+        <Pressable
+          style={styles.loginButton}
+          onPress={handleLoginButton}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text
+              style={{
+                color: "white",
+                textAlign: "center",
+                fontWeight: "bold",
+              }}
+            >
+              Log In
+            </Text>
+          )}
+        </Pressable>
+
         {error && <Text style={styles.error}>{error}</Text>}
-        <Pressable style={styles.loginButton} onPress={handleLoginButton}>
-          <Text
-            style={{ color: "white", textAlign: "center", fontWeight: "bold" }}
-          >
-            Log In
-          </Text>
+        <Pressable onPress={handleResetPasswordLink}>
+          <View style={styles.forgotView}>
+            <Text style={{ color: "white" }}>Forgot password?</Text>
+            <Text style={{ color: apidonPink }}>Reset!</Text>
+          </View>
         </Pressable>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -141,12 +180,17 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     width: "100%",
-    backgroundColor: "black",
+    backgroundColor: apidonPink,
     paddingHorizontal: 10,
     paddingVertical: 12,
-    borderWidth: 1,
     borderRadius: 10,
-    borderColor: "#d53f8cd9",
+  },
+  forgotView: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 5,
+    marginTop: 20,
   },
 });
 
