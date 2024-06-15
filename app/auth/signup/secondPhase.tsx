@@ -260,7 +260,9 @@ const secondPhase = (props: Props) => {
           // We need to make something for here.
         }
       }
-      router.push("/auth/signup/verification");
+      router.push(
+        `/auth/signup/verification?email=${email}&password=${password}&username=${username}&fullname=${fullname}&referralCode=${referralCode}`
+      );
       // Verification Code Sent.. Go to verification page.
       return true;
     } catch (error) {

@@ -17,3 +17,15 @@ export type VerificationCodeSendApiErrorResponseBody = {
     | "referralCode";
   message: string;
 };
+
+export type SignUpApiErrorResponseBody = {
+  cause:
+    | "server"
+    | "email"
+    | "password"
+    | "username"
+    | "fullname"
+    | "verificationCode"
+    | "referralCode";
+  message: string;
+};
