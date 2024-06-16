@@ -1,31 +1,88 @@
-import {
-  View,
-  Text,
-  SafeAreaView,
-  StyleSheet,
-  Image,
-  TextInput,
-  Pressable,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
-import React, { useState } from "react";
+import { apidonPink } from "@/constants/Colors";
 import { Link, router } from "expo-router";
-import { CheckReferralCodeApiResponseBody } from "@/types/ApiResponses";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Animated,
+  Dimensions,
+  Image,
+  Keyboard,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
-type Props = {};
-
-const index = (props: Props) => {
+const index = () => {
   const [referralCode, setReferralCode] = useState("");
 
-  const [referralCodeStatus, setReferralCodeStatus] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const [error, setError] = useState("");
+
+  const containerRef = useRef<null | View>(null);
+  const screenHeight = Dimensions.get("window").height;
+  const animatedTranslateValue = useRef(new Animated.Value(0)).current;
+
+  // Keyboard-Layout Change
+  useEffect(() => {
+    const keyboardWillShowListener = Keyboard.addListener(
+      "keyboardWillShow",
+      (event) => {
+        if (Keyboard.isVisible()) return;
+
+        const keyboardHeight = event.endCoordinates.height;
+
+        if (containerRef.current) {
+          containerRef.current.measure((x, y, width, height, pageX, pageY) => {
+            const containerBottom = pageY + height;
+            const distanceFromBottom = screenHeight - containerBottom;
+
+            let toValue = 0;
+            if (distanceFromBottom > keyboardHeight) {
+              toValue = 0;
+            } else {
+              toValue = keyboardHeight - distanceFromBottom;
+            }
+
+            Animated.timing(animatedTranslateValue, {
+              toValue: -toValue,
+              duration: 250,
+              useNativeDriver: true,
+            }).start();
+          });
+        }
+      }
+    );
+
+    const keyboardWillHideListener = Keyboard.addListener(
+      "keyboardWillHide",
+      (event) => {
+        let toValue = 0;
+
+        Animated.timing(animatedTranslateValue, {
+          toValue: toValue,
+          duration: 250,
+          useNativeDriver: true,
+        }).start();
+      }
+    );
+
+    return () => {
+      keyboardWillShowListener.remove();
+      keyboardWillHideListener.remove();
+    };
+  }, []);
 
   const handleReferralCodeChange = (input: string) => {
+    setError("");
     setReferralCode(input);
-    if (input.length > 0) handleGetReferralCodeStatus(input);
   };
 
-  const handleGetReferralCodeStatus = async (referralCodeInput: string) => {
+  const getReferralCodeStatus = async (referralCodeInput: string) => {
     try {
       const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
       if (!userPanelBaseUrl) {
@@ -53,30 +110,42 @@ const index = (props: Props) => {
       });
 
       if (!response.ok) {
+        const message = await response.text();
+
         console.error(
           "Error on fetching to checkReferralCode API from apidon-user side: ",
-          await response.text()
+          message
         );
+
+        setError(message);
+
         return false;
       }
 
-      const result =
-        (await response.json()) as CheckReferralCodeApiResponseBody;
-
-      if (result.referralCodeStatus === "invalid")
-        return setReferralCodeStatus(false);
-
-      return setReferralCodeStatus(true);
+      return true;
     } catch (error) {
       console.error("Error on fetching to checkReferralCode API: ", error);
-      setReferralCodeStatus(false);
       return false;
     }
   };
 
-  const handleContinueButton = () => {
-    if (!referralCodeStatus) return;
-    router.push("/auth/signup/secondPhase");
+  const handleContinueButton = async () => {
+    if (loading) return;
+
+    Keyboard.dismiss();
+
+    setLoading(true);
+
+    const referralCodeStatus = await getReferralCodeStatus(referralCode);
+
+    const encodedReferralCode = encodeURI(referralCode);
+
+    if (referralCodeStatus)
+      router.push(
+        `/auth/signup/secondPhase?referralCode=${encodedReferralCode}`
+      );
+
+    setLoading(false);
   };
 
   return (
@@ -85,56 +154,92 @@ const index = (props: Props) => {
         flex: 1,
       }}
     >
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      <ScrollView
+        contentContainerStyle={{
+          flex: 1,
+          justifyContent: "center",
+        }}
+        keyboardShouldPersistTaps="handled"
       >
-        <Image
-          style={styles.logoImage}
-          source={require("@/assets/images/logo.png")}
-        />
-        <Text style={styles.join}>Join Apidon</Text>
-        <Text style={styles.continueText}>
-          To continue, please enter your referral code. You'll be prompted for
-          your email and password on the next screen.
-        </Text>
-        <TextInput
-          style={styles.referralInput}
-          placeholder="Referral Code"
-          placeholderTextColor="#808080"
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={referralCode}
-          onChangeText={handleReferralCodeChange}
-        />
-        <Pressable style={styles.continueButton} onPress={handleContinueButton}>
-          <Text
-            style={{ color: "white", textAlign: "center", fontWeight: "bold" }}
-          >
-            Continue
+        <Animated.View
+          style={{
+            ...styles.container,
+            transform: [{ translateY: animatedTranslateValue }],
+          }}
+          ref={containerRef}
+        >
+          <Image
+            style={styles.logoImage}
+            source={require("@/assets/images/logo.png")}
+          />
+          <Text style={styles.join}>Join Apidon</Text>
+          <Text style={styles.continueText}>
+            To continue, please enter your referral code. You'll be prompted for
+            your email and password on the next screen.
           </Text>
-        </Pressable>
-        <View style={styles.loginView}>
-          <Text style={{ color: "white" }}>Don't have account?</Text>
-          <Link style={{ color: "cyan" }} href="/auth/login">
-            Log In!
-          </Link>
-        </View>
-      </KeyboardAvoidingView>
+          <TextInput
+            style={styles.referralInput}
+            placeholder="Referral Code"
+            placeholderTextColor="#808080"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={referralCode}
+            onChangeText={handleReferralCodeChange}
+            onSubmitEditing={handleContinueButton}
+            autoFocus
+          />
+          <Pressable
+            style={styles.continueButton}
+            onPress={handleContinueButton}
+          >
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text
+                style={{
+                  color: "white",
+                  textAlign: "center",
+                  fontWeight: "bold",
+                }}
+              >
+                Continue
+              </Text>
+            )}
+          </Pressable>
+
+          {error && (
+            <Text
+              style={{
+                color: "red",
+                fontSize: 14,
+                fontWeight: "bold",
+              }}
+            >
+              {error}
+            </Text>
+          )}
+
+          <View style={styles.loginView}>
+            <Text style={{ color: "white" }}>Already have account?</Text>
+            <Link style={{ color: apidonPink }} href="/auth/login">
+              Log In!
+            </Link>
+          </View>
+        </Animated.View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: "center",
     justifyContent: "center",
     gap: 20,
     padding: 15,
   },
   logoImage: {
-    height: "12%",
+    height: "20%",
     aspectRatio: 1,
   },
   join: {
@@ -160,20 +265,18 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   continueButton: {
-    width: "50%",
-    backgroundColor: "black",
+    width: "100%",
+    backgroundColor: apidonPink,
     paddingHorizontal: 10,
     paddingVertical: 12,
-    borderWidth: 1,
     borderRadius: 10,
-    borderColor: "#d53f8cd9",
   },
   loginView: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     gap: 5,
-    marginTop: 20,
+    marginTop: 10,
   },
 });
 

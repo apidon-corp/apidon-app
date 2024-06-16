@@ -1,6 +1,5 @@
-import { View, Text } from "react-native";
-import React from "react";
 import { Stack } from "expo-router";
+import React from "react";
 
 type Props = {};
 
@@ -11,13 +10,21 @@ const _layout = (props: Props) => {
         name="index"
         options={{
           headerShown: false,
-          title : "Back"
+          title: "Referral",
         }}
       />
       <Stack.Screen
         name="secondPhase"
         options={{
+          headerShown: false,
+          headerTitle: "Email",
+        }}
+      />
+      <Stack.Screen
+        name="verification"
+        options={{
           headerTitle: "",
+          headerShown: false,
         }}
       />
     </Stack>

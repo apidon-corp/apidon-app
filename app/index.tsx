@@ -19,7 +19,7 @@ const index = () => {
       </SafeAreaView>
     );
 
-  if (authStatus === "unauthenticated") return <Redirect href="/auth/signup" />;
+  if (authStatus === "unauthenticated") return <Redirect href="/auth" />;
   if (authStatus === "authenticated") return <Redirect href="/profile" />;
 };
 
