@@ -35,6 +35,8 @@ const index = () => {
     const keyboardWillShowListener = Keyboard.addListener(
       "keyboardWillShow",
       (event) => {
+        if (Keyboard.isVisible()) return;
+
         const keyboardHeight = event.endCoordinates.height;
 
         if (containerRef.current) {
@@ -100,7 +102,7 @@ const index = () => {
     setLoading(true);
     Keyboard.dismiss();
 
-    const userDataResult = await handleGetUserData(emailUsername, isEmail);
+    const userDataResult = await handleGetUserData(emailUsername);
 
     if (userDataResult) {
       const encodedEmail = encodeURI(userDataResult.email);
@@ -132,10 +134,7 @@ const index = () => {
     }
   };
 
-  const handleGetUserData = async (
-    emailOrUsername: string,
-    isEmail: boolean
-  ) => {
+  const handleGetUserData = async (emailOrUsername: string) => {
     setError("");
 
     try {
@@ -169,14 +168,11 @@ const index = () => {
       });
 
       if (!response.ok) {
-        console.error(
-          "Response from ",
-          fetchUrl,
-          " is not okay: ",
-          await response.text()
-        );
+        const message = await response.text();
 
-        setError("Internal Server Error");
+        console.error("Response from ", fetchUrl, " is not okay: ", message);
+
+        setError(message);
 
         return false;
       }
@@ -186,16 +182,6 @@ const index = () => {
 
       const emailFetched = result.email;
       const usernameFetched = result.username;
-
-      if (!emailFetched || !usernameFetched) {
-        if (isEmail) {
-          setError("No account found with this email.");
-        } else {
-          setError("No account found with this username.");
-        }
-
-        return false;
-      }
 
       return {
         email: emailFetched,
@@ -249,6 +235,7 @@ const index = () => {
             keyboardType="email-address"
             value={emailUsername}
             onChangeText={handleEmailUsernameChange}
+            onSubmitEditing={handleLoginButton}
           />
           <Animated.View
             style={{

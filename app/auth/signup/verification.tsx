@@ -1,10 +1,22 @@
-import { View, Text, Image, TextInput, Pressable } from "react-native";
-import React, { useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  TextInput,
+  Pressable,
+  Animated,
+  Dimensions,
+  ScrollView,
+  Keyboard,
+  ActivityIndicator,
+} from "react-native";
+import React, { useEffect, useRef, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import { SignUpApiErrorResponseBody } from "@/types/ApiResponses";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/firebase/client";
+import { apidonPink } from "@/constants/Colors";
 
 type Props = {};
 
@@ -22,28 +34,92 @@ const verification = (props: Props) => {
 
   const [error, setError] = useState("");
 
-  const handleVerifyButton = async () => {
-    console.log(
-      email,
-      password,
-      username,
-      fullname,
-      referralCode,
-      verificationCode
+  const containerRef = useRef<null | View>(null);
+  const screenHeight = Dimensions.get("window").height;
+  const animatedTranslateValue = useRef(new Animated.Value(0)).current;
+
+  const [loading, setLoading] = useState(false);
+
+  // Keyboard-Layout Change
+  useEffect(() => {
+    const keyboardWillShowListener = Keyboard.addListener(
+      "keyboardWillShow",
+      (event) => {
+        if (Keyboard.isVisible()) return;
+
+        const keyboardHeight = event.endCoordinates.height;
+
+        if (containerRef.current) {
+          containerRef.current.measure((x, y, width, height, pageX, pageY) => {
+            const containerBottom = pageY + height;
+            const distanceFromBottom = screenHeight - containerBottom;
+
+            let toValue = 0;
+            if (distanceFromBottom > keyboardHeight) {
+              toValue = 0;
+            } else {
+              toValue = keyboardHeight - distanceFromBottom;
+            }
+
+            Animated.timing(animatedTranslateValue, {
+              toValue: -toValue,
+              duration: 250,
+              useNativeDriver: true,
+            }).start();
+          });
+        }
+      }
     );
 
-    if (
-      !email ||
-      !password ||
-      !username ||
-      !fullname ||
-      !referralCode ||
-      !verificationCode
-    ) {
-      return;
-    }
+    const keyboardWillHideListener = Keyboard.addListener(
+      "keyboardWillHide",
+      (event) => {
+        let toValue = 0;
 
-    await handleSignUp(email, password);
+        Animated.timing(animatedTranslateValue, {
+          toValue: toValue,
+          duration: 250,
+          useNativeDriver: true,
+        }).start();
+      }
+    );
+
+    return () => {
+      keyboardWillShowListener.remove();
+      keyboardWillHideListener.remove();
+    };
+  }, [containerRef]);
+
+  const handleVerifyButton = async () => {
+    const status =
+      email &&
+      password &&
+      username &&
+      fullname &&
+      referralCode &&
+      verificationCode;
+
+    if (!status) return;
+
+    Keyboard.dismiss();
+
+    setLoading(true);
+
+    const emailDecoded = decodeURI(email);
+    const passwordDecoded = decodeURI(password);
+    const usernameDecoded = decodeURI(username);
+    const fullnameDecoded = decodeURI(fullname);
+    const referralCodeDecoded = decodeURI(referralCode);
+
+    await handleSignUp(
+      emailDecoded,
+      passwordDecoded,
+      usernameDecoded,
+      fullnameDecoded,
+      referralCodeDecoded
+    );
+
+    setLoading(false);
   };
 
   /**
@@ -52,7 +128,13 @@ const verification = (props: Props) => {
    * @param password
    * @returns
    */
-  const handleSignUp = async (email: string, password: string) => {
+  const handleSignUp = async (
+    email: string,
+    password: string,
+    username: string,
+    fullname: string,
+    referralCode: string
+  ) => {
     const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
     if (!userPanelBaseUrl) {
       return console.error("User panel base url couldnt fetch from .env file");
@@ -113,7 +195,7 @@ const verification = (props: Props) => {
         password
       );
 
-      return console.log("User created successfully: ", createdUser);
+      return console.log("User created successfully.");
     } catch (error) {
       return console.error("Error on fetching to signup API: ", error);
     }
@@ -125,85 +207,101 @@ const verification = (props: Props) => {
         flex: 1,
       }}
     >
-      <View
-        style={{
+      <ScrollView
+        contentContainerStyle={{
           flex: 1,
-          alignItems: "center",
           justifyContent: "center",
-          gap: 20,
-          padding: 15,
         }}
+        keyboardShouldPersistTaps="handled"
       >
-        <Image
-          source={require("@/assets/images/logo.png")}
+        <Animated.View
+          ref={containerRef}
           style={{
-            height: "12%",
-            aspectRatio: 1,
-          }}
-        />
-        <Text style={{ color: "white", fontWeight: "bold", fontSize: 20 }}>
-          Verify Your Account
-        </Text>
-        <Text
-          style={{
-            color: "#718096",
-            fontWeight: "bold",
-            fontSize: 14,
-            textAlign: "center",
+            width: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 20,
+            padding: 15,
+            transform: [{ translateY: animatedTranslateValue }],
           }}
         >
-          To continue, please enter your verification code. We've sent it to{" "}
-          <Text style={{ color: "rgb(49, 130, 206)", fontWeight: "bold" }}>
-            {email}
+          <Image
+            source={require("@/assets/images/logo.png")}
+            style={{
+              height: "20%",
+              aspectRatio: 1,
+            }}
+          />
+          <Text style={{ color: "white", fontWeight: "bold", fontSize: 20 }}>
+            Verify Your Account
           </Text>
-        </Text>
-        <TextInput
-          placeholder="Verification Code"
-          style={{
-            backgroundColor: "black",
-            padding: 10,
-            borderWidth: 1,
-            borderColor: "white",
-            borderRadius: 10,
-            width: "80%",
-            color: "white",
-          }}
-          placeholderTextColor="#808080"
-          keyboardType="numeric"
-          onChangeText={setVerificationCode}
-        />
-        {error && (
           <Text
             style={{
-              color: "red",
+              color: "#718096",
               fontWeight: "bold",
               fontSize: 14,
               textAlign: "center",
             }}
           >
-            Verification code invalid
+            To continue, please enter your verification code. We've sent it to{" "}
+            <Text style={{ color: "rgb(49, 130, 206)", fontWeight: "bold" }}>
+              {email}
+            </Text>
           </Text>
-        )}
-
-        <Pressable
-          style={{
-            backgroundColor: "white",
-            padding: 10,
-            borderRadius: 10,
-            width: "80%",
-          }}
-          onPress={handleVerifyButton}
-        >
-          <Text
+          <TextInput
+            placeholder="Verification Code"
             style={{
-              textAlign: "center",
-              fontSize: 14,
+              backgroundColor: "black",
+              padding: 10,
+              borderWidth: 1,
+              borderColor: "white",
+              borderRadius: 10,
+              width: "100%",
+              color: "white",
             }}
+            placeholderTextColor="#808080"
+            keyboardType="numeric"
+            onChangeText={setVerificationCode}
+          />
+          {error && (
+            <Text
+              style={{
+                color: "red",
+                fontWeight: "bold",
+                fontSize: 14,
+                textAlign: "center",
+              }}
+            >
+              Verification code invalid
+            </Text>
+          )}
+
+          <Pressable
+            style={{
+              backgroundColor: apidonPink,
+              padding: 10,
+              borderRadius: 10,
+              width: "100%",
+            }}
+            onPress={handleVerifyButton}
           >
-            Verify
-          </Text>
-        </Pressable>
-      </View>
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text
+                style={{
+                  textAlign: "center",
+                  fontSize: 14,
+                  color: "white",
+                  fontWeight: "bold",
+                }}
+              >
+                Verify
+              </Text>
+            )}
+          </Pressable>
+        </Animated.View>
+      </ScrollView>
     </SafeAreaView>
   );
 };

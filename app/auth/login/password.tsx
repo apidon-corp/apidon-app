@@ -2,14 +2,18 @@ import { apidonPink } from "@/constants/Colors";
 import { auth } from "@/firebase/client";
 import { router, useLocalSearchParams } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
+  Dimensions,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -28,6 +32,59 @@ const password = () => {
   const [error, setError] = useState("");
 
   const [loading, setLoading] = useState(false);
+
+  const containerRef = useRef<null | View>(null);
+  const screenHeight = Dimensions.get("window").height;
+  const animatedTranslateValue = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const keyboardWillShowListener = Keyboard.addListener(
+      "keyboardWillShow",
+      (event) => {
+        if (Keyboard.isVisible()) return;
+
+        const keyboardHeight = event.endCoordinates.height;
+
+        if (containerRef.current) {
+          containerRef.current.measure((x, y, width, height, pageX, pageY) => {
+            const containerBottom = pageY + height;
+            const distanceFromBottom = screenHeight - containerBottom;
+
+            let toValue = 0;
+            if (distanceFromBottom > keyboardHeight) {
+              toValue = 0;
+            } else {
+              toValue = keyboardHeight - distanceFromBottom;
+            }
+
+            Animated.timing(animatedTranslateValue, {
+              toValue: -toValue,
+              duration: 250,
+              useNativeDriver: true,
+            }).start();
+          });
+        }
+      }
+    );
+
+    const keyboardWillHideListener = Keyboard.addListener(
+      "keyboardWillHide",
+      (event) => {
+        let toValue = 0;
+
+        Animated.timing(animatedTranslateValue, {
+          toValue: toValue,
+          duration: 250,
+          useNativeDriver: true,
+        }).start();
+      }
+    );
+
+    return () => {
+      keyboardWillShowListener.remove();
+      keyboardWillHideListener.remove();
+    };
+  }, [containerRef.current]);
 
   const handleLoginButton = async () => {
     if (!email || !username) {
@@ -63,83 +120,93 @@ const password = () => {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <KeyboardAwareScrollView
-        contentContainerStyle={styles.container}
-        extraHeight={200}
+      <ScrollView
+        contentContainerStyle={{
+          flex: 1,
+          justifyContent: "center",
+        }}
         keyboardShouldPersistTaps="handled"
       >
-        <Image
-          style={styles.logoImage}
-          source={require("@/assets/images/logo.png")}
-        />
-        <Text style={styles.helloText}>
-          Hello Again{" "}
-          <Text
-            style={{
-              color: apidonPink,
-            }}
-          >
-            {username && decodeURI(username)}
-          </Text>
-          !
-        </Text>
-        <Text style={styles.secureText}>
-          Now, to securely access your Apidon account, please enter your
-          password.
-        </Text>
-        <TextInput
-          style={styles.passworInput}
-          placeholder="Password"
-          placeholderTextColor="#808080"
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={password}
-          onChangeText={handlePasswordChage}
-          secureTextEntry={true}
-        />
-
-        <Pressable
-          style={styles.loginButton}
-          onPress={handleLoginButton}
-          disabled={loading}
+        <Animated.View
+          style={{
+            ...styles.container,
+            transform: [{ translateY: animatedTranslateValue }],
+          }}
+          ref={containerRef}
         >
-          {loading ? (
-            <ActivityIndicator color="white" />
-          ) : (
+          <Image
+            style={styles.logoImage}
+            source={require("@/assets/images/logo.png")}
+          />
+          <Text style={styles.helloText}>
+            Hello Again{" "}
             <Text
               style={{
-                color: "white",
-                textAlign: "center",
-                fontWeight: "bold",
+                color: apidonPink,
               }}
             >
-              Log In
+              {username && decodeURI(username)}
             </Text>
-          )}
-        </Pressable>
+            !
+          </Text>
+          <Text style={styles.secureText}>
+            Now, to securely access your Apidon account, please enter your
+            password.
+          </Text>
+          <TextInput
+            style={styles.passworInput}
+            placeholder="Password"
+            placeholderTextColor="#808080"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={password}
+            onChangeText={handlePasswordChage}
+            secureTextEntry={true}
+            onSubmitEditing={handleLoginButton}
+          />
 
-        {error && <Text style={styles.error}>{error}</Text>}
-        <Pressable onPress={handleResetPasswordLink}>
-          <View style={styles.forgotView}>
-            <Text style={{ color: "white" }}>Forgot password?</Text>
-            <Text style={{ color: apidonPink }}>Reset!</Text>
-          </View>
-        </Pressable>
-      </KeyboardAwareScrollView>
+          <Pressable
+            style={styles.loginButton}
+            onPress={handleLoginButton}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text
+                style={{
+                  color: "white",
+                  textAlign: "center",
+                  fontWeight: "bold",
+                }}
+              >
+                Log In
+              </Text>
+            )}
+          </Pressable>
+
+          {error && <Text style={styles.error}>{error}</Text>}
+          <Pressable onPress={handleResetPasswordLink}>
+            <View style={styles.forgotView}>
+              <Text style={{ color: "white" }}>Forgot password?</Text>
+              <Text style={{ color: apidonPink }}>Reset!</Text>
+            </View>
+          </Pressable>
+        </Animated.View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 15,
     gap: 20,
   },
   logoImage: {
-    height: "12%",
+    height: "20%",
     aspectRatio: 1,
   },
   helloAgainContainer: {
@@ -192,7 +259,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     gap: 5,
-    marginTop: 20,
+    marginTop: 10,
   },
 });
 

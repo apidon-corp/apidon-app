@@ -6,8 +6,14 @@ import {
   StyleSheet,
   Image,
   Pressable,
+  ScrollView,
+  Animated,
+  Dimensions,
+  Keyboard,
+  ActivityIndicator,
+  TurboModuleRegistry,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { MaterialIcons } from "@expo/vector-icons";
 import {
@@ -15,6 +21,7 @@ import {
   VerificationCodeSendApiErrorResponseBody,
 } from "@/types/ApiResponses";
 import { router, useLocalSearchParams } from "expo-router";
+import { apidonPink } from "@/constants/Colors";
 
 type Props = {};
 
@@ -30,10 +37,15 @@ const secondPhase = (props: Props) => {
 
   const [error, setError] = useState("");
 
-  const [isEmailValid, setIsEmailValid] = useState(true);
-  const [isPasswordValid, setIsPasswordValid] = useState(true);
-  const [isUsernameValid, setIsUsernameValid] = useState(true);
-  const [isFullnameValid, setIsFullnameValid] = useState(true);
+  const [isEmailValid, setIsEmailValid] = useState(false);
+  const [isPasswordValid, setIsPasswordValid] = useState(false);
+  const [isUsernameValid, setIsUsernameValid] = useState(false);
+  const [isFullnameValid, setIsFullnameValid] = useState(false);
+
+  const emailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const usernameRef = useRef<TextInput>(null);
+  const fullnameRef = useRef<TextInput>(null);
 
   const [passwordStatus, setPasswordStatus] = useState({
     digit: false,
@@ -43,10 +55,79 @@ const secondPhase = (props: Props) => {
     special: false,
   });
 
+  const containerRef = useRef<null | View>(null);
+  const screenHeight = Dimensions.get("window").height;
+  const animatedTranslateValue = useRef(new Animated.Value(0)).current;
+
+  const animatedOpacityValue = useRef(new Animated.Value(1)).current;
+
+  const [loading, setLoading] = useState(false);
+
+  // Keyboard-Layout Change
+  useEffect(() => {
+    const keyboardWillShowListener = Keyboard.addListener(
+      "keyboardWillShow",
+      (event) => {
+        if (Keyboard.isVisible()) return;
+
+        const keyboardHeight = event.endCoordinates.height;
+
+        if (containerRef.current) {
+          containerRef.current.measure((x, y, width, height, pageX, pageY) => {
+            const containerBottom = pageY + height;
+            const distanceFromBottom = screenHeight - containerBottom;
+
+            let toValue = 0;
+            if (distanceFromBottom > keyboardHeight) {
+              toValue = 0;
+            } else {
+              toValue = keyboardHeight - distanceFromBottom;
+              toValue += 20;
+            }
+
+            Animated.timing(animatedTranslateValue, {
+              toValue: -toValue,
+              duration: 250,
+              useNativeDriver: true,
+            }).start();
+          });
+        }
+      }
+    );
+
+    const keyboardWillHideListener = Keyboard.addListener(
+      "keyboardWillHide",
+      (event) => {
+        let toValue = 0;
+
+        Animated.timing(animatedTranslateValue, {
+          toValue: toValue,
+          duration: 250,
+          useNativeDriver: true,
+        }).start();
+      }
+    );
+
+    return () => {
+      keyboardWillShowListener.remove();
+      keyboardWillHideListener.remove();
+    };
+  }, [containerRef]);
+
+  useEffect(() => {
+    const status =
+      isEmailValid && isPasswordValid && isUsernameValid && isFullnameValid;
+
+    Animated.timing(animatedOpacityValue, {
+      toValue: status ? 1 : 0.5,
+      duration: 250,
+      useNativeDriver: true,
+    }).start();
+  }, [isEmailValid, isPasswordValid, isUsernameValid, isFullnameValid]);
+
   const handleEmailChange = (input: string) => {
     setError("");
     setEmail(input);
-    if (input.length === 0) return setIsEmailValid(true);
     const emailRegex =
       /^[A-Za-z0-9._%+-]+@(gmail|yahoo|outlook|aol|icloud|protonmail|yandex|mail|zoho)\.(com|net|org)$/i;
     const regexTestResult = emailRegex.test(input);
@@ -55,8 +136,6 @@ const secondPhase = (props: Props) => {
 
   const handlePasswordChange = async (input: string) => {
     setPassword(input);
-
-    if (input.length === 0) return setIsPasswordValid(true);
 
     const passwordRegex =
       /^(?=.*?\p{Lu})(?=.*?\p{Ll})(?=.*?\d)(?=.*?[^\w\s]|[_]).{12,}$/u;
@@ -89,12 +168,6 @@ const secondPhase = (props: Props) => {
 
     setUsername(input);
 
-    if (input.length === 0) {
-      setIsUsernameValid(true);
-      setError("");
-      return;
-    }
-
     const usernameRegex = /^[a-z0-9]{4,20}$/;
     const regexTestResult = usernameRegex.test(input);
 
@@ -106,10 +179,7 @@ const secondPhase = (props: Props) => {
         "Please enter a username consisting of 4 to 20 characters, using only lowercase letters (a-z) and digits (0-9)."
       );
 
-    const usernameCanBeUsed = await checkUsernameCanBeUsed(input);
-    if (!usernameCanBeUsed) setError("Username is taken :(");
-
-    setIsUsernameValid(usernameCanBeUsed);
+    checkUsernameCanBeUsed(input);
   };
 
   /**
@@ -144,28 +214,30 @@ const secondPhase = (props: Props) => {
       });
 
       if (!response.ok) {
-        console.error(
+        console.log(
           "Response from ",
           fetchUrl,
           " is not okay: ",
           await response.text()
         );
+
+        setError("");
+        setIsUsernameValid(true);
+
         return false;
       }
 
-      const result =
-        (await response.json()) as CheckThereIsLinkedAccountApiResponseBody;
+      setError("Username is used.");
+      setIsUsernameValid(false);
 
-      if (result.username) {
-        return false;
-      } else {
-        return true;
-      }
+      return true;
     } catch (error) {
       console.error(
         "Error on fetching to checkThereIsLinkedAccount API from apidon-user side: ",
         error
       );
+      setError("Internal Server Error");
+      setIsUsernameValid(false);
       return false;
     }
   };
@@ -174,8 +246,6 @@ const secondPhase = (props: Props) => {
     setError("");
     input = input.replace(/[^\p{L}\p{N}\s]/gu, "");
     setFullname(input);
-
-    if (input.length === 0) return;
 
     const fullnameRegex = /^\p{L}{1,20}(?: \p{L}{1,20})*$/u;
     const regexTestResult = fullnameRegex.test(input);
@@ -190,16 +260,25 @@ const secondPhase = (props: Props) => {
   };
 
   const handleSignUpButton = async () => {
-    if (
-      !isEmailValid ||
-      !isPasswordValid ||
-      !isUsernameValid ||
-      !isFullnameValid ||
-      !referralCode
-    ) {
-      return;
-    }
+    const status =
+      isEmailValid &&
+      isPasswordValid &&
+      isUsernameValid &&
+      isFullnameValid &&
+      referralCode !== undefined;
 
+    if (!status) return;
+
+    if (loading) return;
+
+    setLoading(true);
+
+    await handleSignUp();
+
+    setLoading(false);
+  };
+
+  const handleSignUp = async () => {
     const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
     if (!userPanelBaseUrl) {
       console.error("User panel base url couldnt fetch from .env file");
@@ -259,11 +338,20 @@ const secondPhase = (props: Props) => {
         } else if (cause === "server") {
           // We need to make something for here.
         }
+
+        return false;
       }
+
+      const encodedEmail = encodeURI(email);
+      const encodedPassword = encodeURI(password);
+      const encodedUsername = encodeURI(username);
+      const encodedFullname = encodeURI(fullname);
+      const encodedReferralCode = encodeURI(referralCode as string);
+
       router.push(
-        `/auth/signup/verification?email=${email}&password=${password}&username=${username}&fullname=${fullname}&referralCode=${referralCode}`
+        `/auth/signup/verification?email=${encodedEmail}&password=${encodedPassword}&username=${encodedUsername}&fullname=${encodedFullname}&referralCode=${encodedReferralCode}`
       );
-      // Verification Code Sent.. Go to verification page.
+
       return true;
     } catch (error) {
       console.error(
@@ -281,177 +369,222 @@ const secondPhase = (props: Props) => {
         flex: 1,
       }}
     >
-      <View style={styles.container}>
-        <Image
-          style={styles.logoImage}
-          source={require("@/assets/images/logo.png")}
-        />
-        <Text style={styles.join}>Join Apidon</Text>
-        <Text style={styles.continueText}>
-          To finish sign up, please enter your email, password, username and
-          fullname.
-        </Text>
+      <ScrollView
+        contentContainerStyle={{
+          flex: 1,
+          justifyContent: "center",
+        }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Animated.View
+          style={{
+            ...styles.container,
+            transform: [{ translateY: animatedTranslateValue }],
+          }}
+          ref={containerRef}
+        >
+          <Image
+            style={styles.logoImage}
+            source={require("@/assets/images/logo.png")}
+          />
+          <Text style={styles.join}>Join Apidon</Text>
+          <Text style={styles.continueText}>
+            To finish sign up, please enter your email, password, username and
+            fullname.
+          </Text>
 
-        <TextInput
-          style={{
-            ...styles.input,
-            borderColor: isEmailValid ? "white" : "red",
-          }}
-          placeholder="Email"
-          placeholderTextColor="#808080"
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={handleEmailChange}
-        />
-        <TextInput
-          style={{
-            ...styles.input,
-            borderColor: isPasswordValid ? "white" : "red",
-          }}
-          placeholder="Password"
-          placeholderTextColor="#808080"
-          autoCapitalize="none"
-          secureTextEntry={true}
-          value={password}
-          onChangeText={handlePasswordChange}
-        />
-        {!isPasswordValid && (
-          <View
+          <TextInput
+            ref={emailRef}
+            style={{
+              ...styles.input,
+              borderColor: isEmailValid || email.length === 0 ? "white" : "red",
+            }}
+            placeholder="Email"
+            placeholderTextColor="#808080"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={handleEmailChange}
+            onSubmitEditing={() => {
+              passwordRef.current?.focus();
+            }}
+            autoFocus
+          />
+          <TextInput
+            ref={passwordRef}
+            style={{
+              ...styles.input,
+              borderColor:
+                isPasswordValid || password.length === 0 ? "white" : "red",
+            }}
+            placeholder="Password"
+            placeholderTextColor="#808080"
+            autoCapitalize="none"
+            secureTextEntry={true}
+            value={password}
+            onChangeText={handlePasswordChange}
+            onSubmitEditing={() => {
+              usernameRef.current?.focus();
+            }}
+          />
+          {!isPasswordValid && password.length !== 0 && (
+            <View
+              style={{
+                width: "100%",
+                gap: 5,
+              }}
+            >
+              {!passwordStatus.digit && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 5,
+                    paddingHorizontal: 20,
+                  }}
+                >
+                  <MaterialIcons name="error-outline" color="red" size={20} />
+                  <Text style={{ fontSize: 15, color: "red" }}>
+                    Numbers (0-9)
+                  </Text>
+                </View>
+              )}
+              {!passwordStatus.lowercase && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 5,
+                    paddingHorizontal: 20,
+                  }}
+                >
+                  <MaterialIcons name="error-outline" color="red" size={20} />
+                  <Text style={{ fontSize: 15, color: "red" }}>
+                    Lower case letters (aa)
+                  </Text>
+                </View>
+              )}
+
+              {!passwordStatus.uppercase && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 5,
+                    paddingHorizontal: 20,
+                  }}
+                >
+                  <MaterialIcons name="error-outline" color="red" size={20} />
+                  <Text style={{ fontSize: 15, color: "red" }}>
+                    Upper case letters (AA)
+                  </Text>
+                </View>
+              )}
+
+              {!passwordStatus.special && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 5,
+                    paddingHorizontal: 20,
+                  }}
+                >
+                  <MaterialIcons name="error-outline" color="red" size={20} />
+                  <Text style={{ fontSize: 15, color: "red" }}>
+                    Special characters (&*%)
+                  </Text>
+                </View>
+              )}
+
+              {!passwordStatus.eightCharacter && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 5,
+                    paddingHorizontal: 20,
+                  }}
+                >
+                  <MaterialIcons name="error-outline" color="red" size={20} />
+                  <Text style={{ fontSize: 15, color: "red" }}>
+                    At least 12 characters
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+
+          <TextInput
+            ref={usernameRef}
+            style={{
+              ...styles.input,
+              borderColor:
+                isUsernameValid || username.length === 0 ? "white" : "red",
+            }}
+            placeholder="Username"
+            placeholderTextColor="#808080"
+            autoCapitalize="none"
+            keyboardType="default"
+            value={username}
+            onChangeText={handleUsernameChange}
+            onSubmitEditing={() => {
+              fullnameRef.current?.focus();
+            }}
+          />
+          <TextInput
+            ref={fullnameRef}
+            style={{
+              ...styles.input,
+              borderColor:
+                isFullnameValid || fullname.length === 0 ? "white" : "red",
+            }}
+            placeholder="Fullname"
+            placeholderTextColor="#808080"
+            keyboardType="default"
+            value={fullname}
+            onChangeText={handleFullnameChange}
+          />
+
+          {error && <Text style={styles.error}>{error}</Text>}
+
+          <Animated.View
             style={{
               width: "100%",
-              gap: 5,
+              opacity: animatedOpacityValue,
             }}
           >
-            {!passwordStatus.digit && (
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 5,
-                  paddingHorizontal: 20,
-                }}
-              >
-                <MaterialIcons name="error-outline" color="red" size={20} />
-                <Text style={{ fontSize: 15, color: "red" }}>
-                  Numbers (0-9)
+            <Pressable style={styles.signUpButton} onPress={handleSignUpButton}>
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text
+                  style={{
+                    color: "white",
+                    textAlign: "center",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Sign Up
                 </Text>
-              </View>
-            )}
-            {!passwordStatus.lowercase && (
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 5,
-                  paddingHorizontal: 20,
-                }}
-              >
-                <MaterialIcons name="error-outline" color="red" size={20} />
-                <Text style={{ fontSize: 15, color: "red" }}>
-                  Lower case letters (aa)
-                </Text>
-              </View>
-            )}
-
-            {!passwordStatus.uppercase && (
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 5,
-                  paddingHorizontal: 20,
-                }}
-              >
-                <MaterialIcons name="error-outline" color="red" size={20} />
-                <Text style={{ fontSize: 15, color: "red" }}>
-                  Upper case letters (AA)
-                </Text>
-              </View>
-            )}
-
-            {!passwordStatus.special && (
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 5,
-                  paddingHorizontal: 20,
-                }}
-              >
-                <MaterialIcons name="error-outline" color="red" size={20} />
-                <Text style={{ fontSize: 15, color: "red" }}>
-                  Special characters (&*%)
-                </Text>
-              </View>
-            )}
-
-            {!passwordStatus.eightCharacter && (
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 5,
-                  paddingHorizontal: 20,
-                }}
-              >
-                <MaterialIcons name="error-outline" color="red" size={20} />
-                <Text style={{ fontSize: 15, color: "red" }}>
-                  At least 12 characters
-                </Text>
-              </View>
-            )}
-          </View>
-        )}
-
-        <TextInput
-          style={{
-            ...styles.input,
-            borderColor: isUsernameValid ? "white" : "red",
-          }}
-          placeholder="Username"
-          placeholderTextColor="#808080"
-          autoCapitalize="none"
-          keyboardType="default"
-          value={username}
-          onChangeText={handleUsernameChange}
-        />
-        <TextInput
-          style={{
-            ...styles.input,
-            borderColor: isFullnameValid ? "white" : "red",
-          }}
-          placeholder="Fullname"
-          placeholderTextColor="#808080"
-          keyboardType="default"
-          value={fullname}
-          onChangeText={handleFullnameChange}
-        />
-
-        <Text style={styles.error}>{error}</Text>
-
-        <Pressable style={styles.signUpButton} onPress={handleSignUpButton}>
-          <Text
-            style={{ color: "white", textAlign: "center", fontWeight: "bold" }}
-          >
-            Sign Up
-          </Text>
-        </Pressable>
-      </View>
+              )}
+            </Pressable>
+          </Animated.View>
+        </Animated.View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: "center",
     justifyContent: "center",
     gap: 20,
     padding: 15,
   },
   logoImage: {
-    height: "12%",
+    height: "20%",
     aspectRatio: 1,
   },
   join: {
@@ -477,13 +610,11 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   signUpButton: {
-    width: "50%",
-    backgroundColor: "black",
+    width: "100%",
     paddingHorizontal: 10,
     paddingVertical: 12,
-    borderWidth: 1,
+    backgroundColor: apidonPink,
     borderRadius: 10,
-    borderColor: "#d53f8cd9",
   },
   error: {
     color: "red",
