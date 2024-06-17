@@ -5,11 +5,11 @@ import { doc, getDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
   Pressable,
   SafeAreaView,
   Switch,
   View,
+  Image,
 } from "react-native";
 
 import { Text } from "@/components/Text/Text";
@@ -61,8 +61,17 @@ const profile = (props: Props) => {
   const handleEditProfileButton = () => {
     if (!userData) return;
 
+    console.log("User Data: ", userData);
+
     const encodedImage = encodeURI(userData.profilePhoto);
     const encodedFullname = encodeURI(userData.fullname);
+
+    console.log(
+      "Encoded Image: ",
+      encodedImage,
+      "\n Encoded Fullname: ",
+      encodedFullname
+    );
 
     router.push(
       `/home/profile/editProfile?image=${encodedImage}&fullname=${encodedFullname}`
@@ -102,7 +111,7 @@ const profile = (props: Props) => {
           }}
           style={{
             height: 150,
-            aspectRatio: 1,
+            width: 150,
             borderRadius: 75,
           }}
         />

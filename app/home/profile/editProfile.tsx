@@ -1,20 +1,24 @@
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Animated,
   Dimensions,
-  Image,
   Keyboard,
   Pressable,
   SafeAreaView,
   ScrollView,
   TextInput,
   View,
+  Image,
 } from "react-native";
 
 import * as ImagePicker from "expo-image-picker";
+import { auth, firestore, storage } from "@/firebase/client";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { doc, updateDoc } from "firebase/firestore";
 
 type Props = {};
 
@@ -37,6 +41,8 @@ const editProfile = (props: Props) => {
   const animatedTranslateValue = useRef(new Animated.Value(0)).current;
 
   const animatedOpacityValue = useRef(new Animated.Value(0.5)).current;
+
+  const [loading, setLoading] = useState(false);
 
   // Keyboard-Layout Change
   useEffect(() => {
@@ -90,7 +96,10 @@ const editProfile = (props: Props) => {
   }, [containerRef]);
 
   useEffect(() => {
-    if ((isFullnameValid && isFullnameChanged) || imageEdited.length > 0) {
+    const editStatus = isFullnameChanged || imageEdited.length > 0;
+    const forwardStatus = isFullnameValid && editStatus;
+
+    if (forwardStatus) {
       Animated.timing(animatedOpacityValue, {
         toValue: 1,
         duration: 250,
@@ -107,7 +116,12 @@ const editProfile = (props: Props) => {
 
   useEffect(() => {
     setIsFullnameChanged(fullnameEdited !== fullname);
-  }, [fullnameEdited, fullname, imageEdited.length]);
+  }, [fullnameEdited, fullname]);
+
+  useEffect(() => {
+    console.log("Fullname: ", fullname);
+    console.log("Image: ", image);
+  }, [fullname, image]);
 
   const handleFullnameChange = (input: string) => {
     setError("");
@@ -127,6 +141,8 @@ const editProfile = (props: Props) => {
   };
 
   const handleChangeImageButton = async () => {
+    if (imageEdited.length > 0) return setImageEdited("");
+
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -136,6 +152,55 @@ const editProfile = (props: Props) => {
 
     if (!result.canceled) {
       setImageEdited(result.assets[0].uri);
+    }
+  };
+
+  const handleSaveButton = async () => {
+    if (loading) return;
+
+    setLoading(true);
+    if (imageEdited.length > 0) {
+      // Upload Image
+      const imageUploadResult = await updateImage(imageEdited);
+    }
+    if (isFullnameChanged && isFullnameValid) {
+      // Update Fullname
+    }
+
+    router.back();
+
+    setLoading(false);
+  };
+
+  const updateImage = async (image: string) => {
+    const displayName = auth.currentUser?.displayName;
+    if (!displayName) {
+      console.error("Display name not found");
+      return false;
+    }
+
+    try {
+      const path = `users/${displayName}/profilePhoto`;
+      const storageRef = ref(storage, path);
+
+      const response = await fetch(imageEdited);
+      const blob = await response.blob();
+
+      await uploadBytes(storageRef, blob);
+
+      const downloadURL = await getDownloadURL(storageRef);
+
+      const docPath = `/users/${displayName}`;
+      const docRef = doc(firestore, docPath);
+
+      await updateDoc(docRef, {
+        profilePhoto: downloadURL,
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Error on updating profile image: ", error);
+      return false;
     }
   };
 
@@ -154,6 +219,7 @@ const editProfile = (props: Props) => {
         <Animated.View
           ref={containerRef}
           style={{
+            marginTop: 20,
             alignItems: "center",
             padding: 15,
             gap: 20,
@@ -202,7 +268,7 @@ const editProfile = (props: Props) => {
                 }}
                 bold
               >
-                {imageEdited ? "Try New One" : "Change Image"}
+                {imageEdited ? "Cancel" : "Change Image"}
               </Text>
             </Pressable>
           </View>
@@ -212,7 +278,14 @@ const editProfile = (props: Props) => {
               gap: 5,
             }}
           >
-            <Text>Fullname</Text>
+            <Text
+              bold
+              style={{
+                fontSize: 16,
+              }}
+            >
+              Fullname
+            </Text>
             <TextInput
               style={{
                 borderWidth: 1,
@@ -243,23 +316,32 @@ const editProfile = (props: Props) => {
           <Animated.View
             style={{
               opacity: animatedOpacityValue,
+              width: "100%",
+              alignItems: "center",
             }}
           >
             <Pressable
+              onPress={handleSaveButton}
               style={{
                 padding: 10,
                 backgroundColor: apidonPink,
                 borderRadius: 10,
+                width: "30%",
               }}
             >
-              <Text
-                style={{
-                  color: "white",
-                  fontSize: 16,
-                }}
-              >
-                Save
-              </Text>
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text
+                  style={{
+                    color: "white",
+                    fontSize: 14,
+                    textAlign: "center",
+                  }}
+                >
+                  Save
+                </Text>
+              )}
             </Pressable>
           </Animated.View>
         </Animated.View>
