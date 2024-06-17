@@ -28,6 +28,15 @@ const _layout = (props: Props) => {
           ),
         }}
       />
+      <Stack.Screen
+        name="editProfile"
+        options={{
+          headerShown: true,
+          title: "Edit Profile",
+          presentation: "card",
+          headerBackTitleVisible: false,
+        }}
+      />
     </Stack>
   );
 };

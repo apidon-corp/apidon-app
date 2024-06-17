@@ -1,6 +1,6 @@
 import { firestore } from "@/firebase/client";
 import { UserInServer } from "@/types/User";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { doc, getDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
@@ -56,6 +56,17 @@ const profile = (props: Props) => {
 
   const onToggleValueChange = () => {
     setToggleValue((prev) => (prev === "posts" ? "frenlets" : "posts"));
+  };
+
+  const handleEditProfileButton = () => {
+    if (!userData) return;
+
+    const encodedImage = encodeURI(userData.profilePhoto);
+    const encodedFullname = encodeURI(userData.fullname);
+
+    router.push(
+      `/home/profile/editProfile?image=${encodedImage}&fullname=${encodedFullname}`
+    );
   };
 
   if (!userData)
@@ -201,6 +212,7 @@ const profile = (props: Props) => {
           </View>
         </View>
         <Pressable
+          onPress={handleEditProfileButton}
           style={{
             borderColor: apidonPink,
             borderWidth: 1,
@@ -213,6 +225,7 @@ const profile = (props: Props) => {
           <Text
             style={{
               fontSize: 14,
+              textAlign: "center",
             }}
             bold
           >
@@ -226,7 +239,7 @@ const profile = (props: Props) => {
             justifyContent: "center",
             flexDirection: "row",
             gap: 10,
-            marginTop: 10,
+            marginTop: 15,
           }}
         >
           <Text
@@ -242,7 +255,6 @@ const profile = (props: Props) => {
             thumbColor="black"
             onValueChange={onToggleValueChange}
             value={toggleValue === "posts" ? false : true}
-           
           />
           <Text
             style={{
