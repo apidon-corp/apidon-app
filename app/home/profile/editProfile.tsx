@@ -1,6 +1,6 @@
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
-import { router, useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -12,21 +12,25 @@ import {
   ScrollView,
   TextInput,
   View,
-  Image,
 } from "react-native";
 
+import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
+import { ImageWithSkeleton } from "@/components/Image/ImageWithSkeleton";
+import { auth, storage } from "@/firebase/client";
 import * as ImagePicker from "expo-image-picker";
-import { auth, firestore, storage } from "@/firebase/client";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { doc, updateDoc } from "firebase/firestore";
+import { useAtomValue } from "jotai";
 
 type Props = {};
 
 const editProfile = (props: Props) => {
-  const { image, fullname } = useLocalSearchParams<{
-    image: string;
-    fullname: string;
-  }>();
+  const screenParameters = useAtomValue(screenParametersAtom);
+
+  const fullname = screenParameters.find((p) => p.queryId === "fullname")
+    ?.value as string;
+
+  const image = screenParameters.find((p) => p.queryId === "image")
+    ?.value as string;
 
   const [error, setError] = useState("");
 
@@ -118,11 +122,6 @@ const editProfile = (props: Props) => {
     setIsFullnameChanged(fullnameEdited !== fullname);
   }, [fullnameEdited, fullname]);
 
-  useEffect(() => {
-    console.log("Fullname: ", fullname);
-    console.log("Image: ", image);
-  }, [fullname, image]);
-
   const handleFullnameChange = (input: string) => {
     setError("");
     input = input.replace(/[^\p{L}\p{N}\s]/gu, "");
@@ -147,7 +146,6 @@ const editProfile = (props: Props) => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 1,
     });
 
     if (!result.canceled) {
@@ -157,14 +155,16 @@ const editProfile = (props: Props) => {
 
   const handleSaveButton = async () => {
     if (loading) return;
-
     setLoading(true);
-    if (imageEdited.length > 0) {
-      // Upload Image
-      const imageUploadResult = await updateImage(imageEdited);
-    }
-    if (isFullnameChanged && isFullnameValid) {
-      // Update Fullname
+
+    const [imageOperationResult, fullnameOperationResult] = await Promise.all([
+      imageOperationsExecutor(),
+      fullnameOperationsExecutor(),
+    ]);
+
+    if (!imageOperationResult || !fullnameOperationResult) {
+      console.error("Image or fullname operation failed.");
+      return setLoading(false);
     }
 
     router.back();
@@ -172,7 +172,7 @@ const editProfile = (props: Props) => {
     setLoading(false);
   };
 
-  const updateImage = async (image: string) => {
+  const uploadImage = async (image: string) => {
     const displayName = auth.currentUser?.displayName;
     if (!displayName) {
       console.error("Display name not found");
@@ -183,25 +183,130 @@ const editProfile = (props: Props) => {
       const path = `users/${displayName}/profilePhoto`;
       const storageRef = ref(storage, path);
 
-      const response = await fetch(imageEdited);
+      const response = await fetch(image);
+
       const blob = await response.blob();
 
       await uploadBytes(storageRef, blob);
 
       const downloadURL = await getDownloadURL(storageRef);
 
-      const docPath = `/users/${displayName}`;
-      const docRef = doc(firestore, docPath);
-
-      await updateDoc(docRef, {
-        profilePhoto: downloadURL,
-      });
-
-      return true;
+      return downloadURL;
     } catch (error) {
       console.error("Error on updating profile image: ", error);
       return false;
     }
+  };
+
+  const updateImage = async (imageURL: string) => {
+    const currentUserAuthObject = auth.currentUser;
+    if (!currentUserAuthObject) return false;
+
+    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
+    if (!userPanelBaseUrl) {
+      console.error("User panel base url couldnt fetch from .env file");
+      setError("Internal Server Error");
+      return false;
+    }
+
+    try {
+      const idToken = await currentUserAuthObject.getIdToken();
+
+      const route = `${userPanelBaseUrl}/api/mobile/updateProfileImage`;
+
+      const response = await fetch(route, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          image: imageURL,
+        }),
+      });
+
+      if (!response.ok) {
+        const message = await response.text();
+        console.error(
+          "Response from updateProfileImage API is not okay: ",
+          message
+        );
+        setError(message);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error on updating profile image: ", error);
+      setError("Internal Server Error");
+      return false;
+    }
+  };
+
+  const imageOperationsExecutor = async () => {
+    if (imageEdited.length === 0) return true;
+
+    const imageUrl = await uploadImage(imageEdited);
+    if (!imageUrl) return false;
+
+    console.log("Now updating user doc...");
+    const updateImageResult = await updateImage(imageUrl);
+    if (!updateImageResult) return false;
+
+    return true;
+  };
+
+  const updateFullname = async (fullname: string) => {
+    const currentUserAuthObject = auth.currentUser;
+    if (!currentUserAuthObject) return false;
+
+    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
+    if (!userPanelBaseUrl) {
+      console.error("User panel base url couldnt fetch from .env file");
+      setError("Internal Server Error");
+      return false;
+    }
+
+    try {
+      const idToken = await currentUserAuthObject.getIdToken();
+
+      const route = `${userPanelBaseUrl}/api/user/fullnameUpdate`;
+
+      const response = await fetch(route, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          fullname: fullname,
+        }),
+      });
+
+      if (!response.ok) {
+        const message = await response.text();
+        console.error(
+          "Response from updateFullname API is not okay: ",
+          message
+        );
+        setError(message);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error on updating fullname: ", error);
+      setError("Internal Server Error");
+      return false;
+    }
+  };
+
+  const fullnameOperationsExecutor = async () => {
+    if (!isFullnameChanged) return true;
+    if (!isFullnameValid) return false;
+
+    const updateFullnameResult = await updateFullname(fullnameEdited);
+    return updateFullnameResult;
   };
 
   return (
@@ -239,15 +344,18 @@ const editProfile = (props: Props) => {
             }}
           >
             {image && (
-              <Image
+              <ImageWithSkeleton
                 source={{
-                  uri: imageEdited || decodeURI(image),
+                  uri: imageEdited || image,
                 }}
                 style={{
                   width: 200,
                   aspectRatio: 1,
                   borderRadius: 100,
                 }}
+                skeletonWidth={200}
+                skeletonHeight={200}
+                skeletonBorderRadius={100}
               />
             )}
             <Pressable

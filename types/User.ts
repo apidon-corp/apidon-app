@@ -12,3 +12,9 @@ export type UserInServer = {
   email: string;
   uid: string;
 };
+
+export type FollowerDocData = {
+  followTime: number;
+};
+
+

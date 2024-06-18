@@ -1,7 +1,7 @@
 import { firestore } from "@/firebase/client";
 import { UserInServer } from "@/types/User";
 import { router, useLocalSearchParams } from "expo-router";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -9,11 +9,13 @@ import {
   SafeAreaView,
   Switch,
   View,
-  Image,
 } from "react-native";
 
+import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
+import { ImageWithSkeleton } from "@/components/Image/ImageWithSkeleton";
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
+import { useSetAtom } from "jotai";
 
 type Props = {};
 
@@ -26,10 +28,38 @@ const profile = (props: Props) => {
 
   const [toggleValue, setToggleValue] = useState<"posts" | "frenlets">("posts");
 
+  const setScreenParams = useSetAtom(screenParametersAtom);
+
   useEffect(() => {
     if (username) handleGetProfileData();
   }, [username]);
 
+  // Dynamic Data Fetching
+  useEffect(() => {
+    const userDocRef = doc(firestore, `/users/${username}`);
+
+    const unsubscribe = onSnapshot(
+      userDocRef,
+      (snapshot) => {
+        if (!snapshot.exists()) {
+          console.error("User's realtime data can not be fecthed.");
+          return setUserData(null);
+        }
+
+        const userDocData = snapshot.data() as UserInServer;
+
+        setUserData(userDocData);
+      },
+      (error) => {
+        console.error("Error on getting realtime data: ", error);
+        return setUserData(null);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [username]);
+
+  // Initially getting user data...
   const handleGetProfileData = async () => {
     if (!username) return;
     if (loading) return;
@@ -61,21 +91,15 @@ const profile = (props: Props) => {
   const handleEditProfileButton = () => {
     if (!userData) return;
 
-    console.log("User Data: ", userData);
+    setScreenParams([
+      { queryId: "image", value: userData.profilePhoto },
+      {
+        queryId: "fullname",
+        value: userData.fullname,
+      },
+    ]);
 
-    const encodedImage = encodeURI(userData.profilePhoto);
-    const encodedFullname = encodeURI(userData.fullname);
-
-    console.log(
-      "Encoded Image: ",
-      encodedImage,
-      "\n Encoded Fullname: ",
-      encodedFullname
-    );
-
-    router.push(
-      `/home/profile/editProfile?image=${encodedImage}&fullname=${encodedFullname}`
-    );
+    router.push("/home/profile/editProfile");
   };
 
   if (!userData)
@@ -105,7 +129,7 @@ const profile = (props: Props) => {
           gap: 5,
         }}
       >
-        <Image
+        <ImageWithSkeleton
           source={{
             uri: userData.profilePhoto,
           }}
@@ -114,6 +138,9 @@ const profile = (props: Props) => {
             width: 150,
             borderRadius: 75,
           }}
+          skeletonWidth={150}
+          skeletonHeight={150}
+          skeletonBorderRadius={75}
         />
         <Text
           bold
@@ -146,7 +173,7 @@ const profile = (props: Props) => {
           <View
             style={{
               gap: 4,
-              width: "25%",
+              width: "20%",
             }}
           >
             <Text
@@ -168,36 +195,47 @@ const profile = (props: Props) => {
               NFT
             </Text>
           </View>
+
           <View
             style={{
               gap: 4,
-              width: "25%",
+              width: "20%",
             }}
           >
-            <Text
-              style={{
-                color: "white",
-                fontSize: 15,
-                textAlign: "center",
+            <Pressable
+              onPress={() => {
+                router.push("/home/profile/followers");
               }}
-              bold
-            >
-              {userData.followerCount}
-            </Text>
-            <Text
               style={{
-                color: "white",
-                fontSize: 15,
-                textAlign: "center",
+                gap: 4,
               }}
             >
-              Followers
-            </Text>
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 15,
+                  textAlign: "center",
+                }}
+                bold
+              >
+                {userData.followerCount}
+              </Text>
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 15,
+                  textAlign: "center",
+                }}
+              >
+                Followers
+              </Text>
+            </Pressable>
           </View>
+
           <View
             style={{
               gap: 4,
-              width: "25%",
+              width: "20%",
             }}
           >
             <Text

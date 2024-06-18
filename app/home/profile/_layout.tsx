@@ -37,6 +37,14 @@ const _layout = (props: Props) => {
           headerBackTitleVisible: false,
         }}
       />
+      <Stack.Screen
+        name="followers"
+        options={{
+          headerShown: true,
+          title: "Followers",
+          presentation: "modal",
+        }}
+      />
     </Stack>
   );
 };
