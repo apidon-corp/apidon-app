@@ -1,6 +1,6 @@
-import { firestore } from "@/firebase/client";
+import { auth, firestore } from "@/firebase/client";
 import { UserInServer } from "@/types/User";
-import { router, useLocalSearchParams } from "expo-router";
+import { Stack, router, useLocalSearchParams } from "expo-router";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
@@ -16,6 +16,8 @@ import { ImageWithSkeleton } from "@/components/Image/ImageWithSkeleton";
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
 import { useSetAtom } from "jotai";
+import { Ionicons, FontAwesome } from "@expo/vector-icons";
+import FollowButton from "@/components/Follow/FollowButton";
 
 type Props = {};
 
@@ -29,6 +31,8 @@ const profile = (props: Props) => {
   const [toggleValue, setToggleValue] = useState<"posts" | "frenlets">("posts");
 
   const setScreenParams = useSetAtom(screenParametersAtom);
+
+  const [userOwnsPage, setUserOwnsPage] = useState(false);
 
   useEffect(() => {
     if (username) handleGetProfileData();
@@ -58,6 +62,10 @@ const profile = (props: Props) => {
 
     return () => unsubscribe();
   }, [username]);
+
+  useEffect(() => {
+    checkUserOwnsPage();
+  }, [username, auth.currentUser]);
 
   // Initially getting user data...
   const handleGetProfileData = async () => {
@@ -102,6 +110,15 @@ const profile = (props: Props) => {
     router.push("/home/profile/editProfile");
   };
 
+  const checkUserOwnsPage = () => {
+    if (!auth.currentUser || !username) return setUserOwnsPage(false);
+
+    const displayName = auth.currentUser.displayName;
+    if (!displayName) return setUserOwnsPage(false);
+
+    return setUserOwnsPage(displayName === username);
+  };
+
   if (!userData)
     return (
       <SafeAreaView
@@ -116,109 +133,93 @@ const profile = (props: Props) => {
     );
 
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-      }}
-    >
-      <View
+    <>
+      {userOwnsPage && (
+        <Stack.Screen
+          options={{
+            headerRight: () => (
+              <Ionicons
+                name="notifications"
+                color="white"
+                size={23}
+                style={{}}
+              />
+            ),
+            headerLeft: () => (
+              <FontAwesome name="chain" color="white" size={23} style={{}} />
+            ),
+          }}
+        />
+      )}
+
+      <SafeAreaView
         style={{
           flex: 1,
-          padding: 10,
-          alignItems: "center",
-          gap: 5,
         }}
       >
-        <ImageWithSkeleton
-          source={{
-            uri: userData.profilePhoto,
-          }}
-          style={{
-            height: 150,
-            width: 150,
-            borderRadius: 75,
-          }}
-          skeletonWidth={150}
-          skeletonHeight={150}
-          skeletonBorderRadius={75}
-        />
-        <Text
-          bold
-          style={{
-            fontSize: 25,
-            textAlign: "center",
-          }}
-        >
-          {userData.fullname}
-        </Text>
-        <Text
-          style={{
-            color: "white",
-            fontSize: 14,
-            textAlign: "center",
-          }}
-        >
-          Istanbul, Turkey
-        </Text>
         <View
           style={{
-            flexDirection: "row",
-            gap: 20,
-            justifyContent: "center",
+            flex: 1,
+            padding: 10,
             alignItems: "center",
-            width: "100%",
-            marginTop: 10,
+            gap: 5,
           }}
         >
-          <View
+          <ImageWithSkeleton
+            source={{
+              uri: userData.profilePhoto,
+            }}
             style={{
-              gap: 4,
-              width: "20%",
+              height: 150,
+              width: 150,
+              borderRadius: 75,
+            }}
+            skeletonWidth={150}
+            skeletonHeight={150}
+            skeletonBorderRadius={75}
+          />
+          <Text
+            bold
+            style={{
+              fontSize: 25,
+              textAlign: "center",
             }}
           >
-            <Text
-              style={{
-                fontSize: 15,
-                textAlign: "center",
-              }}
-              bold
-            >
-              {userData.nftCount}
-            </Text>
-            <Text
-              style={{
-                color: "white",
-                fontSize: 15,
-                textAlign: "center",
-              }}
-            >
-              NFT
-            </Text>
-          </View>
-
-          <View
+            {userData.fullname}
+          </Text>
+          <Text
             style={{
-              gap: 4,
-              width: "20%",
+              color: "white",
+              fontSize: 14,
+              textAlign: "center",
             }}
           >
-            <Pressable
-              onPress={() => {
-                router.push("/home/profile/followers");
-              }}
+            Istanbul, Turkey
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              gap: 20,
+              justifyContent: "center",
+              alignItems: "center",
+              width: "100%",
+              marginTop: 10,
+            }}
+          >
+            <View
               style={{
                 gap: 4,
+                width: "20%",
               }}
             >
               <Text
                 style={{
-                  color: "white",
                   fontSize: 15,
                   textAlign: "center",
                 }}
                 bold
               >
-                {userData.followerCount}
+                {userData.nftCount}
               </Text>
               <Text
                 style={{
@@ -227,92 +228,141 @@ const profile = (props: Props) => {
                   textAlign: "center",
                 }}
               >
-                Followers
+                NFT
+              </Text>
+            </View>
+
+            <View
+              style={{
+                width: "20%",
+              }}
+            >
+              <Pressable
+                onPress={() => {
+                  router.push("/home/profile/followers");
+                }}
+                style={{
+                  gap: 4,
+                }}
+              >
+                <Text
+                  style={{
+                    color: "white",
+                    fontSize: 15,
+                    textAlign: "center",
+                  }}
+                  bold
+                >
+                  {userData.followerCount}
+                </Text>
+                <Text
+                  style={{
+                    color: "white",
+                    fontSize: 15,
+                    textAlign: "center",
+                  }}
+                >
+                  Followers
+                </Text>
+              </Pressable>
+            </View>
+
+            <View
+              style={{
+                gap: 4,
+                width: "20%",
+              }}
+            >
+              <Pressable
+                style={{
+                  gap: 4,
+                }}
+                onPress={() => {
+                  router.push("/home/profile/following");
+                }}
+              >
+                <Text
+                  style={{
+                    color: "white",
+                    fontSize: 15,
+                    textAlign: "center",
+                  }}
+                  bold
+                >
+                  {userData.followingCount}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 15,
+                    textAlign: "center",
+                  }}
+                >
+                  Following
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+          {userOwnsPage ? (
+            <Pressable
+              onPress={handleEditProfileButton}
+              style={{
+                borderColor: apidonPink,
+                borderWidth: 1,
+                borderRadius: 10,
+                paddingHorizontal: 15,
+                paddingVertical: 5,
+                marginTop: 10,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 14,
+                  textAlign: "center",
+                }}
+                bold
+              >
+                Edit Profile
               </Text>
             </Pressable>
-          </View>
+          ) : (
+            <FollowButton username={username} />
+          )}
 
           <View
             style={{
-              gap: 4,
-              width: "20%",
+              width: "100%",
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "row",
+              gap: 10,
+              marginTop: 15,
             }}
           >
             <Text
               style={{
-                color: "white",
-                fontSize: 15,
-                textAlign: "center",
+                fontSize: 14,
               }}
-              bold
             >
-              {userData.followingCount}
+              Posts
             </Text>
+            <Switch
+              trackColor={{ false: apidonPink, true: apidonPink }}
+              ios_backgroundColor={apidonPink}
+              thumbColor="black"
+              onValueChange={onToggleValueChange}
+              value={toggleValue === "posts" ? false : true}
+            />
             <Text
               style={{
-                fontSize: 15,
-                textAlign: "center",
+                fontSize: 14,
               }}
             >
-              Following
+              Frens
             </Text>
           </View>
         </View>
-        <Pressable
-          onPress={handleEditProfileButton}
-          style={{
-            borderColor: apidonPink,
-            borderWidth: 1,
-            borderRadius: 10,
-            paddingHorizontal: 15,
-            paddingVertical: 5,
-            marginTop: 10,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 14,
-              textAlign: "center",
-            }}
-            bold
-          >
-            Edit Profile
-          </Text>
-        </Pressable>
-        <View
-          style={{
-            width: "100%",
-            alignItems: "center",
-            justifyContent: "center",
-            flexDirection: "row",
-            gap: 10,
-            marginTop: 15,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 14,
-            }}
-          >
-            Posts
-          </Text>
-          <Switch
-            trackColor={{ false: apidonPink, true: apidonPink }}
-            ios_backgroundColor={apidonPink}
-            thumbColor="black"
-            onValueChange={onToggleValueChange}
-            value={toggleValue === "posts" ? false : true}
-          />
-          <Text
-            style={{
-              fontSize: 14,
-            }}
-          >
-            Frens
-          </Text>
-        </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </>
   );
 };
 

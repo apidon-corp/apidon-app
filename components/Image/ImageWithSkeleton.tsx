@@ -29,12 +29,12 @@ export const ImageWithSkeleton: React.FC<ImageWithSkeletonProps> = ({
     setLoading(true);
     Animated.timing(animatedOpacityValue, {
       toValue: 0,
-      duration: 1000,
+      duration: 500,
       useNativeDriver: true,
     }).start();
     Animated.timing(animatedOpacityValueSkeleton, {
       toValue: 1,
-      duration: 1000,
+      duration: 500,
       useNativeDriver: true,
     }).start();
   };
@@ -43,12 +43,12 @@ export const ImageWithSkeleton: React.FC<ImageWithSkeletonProps> = ({
     setLoading(false);
     Animated.timing(animatedOpacityValue, {
       toValue: 1,
-      duration: 1000,
+      duration: 500,
       useNativeDriver: true,
     }).start();
     Animated.timing(animatedOpacityValueSkeleton, {
       toValue: 0,
-      duration: 1000,
+      duration: 500,
       useNativeDriver: true,
     }).start();
   };

@@ -7,6 +7,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { auth, firestore } from "@/firebase/client";
 import { FollowStatusAPIResponseBody } from "@/types/ApiResponses";
 import { apidonPink } from "@/constants/Colors";
+import { router } from "expo-router";
 
 type Props = {
   username: string;
@@ -17,6 +18,8 @@ const FollowItem = ({ username }: Props) => {
   const [loading, setLoading] = useState(false);
 
   const [doesFollow, setDoesFollow] = useState(true);
+
+  const [followLoading, setFollowLoading] = useState(false);
 
   useEffect(() => {
     handleGetUserData();
@@ -84,6 +87,51 @@ const FollowItem = ({ username }: Props) => {
     }
   };
 
+  const handleFollowButton = async () => {
+    if (followLoading) return;
+
+    setFollowLoading(true);
+
+    const currentUserAuthObject = auth.currentUser;
+    if (!currentUserAuthObject) return console.error("No user found!");
+
+    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
+    if (!userPanelBaseUrl)
+      return console.error("User panel base url couldnt fetch from .env file");
+
+    const route = `${userPanelBaseUrl}/api/social/follow`;
+
+    try {
+      const idToken = await currentUserAuthObject.getIdToken();
+
+      const response = await fetch(route, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          operationTo: username,
+          opCode: 1,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error(
+          "Response from follow API is not okay: ",
+          await response.json()
+        );
+        return setFollowLoading(false);
+      }
+
+      setDoesFollow(true);
+      return setFollowLoading(true);
+    } catch (error) {
+      console.error("Error on fetching follow API: : ", error);
+      return setFollowLoading(false);
+    }
+  };
+
   if (loading || !userData)
     return (
       <View
@@ -91,6 +139,7 @@ const FollowItem = ({ username }: Props) => {
           justifyContent: "center",
           alignItems: "center",
           width: "100%",
+          height: 75,
         }}
       >
         <ActivityIndicator color="white" />
@@ -101,46 +150,57 @@ const FollowItem = ({ username }: Props) => {
     <View
       style={{
         justifyContent: "space-between",
+        alignItems: "center",
         flexDirection: "row",
+        height: 75,
       }}
     >
       <View
         style={{
-          flexDirection: "row",
-          gap: 10,
           alignItems: "center",
         }}
       >
-        <ImageWithSkeleton
-          source={{
-            uri: userData.profilePhoto,
-          }}
+        <Pressable
           style={{
-            width: 50,
-            height: 50,
-            borderRadius: 25,
+            flexDirection: "row",
+            gap: 10,
+            alignItems: "center",
           }}
-          skeletonWidth={50}
-          skeletonHeight={50}
-          skeletonBorderRadius={25}
-        />
-        <View>
-          <Text
-            style={{
-              fontSize: 14,
+          onPress={() => {
+            router.push(`/home/profile/${username}`);
+          }}
+        >
+          <ImageWithSkeleton
+            source={{
+              uri: userData.profilePhoto,
             }}
-            bold
-          >
-            {userData.username}
-          </Text>
-          <Text
             style={{
-              fontSize: 14,
+              width: 50,
+              height: 50,
+              borderRadius: 25,
             }}
-          >
-            {userData.fullname}
-          </Text>
-        </View>
+            skeletonWidth={50}
+            skeletonHeight={50}
+            skeletonBorderRadius={25}
+          />
+          <View>
+            <Text
+              style={{
+                fontSize: 14,
+              }}
+              bold
+            >
+              {userData.username}
+            </Text>
+            <Text
+              style={{
+                fontSize: 14,
+              }}
+            >
+              {userData.fullname}
+            </Text>
+          </View>
+        </Pressable>
       </View>
 
       {!doesFollow && (
@@ -158,14 +218,20 @@ const FollowItem = ({ username }: Props) => {
               padding: 10,
               borderRadius: 10,
             }}
+            onPress={handleFollowButton}
+            disabled={followLoading}
           >
-            <Text
-              style={{
-                fontSize: 14,
-              }}
-            >
-              Follow
-            </Text>
+            {followLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text
+                style={{
+                  fontSize: 14,
+                }}
+              >
+                Follow
+              </Text>
+            )}
           </Pressable>
         </View>
       )}

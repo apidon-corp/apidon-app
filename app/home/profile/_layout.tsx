@@ -20,12 +20,12 @@ const _layout = (props: Props) => {
           headerBackground: () => (
             <View style={{ flex: 1, backgroundColor: "black" }} />
           ),
-          headerRight: () => (
-            <Ionicons name="notifications" color="white" size={23} style={{}} />
-          ),
-          headerLeft: () => (
-            <FontAwesome name="chain" color="white" size={23} style={{}} />
-          ),
+          // headerRight: () => (
+          //   <Ionicons name="notifications" color="white" size={23} style={{}} />
+          // ),
+          // headerLeft: () => (
+          //   <FontAwesome name="chain" color="white" size={23} style={{}} />
+          // ),
         }}
       />
       <Stack.Screen
@@ -42,7 +42,27 @@ const _layout = (props: Props) => {
         options={{
           headerShown: true,
           title: "Followers",
-          presentation: "modal",
+          headerBackTitleVisible: false,
+          headerTitle: () => (
+            <Text style={{ color: "white", fontSize: 18 }}>Followers</Text>
+          ),
+          headerBackground: () => (
+            <View style={{ flex: 1, backgroundColor: "black" }} />
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="following"
+        options={{
+          headerShown: true,
+          title: "Following",
+          headerBackTitleVisible: false,
+          headerTitle: () => (
+            <Text style={{ color: "white", fontSize: 18 }}>Following</Text>
+          ),
+          headerBackground: () => (
+            <View style={{ flex: 1, backgroundColor: "black" }} />
+          ),
         }}
       />
     </Stack>

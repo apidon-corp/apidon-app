@@ -5,15 +5,15 @@ import { auth, firestore } from "@/firebase/client";
 import { FollowerDocData } from "@/types/User";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 
-type FollowerData = {
-  follower: string;
+type FollowingData = {
+  following: string;
   followTime: number;
 };
 
-const followers = () => {
+const following = () => {
   const [loading, setLoading] = useState(false);
 
-  const [followerDatas, setFollowerDatas] = useState<FollowerData[]>([]);
+  const [followingsData, setFollowingsData] = useState<FollowingData[]>([]);
 
   useEffect(() => {
     handleGetInitialData();
@@ -31,26 +31,26 @@ const followers = () => {
     }
 
     try {
-      const followersCollectionRef = collection(
+      const followingsCollectionRef = collection(
         firestore,
-        `/users/${displayName}/followers`
+        `/users/${displayName}/followings`
       );
 
-      const followersQuery = query(
-        followersCollectionRef,
+      const followingsQuery = query(
+        followingsCollectionRef,
         orderBy("followTime", "desc")
       );
 
-      const followerDocs = (await getDocs(followersQuery)).docs;
+      const followerDocs = (await getDocs(followingsQuery)).docs;
 
       const followerDatas = followerDocs.map((followerDoc) => {
         return {
-          follower: followerDoc.id,
+          following: followerDoc.id,
           followTime: (followerDoc.data() as FollowerDocData).followTime,
         };
-      }) as FollowerData[];
+      }) as FollowingData[];
 
-      setFollowerDatas(followerDatas);
+      setFollowingsData(followerDatas);
       return setLoading(false);
     } catch (error) {
       console.error("Error on getting initial data: ", error);
@@ -83,12 +83,13 @@ const followers = () => {
         }}
       >
         <FlatList
-          data={followerDatas}
+          data={followingsData}
           renderItem={({ item }) => (
-            <FollowItem username={item.follower} key={item.follower} />
+            <FollowItem username={item.following} key={item.following} />
           )}
           contentContainerStyle={{
             padding: 10,
+            gap: 5,
           }}
         />
       </View>
@@ -96,4 +97,4 @@ const followers = () => {
   );
 };
 
-export default followers;
+export default following;
