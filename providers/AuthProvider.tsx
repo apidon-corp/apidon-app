@@ -15,7 +15,7 @@ const AuthContext = createContext<AuthStatus>("loading");
 export default function AuthProvider({ children }: PropsWithChildren) {
   const [authStatus, setAuthStatus] = useState<AuthStatus>("loading");
 
-  const getCurrentUser = () => {
+  const getCurrentUserDisplayName = () => {
     try {
       const currentUserAuthObject = auth.currentUser;
       if (!currentUserAuthObject) return false;
@@ -27,7 +27,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
         return false;
       }
 
-      return true;
+      return displayName;
     } catch (error) {
       console.error("Error on checking if there is a current user: ", error);
       return false;
@@ -37,11 +37,11 @@ export default function AuthProvider({ children }: PropsWithChildren) {
   const handleInitialAuthentication = () => {
     setAuthStatus("loading");
 
-    const currentUserStatus = getCurrentUser();
+    const currentUserDisplayName = getCurrentUserDisplayName();
 
-    if (currentUserStatus) {
+    if (currentUserDisplayName) {
       setAuthStatus("authenticated");
-      router.replace("/home");
+      router.replace(`/home/profile/${currentUserDisplayName}`);
     } else {
       setAuthStatus("unauthenticated");
       router.replace("/");

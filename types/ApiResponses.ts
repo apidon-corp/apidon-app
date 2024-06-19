@@ -29,3 +29,8 @@ export type SignUpApiErrorResponseBody = {
     | "referralCode";
   message: string;
 };
+
+export type FollowStatusAPIResponseBody = {
+  doesRequesterFollowsSuspect: boolean;
+  doesSuspectFollowsRequester: boolean;
+};

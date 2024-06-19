@@ -20,7 +20,7 @@ const index = () => {
     );
 
   if (authStatus === "unauthenticated") return <Redirect href="/auth" />;
-  if (authStatus === "authenticated") return <Redirect href="/profile" />;
+  if (authStatus === "authenticated") return <Redirect href="/home/profile/[username]" />;
 };
 
 export default index;
