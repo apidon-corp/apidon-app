@@ -17,8 +17,14 @@ import {
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { ImageWithSkeleton } from "@/components/Image/ImageWithSkeleton";
 import { auth, storage } from "@/firebase/client";
+import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+
+import {
+  getDownloadURL,
+  ref,
+  uploadBytesResumable
+} from "firebase/storage";
 import { useAtomValue } from "jotai";
 
 type Props = {};
@@ -146,6 +152,7 @@ const editProfile = (props: Props) => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
+      quality: 1,
     });
 
     if (!result.canceled) {
@@ -183,11 +190,9 @@ const editProfile = (props: Props) => {
       const path = `users/${displayName}/profilePhoto`;
       const storageRef = ref(storage, path);
 
-      const response = await fetch(image);
+      const blob = await getImageBlob(image);
 
-      const blob = await response.blob();
-
-      await uploadBytes(storageRef, blob);
+      await uploadBytesResumable(storageRef, blob);
 
       const downloadURL = await getDownloadURL(storageRef);
 
@@ -196,6 +201,20 @@ const editProfile = (props: Props) => {
       console.error("Error on updating profile image: ", error);
       return false;
     }
+  };
+
+  const getImageBlob = async (imageURI: string) => {
+    const fileName = imageURI.substring(imageURI.lastIndexOf("/") + 1);
+
+    const newURI = `${FileSystem.documentDirectory}resumableUploadManager-${fileName}.toupload`;
+    await FileSystem.copyAsync({ from: imageURI, to: newURI });
+
+    const response = await fetch(newURI);
+    const blobData = await response.blob();
+
+    return new Blob([blobData], {
+      type: blobData.type,
+    });
   };
 
   const updateImage = async (imageURL: string) => {
@@ -249,7 +268,6 @@ const editProfile = (props: Props) => {
     const imageUrl = await uploadImage(imageEdited);
     if (!imageUrl) return false;
 
-    console.log("Now updating user doc...");
     const updateImageResult = await updateImage(imageUrl);
     if (!updateImageResult) return false;
 

@@ -1,11 +1,10 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import {
   AnimatableNumericValue,
+  Animated,
   DimensionValue,
-  Image,
   ImageProps,
   View,
-  Animated,
 } from "react-native";
 
 interface ImageWithSkeletonProps extends ImageProps {
@@ -20,13 +19,10 @@ export const ImageWithSkeleton: React.FC<ImageWithSkeletonProps> = ({
   skeletonBorderRadius,
   ...props
 }) => {
-  const [loading, setLoading] = useState(true);
-
   const animatedOpacityValue = useRef(new Animated.Value(0)).current;
   const animatedOpacityValueSkeleton = useRef(new Animated.Value(1)).current;
 
   const handleImageLoadingStarted = () => {
-    setLoading(true);
     Animated.timing(animatedOpacityValue, {
       toValue: 0,
       duration: 500,
@@ -40,7 +36,6 @@ export const ImageWithSkeleton: React.FC<ImageWithSkeletonProps> = ({
   };
 
   const handleImageLoadingFinished = () => {
-    setLoading(false);
     Animated.timing(animatedOpacityValue, {
       toValue: 1,
       duration: 500,
