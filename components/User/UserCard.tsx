@@ -13,7 +13,7 @@ type Props = {
   username: string;
 };
 
-const FollowItem = ({ username }: Props) => {
+const UserCard = ({ username }: Props) => {
   const [userData, setUserData] = useState<UserInServer>();
   const [loading, setLoading] = useState(false);
 
@@ -239,4 +239,4 @@ const FollowItem = ({ username }: Props) => {
   );
 };
 
-export default FollowItem;
+export default UserCard;

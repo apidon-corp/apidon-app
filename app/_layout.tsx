@@ -55,6 +55,13 @@ function RootLayoutNav() {
         <ThemeProvider value={DarkTheme}>
           <Stack>
             <Stack.Screen
+              name="(modals)"
+              options={{
+                headerShown: false,
+                presentation: "modal",
+              }}
+            />
+            <Stack.Screen
               name="index"
               options={{
                 title: "Index",

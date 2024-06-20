@@ -1,11 +1,7 @@
 import Post from "@/components/Post/Post";
 import { auth } from "@/firebase/client";
 import React, { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  SafeAreaView
-} from "react-native";
+import { ActivityIndicator, FlatList, SafeAreaView } from "react-native";
 
 const index = () => {
   const [loading, setLoading] = useState(false);
@@ -79,7 +75,11 @@ const index = () => {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
     >
       <FlatList
         style={{
@@ -90,6 +90,7 @@ const index = () => {
         }}
         data={postDocPathArray}
         renderItem={({ item }) => <Post postDocPath={item} key={item} />}
+        showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
   );

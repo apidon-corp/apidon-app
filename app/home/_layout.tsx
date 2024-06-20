@@ -1,7 +1,7 @@
-import { Tabs } from "expo-router";
+import { Stack, Tabs } from "expo-router";
 import React from "react";
 
-import { Entypo, Feather, Ionicons, FontAwesome } from "@expo/vector-icons";
+import { Entypo, Feather } from "@expo/vector-icons";
 import { StatusBar } from "react-native";
 
 type Props = {};
