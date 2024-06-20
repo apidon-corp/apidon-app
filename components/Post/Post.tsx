@@ -349,6 +349,7 @@ const Post = ({ postDocPath }: Props) => {
                 width: "33%",
                 justifyContent: "center",
                 alignItems: "center",
+                position: "relative",
               }}
             >
               <RateStar />
@@ -365,7 +366,7 @@ const Post = ({ postDocPath }: Props) => {
             </View>
           </View>
 
-          <Pressable onPress={handleOpenCommentsModal}>
+          <Pressable onPress={handleOpenCommentsModal} style={{ height: 50 }}>
             <View
               id="comments-preview"
               style={{

@@ -1,25 +1,28 @@
-import { View, Text } from "react-native";
 import React from "react";
-import { FontAwesome } from "@expo/vector-icons";
+import { View } from "react-native";
+import CurvedStar from "./CurvedStar";
 
-const CurvedStars = () => {
+type Props = {
+  rateValue: number;
+  setRateValue: (value: number) => void;
+};
+
+const CurvedStars = ({ rateValue, setRateValue }: Props) => {
   return (
     <View
       style={{
-        gap: 1,
+        gap: 30,
         flexDirection: "row",
         transform: [
           {
-            translateY : -100
-          }
-        ]
+            translateY: -20,
+          },
+        ],
       }}
     >
-      <FontAwesome name="star" size={24} color="white" />
-      <FontAwesome name="star" size={24} color="white" />
-      <FontAwesome name="star" size={24} color="white" />
-      <FontAwesome name="star" size={24} color="white" />
-      <FontAwesome name="star" size={24} color="white" />
+      {Array.from({ length: 5 }, (_, i) => (
+        <CurvedStar index={i} rateValue={rateValue} key={i} />
+      ))}
     </View>
   );
 };
