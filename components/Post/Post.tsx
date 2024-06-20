@@ -14,14 +14,13 @@ import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useRef, useState } from "react";
 import { ImageWithSkeleton } from "../Image/ImageWithSkeleton";
 
-import { Entypo } from "@expo/vector-icons";
-import { FontAwesome } from "@expo/vector-icons";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Entypo, FontAwesome } from "@expo/vector-icons";
 
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { formatDistanceToNow } from "date-fns";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
+import RateStar from "./Rating/RateStar";
 import Stars from "./Rating/Stars";
 
 type Props = {
@@ -352,11 +351,7 @@ const Post = ({ postDocPath }: Props) => {
                 alignItems: "center",
               }}
             >
-              <MaterialCommunityIcons
-                name="star-plus"
-                size={40}
-                color="white"
-              />
+              <RateStar />
             </View>
 
             <View
@@ -369,6 +364,7 @@ const Post = ({ postDocPath }: Props) => {
               <FontAwesome name="comments" size={30} color="white" />
             </View>
           </View>
+
           <Pressable onPress={handleOpenCommentsModal}>
             <View
               id="comments-preview"
@@ -380,7 +376,7 @@ const Post = ({ postDocPath }: Props) => {
                 id="description"
                 style={{
                   flexDirection: "row",
-                  gap: 8,
+                  gap: 6,
                 }}
               >
                 <Text bold>{postSenderData.username}</Text>
