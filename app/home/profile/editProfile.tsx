@@ -15,17 +15,13 @@ import {
 } from "react-native";
 
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
-import { ImageWithSkeleton } from "@/components/Image/ImageWithSkeleton";
 import { auth, storage } from "@/firebase/client";
 import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 
-import {
-  getDownloadURL,
-  ref,
-  uploadBytesResumable
-} from "firebase/storage";
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { useAtomValue } from "jotai";
+import { Image } from "expo-image";
 
 type Props = {};
 
@@ -45,6 +41,7 @@ const editProfile = (props: Props) => {
   const [isFullnameChanged, setIsFullnameChanged] = useState(false);
 
   const [imageEdited, setImageEdited] = useState("");
+  const [imageMime, setImageMime] = useState("");
 
   const containerRef = useRef<null | View>(null);
   const screenHeight = Dimensions.get("window").height;
@@ -157,6 +154,7 @@ const editProfile = (props: Props) => {
 
     if (!result.canceled) {
       setImageEdited(result.assets[0].uri);
+      setImageMime(result.assets[0].mimeType || "image/png");
     }
   };
 
@@ -179,7 +177,7 @@ const editProfile = (props: Props) => {
     setLoading(false);
   };
 
-  const uploadImage = async (image: string) => {
+  const uploadImage = async (image: string, mimeType: string) => {
     const displayName = auth.currentUser?.displayName;
     if (!displayName) {
       console.error("Display name not found");
@@ -187,12 +185,15 @@ const editProfile = (props: Props) => {
     }
 
     try {
-      const path = `users/${displayName}/profilePhoto`;
+      const extension = image.split(".").pop() || "png";
+      const path = `users/${displayName}/profilePhoto.${extension}`;
       const storageRef = ref(storage, path);
 
-      const blob = await getImageBlob(image);
+      const blob = await getImageBlob(image, mimeType);
 
-      await uploadBytesResumable(storageRef, blob);
+      await uploadBytesResumable(storageRef, blob, {
+        contentType: mimeType,
+      });
 
       const downloadURL = await getDownloadURL(storageRef);
 
@@ -203,7 +204,7 @@ const editProfile = (props: Props) => {
     }
   };
 
-  const getImageBlob = async (imageURI: string) => {
+  const getImageBlob = async (imageURI: string, mimeType: string) => {
     const fileName = imageURI.substring(imageURI.lastIndexOf("/") + 1);
 
     const newURI = `${FileSystem.documentDirectory}resumableUploadManager-${fileName}.toupload`;
@@ -213,7 +214,7 @@ const editProfile = (props: Props) => {
     const blobData = await response.blob();
 
     return new Blob([blobData], {
-      type: blobData.type,
+      type: mimeType,
     });
   };
 
@@ -265,7 +266,7 @@ const editProfile = (props: Props) => {
   const imageOperationsExecutor = async () => {
     if (imageEdited.length === 0) return true;
 
-    const imageUrl = await uploadImage(imageEdited);
+    const imageUrl = await uploadImage(imageEdited, imageMime);
     if (!imageUrl) return false;
 
     const updateImageResult = await updateImage(imageUrl);
@@ -362,18 +363,14 @@ const editProfile = (props: Props) => {
             }}
           >
             {image && (
-              <ImageWithSkeleton
-                source={{
-                  uri: imageEdited || image,
-                }}
+              <Image
+                source={imageEdited || image}
                 style={{
                   width: 200,
                   aspectRatio: 1,
                   borderRadius: 100,
                 }}
-                skeletonWidth={200}
-                skeletonHeight={200}
-                skeletonBorderRadius={100}
+                transition={500}
               />
             )}
             <Pressable

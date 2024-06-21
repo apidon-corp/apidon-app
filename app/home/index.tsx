@@ -1,11 +1,19 @@
+import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import Post from "@/components/Post/Post";
 import { auth } from "@/firebase/client";
+import { useAtomValue } from "jotai";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, SafeAreaView } from "react-native";
 
 const index = () => {
   const [loading, setLoading] = useState(false);
   const [postDocPathArray, setPostDocPathArray] = useState<string[]>([]);
+
+  const screenParameters = useAtomValue(screenParametersAtom);
+
+  const createdPostDocPath = screenParameters.find(
+    (q) => q.queryId === "createdPostDocPath"
+  )?.value as string | undefined;
 
   /**
    * Fetches paths of recommended posts from server.
@@ -51,6 +59,9 @@ const index = () => {
 
       const postDocPathArrayFetched = result.postDocPathArray as string[];
 
+      if (createdPostDocPath)
+        postDocPathArrayFetched.unshift(createdPostDocPath);
+
       setLoading(false);
       return setPostDocPathArray(postDocPathArrayFetched);
     } catch (error) {
@@ -62,7 +73,7 @@ const index = () => {
 
   useEffect(() => {
     handleGetPostRecommendations();
-  }, []);
+  }, [createdPostDocPath]);
 
   if (loading)
     return (

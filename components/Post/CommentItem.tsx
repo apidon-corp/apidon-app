@@ -2,10 +2,10 @@ import { View, ActivityIndicator } from "react-native";
 import { Text } from "@/components/Text/Text";
 import React, { useEffect, useState } from "react";
 import { CommentServerData } from "@/types/Post";
-import { ImageWithSkeleton } from "../Image/ImageWithSkeleton";
 import { UserInServer } from "@/types/User";
 import { firestore } from "@/firebase/client";
 import { doc, getDoc } from "firebase/firestore";
+import { Image } from "expo-image";
 
 const CommentItem = ({ message, sender, ts }: CommentServerData) => {
   const [userData, setUserData] = useState<UserInServer | null>(null);
@@ -65,18 +65,14 @@ const CommentItem = ({ message, sender, ts }: CommentServerData) => {
         alignItems: "center",
       }}
     >
-      <ImageWithSkeleton
-        source={{
-          uri: userData.profilePhoto,
-        }}
+      <Image
+        source={userData.profilePhoto}
         style={{
           width: 50,
           height: 50,
           borderRadius: 25,
         }}
-        skeletonWidth={50}
-        skeletonHeight={50}
-        skeletonBorderRadius={25}
+        transition={500}
       />
       <View
         style={{

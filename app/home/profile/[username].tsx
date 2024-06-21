@@ -12,12 +12,12 @@ import {
 } from "react-native";
 
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
-import { ImageWithSkeleton } from "@/components/Image/ImageWithSkeleton";
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
 import { useSetAtom } from "jotai";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import FollowButton from "@/components/Follow/FollowButton";
+import { Image } from "expo-image";
 
 type Props = {};
 
@@ -165,18 +165,14 @@ const profile = (props: Props) => {
             gap: 5,
           }}
         >
-          <ImageWithSkeleton
-            source={{
-              uri: userData.profilePhoto,
-            }}
+          <Image
+            source={userData.profilePhoto}
             style={{
               height: 150,
               width: 150,
               borderRadius: 75,
             }}
-            skeletonWidth={150}
-            skeletonHeight={150}
-            skeletonBorderRadius={75}
+            transition={500}
           />
           <Text
             bold

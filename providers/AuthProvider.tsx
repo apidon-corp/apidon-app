@@ -41,7 +41,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
 
     if (currentUserDisplayName) {
       setAuthStatus("authenticated");
-      router.replace(`/home`);
+      router.replace(`/home/postCreate`);
     } else {
       setAuthStatus("unauthenticated");
       router.replace("/");

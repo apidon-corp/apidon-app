@@ -12,7 +12,6 @@ import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useRef, useState } from "react";
-import { ImageWithSkeleton } from "../Image/ImageWithSkeleton";
 
 import { Entypo, FontAwesome } from "@expo/vector-icons";
 
@@ -22,6 +21,7 @@ import { router } from "expo-router";
 import { useSetAtom } from "jotai";
 import RateStar from "./Rating/RateStar";
 import Stars from "./Rating/Stars";
+import { Image } from "expo-image";
 
 type Props = {
   postDocPath: string;
@@ -230,18 +230,14 @@ const Post = ({ postDocPath }: Props) => {
               router.push(`/home/profile/${postSenderData.username}`);
             }}
           >
-            <ImageWithSkeleton
-              source={{
-                uri: postSenderData.profilePhoto,
-              }}
+            <Image
+              source={postSenderData.profilePhoto}
               style={{
                 width: 50,
                 height: 50,
                 borderRadius: 25,
               }}
-              skeletonWidth={50}
-              skeletonHeight={50}
-              skeletonBorderRadius={25}
+              transition={500}
             />
             <View
               id="username-fullname-time"
@@ -303,17 +299,13 @@ const Post = ({ postDocPath }: Props) => {
         </View>
 
         {postDocData.image && (
-          <ImageWithSkeleton
-            source={{
-              uri: postDocData.image,
-            }}
+          <Image
+            source={postDocData.image}
             style={{
               width: "100%",
               height: 350,
             }}
-            skeletonWidth="100%"
-            skeletonHeight={350}
-            skeletonBorderRadius={0}
+            transition={500}
           />
         )}
 
