@@ -5,9 +5,9 @@ const _layout = () => {
   return (
     <Stack>
       <Stack.Screen
-        name="likes"
+        name="rates"
         options={{
-          title: "Likes",
+          title: "Rates",
           presentation: "modal",
         }}
       />

@@ -23,7 +23,7 @@ const Stars = ({ score }: Props) => {
       {Array.from({ length: filledStarCount }).map((_, i) => (
         <FontAwesome name="star" size={24} color="white" key={i} />
       ))}
-      {halfStar && <FontAwesome name="star-half" size={24} color="white" />}
+      {halfStar && <FontAwesome name="star-half-full" size={24} color="white" />}
       {Array.from({ length: emptyStarCount }).map((_, i) => (
         <FontAwesome name="star-o" size={24} color="white" key={i} />
       ))}

@@ -4,8 +4,7 @@ export type PostServerData = {
   description: string;
   image: string;
 
-  likeCount: number;
-  likes: LikeServerData[];
+  rates:  RateData[];
 
   commentCount: number;
   comments: CommentServerData[];
@@ -25,7 +24,8 @@ export type CommentServerData = {
   ts: number;
 };
 
-export type LikeServerData = {
+export type RateData = {
   sender: string;
+  rate: number;
   ts: number;
 };

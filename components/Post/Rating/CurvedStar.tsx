@@ -13,7 +13,7 @@ const CurvedStar = ({ rateValue, index }: Props) => {
       <FontAwesome
         name={rateValue >= index + 1 ? "star" : "star-o"}
         size={40}
-        color="yellow"
+        color="white"
         style={{
           transform: [
             {

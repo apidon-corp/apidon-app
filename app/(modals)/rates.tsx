@@ -1,7 +1,7 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import UserCard from "@/components/User/UserCard";
 import { firestore } from "@/firebase/client";
-import { LikeServerData, PostServerData } from "@/types/Post";
+import { RateData, PostServerData } from "@/types/Post";
 import { doc, onSnapshot } from "firebase/firestore";
 import { useAtomValue } from "jotai";
 import React, { useEffect, useState } from "react";
@@ -15,7 +15,7 @@ const Likes = () => {
   )?.value as string;
 
   const [loading, setLoading] = useState(false);
-  const [likeData, setLikeData] = useState<LikeServerData[]>([]);
+  const [rateData, setRateData] = useState<RateData[]>([]);
 
   // Dynamic Data Fetching
   useEffect(() => {
@@ -33,7 +33,7 @@ const Likes = () => {
           return setLoading(false);
         }
         const postDocData = snapshot.data() as PostServerData;
-        setLikeData(postDocData.likes);
+        setRateData(postDocData.rates);
 
         return setLoading(false);
       },
@@ -79,7 +79,7 @@ const Likes = () => {
       }}
     >
       <FlatList
-        data={likeData}
+        data={rateData}
         renderItem={({ item }) => (
           <UserCard username={item.sender} key={item.sender} />
         )}

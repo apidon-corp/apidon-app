@@ -11,9 +11,9 @@ import { auth, firestore } from "@/firebase/client";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
-import { Entypo, FontAwesome } from "@expo/vector-icons";
+import { Entypo, Feather, FontAwesome } from "@expo/vector-icons";
 
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { formatDistanceToNow } from "date-fns";
@@ -44,6 +44,20 @@ const Post = ({ postDocPath }: Props) => {
 
   const animatedScaleValue = useRef(new Animated.Value(1)).current;
 
+  const overallRating = useMemo(() => {
+    if (!postDocData) return 0;
+
+    // Prevent 0-division
+    const rateCount = postDocData.rates.length ? postDocData.rates.length : 1;
+
+    const totalRates = postDocData.rates.reduce(
+      (acc, current) => acc + current.rate,
+      0
+    );
+
+    return totalRates / rateCount;
+  }, [postDocData?.rates]);
+
   const handleGetPostSenderInformation = async (senderUsername: string) => {
     try {
       const userDocRef = doc(firestore, `/users/${senderUsername}`);
@@ -60,10 +74,11 @@ const Post = ({ postDocPath }: Props) => {
     }
   };
 
-  const handleOpenLikeModal = () => {
+  const handleOpenRatesModal = () => {
     setScreenParameters([{ queryId: "postDocPath", value: postDocPath }]);
-    router.push("/(modals)/likes");
+    router.push("/(modals)/rates");
   };
+
   const handleOpenCommentsModal = () => {
     setScreenParameters([{ queryId: "postDocPath", value: postDocPath }]);
     router.push("/(modals)/comments");
@@ -318,23 +333,29 @@ const Post = ({ postDocPath }: Props) => {
           }}
         >
           <View
-            id="starts-star-comment"
+            id="stars-star-share"
             style={{
               width: "100%",
-              height: 50,
+              height: 75,
               flexDirection: "row",
               alignContent: "center",
               justifyContent: "space-between",
             }}
           >
-            <View
+            <Pressable
+              onPress={handleOpenRatesModal}
               style={{
                 width: "33%",
                 justifyContent: "center",
+                gap: 5,
               }}
             >
-              <Stars score={3.2} />
-            </View>
+              <Stars score={overallRating} />
+              <View style={{ flexDirection: "row" }}>
+                <Text bold>{overallRating}</Text>
+                <Text> average</Text>
+              </View>
+            </Pressable>
 
             <View
               style={{
@@ -344,7 +365,15 @@ const Post = ({ postDocPath }: Props) => {
                 position: "relative",
               }}
             >
-              <RateStar />
+              <RateStar
+                previousValue={
+                  postDocData.rates.find(
+                    (r) => r.sender === auth.currentUser?.displayName
+                  )?.rate
+                }
+                postDocPath={postDocPath}
+              />
+              <Pressable />
             </View>
 
             <View
@@ -352,9 +381,10 @@ const Post = ({ postDocPath }: Props) => {
                 width: "33%",
                 justifyContent: "center",
                 alignItems: "flex-end",
+                paddingRight: 5,
               }}
             >
-              <FontAwesome name="comments" size={30} color="white" />
+              <Feather name="share-2" size={24} color="white" />
             </View>
           </View>
 
@@ -388,7 +418,8 @@ const Post = ({ postDocPath }: Props) => {
                     color: "gray",
                   }}
                 >
-                  {postDocData.commentCount} comments
+                  {postDocData.commentCount ? postDocData.commentCount : 0}{" "}
+                  comments
                 </Text>
               </View>
             </View>
