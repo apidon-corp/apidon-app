@@ -394,68 +394,6 @@ const Post = ({ postDocPath }: Props) => {
             </View>
           </Pressable>
         </View>
-
-        {/* {postDocData.description && (
-          <Text
-            bold
-            style={{
-              fontSize: 15,
-              height: 25,
-              paddingHorizontal: 10,
-            }}
-          >
-            {postDocData.description}
-          </Text>
-        )} */}
-
-        {/* <View
-          id="footer"
-          style={{
-            width: "100%",
-            flexDirection: "row",
-            paddingHorizontal: 10,
-            gap: 10,
-          }}
-        >
-          <View
-            id="like"
-            style={{
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: 5,
-            }}
-          >
-            <AntDesign name="heart" size={24} color="red" />
-            <Pressable onPress={handleOpenLikeModal}>
-              <Text
-                style={{
-                  fontSize: 16,
-                }}
-              >
-                {postDocData.likeCount}
-              </Text>
-            </Pressable>
-          </View>
-          <Pressable
-            onPress={handleOpenCommentsModal}
-            style={{
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: 5,
-            }}
-          >
-            <FontAwesome name="comments-o" size={24} color="white" />
-            <Text
-              style={{
-                fontSize: 16,
-              }}
-            >
-              {postDocData.commentCount}
-            </Text>
-          </Pressable>
-        </View> */}
       </Animated.View>
     </>
   );

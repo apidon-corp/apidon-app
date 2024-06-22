@@ -13,7 +13,6 @@ import {
   View,
 } from "react-native";
 
-import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 
 import { auth, storage } from "@/firebase/client";
@@ -21,6 +20,7 @@ import { ref, uploadBytesResumable } from "firebase/storage";
 
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { apidonPink } from "@/constants/Colors";
+import createBlobFromURI from "@/utils/createBlobFromURI";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
@@ -57,19 +57,15 @@ const postCreate = (props: Props) => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 1,
+      quality: 0.2,
     });
 
     if (!result.canceled) {
       const pickedImage = result.assets[0];
 
-      if (!pickedImage.mimeType) {
-        console.error("Mime type not found");
-        return;
-      }
-
       setPickedImageURI(pickedImage.uri);
-      uploadImage(pickedImage.uri, pickedImage.mimeType);
+
+      uploadImage(pickedImage.uri);
     }
   };
 
@@ -80,21 +76,7 @@ const postCreate = (props: Props) => {
     setTempImageLocation("");
   };
 
-  const getImageBlob = async (imageURI: string, mimeType: string) => {
-    const fileName = imageURI.substring(imageURI.lastIndexOf("/") + 1);
-
-    const newURI = `${FileSystem.documentDirectory}resumableUploadManager-${fileName}.toupload`;
-    await FileSystem.copyAsync({ from: imageURI, to: newURI });
-
-    const response = await fetch(newURI);
-    const blobData = await response.blob();
-
-    return new Blob([blobData], {
-      type: mimeType,
-    });
-  };
-
-  const uploadImage = async (image: string, mimeType: string) => {
+  const uploadImage = async (image: string) => {
     const displayName = auth.currentUser?.displayName;
     if (!displayName) {
       console.error("Display name not found");
@@ -104,15 +86,13 @@ const postCreate = (props: Props) => {
     setImageUploadLoading(true);
 
     try {
-      const extension = image.split(".").pop() || "png";
-      const blob = await getImageBlob(image, mimeType);
+      const blob = await createBlobFromURI(image);
 
-      const tempLocation = `users/${displayName}/postFiles/temp/${Date.now()}.${extension}`;
-
+      const tempLocation = `users/${displayName}/postFiles/temp/${Date.now()}.jpg`;
       const storageRef = ref(storage, tempLocation);
 
       const uploadTask = uploadBytesResumable(storageRef, blob, {
-        contentType: mimeType,
+        contentType: "image/jpeg",
       });
 
       uploadTask.on(

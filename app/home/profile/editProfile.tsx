@@ -16,16 +16,14 @@ import {
 
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { auth, storage } from "@/firebase/client";
-import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 
+import createBlobFromURI from "@/utils/createBlobFromURI";
+import { Image } from "expo-image";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { useAtomValue } from "jotai";
-import { Image } from "expo-image";
 
-type Props = {};
-
-const editProfile = (props: Props) => {
+const editProfile = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
 
   const fullname = screenParameters.find((p) => p.queryId === "fullname")
@@ -41,7 +39,6 @@ const editProfile = (props: Props) => {
   const [isFullnameChanged, setIsFullnameChanged] = useState(false);
 
   const [imageEdited, setImageEdited] = useState("");
-  const [imageMime, setImageMime] = useState("");
 
   const containerRef = useRef<null | View>(null);
   const screenHeight = Dimensions.get("window").height;
@@ -149,12 +146,11 @@ const editProfile = (props: Props) => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 1,
+      quality: 0.2,
     });
 
     if (!result.canceled) {
       setImageEdited(result.assets[0].uri);
-      setImageMime(result.assets[0].mimeType || "image/png");
     }
   };
 
@@ -177,7 +173,7 @@ const editProfile = (props: Props) => {
     setLoading(false);
   };
 
-  const uploadImage = async (image: string, mimeType: string) => {
+  const uploadImage = async (image: string) => {
     const displayName = auth.currentUser?.displayName;
     if (!displayName) {
       console.error("Display name not found");
@@ -185,15 +181,12 @@ const editProfile = (props: Props) => {
     }
 
     try {
-      const extension = image.split(".").pop() || "png";
-      const path = `users/${displayName}/profilePhoto.${extension}`;
+      const path = `users/${displayName}/profilePhoto.jpg`;
       const storageRef = ref(storage, path);
 
-      const blob = await getImageBlob(image, mimeType);
+      const blob = await createBlobFromURI(image);
 
-      await uploadBytesResumable(storageRef, blob, {
-        contentType: mimeType,
-      });
+      await uploadBytesResumable(storageRef, blob);
 
       const downloadURL = await getDownloadURL(storageRef);
 
@@ -202,20 +195,6 @@ const editProfile = (props: Props) => {
       console.error("Error on updating profile image: ", error);
       return false;
     }
-  };
-
-  const getImageBlob = async (imageURI: string, mimeType: string) => {
-    const fileName = imageURI.substring(imageURI.lastIndexOf("/") + 1);
-
-    const newURI = `${FileSystem.documentDirectory}resumableUploadManager-${fileName}.toupload`;
-    await FileSystem.copyAsync({ from: imageURI, to: newURI });
-
-    const response = await fetch(newURI);
-    const blobData = await response.blob();
-
-    return new Blob([blobData], {
-      type: mimeType,
-    });
   };
 
   const updateImage = async (imageURL: string) => {
@@ -266,7 +245,7 @@ const editProfile = (props: Props) => {
   const imageOperationsExecutor = async () => {
     if (imageEdited.length === 0) return true;
 
-    const imageUrl = await uploadImage(imageEdited, imageMime);
+    const imageUrl = await uploadImage(imageEdited);
     if (!imageUrl) return false;
 
     const updateImageResult = await updateImage(imageUrl);
