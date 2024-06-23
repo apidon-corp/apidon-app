@@ -13,7 +13,13 @@ import { UserInServer } from "@/types/User";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-import { Entypo, Feather, FontAwesome } from "@expo/vector-icons";
+import {
+  Entypo,
+  Feather,
+  FontAwesome,
+  FontAwesome6,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
 
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { formatDistanceToNow } from "date-fns";
@@ -292,23 +298,8 @@ const Post = ({ postDocPath }: Props) => {
             </View>
           </Pressable>
           {doesOwnPost && (
-            <Pressable
-              style={{
-                borderWidth: 1,
-                borderColor: "red",
-                borderRadius: 5,
-                padding: 5,
-              }}
-              onPress={handleDeleteButton}
-            >
-              <Text
-                style={{
-                  fontSize: 13,
-                }}
-                bold
-              >
-                Delete
-              </Text>
+            <Pressable onPress={handleDeleteButton}>
+              <Feather name="delete" size={24} color="red" />
             </Pressable>
           )}
         </View>

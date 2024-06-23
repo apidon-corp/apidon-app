@@ -10,6 +10,7 @@ import AuthProvider from "@/providers/AuthProvider";
 import { StatusBar } from "react-native";
 
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export {
   // Catch any errors thrown by the Layout component.

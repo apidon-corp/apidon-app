@@ -299,27 +299,43 @@ const profile = (props: Props) => {
             </View>
           </View>
           {userOwnsPage ? (
-            <Pressable
-              onPress={handleEditProfileButton}
-              style={{
-                borderColor: apidonPink,
-                borderWidth: 1,
-                borderRadius: 10,
-                paddingHorizontal: 15,
-                paddingVertical: 5,
-                marginTop: 10,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 14,
-                  textAlign: "center",
+            <>
+              <Pressable
+                onPress={() => {
+                  auth.signOut();
                 }}
-                bold
               >
-                Edit Profile
-              </Text>
-            </Pressable>
+                <Text
+                  bold
+                  style={{
+                    color: "red",
+                  }}
+                >
+                  Sign Out
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={handleEditProfileButton}
+                style={{
+                  borderColor: apidonPink,
+                  borderWidth: 1,
+                  borderRadius: 10,
+                  paddingHorizontal: 15,
+                  paddingVertical: 5,
+                  marginTop: 10,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 14,
+                    textAlign: "center",
+                  }}
+                  bold
+                >
+                  Edit Profile
+                </Text>
+              </Pressable>
+            </>
           ) : (
             <FollowButton username={username} />
           )}
