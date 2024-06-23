@@ -251,6 +251,7 @@ const comments = () => {
     <View
       style={{
         flex: 1,
+        paddingBottom : 100,
       }}
     >
       <FlatList

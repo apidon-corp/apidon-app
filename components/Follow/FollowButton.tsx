@@ -1,10 +1,10 @@
-import { ActivityIndicator, Pressable, View } from "react-native";
 import { Text } from "@/components/Text/Text";
+import { ActivityIndicator, Pressable } from "react-native";
 
-import React, { useEffect, useState } from "react";
 import { apidonPink } from "@/constants/Colors";
-import { auth } from "@/firebase/client";
-import { FollowStatusAPIResponseBody } from "@/types/ApiResponses";
+import { auth, firestore } from "@/firebase/client";
+import { doc, onSnapshot } from "firebase/firestore";
+import React, { useEffect, useState } from "react";
 
 type Props = {
   username: string | undefined;
@@ -17,58 +17,8 @@ const FollowButton = ({ username }: Props) => {
 
   const [followLoading, setFollowLoading] = useState(false);
 
-  const handleGetFollowStatus = async () => {
-    if (loading) return;
-
-    const currentUserAuthObject = auth.currentUser;
-    if (!currentUserAuthObject) return console.error("No user found!");
-
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl)
-      return console.error("User panel base url couldnt fetch from .env file");
-
-    if (!username) return console.error("Username is not defined");
-
-    setLoading(true);
-
-    try {
-      const idToken = await currentUserAuthObject.getIdToken();
-
-      const route = `${userPanelBaseUrl}/api/social/followStatus`;
-
-      const response = await fetch(route, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({
-          suspectUsername: username,
-        }),
-      });
-
-      if (!response.ok) {
-        setLoading(false);
-        return console.error(
-          "Response from followStatus is not okay: ",
-          await response.json()
-        );
-      }
-
-      const result = (await response.json()) as FollowStatusAPIResponseBody;
-
-      setLoading(false);
-      return setDoesFollow(result.doesRequesterFollowsSuspect);
-    } catch (error) {
-      setLoading(false);
-      return console.error("Error on fetching followStatus API: : ", error);
-    }
-  };
-
   const handleFollowButton = async (action: "follow" | "unfollow") => {
     if (followLoading) return;
-
-    setFollowLoading(true);
 
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return console.error("No user found!");
@@ -78,6 +28,8 @@ const FollowButton = ({ username }: Props) => {
       return console.error("User panel base url couldnt fetch from .env file");
 
     const route = `${userPanelBaseUrl}/api/social/follow`;
+
+    setFollowLoading(true);
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
@@ -97,7 +49,7 @@ const FollowButton = ({ username }: Props) => {
       if (!response.ok) {
         console.error(
           "Response from follow API is not okay: ",
-          await response.json()
+          await response.text()
         );
         return setFollowLoading(false);
       }
@@ -110,9 +62,40 @@ const FollowButton = ({ username }: Props) => {
     }
   };
 
+  // Dynamic Data Fetching / Current User
   useEffect(() => {
-    handleGetFollowStatus();
-  }, [username]);
+    if (loading) return;
+
+    const displayName = auth.currentUser?.displayName;
+    if (!displayName) return;
+
+    if (!username) return;
+
+    const postSenderFollowingDocOnCurrentUser = doc(
+      firestore,
+      `/users/${username}/followers/${displayName}`
+    );
+
+    setLoading(true);
+
+    const unsubscribe = onSnapshot(
+      postSenderFollowingDocOnCurrentUser,
+      (snapshot) => {
+        if (!snapshot.exists()) {
+          setDoesFollow(false);
+        } else {
+          setDoesFollow(true);
+        }
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Error on getting realtime data: ", error);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [auth.currentUser, username]);
 
   return (
     <Pressable

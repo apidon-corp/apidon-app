@@ -19,9 +19,7 @@ import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import FollowButton from "@/components/Follow/FollowButton";
 import { Image } from "expo-image";
 
-type Props = {};
-
-const profile = (props: Props) => {
+const profile = () => {
   const { username } = useLocalSearchParams<{ username: string }>();
 
   const [loading, setLoading] = useState(false);

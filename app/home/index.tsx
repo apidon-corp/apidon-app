@@ -72,8 +72,21 @@ const index = () => {
   };
 
   useEffect(() => {
-    handleGetPostRecommendations();
+    if (!createdPostDocPath) return;
+
+    const previousValues = postDocPathArray;
+    if (previousValues.includes(createdPostDocPath)) return;
+
+    previousValues.unshift(createdPostDocPath);
+
+    const updatedValues = previousValues;
+
+    setPostDocPathArray(updatedValues);
   }, [createdPostDocPath]);
+
+  useEffect(() => {
+    handleGetPostRecommendations();
+  }, []);
 
   if (loading)
     return (
@@ -99,6 +112,7 @@ const index = () => {
         contentContainerStyle={{
           gap: 20,
         }}
+        keyExtractor={(item) => item}
         data={postDocPathArray}
         renderItem={({ item }) => <Post postDocPath={item} key={item} />}
         showsVerticalScrollIndicator={false}

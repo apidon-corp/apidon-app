@@ -44,7 +44,9 @@ const Post = ({ postDocPath }: Props) => {
   const setScreenParameters = useSetAtom(screenParametersAtom);
 
   const [doesOwnPost, setDoesOwnPost] = useState(false);
+
   const [doesFollow, setDoesFollow] = useState(true);
+  const [followLoading, setFollowLoading] = useState(false);
 
   const [postDeleted, setPostDeleted] = useState(false);
 
@@ -165,7 +167,54 @@ const Post = ({ postDocPath }: Props) => {
       return console.error("Error on deleting post: ", error);
     }
   };
-  // Dynamic Data Fetching
+
+  const handleFollowButton = async () => {
+    if (followLoading) return;
+    if (!postDocData?.senderUsername) return;
+
+    const currentUserAuthObject = auth.currentUser;
+    if (!currentUserAuthObject) return console.error("No user found!");
+
+    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
+    if (!userPanelBaseUrl)
+      return console.error("User panel base url couldnt fetch from .env file");
+
+    const route = `${userPanelBaseUrl}/api/social/follow`;
+
+    setFollowLoading(true);
+
+    try {
+      const idToken = await currentUserAuthObject.getIdToken();
+
+      const response = await fetch(route, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          operationTo: postDocData.senderUsername,
+          opCode: 1,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error(
+          "Response from follow API is not okay: ",
+          await response.text()
+        );
+        return setFollowLoading(false);
+      }
+
+      setDoesFollow(true);
+      return setFollowLoading(false);
+    } catch (error) {
+      console.error("Error on fetching follow API: : ", error);
+      return setFollowLoading(false);
+    }
+  };
+
+  // Dynamic Data Fetching / Post Object
   useEffect(() => {
     if (postDeleted) return;
 
@@ -199,6 +248,34 @@ const Post = ({ postDocPath }: Props) => {
 
     return () => unsubscribe();
   }, [postDocPath, auth, postDeleted]);
+
+  // Dynamic Data Fetching / Current User
+  useEffect(() => {
+    const displayName = auth.currentUser?.displayName;
+    if (!displayName) return;
+
+    if (!postDocData) return;
+
+    const postSenderFollowingDocOnCurrentUser = doc(
+      firestore,
+      `/users/${postDocData.senderUsername}/followers/${displayName}`
+    );
+    const unsubscribe = onSnapshot(
+      postSenderFollowingDocOnCurrentUser,
+      (snapshot) => {
+        if (!snapshot.exists()) {
+          setDoesFollow(false);
+        } else {
+          setDoesFollow(true);
+        }
+      },
+      (error) => {
+        console.error("Error on getting realtime data: ", error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [auth.currentUser, postDocData?.senderUsername]);
 
   if (loading)
     return (
@@ -290,17 +367,33 @@ const Post = ({ postDocPath }: Props) => {
                     {postSenderData.fullname}
                   </Text>
                   <Entypo name="dot-single" size={15} color="gray" />
-                  <Text style={{ fontSize: 15, color: "gray" }}>
+                  <Text style={{ fontSize: 12, color: "gray" }}>
                     {formatDistanceToNow(new Date(postDocData.creationTime))}
                   </Text>
                 </View>
               </View>
             </View>
           </Pressable>
-          {doesOwnPost && (
+          {doesOwnPost ? (
             <Pressable onPress={handleDeleteButton}>
               <Feather name="delete" size={24} color="red" />
             </Pressable>
+          ) : (
+            !doesFollow && (
+              <Pressable
+                onPress={handleFollowButton}
+                style={{
+                  padding: 5,
+                }}
+                disabled={followLoading}
+              >
+                {followLoading ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Feather name="user-plus" size={24} color="white" />
+                )}
+              </Pressable>
+            )
           )}
         </View>
 

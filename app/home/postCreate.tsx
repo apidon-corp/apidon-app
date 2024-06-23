@@ -279,164 +279,162 @@ const postCreate = (props: Props) => {
   }, [canPost]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <ScrollView
-        contentContainerStyle={{
-          flex: 1,
+    <ScrollView
+      style={{
+        flex: 1,
+      }}
+      keyboardShouldPersistTaps="handled"
+    >
+      <Animated.View
+        ref={containerRef}
+        style={{
+          width: "100%",
+          alignItems: "center",
+          gap: 10,
+          transform: [
+            {
+              translateY: animatedTranslateValue,
+            },
+          ],
         }}
-        keyboardShouldPersistTaps="handled"
       >
-        <Animated.View
-          ref={containerRef}
+        <View
+          id="image-upload-area"
           style={{
             width: "100%",
-            alignItems: "center",
-            gap: 10,
-            transform: [
-              {
-                translateY: animatedTranslateValue,
-              },
-            ],
+            padding: 10,
+            gap: 5,
           }}
         >
-          <View
-            id="image-upload-area"
+          <Text
+            bold
             style={{
-              width: "100%",
-              padding: 10,
-              gap: 5,
+              fontSize: 20,
             }}
           >
-            <Text
-              bold
+            Image
+          </Text>
+          {pickedImageURI ? (
+            <View
               style={{
-                fontSize: 20,
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+                position: "relative",
               }}
             >
-              Image
-            </Text>
-            {pickedImageURI ? (
-              <View
+              {imageUploadLoading && (
+                <View
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "100%",
+                    height: 350,
+                    zIndex: 1,
+                    backgroundColor: "rgba(0,0,0,0.5)",
+                  }}
+                >
+                  <AnimatedCircularProgress
+                    size={120}
+                    width={15}
+                    fill={imageUploadPercentage}
+                    tintColor={apidonPink}
+                    backgroundColor="gray"
+                  />
+                </View>
+              )}
+
+              <Image
+                source={pickedImageURI}
                 style={{
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 10,
-                  position: "relative",
+                  width: "100%",
+                  height: 350,
+                  borderRadius: 10,
+                }}
+                transition={500}
+              />
+              <Pressable
+                onPress={handleRemoveImageButton}
+                style={{
+                  borderWidth: 1,
+                  borderColor: "gray",
+                  padding: 10,
+                  borderRadius: 20,
                 }}
               >
-                {imageUploadLoading && (
-                  <View
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: "100%",
-                      height: 350,
-                      zIndex: 1,
-                      backgroundColor: "rgba(0,0,0,0.5)",
-                    }}
-                  >
-                    <AnimatedCircularProgress
-                      size={120}
-                      width={15}
-                      fill={imageUploadPercentage}
-                      tintColor={apidonPink}
-                      backgroundColor="gray"
-                    />
-                  </View>
-                )}
-
-                <Image
-                  source={pickedImageURI}
-                  style={{
-                    width: "100%",
-                    height: 350,
-                    borderRadius: 10,
-                  }}
-                  transition={500}
-                />
-                <Pressable
-                  onPress={handleRemoveImageButton}
-                  style={{
-                    borderWidth: 1,
-                    borderColor: "gray",
-                    padding: 10,
-                    borderRadius: 20,
-                  }}
-                >
-                  <Text>Remove Image</Text>
-                </Pressable>
-              </View>
-            ) : (
-              <Pressable onPress={handlePickImage}>
-                <View
-                  id="image-placeholder"
-                  style={{
-                    width: "100%",
-                    height: 350,
-                    backgroundColor: "rgba(255,255,255,0.1)",
-                    borderRadius: 10,
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <Feather name="upload" size={40} color="white" />
-                </View>
+                <Text>Remove Image</Text>
               </Pressable>
-            )}
-          </View>
-          <View
-            id="description-area"
-            style={{
-              width: "100%",
-              padding: 10,
-              gap: 5,
-            }}
-          >
-            <Text
-              bold
-              style={{
-                fontSize: 20,
-              }}
-            >
-              Description
-            </Text>
-            <TextInput
-              style={{
-                borderWidth: 1,
-                borderColor: "gray",
-                padding: 10,
-                borderRadius: 10,
-                color: "white",
-              }}
-              onChangeText={onDescriptionChange}
-              value={description}
-            />
-          </View>
-          <Animated.View
-            id="button"
-            style={{
-              opacity: animatedOpacityValue,
-            }}
-          >
-            <Pressable
-              onPress={handlePostButton}
-              disabled={!canPost}
-              style={{
-                paddingVertical: 10,
-                paddingHorizontal: 20,
-                borderRadius: 10,
-                borderWidth: 1,
-                borderColor: "white",
-              }}
-            >
-              {loading ? <ActivityIndicator /> : <Text bold>Post</Text>}
+            </View>
+          ) : (
+            <Pressable onPress={handlePickImage}>
+              <View
+                id="image-placeholder"
+                style={{
+                  width: "100%",
+                  height: 350,
+                  backgroundColor: "rgba(255,255,255,0.1)",
+                  borderRadius: 10,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Feather name="upload" size={40} color="white" />
+              </View>
             </Pressable>
-          </Animated.View>
+          )}
+        </View>
+        <View
+          id="description-area"
+          style={{
+            width: "100%",
+            padding: 10,
+            gap: 5,
+          }}
+        >
+          <Text
+            bold
+            style={{
+              fontSize: 20,
+            }}
+          >
+            Description
+          </Text>
+          <TextInput
+            style={{
+              borderWidth: 1,
+              borderColor: "gray",
+              padding: 10,
+              borderRadius: 10,
+              color: "white",
+            }}
+            onChangeText={onDescriptionChange}
+            value={description}
+          />
+        </View>
+        <Animated.View
+          id="button"
+          style={{
+            opacity: animatedOpacityValue,
+          }}
+        >
+          <Pressable
+            onPress={handlePostButton}
+            disabled={!canPost}
+            style={{
+              paddingVertical: 10,
+              paddingHorizontal: 20,
+              borderRadius: 10,
+              borderWidth: 1,
+              borderColor: "white",
+            }}
+          >
+            {loading ? <ActivityIndicator /> : <Text bold>Post</Text>}
+          </Pressable>
         </Animated.View>
-      </ScrollView>
-    </SafeAreaView>
+      </Animated.View>
+    </ScrollView>
   );
 };
 

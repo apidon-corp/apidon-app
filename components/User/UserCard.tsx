@@ -119,7 +119,7 @@ const UserCard = ({ username }: Props) => {
       if (!response.ok) {
         console.error(
           "Response from follow API is not okay: ",
-          await response.json()
+          await response.text()
         );
         return setFollowLoading(false);
       }
