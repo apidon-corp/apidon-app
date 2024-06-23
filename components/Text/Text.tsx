@@ -36,7 +36,7 @@ export const Text: React.FC<CustomTextProps> = ({
 const styles = StyleSheet.create({
   defaultStyle: {
     color: "white",
-    fontSize: 20,
+    fontSize: 14,
     fontFamily: "Poppins-Regular",
   },
 });

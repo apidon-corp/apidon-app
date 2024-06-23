@@ -41,7 +41,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
 
     if (currentUserDisplayName) {
       setAuthStatus("authenticated");
-      router.replace(`/home/profile/${currentUserDisplayName}`);
+      router.replace(`/home`);
     } else {
       setAuthStatus("unauthenticated");
       router.replace("/");

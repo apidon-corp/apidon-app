@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
-import FollowItem from "@/components/FollowItem/FollowItem";
+import UserCard from "@/components/User/UserCard";
 import { auth, firestore } from "@/firebase/client";
 import { FollowerDocData } from "@/types/User";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 
 type FollowingData = {
   following: string;
@@ -85,7 +85,7 @@ const following = () => {
         <FlatList
           data={followingsData}
           renderItem={({ item }) => (
-            <FollowItem username={item.following} key={item.following} />
+            <UserCard username={item.following} key={item.following} />
           )}
           contentContainerStyle={{
             padding: 10,

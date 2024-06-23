@@ -1,8 +1,9 @@
-import { Tabs } from "expo-router";
+import { Stack, Tabs } from "expo-router";
 import React from "react";
 
-import { Entypo, Feather, Ionicons, FontAwesome } from "@expo/vector-icons";
-import { StatusBar } from "react-native";
+import { Text } from "@/components/Text/Text";
+import { Entypo, Feather } from "@expo/vector-icons";
+import { StatusBar, View } from "react-native";
 
 type Props = {};
 
@@ -34,7 +35,7 @@ const _layout = (props: Props) => {
               <Entypo name="circle-with-plus" size={25} color="white" />
             ),
             tabBarLabel: () => <></>,
-            headerShown: false,
+            title: "Create Post",
           }}
         />
         <Tabs.Screen

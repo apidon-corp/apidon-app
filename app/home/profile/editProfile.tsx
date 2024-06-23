@@ -15,21 +15,15 @@ import {
 } from "react-native";
 
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
-import { ImageWithSkeleton } from "@/components/Image/ImageWithSkeleton";
 import { auth, storage } from "@/firebase/client";
-import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 
-import {
-  getDownloadURL,
-  ref,
-  uploadBytesResumable
-} from "firebase/storage";
+import createBlobFromURI from "@/utils/createBlobFromURI";
+import { Image } from "expo-image";
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { useAtomValue } from "jotai";
 
-type Props = {};
-
-const editProfile = (props: Props) => {
+const editProfile = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
 
   const fullname = screenParameters.find((p) => p.queryId === "fullname")
@@ -152,7 +146,7 @@ const editProfile = (props: Props) => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 1,
+      quality: 0.2,
     });
 
     if (!result.canceled) {
@@ -187,10 +181,10 @@ const editProfile = (props: Props) => {
     }
 
     try {
-      const path = `users/${displayName}/profilePhoto`;
+      const path = `users/${displayName}/profilePhoto.jpg`;
       const storageRef = ref(storage, path);
 
-      const blob = await getImageBlob(image);
+      const blob = await createBlobFromURI(image);
 
       await uploadBytesResumable(storageRef, blob);
 
@@ -201,20 +195,6 @@ const editProfile = (props: Props) => {
       console.error("Error on updating profile image: ", error);
       return false;
     }
-  };
-
-  const getImageBlob = async (imageURI: string) => {
-    const fileName = imageURI.substring(imageURI.lastIndexOf("/") + 1);
-
-    const newURI = `${FileSystem.documentDirectory}resumableUploadManager-${fileName}.toupload`;
-    await FileSystem.copyAsync({ from: imageURI, to: newURI });
-
-    const response = await fetch(newURI);
-    const blobData = await response.blob();
-
-    return new Blob([blobData], {
-      type: blobData.type,
-    });
   };
 
   const updateImage = async (imageURL: string) => {
@@ -362,18 +342,14 @@ const editProfile = (props: Props) => {
             }}
           >
             {image && (
-              <ImageWithSkeleton
-                source={{
-                  uri: imageEdited || image,
-                }}
+              <Image
+                source={imageEdited || image}
                 style={{
                   width: 200,
                   aspectRatio: 1,
                   borderRadius: 100,
                 }}
-                skeletonWidth={200}
-                skeletonHeight={200}
-                skeletonBorderRadius={100}
+                transition={500}
               />
             )}
             <Pressable

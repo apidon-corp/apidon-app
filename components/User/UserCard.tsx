@@ -1,19 +1,19 @@
 import { ActivityIndicator, Pressable, SafeAreaView, View } from "react-native";
 import React, { useEffect, useState } from "react";
 import { Text } from "@/components/Text/Text";
-import { ImageWithSkeleton } from "../Image/ImageWithSkeleton";
 import { UserInServer } from "@/types/User";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, firestore } from "@/firebase/client";
 import { FollowStatusAPIResponseBody } from "@/types/ApiResponses";
 import { apidonPink } from "@/constants/Colors";
 import { router } from "expo-router";
+import { Image } from "expo-image";
 
 type Props = {
   username: string;
 };
 
-const FollowItem = ({ username }: Props) => {
+const UserCard = ({ username }: Props) => {
   const [userData, setUserData] = useState<UserInServer>();
   const [loading, setLoading] = useState(false);
 
@@ -119,7 +119,7 @@ const FollowItem = ({ username }: Props) => {
       if (!response.ok) {
         console.error(
           "Response from follow API is not okay: ",
-          await response.json()
+          await response.text()
         );
         return setFollowLoading(false);
       }
@@ -170,18 +170,14 @@ const FollowItem = ({ username }: Props) => {
             router.push(`/home/profile/${username}`);
           }}
         >
-          <ImageWithSkeleton
-            source={{
-              uri: userData.profilePhoto,
-            }}
+          <Image
+            source={userData.profilePhoto}
             style={{
               width: 50,
               height: 50,
               borderRadius: 25,
             }}
-            skeletonWidth={50}
-            skeletonHeight={50}
-            skeletonBorderRadius={25}
+            transition={500}
           />
           <View>
             <Text
@@ -239,4 +235,4 @@ const FollowItem = ({ username }: Props) => {
   );
 };
 
-export default FollowItem;
+export default UserCard;
