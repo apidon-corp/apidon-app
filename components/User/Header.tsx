@@ -207,6 +207,12 @@ const Header = ({ username }: Props) => {
           >
             <Pressable
               onPress={() => {
+                setScreenParams([
+                  {
+                    queryId: "username",
+                    value: username,
+                  },
+                ]);
                 router.push("/home/profile/followers");
               }}
               style={{
@@ -246,6 +252,12 @@ const Header = ({ username }: Props) => {
                 gap: 4,
               }}
               onPress={() => {
+                setScreenParams([
+                  {
+                    queryId: "username",
+                    value: username,
+                  },
+                ]);
                 router.push("/home/profile/following");
               }}
             >
