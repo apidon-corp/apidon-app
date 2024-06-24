@@ -48,6 +48,7 @@ const Post = ({ postDocPath }: Props) => {
   const [doesFollow, setDoesFollow] = useState(true);
   const [followLoading, setFollowLoading] = useState(false);
 
+  const [postDeleteLoading, setPostDeleteLoading] = useState(false);
   const [postDeleted, setPostDeleted] = useState(false);
 
   const animatedScaleValue = useRef(new Animated.Value(1)).current;
@@ -99,6 +100,7 @@ const Post = ({ postDocPath }: Props) => {
         style: "cancel",
       },
       {
+        style: "destructive",
         text: "Delete",
         onPress: handleDeletePost,
       },
@@ -106,6 +108,8 @@ const Post = ({ postDocPath }: Props) => {
   };
 
   const handleDeletePost = async () => {
+    if (postDeleteLoading) return;
+
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return console.log("No user is logged in.");
 
@@ -115,15 +119,7 @@ const Post = ({ postDocPath }: Props) => {
 
     const route = `${userPanelBaseUrl}/api/postv2/postDelete`;
 
-    Animated.timing(animatedScaleValue, {
-      toValue: 0,
-      duration: 250,
-      useNativeDriver: true,
-    }).start();
-
-    setTimeout(() => {
-      setPostDeleted(true);
-    }, 250);
+    setPostDeleteLoading(true);
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
@@ -141,29 +137,23 @@ const Post = ({ postDocPath }: Props) => {
 
       if (!response.ok) {
         const message = await response.text();
-
-        Animated.timing(animatedScaleValue, {
-          toValue: 1,
-          duration: 250,
-          useNativeDriver: true,
-        }).start();
-
-        setPostDeleted(false);
-
+        setPostDeleteLoading(false);
         return console.error(
           "Response from deletePost API is not okay: ",
           message
         );
       }
 
-      return console.log("Post Deleted Successfully");
-    } catch (error) {
       Animated.timing(animatedScaleValue, {
-        toValue: 1,
+        toValue: 0,
         duration: 250,
         useNativeDriver: true,
-      }).start();
-
+      }).start(() => {
+        setPostDeleteLoading(false);
+        return setPostDeleted(true);
+      });
+    } catch (error) {
+      setPostDeleteLoading(false);
       return console.error("Error on deleting post: ", error);
     }
   };
@@ -375,8 +365,15 @@ const Post = ({ postDocPath }: Props) => {
             </View>
           </Pressable>
           {doesOwnPost ? (
-            <Pressable onPress={handleDeleteButton}>
-              <Feather name="delete" size={24} color="red" />
+            <Pressable
+              onPress={handleDeleteButton}
+              disabled={postDeleteLoading}
+            >
+              {postDeleteLoading ? (
+                <ActivityIndicator color="red" />
+              ) : (
+                <Feather name="delete" size={24} color="red" />
+              )}
             </Pressable>
           ) : (
             !doesFollow && (

@@ -1,3 +1,5 @@
+import { FrenletServerData } from "./Frenlet";
+
 export type CheckThereIsLinkedAccountApiResponseBody = {
   email: string;
   username: string;
@@ -33,4 +35,9 @@ export type SignUpApiErrorResponseBody = {
 export type FollowStatusAPIResponseBody = {
   doesRequesterFollowsSuspect: boolean;
   doesSuspectFollowsRequester: boolean;
+};
+
+export type GetPersonalizedUserFeedAPIResponseBody = {
+  postDocPaths: string[];
+  frenletDocPaths: string[];
 };
