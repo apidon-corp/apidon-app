@@ -11,6 +11,7 @@ import { Text } from "@/components/Text/Text";
 import { formatDistanceToNow } from "date-fns";
 import { FlatList } from "react-native-gesture-handler";
 import Replet from "@/components/Frenlet/Replet";
+import CreateReplet from "@/components/Frenlet/CreateReplet";
 
 const replets = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
@@ -92,6 +93,8 @@ const replets = () => {
     <View
       style={{
         padding: 10,
+        position: "relative",
+        flex: 1,
       }}
     >
       <View id="recap" style={{ width: "100%", alignItems: "center", gap: 5 }}>
@@ -139,12 +142,19 @@ const replets = () => {
                 frenletData.frenletSender,
               ]}
               repletData={item}
+              frenletDocPath={frenletDocPath}
               key={`${item.sender}-${frenletData.ts}`}
             />
           )}
           showsVerticalScrollIndicator={false}
           scrollEnabled={false}
         />
+      </View>
+      <View
+        id="send-replet"
+        style={{ position: "absolute", bottom: 20, left: 10, width: "100%" }}
+      >
+        <CreateReplet frenletDocPath={frenletDocPath} />
       </View>
     </View>
   );

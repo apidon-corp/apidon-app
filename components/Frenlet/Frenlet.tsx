@@ -1,4 +1,13 @@
+import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
+import { Text } from "@/components/Text/Text";
+import { apidonPink } from "@/constants/Colors";
+import { auth, firestore } from "@/firebase/client";
 import { FrenletServerData } from "@/types/Frenlet";
+import { UserInServer } from "@/types/User";
+import { Image } from "expo-image";
+import { router } from "expo-router";
+import { doc, onSnapshot } from "firebase/firestore";
+import { useSetAtom } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -7,16 +16,7 @@ import {
   Pressable,
   View,
 } from "react-native";
-import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
-import { Text } from "@/components/Text/Text";
-import { apidonPink } from "@/constants/Colors";
-import { auth, firestore } from "@/firebase/client";
-import { UserInServer } from "@/types/User";
-import { MaterialIcons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import { router } from "expo-router";
-import { doc, onSnapshot } from "firebase/firestore";
-import { useSetAtom } from "jotai";
+import Replet from "./Replet";
 
 type Props = {
   frenletDocPath: string;
@@ -239,15 +239,26 @@ const Frenlet = ({ frenletDocPath }: Props) => {
           {frenletData.frenletSender}
         </Text>
       </Pressable>
-      <View id="content" style={{ gap: 5, justifyContent: "center", flex: 1 }}>
+      <View id="content" style={{ gap: 20, flex: 1 }}>
         <Text
           bold
           style={{
             fontSize: 16,
           }}
         >
-          "{frenletData.message}"
+          {frenletData.message}
         </Text>
+        {frenletData.replies.length > 0 && (
+          <Replet
+            frenletOwners={[
+              frenletData.frenletReceiver,
+              frenletData.frenletSender,
+            ]}
+            repletData={frenletData.replies[0]}
+            frenletDocPath={frenletDocPath}
+          />
+        )}
+
         <Pressable
           onPress={() => {
             setScreenParameters([
@@ -277,7 +288,7 @@ const Frenlet = ({ frenletDocPath }: Props) => {
           </Text>
         </Pressable>
       </View>
-      {canDelete && (
+      {/* {canDelete && (
         <Pressable
           onPress={handleFrenletDeleteButton}
           style={{
@@ -292,7 +303,7 @@ const Frenlet = ({ frenletDocPath }: Props) => {
             <MaterialIcons name="delete-outline" size={32} color="red" />
           )}
         </Pressable>
-      )}
+      )} */}
     </Animated.View>
   );
 };

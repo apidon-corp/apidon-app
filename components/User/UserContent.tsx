@@ -43,6 +43,10 @@ const UserContent = ({ username }: Props) => {
       snapshot.docChanges().forEach((change) => {
         if (change.type === "added") {
           setPostDocPathArray((prev) => [change.doc.ref.path, ...prev]);
+        } else if (change.type === "removed") {
+          setPostDocPathArray((prev) =>
+            prev.filter((path) => path !== change.doc.ref.path)
+          );
         }
       });
     });
@@ -66,6 +70,10 @@ const UserContent = ({ username }: Props) => {
       snapshot.docChanges().forEach((change) => {
         if (change.type === "added") {
           setFrenletDocPaths((prev) => [change.doc.ref.path, ...prev]);
+        } else if (change.type === "removed") {
+          setFrenletDocPaths((prev) =>
+            prev.filter((path) => path !== change.doc.ref.path)
+          );
         }
       });
     });

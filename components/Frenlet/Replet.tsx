@@ -1,4 +1,4 @@
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, Pressable, Alert } from "react-native";
 import { Text } from "@/components/Text/Text";
 import React, { useEffect, useState } from "react";
 import { RepletServerData } from "@/types/Frenlet";
@@ -12,12 +12,14 @@ import { Entypo, Ionicons } from "@expo/vector-icons";
 type Props = {
   repletData: RepletServerData;
   frenletOwners: string[];
+  frenletDocPath: string;
 };
 
-const Replet = ({ repletData, frenletOwners }: Props) => {
+const Replet = ({ repletData, frenletOwners, frenletDocPath }: Props) => {
   const [senderData, setSenderData] = useState<UserInServer | null>(null);
 
   const [canDelete, setCanDelete] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     if (!repletData) return;
@@ -57,6 +59,69 @@ const Replet = ({ repletData, frenletOwners }: Props) => {
     const repletOwners = [repletData.sender, ...frenletOwners];
 
     setCanDelete(repletOwners.includes(displayName));
+  };
+
+  const handleDeleteRepletButton = () => {
+    Alert.alert(
+      "Delete Replet",
+      "Are you sure you want to delete this replet?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: deleteReplet,
+        },
+      ]
+    );
+  };
+
+  const deleteReplet = async () => {
+    if (deleteLoading) return;
+    if (!canDelete) return;
+
+    const currentUserAuthObject = auth.currentUser;
+    if (!currentUserAuthObject) return console.error("User is not logged");
+
+    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
+    if (!userPanelBaseUrl) {
+      return console.error("User panel base url couldnt fetch from .env file");
+    }
+    setDeleteLoading(true);
+
+    const route = `${userPanelBaseUrl}/api/frenlet/deleteReplet`;
+
+    try {
+      const idToken = await currentUserAuthObject.getIdToken();
+      const response = await fetch(route, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          frenletDocPath: frenletDocPath,
+          replet: repletData,
+        }),
+      });
+
+      if (!response.ok) {
+        setDeleteLoading(false);
+        return console.error(
+          "Response from deleteReplet API is not okay: ",
+          await response.text()
+        );
+      }
+
+      // Automatically deletes from UI.
+      return setDeleteLoading(false);
+    } catch (error) {
+      setDeleteLoading(false);
+      console.error("Error on deleting replet: ", error);
+    }
   };
 
   if (!repletData || !senderData) {
@@ -121,9 +186,18 @@ const Replet = ({ repletData, frenletOwners }: Props) => {
       </View>
 
       {canDelete && (
-        <View>
-          <Ionicons name="backspace" size={20} color="red" />
-        </View>
+        <Pressable
+          onPress={handleDeleteRepletButton}
+          style={{
+            justifyContent: "center",
+          }}
+        >
+          {deleteLoading ? (
+            <ActivityIndicator color="red" />
+          ) : (
+            <Ionicons name="backspace" size={20} color="red" />
+          )}
+        </Pressable>
       )}
     </View>
   );

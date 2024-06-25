@@ -174,9 +174,10 @@ const comments = () => {
 
   const handleSendComment = async () => {
     if (sendCommentLoading) return;
-    if (comment.length === 0) return;
 
-    setSendCommentLoading(true);
+    const trimmedComment = comment.trim();
+
+    if (trimmedComment.length === 0) return;
 
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return console.error("User is not logged");
@@ -185,6 +186,8 @@ const comments = () => {
     if (!userPanelBaseUrl) {
       return console.error("User panel base url couldnt fetch from .env file");
     }
+
+    setSendCommentLoading(true);
 
     const route = `${userPanelBaseUrl}/api/postv3/postComment`;
 
@@ -197,7 +200,7 @@ const comments = () => {
           authorization: `Bearer ${idToken}`,
         },
         body: JSON.stringify({
-          message: comment,
+          message: trimmedComment,
           postDocPath: postDocPath,
         }),
       });
@@ -251,7 +254,7 @@ const comments = () => {
     <View
       style={{
         flex: 1,
-        paddingBottom : 100,
+        paddingBottom: 100,
       }}
     >
       <FlatList
