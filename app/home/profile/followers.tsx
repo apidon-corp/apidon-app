@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 
+import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import UserCard from "@/components/User/UserCard";
-import { auth, firestore } from "@/firebase/client";
+import { firestore } from "@/firebase/client";
 import { FollowerDocData } from "@/types/User";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { useAtomValue } from "jotai";
 
 type FollowerData = {
   follower: string;
@@ -12,6 +14,11 @@ type FollowerData = {
 };
 
 const followers = () => {
+  const screenParameters = useAtomValue(screenParametersAtom);
+  const username = screenParameters.find(
+    (query) => query.queryId === "username"
+  )?.value as string;
+
   const [loading, setLoading] = useState(false);
 
   const [followerDatas, setFollowerDatas] = useState<FollowerData[]>([]);
@@ -22,19 +29,14 @@ const followers = () => {
 
   const handleGetInitialData = async () => {
     if (loading) return;
+    if (!username) return;
 
     setLoading(true);
-
-    const displayName = auth.currentUser?.displayName;
-    if (!displayName) {
-      console.error("Display name not found");
-      return setLoading(false);
-    }
 
     try {
       const followersCollectionRef = collection(
         firestore,
-        `/users/${displayName}/followers`
+        `/users/${username}/followers`
       );
 
       const followersQuery = query(

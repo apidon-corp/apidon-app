@@ -18,6 +18,13 @@ const _layout = () => {
           presentation: "modal",
         }}
       />
+      <Stack.Screen
+        name="replets"
+        options={{
+          title: "Replets",
+          presentation: "modal",
+        }}
+      />
     </Stack>
   );
 };

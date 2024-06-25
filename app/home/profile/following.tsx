@@ -1,7 +1,9 @@
+import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import UserCard from "@/components/User/UserCard";
-import { auth, firestore } from "@/firebase/client";
+import { firestore } from "@/firebase/client";
 import { FollowerDocData } from "@/types/User";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { useAtomValue } from "jotai";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 
@@ -11,6 +13,12 @@ type FollowingData = {
 };
 
 const following = () => {
+  const screenParameters = useAtomValue(screenParametersAtom);
+
+  const username = screenParameters.find(
+    (query) => query.queryId === "username"
+  )?.value as string;
+
   const [loading, setLoading] = useState(false);
 
   const [followingsData, setFollowingsData] = useState<FollowingData[]>([]);
@@ -20,20 +28,15 @@ const following = () => {
   }, []);
 
   const handleGetInitialData = async () => {
+    if (!username) return;
     if (loading) return;
 
     setLoading(true);
 
-    const displayName = auth.currentUser?.displayName;
-    if (!displayName) {
-      console.error("Display name not found");
-      return setLoading(false);
-    }
-
     try {
       const followingsCollectionRef = collection(
         firestore,
-        `/users/${displayName}/followings`
+        `/users/${username}/followings`
       );
 
       const followingsQuery = query(
@@ -58,7 +61,7 @@ const following = () => {
     }
   };
 
-  if (loading)
+  if (loading || !username)
     return (
       <SafeAreaView
         style={{
