@@ -41,3 +41,7 @@ export type GetPersonalizedUserFeedAPIResponseBody = {
   postDocPaths: string[];
   frenletDocPaths: string[];
 };
+
+export type CreateFrenletAPIResponseBody = {
+  frenletDocPath: string;
+};

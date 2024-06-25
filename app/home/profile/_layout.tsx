@@ -1,7 +1,6 @@
-import { View } from "react-native";
-import React from "react";
 import { Stack } from "expo-router";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { View } from "react-native";
 
 import { Text } from "@/components/Text/Text";
 
@@ -20,12 +19,6 @@ const _layout = (props: Props) => {
           headerBackground: () => (
             <View style={{ flex: 1, backgroundColor: "black" }} />
           ),
-          // headerRight: () => (
-          //   <Ionicons name="notifications" color="white" size={23} style={{}} />
-          // ),
-          // headerLeft: () => (
-          //   <FontAwesome name="chain" color="white" size={23} style={{}} />
-          // ),
         }}
       />
       <Stack.Screen

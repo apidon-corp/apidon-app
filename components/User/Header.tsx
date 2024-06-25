@@ -111,6 +111,11 @@ const Header = ({ username }: Props) => {
 
   return (
     <>
+      <Stack.Screen
+        options={{
+          title: username,
+        }}
+      />
       {userOwnsPage && (
         <Stack.Screen
           options={{

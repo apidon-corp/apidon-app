@@ -1,3 +1,5 @@
+import { FrenletServerData } from "@/types/Frenlet";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -5,20 +7,16 @@ import {
   Pressable,
   View,
 } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
-import { FrenletServerData } from "@/types/Frenlet";
-
+import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { Text } from "@/components/Text/Text";
-import { Image } from "expo-image";
+import { apidonPink } from "@/constants/Colors";
 import { auth, firestore } from "@/firebase/client";
 import { UserInServer } from "@/types/User";
-import { doc, onSnapshot } from "firebase/firestore";
-import Replet from "./Replet";
 import { MaterialIcons } from "@expo/vector-icons";
-import { apidonPink } from "@/constants/Colors";
-import { useSetAtom } from "jotai";
-import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
+import { Image } from "expo-image";
 import { router } from "expo-router";
+import { doc, onSnapshot } from "firebase/firestore";
+import { useSetAtom } from "jotai";
 
 type Props = {
   frenletDocPath: string;
@@ -185,7 +183,7 @@ const Frenlet = ({ frenletDocPath }: Props) => {
     }
   };
 
-  if (!senderData || !frenletData || loading) {
+  if (!frenletData || loading) {
     return (
       <View
         style={{
@@ -218,7 +216,10 @@ const Frenlet = ({ frenletDocPath }: Props) => {
         ],
       }}
     >
-      <View
+      <Pressable
+        onPress={() => {
+          router.push(`/home/profile/${frenletData.frenletSender}`);
+        }}
         id="sender"
         style={{
           alignItems: "center",
@@ -226,17 +227,18 @@ const Frenlet = ({ frenletDocPath }: Props) => {
         }}
       >
         <Image
-          source={senderData.profilePhoto}
+          source={senderData?.profilePhoto}
           style={{
             width: 80,
             height: 80,
             borderRadius: 40,
           }}
+          transition={500}
         />
         <Text bold style={{ fontSize: 12 }}>
-          {senderData.username}
+          {frenletData.frenletSender}
         </Text>
-      </View>
+      </Pressable>
       <View id="content" style={{ gap: 5, justifyContent: "center", flex: 1 }}>
         <Text
           bold

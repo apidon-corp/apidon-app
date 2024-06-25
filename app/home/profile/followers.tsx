@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 
+import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import UserCard from "@/components/User/UserCard";
-import { auth, firestore } from "@/firebase/client";
+import { firestore } from "@/firebase/client";
 import { FollowerDocData } from "@/types/User";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { useAtomValue } from "jotai";
-import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 
 type FollowerData = {
   follower: string;
