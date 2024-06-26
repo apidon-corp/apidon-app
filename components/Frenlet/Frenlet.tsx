@@ -223,6 +223,7 @@ const Frenlet = ({ frenletDocPath }: Props) => {
         id="sender"
         style={{
           alignItems: "center",
+          justifyContent: "center",
           gap: 5,
         }}
       >

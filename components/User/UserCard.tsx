@@ -52,6 +52,9 @@ const UserCard = ({ username }: Props) => {
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return console.error("No user found!");
 
+    const displayName = currentUserAuthObject.displayName;
+    if (username === displayName) return setDoesFollow(true);
+
     const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
     if (!userPanelBaseUrl)
       return console.error("User panel base url couldnt fetch from .env file");

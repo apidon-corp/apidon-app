@@ -1,15 +1,15 @@
-import { auth } from "@/firebase/client";
-import { UserInServer } from "@/types/User";
-import { Stack, router } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, View } from "react-native";
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import FollowButton from "@/components/Follow/FollowButton";
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { auth } from "@/firebase/client";
+import { UserInServer } from "@/types/User";
+import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import { Stack, router } from "expo-router";
 import { useSetAtom } from "jotai";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Pressable, View } from "react-native";
 
 type Props = {
   userData: UserInServer;
@@ -51,24 +51,11 @@ const Header = ({ userData }: Props) => {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: userData.username,
-        }}
-      />
       {userOwnsPage && (
         <Stack.Screen
           options={{
             headerRight: () => (
-              <Ionicons
-                name="notifications"
-                color="white"
-                size={23}
-                style={{}}
-              />
-            ),
-            headerLeft: () => (
-              <FontAwesome name="chain" color="white" size={23} style={{}} />
+              <Feather name="settings" size={23} color="white" />
             ),
           }}
         />

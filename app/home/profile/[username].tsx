@@ -1,5 +1,5 @@
 import UserContent from "@/components/User/UserContent";
-import { useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { ActivityIndicator, SafeAreaView, ScrollView } from "react-native";
 
@@ -16,9 +16,19 @@ const profile = () => {
         {!username ? (
           <ActivityIndicator color="white" size="large" />
         ) : (
-          <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps={"handled"}>
-            <UserContent username={username} />
-          </ScrollView>
+          <>
+            <Stack.Screen
+              options={{
+                title: username,
+              }}
+            />
+            <ScrollView
+              style={{ flex: 1 }}
+              keyboardShouldPersistTaps={"handled"}
+            >
+              <UserContent username={username} />
+            </ScrollView>
+          </>
         )}
       </SafeAreaView>
     </>
