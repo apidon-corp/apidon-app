@@ -36,7 +36,7 @@ const notifications = () => {
         );
       }
 
-      return console.log("Last opened time updated");
+      return;
     } catch (error) {
       return console.error("Error on updating last opened time: ", error);
     }

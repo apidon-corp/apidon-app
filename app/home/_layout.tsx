@@ -1,8 +1,17 @@
 import { useNotification } from "@/providers/NotificationProvider";
-import { Entypo, Feather, Ionicons } from "@expo/vector-icons";
+import {
+  AntDesign,
+  Entypo,
+  Feather,
+  FontAwesome5,
+  Ionicons,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
 import { StatusBar, View } from "react-native";
+
+import { Text } from "@/components/Text/Text";
 
 const _layout = () => {
   const notificationData = useNotification();
@@ -30,7 +39,30 @@ const _layout = () => {
           options={{
             tabBarIcon: () => <Entypo name="home" size={25} color="white" />,
             tabBarLabel: () => <></>,
-            headerShown: false,
+            headerTitle: () => (
+              <Text bold style={{ color: "white", fontSize: 18 }}>
+                APIDON
+              </Text>
+            ),
+            headerBackground: () => (
+              <View style={{ flex: 1, backgroundColor: "black" }} />
+            ),
+            headerLeft: () => (
+              <MaterialCommunityIcons
+                name="robot-happy-outline"
+                size={24}
+                color="white"
+                style={{ marginHorizontal: 10 }}
+              />
+            ),
+            headerRight: () => (
+              <AntDesign
+                name="user"
+                size={24}
+                color="white"
+                style={{ marginHorizontal: 10 }}
+              />
+            ),
           }}
         />
         <Tabs.Screen
