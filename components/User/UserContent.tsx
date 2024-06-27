@@ -1,14 +1,21 @@
 import { apidonPink } from "@/constants/Colors";
 import { firestore } from "@/firebase/client";
 import React, { useEffect, useState } from "react";
-import { View } from "react-native";
+import { ActivityIndicator, Dimensions, View } from "react-native";
 import { FlatList, Switch } from "react-native-gesture-handler";
 import Post from "../Post/Post";
-
 import { Text } from "@/components/Text/Text";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  onSnapshot,
+  orderBy,
+  query,
+} from "firebase/firestore";
 import CreateFrenlet from "../Frenlet/CreateFrenlet";
 import Frenlet from "../Frenlet/Frenlet";
+import Header from "./Header";
+import { UserInServer } from "@/types/User";
 
 type Props = {
   username: string;
@@ -17,8 +24,11 @@ type Props = {
 const UserContent = ({ username }: Props) => {
   const [postDocPathArray, setPostDocPathArray] = useState<string[]>([]);
   const [frenletDocPaths, setFrenletDocPaths] = useState<string[]>([]);
+  const [userData, setUserData] = useState<UserInServer | null>(null);
 
   const [toggleValue, setToggleValue] = useState<"posts" | "frenlets">("posts");
+
+  const { height } = Dimensions.get("window");
 
   const onToggleValueChange = () => {
     setToggleValue((prev) => (prev === "posts" ? "frenlets" : "posts"));
@@ -81,8 +91,47 @@ const UserContent = ({ username }: Props) => {
     return () => unsubscribe();
   }, [username]);
 
+  // Dynamic Data Fetching
+  useEffect(() => {
+    const userDocRef = doc(firestore, `/users/${username}`);
+
+    const unsubscribe = onSnapshot(
+      userDocRef,
+      (snapshot) => {
+        if (!snapshot.exists()) {
+          console.error("User's realtime data can not be fecthed.");
+          return setUserData(null);
+        }
+
+        const userDocData = snapshot.data() as UserInServer;
+
+        setUserData(userDocData);
+      },
+      (error) => {
+        console.error("Error on getting realtime data: ", error);
+        return setUserData(null);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [username]);
+
+  if (!userData)
+    return (
+      <View
+        style={{
+          alignItems: "center",
+          justifyContent: "center",
+          height: height,
+        }}
+      >
+        <ActivityIndicator color="white" size="large" />
+      </View>
+    );
+
   return (
     <>
+      <Header userData={userData} />
       <View
         id="toggle"
         style={{

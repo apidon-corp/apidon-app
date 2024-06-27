@@ -17,6 +17,7 @@ import {
   View,
 } from "react-native";
 import Replet from "./Replet";
+import { MaterialIcons } from "@expo/vector-icons";
 
 type Props = {
   frenletDocPath: string;
@@ -223,6 +224,7 @@ const Frenlet = ({ frenletDocPath }: Props) => {
         id="sender"
         style={{
           alignItems: "center",
+          justifyContent: "center",
           gap: 5,
         }}
       >
@@ -288,7 +290,7 @@ const Frenlet = ({ frenletDocPath }: Props) => {
           </Text>
         </Pressable>
       </View>
-      {/* {canDelete && (
+      {canDelete && (
         <Pressable
           onPress={handleFrenletDeleteButton}
           style={{
@@ -303,7 +305,7 @@ const Frenlet = ({ frenletDocPath }: Props) => {
             <MaterialIcons name="delete-outline" size={32} color="red" />
           )}
         </Pressable>
-      )} */}
+      )}
     </Animated.View>
   );
 };

@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "apidon-app",
-    "slug": "apidon-app",
+    "slug": "apidon-app-dev",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -19,7 +19,10 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -46,6 +49,15 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "0d348ab7-ab83-4fbc-8f26-98b5b600919b"
+      }
+    },
+    "owner": "abovestars"
   }
 }

@@ -1,88 +1,28 @@
-import { auth, firestore } from "@/firebase/client";
-import { UserInServer } from "@/types/User";
-import { Stack, router } from "expo-router";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, Switch, View } from "react-native";
-
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import FollowButton from "@/components/Follow/FollowButton";
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { auth } from "@/firebase/client";
+import { UserInServer } from "@/types/User";
+import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import { Stack, router } from "expo-router";
 import { useSetAtom } from "jotai";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Pressable, View } from "react-native";
 
 type Props = {
-  username: string;
+  userData: UserInServer;
 };
 
-const Header = ({ username }: Props) => {
-  const [loading, setLoading] = useState(false);
-
-  const [userData, setUserData] = useState<UserInServer | null>(null);
-
+const Header = ({ userData }: Props) => {
   const setScreenParams = useSetAtom(screenParametersAtom);
 
   const [userOwnsPage, setUserOwnsPage] = useState(false);
 
   useEffect(() => {
-    if (username) handleGetProfileData();
-  }, [username]);
-
-  // Dynamic Data Fetching
-  useEffect(() => {
-    const userDocRef = doc(firestore, `/users/${username}`);
-
-    const unsubscribe = onSnapshot(
-      userDocRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          console.error("User's realtime data can not be fecthed.");
-          return setUserData(null);
-        }
-
-        const userDocData = snapshot.data() as UserInServer;
-
-        setUserData(userDocData);
-      },
-      (error) => {
-        console.error("Error on getting realtime data: ", error);
-        return setUserData(null);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [username]);
-
-  useEffect(() => {
-    checkUserOwnsPage();
-  }, [username, auth.currentUser]);
-
-  // Initially getting user data...
-  const handleGetProfileData = async () => {
-    if (!username) return;
-    if (loading) return;
-
-    setLoading(true);
-
-    try {
-      const userDocRef = doc(firestore, `/users/${username}`);
-
-      const userDocSnapshot = await getDoc(userDocRef);
-
-      if (!userDocSnapshot.exists()) return console.error("User not found");
-
-      const userDocData = userDocSnapshot.data() as UserInServer;
-
-      setUserData(userDocData);
-
-      return setLoading(false);
-    } catch (error) {
-      console.error("Error on getting profile data: ", error);
-      return setLoading(false);
-    }
-  };
+    if (userData.username) checkUserOwnsPage();
+  }, [auth.currentUser, userData.username]);
 
   const handleEditProfileButton = () => {
     if (!userData) return;
@@ -99,36 +39,23 @@ const Header = ({ username }: Props) => {
   };
 
   const checkUserOwnsPage = () => {
-    if (!auth.currentUser || !username) return setUserOwnsPage(false);
+    if (!auth.currentUser || !userData.username) return setUserOwnsPage(false);
 
     const displayName = auth.currentUser.displayName;
     if (!displayName) return setUserOwnsPage(false);
 
-    return setUserOwnsPage(displayName === username);
+    return setUserOwnsPage(displayName === userData.username);
   };
 
   if (!userData) return <ActivityIndicator size="large" color="white" />;
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: username,
-        }}
-      />
       {userOwnsPage && (
         <Stack.Screen
           options={{
             headerRight: () => (
-              <Ionicons
-                name="notifications"
-                color="white"
-                size={23}
-                style={{}}
-              />
-            ),
-            headerLeft: () => (
-              <FontAwesome name="chain" color="white" size={23} style={{}} />
+              <Feather name="settings" size={23} color="white" />
             ),
           }}
         />
@@ -215,7 +142,7 @@ const Header = ({ username }: Props) => {
                 setScreenParams([
                   {
                     queryId: "username",
-                    value: username,
+                    value: userData.username,
                   },
                 ]);
                 router.push("/home/profile/followers");
@@ -260,7 +187,7 @@ const Header = ({ username }: Props) => {
                 setScreenParams([
                   {
                     queryId: "username",
-                    value: username,
+                    value: userData.username,
                   },
                 ]);
                 router.push("/home/profile/following");
@@ -326,7 +253,7 @@ const Header = ({ username }: Props) => {
             </Pressable>
           </>
         ) : (
-          <FollowButton username={username} />
+          <FollowButton username={userData.username} />
         )}
       </View>
     </>

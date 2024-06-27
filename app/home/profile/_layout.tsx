@@ -1,12 +1,9 @@
 import { Stack } from "expo-router";
 import React from "react";
 import { View } from "react-native";
-
 import { Text } from "@/components/Text/Text";
 
-type Props = {};
-
-const _layout = (props: Props) => {
+const _layout = () => {
   return (
     <Stack>
       <Stack.Screen
@@ -35,7 +32,6 @@ const _layout = (props: Props) => {
         options={{
           headerShown: true,
           title: "Followers",
-          headerBackTitleVisible: false,
           headerTitle: () => (
             <Text style={{ color: "white", fontSize: 18 }}>Followers</Text>
           ),
@@ -49,7 +45,6 @@ const _layout = (props: Props) => {
         options={{
           headerShown: true,
           title: "Following",
-          headerBackTitleVisible: false,
           headerTitle: () => (
             <Text style={{ color: "white", fontSize: 18 }}>Following</Text>
           ),

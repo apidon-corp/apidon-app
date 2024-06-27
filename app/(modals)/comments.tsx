@@ -269,6 +269,7 @@ const comments = () => {
             key={`${item.sender}-${item.message}-${item.ts}`}
           />
         )}
+        keyExtractor={(item) => `${item.sender}-${item.message}-${item.ts}`}
       />
       {currentUserData && (
         <Animated.View
