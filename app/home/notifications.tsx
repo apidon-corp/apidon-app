@@ -60,10 +60,10 @@ const notifications = () => {
           <NotificationItem
             notificationData={item}
             lastOpenedTime={notificationDocData.lastOpenedTime}
-            key={`${item.sender}- ${item.ts}`}
+            key={`${item.source}- ${item.timestamp}`}
           />
         )}
-        keyExtractor={(item) => `${item.sender}-${item.cause}-${item.ts}`}
+        keyExtractor={(item) => `${item.source}-${item.type}-${item.timestamp}`}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>

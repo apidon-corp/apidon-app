@@ -3,7 +3,6 @@ import {
   AntDesign,
   Entypo,
   Feather,
-  FontAwesome5,
   Ionicons,
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
@@ -21,7 +20,7 @@ const _layout = () => {
 
     let unReadFlag = false;
     for (const notification of notificationData.notifications) {
-      if (notification.ts > notificationData.lastOpenedTime) {
+      if (notification.timestamp > notificationData.lastOpenedTime) {
         unReadFlag = true;
         break;
       }
@@ -134,6 +133,14 @@ const _layout = () => {
           options={{
             headerShown: true,
             title: "Post",
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="frenlet"
+          options={{
+            headerShown: true,
+            title: "Frenlet",
             href: null,
           }}
         />

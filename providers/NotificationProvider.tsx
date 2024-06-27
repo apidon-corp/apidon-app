@@ -9,6 +9,10 @@ import React, {
   useState,
 } from "react";
 import { useAuth } from "./AuthProvider";
+import {
+  adjustNotificationSettings,
+  makeDeviceReadyToGetNotifications,
+} from "@/utils/notificationHelpers";
 
 const NotificationContext = createContext<NotificationDocData | null>(null);
 
@@ -39,11 +43,12 @@ const NotificationProvider = ({ children }: PropsWithChildren) => {
 
         const notificationsFetched = notificationDocData.notifications;
 
-        notificationsFetched.sort((a, b) => b.ts - a.ts);
+        notificationsFetched.sort((a, b) => b.timestamp - a.timestamp);
 
         return setNotificationDocData({
           lastOpenedTime: notificationDocData.lastOpenedTime,
           notifications: notificationsFetched,
+          notificationToken: notificationDocData.notificationToken,
         });
       },
       (error) => {
@@ -53,6 +58,15 @@ const NotificationProvider = ({ children }: PropsWithChildren) => {
     );
 
     return () => unsubscribe();
+  }, [authStatus]);
+
+  useEffect(() => {
+    if (authStatus === "authenticated") {
+      if (auth.currentUser?.displayName) {
+        makeDeviceReadyToGetNotifications();
+        adjustNotificationSettings();
+      }
+    }
   }, [authStatus]);
 
   return (

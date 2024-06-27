@@ -1,14 +1,14 @@
-import { Pressable, View } from "react-native";
 import { Text } from "@/components/Text/Text";
-import React, { useEffect, useState } from "react";
+import { firestore } from "@/firebase/client";
 import { NotificationData } from "@/types/Notification";
 import { UserInServer } from "@/types/User";
-import { doc, getDoc } from "firebase/firestore";
-import { firestore } from "@/firebase/client";
-import { Image } from "expo-image";
-import { formatDistanceToNow, set } from "date-fns";
 import { Entypo, Feather } from "@expo/vector-icons";
+import { formatDistanceToNow } from "date-fns";
+import { Image } from "expo-image";
 import { router, usePathname } from "expo-router";
+import { doc, getDoc } from "firebase/firestore";
+import React, { useEffect, useState } from "react";
+import { Pressable, View } from "react-native";
 
 type Props = {
   notificationData: NotificationData;
@@ -24,8 +24,8 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (notificationData.sender) handleGetSenderData();
-  }, [notificationData.sender]);
+    if (notificationData.source) handleGetSenderData();
+  }, [notificationData.source]);
 
   useEffect(() => {
     if (pathname !== "/home/notifications") {
@@ -35,14 +35,14 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
 
   const handleGetSenderData = async () => {
     try {
-      const userDocRef = doc(firestore, `/users/${notificationData.sender}`);
+      const userDocRef = doc(firestore, `/users/${notificationData.source}`);
 
       const userDocSnapshot = await getDoc(userDocRef);
 
       if (!userDocSnapshot.exists()) {
         console.error(
           "User's data can not be fecthed: ",
-          notificationData.sender
+          notificationData.source
         );
         return setSenderData(null);
       }
@@ -57,33 +57,64 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
   };
 
   const handleClickSenderInformation = () => {
-    router.push(`/home/profile/${notificationData.sender}`);
+    router.push(`/home/profile/${notificationData.source}`);
   };
 
-  const handleClickPostPreviewButton = () => {
-    const postDocPath = notificationData.postDocPath;
-    if (!postDocPath) return;
+  const handleClickPreviewButton = () => {
+    if (notificationData.type === "comment") {
+      const postDocPath = notificationData.params.commentedPostDocPath;
+      if (!postDocPath) return;
 
-    const elements = postDocPath.split("/");
-    console.log(elements);
+      const elements = postDocPath.split("/");
 
-    const postSender = elements[2];
-    const postId = elements[4];
+      const postSender = elements[2];
+      const postId = elements[4];
 
-    router.push(`/home/post?sender=${postSender}&id=${postId}`);
+      router.push(`/home/post?sender=${postSender}&id=${postId}`);
+      return;
+    }
+
+    if (notificationData.type === "frenletCreate") {
+      const frenletDocPath = notificationData.params.createdFrenletDocPath;
+      if (!frenletDocPath) return;
+      const elements = frenletDocPath.split("/");
+
+      console.log(frenletDocPath);
+
+      const receiver = elements[2];
+      const id = elements[6];
+
+      router.push(`/home/frenlet?receiver=${receiver}&id=${id}`);
+      return;
+    }
+    if (notificationData.type === "frenletReply") {
+      const frenletDocPath = notificationData.params.repliedFrenletDocPath;
+      if (!frenletDocPath) return;
+      const elements = frenletDocPath.split("/");
+
+      console.log(frenletDocPath);
+
+      const receiver = elements[2];
+      const id = elements[6];
+
+      router.push(`/home/frenlet?receiver=${receiver}&id=${id}`);
+      return;
+    }
   };
 
   if (!senderData) return <></>;
 
   const message =
-    notificationData.cause === "comment"
-      ? `commented your post`
-      : notificationData.cause === "follow"
+    notificationData.type === "comment"
+      ? `commented to your post`
+      : notificationData.type === "follow"
       ? "started to follow you"
-      : notificationData.cause === "frenlet"
+      : notificationData.type === "frenletCreate"
       ? "created frenlet on you"
-      : notificationData.cause === "like"
-      ? "liked your post"
+      : notificationData.type === "frenletReply"
+      ? "replied your frenlet"
+      : notificationData.type === "ratePost"
+      ? "rated your post"
       : "made unknown action";
 
   return (
@@ -136,25 +167,26 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
               color: "gray",
             }}
           >
-            {formatDistanceToNow(new Date(notificationData.ts))}
+            {formatDistanceToNow(new Date(notificationData.timestamp))}
           </Text>
         </View>
       </View>
 
       <Pressable
-        onPress={handleClickPostPreviewButton}
+        onPress={handleClickPreviewButton}
         style={{
           flexDirection: "row",
           width: "10%",
           justifyContent: "center",
         }}
       >
-        {!(
-          notificationData.cause === "follow" ||
-          notificationData.cause === "frenlet"
-        ) && <Feather name="image" size={24} color="white" />}
+        {(notificationData.type === "comment" ||
+          notificationData.type === "frenletCreate" ||
+          notificationData.type === "frenletReply") && (
+          <Feather name="image" size={24} color="white" />
+        )}
 
-        {lastOpenedTimeLocal < notificationData.ts && (
+        {lastOpenedTimeLocal < notificationData.timestamp && (
           <Entypo name="dot-single" size={24} color="red" />
         )}
       </Pressable>
