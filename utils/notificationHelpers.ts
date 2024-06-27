@@ -105,13 +105,17 @@ export async function makeDeviceReadyToGetNotifications() {
   await updateNotificationTokenOnFirebase(notificationToken);
 }
 
-export function adjustNotificationSettings() {
+export function adjustNotificationSettings(muted?: boolean) {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowAlert: true,
-      shouldPlaySound: true,
+      shouldPlaySound: muted ? false : true,
       shouldSetBadge: true,
       priority: Notifications.AndroidNotificationPriority.MAX,
     }),
   });
+}
+
+export function resetNotificationBadge() {
+  Notifications.setBadgeCountAsync(0);
 }

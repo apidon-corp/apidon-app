@@ -1,5 +1,10 @@
 import { auth, firestore } from "@/firebase/client";
 import { NotificationDocData } from "@/types/Notification";
+import {
+  adjustNotificationSettings,
+  makeDeviceReadyToGetNotifications,
+  resetNotificationBadge,
+} from "@/utils/notificationHelpers";
 import { doc, onSnapshot } from "firebase/firestore";
 import React, {
   PropsWithChildren,
@@ -9,10 +14,7 @@ import React, {
   useState,
 } from "react";
 import { useAuth } from "./AuthProvider";
-import {
-  adjustNotificationSettings,
-  makeDeviceReadyToGetNotifications,
-} from "@/utils/notificationHelpers";
+import { AppState, AppStateStatus } from "react-native";
 
 const NotificationContext = createContext<NotificationDocData | null>(null);
 
@@ -68,6 +70,26 @@ const NotificationProvider = ({ children }: PropsWithChildren) => {
       }
     }
   }, [authStatus]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  const handleAppStateChange = (nextAppState: AppStateStatus) => {
+    resetNotificationBadge();
+    if (nextAppState === "active") {
+      adjustNotificationSettings(true);
+    } else {
+      adjustNotificationSettings(false);
+    }
+  };
 
   return (
     <NotificationContext.Provider value={notificationDocData}>

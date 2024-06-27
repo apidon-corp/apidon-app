@@ -8,7 +8,7 @@ import { Image } from "expo-image";
 import { router, usePathname } from "expo-router";
 import { doc, getDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
-import { Pressable, View } from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
 
 type Props = {
   notificationData: NotificationData;
@@ -79,8 +79,6 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
       if (!frenletDocPath) return;
       const elements = frenletDocPath.split("/");
 
-      console.log(frenletDocPath);
-
       const receiver = elements[2];
       const id = elements[6];
 
@@ -92,8 +90,6 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
       if (!frenletDocPath) return;
       const elements = frenletDocPath.split("/");
 
-      console.log(frenletDocPath);
-
       const receiver = elements[2];
       const id = elements[6];
 
@@ -102,7 +98,20 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
     }
   };
 
-  if (!senderData) return <></>;
+  if (!senderData)
+    return (
+      <View
+        style={{
+          height: 70,
+          width: "100%",
+          backgroundColor: "rgb(27,27,27)",
+          borderRadius: 10,
+          justifyContent: "center",
+        }}
+      >
+        <ActivityIndicator color="white" />
+      </View>
+    );
 
   const message =
     notificationData.type === "comment"
@@ -146,6 +155,7 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
               borderRadius: 25,
             }}
             transition={500}
+            placeholder={{ blurhash: "" }}
           />
         </Pressable>
 
