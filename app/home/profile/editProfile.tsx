@@ -192,7 +192,7 @@ const editProfile = () => {
 
       return downloadURL;
     } catch (error) {
-      console.error("Error on updating profile image: ", error);
+      console.error("Error on uploading profile image: ", error);
       return false;
     }
   };
@@ -341,17 +341,16 @@ const editProfile = () => {
               alignItems: "center",
             }}
           >
-            {image && (
-              <Image
-                source={imageEdited || image}
-                style={{
-                  width: 200,
-                  aspectRatio: 1,
-                  borderRadius: 100,
-                }}
-                transition={500}
-              />
-            )}
+            <Image
+              source={imageEdited || image}
+              style={{
+                width: 200,
+                aspectRatio: 1,
+                borderRadius: 100,
+              }}
+              transition={500}
+            />
+
             <Pressable
               onPress={handleChangeImageButton}
               style={{
