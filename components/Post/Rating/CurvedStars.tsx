@@ -1,29 +1,33 @@
 import React from "react";
-import { View } from "react-native";
 import CurvedStar from "./CurvedStar";
+
+type Location = {
+  x: number;
+  y: number;
+};
 
 type Props = {
   rateValue: number;
-  setRateValue: (value: number) => void;
+  locations: {
+    starIndex: number;
+    location: Location;
+  }[];
 };
 
-const CurvedStars = ({ rateValue, setRateValue }: Props) => {
+const CurvedStars = ({ rateValue, locations }: Props) => {
   return (
-    <View
-      style={{
-        gap: 30,
-        flexDirection: "row",
-        transform: [
-          {
-            translateY: -20,
-          },
-        ],
-      }}
-    >
+    <>
       {Array.from({ length: 5 }, (_, i) => (
-        <CurvedStar index={i} rateValue={rateValue} key={i} />
+        <CurvedStar
+          index={i}
+          rateValue={rateValue}
+          key={i}
+          location={
+            locations.find((l) => l.starIndex === i)?.location || { x: 0, y: 0 }
+          }
+        />
       ))}
-    </View>
+    </>
   );
 };
 

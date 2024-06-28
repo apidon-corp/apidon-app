@@ -17,12 +17,54 @@ type Props = {
   postDocPath: string;
 };
 
+type Location = {
+  x: number;
+  y: number;
+};
+
 const RateStar = ({ previousValue, postDocPath }: Props) => {
   const [isRatingPanelVisible, setIsRatingPanelVisible] = useState(false);
 
   const [rateValue, setRateValue] = useState<undefined | number>(previousValue);
 
   const [loading, setLoading] = useState(false);
+
+  const { width: screenWidth } = Dimensions.get("screen");
+
+  const adjustedScreenWidth = screenWidth * 0.5 * 0.5;
+  const verticalPadding = -20;
+
+  const locations: {
+    starIndex: number;
+    location: Location;
+  }[] = [
+    {
+      starIndex: 0,
+      location: { x: -adjustedScreenWidth, y: 0 + verticalPadding },
+    },
+    {
+      starIndex: 1,
+      location: {
+        x: -adjustedScreenWidth * 0.71,
+        y: -adjustedScreenWidth * 0.71 + verticalPadding,
+      },
+    },
+    {
+      starIndex: 2,
+      location: { x: 0, y: -adjustedScreenWidth + verticalPadding },
+    },
+    {
+      starIndex: 3,
+      location: {
+        x: adjustedScreenWidth * 0.71,
+        y: -adjustedScreenWidth * 0.71 + verticalPadding,
+      },
+    },
+    {
+      starIndex: 4,
+      location: { x: adjustedScreenWidth, y: 0 + verticalPadding },
+    },
+  ];
 
   useEffect(() => {
     if (!isRatingPanelVisible) {
@@ -80,32 +122,6 @@ const RateStar = ({ previousValue, postDocPath }: Props) => {
     }
   };
 
-  /**
-   * For the first star:
-   *  x (-) = 145 and 95
-   *  y = 40 and 80
-   */
-
-  /**
-   * x (-) = 90 and 40
-   * y (-) = 125 and 75
-   */
-
-  /**
-   * x = -30 and +30
-   * y (-) = 110 and 160
-   */
-
-  /**
-   * +40 and +90 (x)
-   * 75 and 125 (y) (-)
-   */
-
-  /**
-   * 95 and 145 (x) (+)
-   * 40 and 80 (y) (-)
-   */
-
   const translationX = useSharedValue(0);
   const translationY = useSharedValue(0);
   const prevTranslationX = useSharedValue(0);
@@ -125,22 +141,15 @@ const RateStar = ({ previousValue, postDocPath }: Props) => {
   }));
 
   function calculateHoveredStarIndex(x: number, y: number) {
-    if (x >= -145 && x <= -95 && y >= -80 && y <= -40) {
-      return 0;
-    }
-    if (x >= -90 && x <= -40 && y >= -125 && y <= -75) {
-      return 1;
-    }
-    if (x >= -30 && x <= 30 && y >= -160 && y <= -110) {
-      return 2;
-    }
-    if (x >= 40 && x <= 90 && y >= -125 && y <= -75) {
-      return 3;
-    }
-    if (x >= 95 && x <= 145 && y >= -80 && y <= -40) {
-      return 4;
-    }
-    return -1;
+    const thresholdX = 20;
+    const thresholdY = 20;
+    return (
+      locations.find(
+        (loc) =>
+          Math.abs(loc.location.x - x) <= thresholdX &&
+          Math.abs(loc.location.y - y - 40) <= thresholdY
+      )?.starIndex ?? -1
+    );
   }
 
   function rateValueUpdate(x: number, y: number) {
@@ -196,7 +205,7 @@ const RateStar = ({ previousValue, postDocPath }: Props) => {
       ) : (
         <GestureDetector gesture={pan}>
           <Animated.View style={animatedPanStyle}>
-            <MaterialCommunityIcons name="star-plus" size={45}  color="white" />
+            <MaterialCommunityIcons name="star-plus" size={45} color="white" />
           </Animated.View>
         </GestureDetector>
       )}
@@ -215,7 +224,7 @@ const RateStar = ({ previousValue, postDocPath }: Props) => {
       >
         <CurvedStars
           rateValue={rateValue ? rateValue : 0}
-          setRateValue={setRateValue}
+          locations={locations}
         />
       </View>
     </>
