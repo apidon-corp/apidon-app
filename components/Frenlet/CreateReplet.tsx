@@ -1,6 +1,7 @@
+import { apidonPink } from "@/constants/Colors";
 import { auth, firestore } from "@/firebase/client";
 import { UserInServer } from "@/types/User";
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { doc, getDoc } from "firebase/firestore";
 import React, { useEffect, useRef, useState } from "react";
@@ -108,7 +109,7 @@ const CreateReplet = ({ frenletDocPath }: Props) => {
       }
 
       // Good to go
-
+      Keyboard.dismiss();
       setMessage("");
       return setMessageSendLoading(false);
     } catch (error) {
@@ -176,13 +177,16 @@ const CreateReplet = ({ frenletDocPath }: Props) => {
     <Animated.View
       ref={containerRef}
       style={{
+        backgroundColor: "black",
         flexDirection: "row",
         borderWidth: 1,
-        borderColor: "white",
+        borderColor: "#808080",
         width: "100%",
-        gap: 20,
-        padding: 20,
         borderRadius: 20,
+        paddingVertical: 5,
+        paddingLeft: 5,
+        paddingRight: 10,
+        gap: 5,
         transform: [
           {
             translateY: animatedTranslateValue,
@@ -199,29 +203,31 @@ const CreateReplet = ({ frenletDocPath }: Props) => {
         source={currentUserData?.profilePhoto}
         transition={500}
       />
+
       <TextInput
         value={message}
         onChangeText={handleMessageChange}
         placeholder="Join conversation..."
         placeholderTextColor="#808080"
         style={{
-          padding: 10,
-          borderColor: "#808080",
-          borderWidth: 1,
-          borderRadius: 10,
           flex: 1,
+          padding: 5,
           color: "white",
         }}
       />
+
       <Pressable
-        style={{ justifyContent: "center" }}
+        style={{
+          justifyContent: "center",
+          height: 50,
+        }}
         disabled={messageSendLoading}
         onPress={handleSendMessage}
       >
         {messageSendLoading ? (
           <ActivityIndicator color="white" style={{ width: 24, height: 24 }} />
         ) : (
-          <Feather name="send" size={24} color="white" />
+          <Ionicons name="send" size={24} color={apidonPink} />
         )}
       </Pressable>
     </Animated.View>

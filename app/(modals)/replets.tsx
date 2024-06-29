@@ -69,6 +69,7 @@ const replets = () => {
           return setLoading(false);
         }
         const frenletDocData = snapshot.data() as FrenletServerData;
+
         setFrenletData(frenletDocData);
 
         return setLoading(false);
@@ -134,7 +135,7 @@ const replets = () => {
             gap: 20,
           }}
           keyExtractor={(item) => `${item.sender}-${item.ts}`}
-          data={frenletData.replies}
+          data={frenletData.replies.sort((b,a) => a.ts- b.ts)}
           renderItem={({ item }) => (
             <Replet
               frenletOwners={[

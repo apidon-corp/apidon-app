@@ -96,6 +96,17 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
       router.push(`/home/frenlet?receiver=${receiver}&id=${id}`);
       return;
     }
+    if (notificationData.type === "ratePost") {
+      const postDocPath = notificationData.params.ratedPostDocPath;
+      if (!postDocPath) return;
+      const elements = postDocPath.split("/");
+
+      const postSender = elements[2];
+      const postId = elements[4];
+
+      router.push(`/home/post?sender=${postSender}&id=${postId}`);
+      return;
+    }
   };
 
   if (!senderData)
@@ -115,15 +126,15 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
 
   const message =
     notificationData.type === "comment"
-      ? `commented to your post`
+      ? `commented to your post: "${notificationData.params.comment}"`
       : notificationData.type === "follow"
       ? "started to follow you"
       : notificationData.type === "frenletCreate"
-      ? "created frenlet on you"
+      ? `created frenlet on you: "${notificationData.params.message}"`
       : notificationData.type === "frenletReply"
-      ? "replied your frenlet"
+      ? `replied your frenlet: "${notificationData.params.message}"`
       : notificationData.type === "ratePost"
-      ? "rated your post"
+      ? `rated your post with ${notificationData.params.rate} stars`
       : "made unknown action";
 
   return (
@@ -139,10 +150,10 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
     >
       <View
         style={{
+          width: "90%",
           flexDirection: "row",
           gap: 10,
           alignItems: "center",
-          width: "90%",
           flexWrap: "wrap",
         }}
       >
@@ -159,27 +170,27 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
           />
         </Pressable>
 
-        <View>
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              gap: 5,
-            }}
-          >
-            <Text bold>{senderData.fullname}</Text>
-            <Text>{message}</Text>
-          </View>
-
-          <Text
-            style={{
-              fontSize: 12,
-              color: "gray",
-            }}
-          >
-            {formatDistanceToNow(new Date(notificationData.timestamp))}
-          </Text>
+        <View
+          style={{
+            maxWidth: "100%",
+            display: "flex",
+            flexDirection: "row",
+            gap: 5,
+            flexWrap: "wrap",
+          }}
+        >
+          <Text bold>{senderData.fullname}</Text>
+          <Text>{message}</Text>
         </View>
+
+        <Text
+          style={{
+            fontSize: 12,
+            color: "gray",
+          }}
+        >
+          {formatDistanceToNow(new Date(notificationData.timestamp))}
+        </Text>
       </View>
 
       <Pressable
@@ -190,7 +201,8 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
           justifyContent: "center",
         }}
       >
-        {(notificationData.type === "comment" ||
+        {(notificationData.type === "ratePost" ||
+          notificationData.type === "comment" ||
           notificationData.type === "frenletCreate" ||
           notificationData.type === "frenletReply") && (
           <Feather name="image" size={24} color="white" />

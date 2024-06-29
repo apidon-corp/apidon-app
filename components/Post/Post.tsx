@@ -13,21 +13,15 @@ import { UserInServer } from "@/types/User";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  Entypo,
-  Feather,
-  FontAwesome,
-  FontAwesome6,
-  MaterialCommunityIcons,
-} from "@expo/vector-icons";
+import { Entypo, Feather } from "@expo/vector-icons";
 
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { formatDistanceToNow } from "date-fns";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
 import RateStar from "./Rating/RateStar";
 import Stars from "./Rating/Stars";
-import { Image } from "expo-image";
 
 type Props = {
   postDocPath: string;
@@ -59,7 +53,7 @@ const Post = ({ postDocPath }: Props) => {
     // Prevent 0-division
     const rateCount = postDocData.rates.length ? postDocData.rates.length : 1;
 
-    const totalRates = postDocData.rates.reduce(
+    let totalRates = postDocData.rates.reduce(
       (acc, current) => acc + current.rate,
       0
     );
@@ -433,7 +427,7 @@ const Post = ({ postDocPath }: Props) => {
             >
               <Stars score={overallRating} />
               <View style={{ flexDirection: "row" }}>
-                <Text bold>{overallRating}</Text>
+                <Text bold>{overallRating.toFixed(2)}</Text>
                 <Text> average</Text>
               </View>
             </Pressable>
