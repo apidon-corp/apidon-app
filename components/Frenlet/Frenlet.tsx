@@ -18,6 +18,7 @@ import {
 } from "react-native";
 import Replet from "./Replet";
 import { MaterialIcons } from "@expo/vector-icons";
+import { formatDistanceToNow } from "date-fns";
 
 type Props = {
   frenletDocPath: string;
@@ -239,6 +240,15 @@ const Frenlet = ({ frenletDocPath }: Props) => {
         />
         <Text bold style={{ fontSize: 12 }}>
           {frenletData.frenletSender}
+        </Text>
+
+        <Text
+          style={{
+            fontSize: 12,
+            color : "#808080"
+          }}
+        >
+          {formatDistanceToNow(new Date(frenletData.ts))}
         </Text>
       </Pressable>
       <View id="content" style={{ gap: 20, flex: 1 }}>
