@@ -111,7 +111,7 @@ const _layout = () => {
           }}
         />
         <Tabs.Screen
-          name="sidebar"
+          name="(sidebar)"
           options={{
             tabBarIcon: () => (
               <Feather name="sidebar" size={25} color="white" />

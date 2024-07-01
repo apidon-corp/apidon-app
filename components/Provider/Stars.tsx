@@ -5,6 +5,7 @@ import { auth } from "@/firebase/client";
 
 type Props = {
   userScore: number;
+  size: number;
 };
 
 const Stars = (props: Props) => {
@@ -66,7 +67,12 @@ const Stars = (props: Props) => {
   return (
     <View style={{ flexDirection: "row", gap: 5 }}>
       {loading ? (
-        <ActivityIndicator size="large" />
+        <ActivityIndicator
+          style={{
+            height: props.size,
+            width: props.size,
+          }}
+        />
       ) : (
         <>
           {Array.from({ length: 5 }, (_, i) => (
@@ -78,7 +84,7 @@ const Stars = (props: Props) => {
             >
               <AntDesign
                 name={i < userRate ? "star" : "staro"}
-                size={36}
+                size={props.size}
                 color="white"
               />
             </Pressable>

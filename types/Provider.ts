@@ -4,6 +4,7 @@ export type GetProviderInformationAPIResponseBody =
       providerOptions: IProviderShowcaseItem[];
     }
   | {
+      providerOptions: IProviderShowcaseItem[];
       isThereActiveProvider: true;
       providerData: {
         dueDatePassed: boolean;
@@ -23,6 +24,20 @@ export type GetProviderInformationAPIResponseBody =
         };
       };
     };
+
+export type ActiveProviderData = {
+  name: string;
+  description: string;
+  image: string;
+  clientCount: number;
+  score: number;
+  userScore: number;
+  yield: number;
+  duration: {
+    startTime: number;
+    endTime: number;
+  };
+};
 
 export interface IProviderShowcaseItem {
   name: string;
