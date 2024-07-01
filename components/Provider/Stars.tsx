@@ -6,6 +6,7 @@ import { auth } from "@/firebase/client";
 type Props = {
   userScore: number;
   size: number;
+  changingProvider: boolean;
 };
 
 const Stars = (props: Props) => {
@@ -13,6 +14,8 @@ const Stars = (props: Props) => {
   const [loading, setLoading] = useState(false);
 
   const handlePressStars = async (index: number) => {
+    if (props.changingProvider) return;
+
     if (loading) return;
 
     const initialValue = userRate;
@@ -77,6 +80,7 @@ const Stars = (props: Props) => {
         <>
           {Array.from({ length: 5 }, (_, i) => (
             <Pressable
+              disabled={props.changingProvider}
               key={i}
               onPress={() => {
                 handlePressStars(i);

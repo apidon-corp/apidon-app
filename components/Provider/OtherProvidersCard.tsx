@@ -1,24 +1,88 @@
-import { Pressable, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, View } from "react-native";
 import { Text } from "@/components/Text/Text";
-import React, { useState } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 import { IProviderShowcaseItem } from "@/types/Provider";
 import { Image } from "expo-image";
 import { apidonPink } from "@/constants/Colors";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
+import { auth } from "@/firebase/client";
 
 type Props = {
   providerData: IProviderShowcaseItem;
+  changingProvider: boolean;
+  setChangingProvider: Dispatch<SetStateAction<boolean>>;
 };
 
-const OtherProvidersCard = ({ providerData }: Props) => {
+const OtherProvidersCard = ({
+  changingProvider,
+  providerData,
+  setChangingProvider,
+}: Props) => {
   const [showDetails, setShowDetails] = useState(false);
 
   const handlePressShowDetails = () => {
     setShowDetails(!showDetails);
   };
 
-  const handleChooseButton = async () => {
+  const handleChangeProvider = async () => {
+    const currentUserAuthObject = auth.currentUser;
+    if (!currentUserAuthObject) return false;
 
+    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
+    if (!userPanelBaseUrl) {
+      console.error("User panel base url couldnt fetch from .env file");
+      return false;
+    }
+
+    if (changingProvider) return;
+
+    const route = `${userPanelBaseUrl}/api/provider/changeProvider`;
+
+    setChangingProvider(true);
+
+    try {
+      const idToken = await currentUserAuthObject.getIdToken();
+      const response = await fetch(route, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          providerName: providerData.name,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error(
+          "Response from changeProvider API is not okay: ",
+          await response.text()
+        );
+        return setChangingProvider(false);
+      }
+
+      return setChangingProvider(false);
+    } catch (error) {
+      console.error("Error on change provider: ", error);
+      return setChangingProvider(false);
+    }
+  };
+
+  const handleChooseButton = () => {
+    Alert.alert(
+      "Change Provider",
+      `Are you sure you want to change your provider to ${providerData.name}?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Change",
+          onPress: handleChangeProvider,
+        },
+      ]
+    );
   };
 
   return (
@@ -136,6 +200,7 @@ const OtherProvidersCard = ({ providerData }: Props) => {
               {providerData.description}
             </Text>
             <Pressable
+              onPress={handleChooseButton}
               style={{
                 padding: 10,
                 paddingHorizontal: 20,
@@ -143,10 +208,15 @@ const OtherProvidersCard = ({ providerData }: Props) => {
                 borderRadius: 10,
                 borderColor: apidonPink,
               }}
+              disabled={changingProvider}
             >
-              <Text bold style={{ color: apidonPink }}>
-                Choose
-              </Text>
+              {changingProvider ? (
+                <ActivityIndicator color={apidonPink} />
+              ) : (
+                <Text bold style={{ color: apidonPink }}>
+                  Choose
+                </Text>
+              )}
             </Pressable>
           </View>
         )}

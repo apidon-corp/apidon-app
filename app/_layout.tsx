@@ -9,14 +9,13 @@ import "react-native-reanimated";
 import AuthProvider from "@/providers/AuthProvider";
 import { StatusBar } from "react-native";
 
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { SafeAreaProvider } from "react-native-safe-area-context";
 import NotificationProvider from "@/providers/NotificationProvider";
 import ProviderProvider from "@/providers/ProviderProvider";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export {
   // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
+  ErrorBoundary
 } from "expo-router";
 
 export const unstable_settings = {
@@ -66,13 +65,6 @@ function RootLayoutNav() {
                 }}
               >
                 <Stack>
-                  <Stack.Screen
-                    name="provider"
-                    options={{
-                      headerShown: false,
-                      presentation: "modal",
-                    }}
-                  />
                   <Stack.Screen
                     name="(modals)"
                     options={{

@@ -8,10 +8,9 @@ const _layout = (props: Props) => {
   return (
     <Stack>
       <Stack.Screen
-        name="(provider)"
+        name="provider"
         options={{
           title: "Provider",
-          headerShown: false,
         }}
       />
     </Stack>

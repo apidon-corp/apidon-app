@@ -9,9 +9,13 @@ import Stars from "./Stars";
 
 type Props = {
   activeProviderData: ActiveProviderData;
+  changingProvider: boolean;
 };
 
-const ActiveProviderCard = ({ activeProviderData }: Props) => {
+const ActiveProviderCard = ({
+  activeProviderData,
+  changingProvider,
+}: Props) => {
   return (
     <View
       style={{
@@ -43,52 +47,66 @@ const ActiveProviderCard = ({ activeProviderData }: Props) => {
         >
           <View
             style={{
+              height: 180,
+              paddingVertical: 3,
               width: "70%",
-              gap: 20,
+              justifyContent: "space-between",
             }}
           >
             <View
               style={{
-                flexDirection: "row",
-                alignItems: "center",
                 gap: 5,
               }}
             >
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 5,
+                }}
+              >
+                <Text
+                  bold
+                  style={{
+                    fontSize: 20,
+                  }}
+                >
+                  {activeProviderData.name}
+                </Text>
+                <MaterialIcons name="verified" size={24} color={apidonPink} />
+              </View>
               <Text
                 bold
                 style={{
-                  fontSize: 20,
+                  color: "#808080",
                 }}
               >
-                {activeProviderData.name}
+                {activeProviderData.description}
               </Text>
-              <MaterialIcons name="verified" size={24} color={apidonPink} />
             </View>
 
-            <Text
-              bold
-              style={{
-                color: "#808080",
-              }}
-            >
-              {activeProviderData.description}
-            </Text>
-            <Text
-              style={{
-                color: apidonPink,
-              }}
-              bold
-            >
-              {activeProviderData.clientCount} Users
-            </Text>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 5,
-              }}
-            >
-              <Text bold>{activeProviderData.score.toFixed(1)}/5</Text>
+            <View>
+              <Text bold>Client Count</Text>
+              <Text
+                style={{
+                  color: apidonPink,
+                }}
+                bold
+              >
+                {activeProviderData.clientCount}
+              </Text>
+            </View>
+
+            <View>
+              <Text bold>Score</Text>
+              <Text
+                bold
+                style={{
+                  color: apidonPink,
+                }}
+              >
+                {activeProviderData.score.toFixed(1)}/5
+              </Text>
             </View>
           </View>
         </View>
@@ -108,7 +126,11 @@ const ActiveProviderCard = ({ activeProviderData }: Props) => {
           </Text>
         </View>
         <View>
-          <Stars size={28} userScore={activeProviderData.userScore} />
+          <Stars
+            size={28}
+            userScore={activeProviderData.userScore}
+            changingProvider={changingProvider}
+          />
         </View>
       </View>
     </View>
