@@ -6,37 +6,18 @@ export type GetProviderInformationAPIResponseBody =
   | {
       providerOptions: IProviderShowcaseItem[];
       isThereActiveProvider: true;
-      providerData: {
-        dueDatePassed: boolean;
-        withdrawn: boolean;
-        additionalProviderData: {
-          name: string;
-          description: string;
-          image: string;
-          clientCount: number;
-          score: number;
-          userScore: number;
-          yield: number;
-          duration: {
-            startTime: number;
-            endTime: number;
-          };
-        };
-      };
+      activeProviderInformation: ActiveProviderInformation;
     };
 
-export type ActiveProviderData = {
+export type ActiveProviderInformation = {
   name: string;
   description: string;
   image: string;
   clientCount: number;
   score: number;
   userScore: number;
-  yield: number;
-  duration: {
-    startTime: number;
-    endTime: number;
-  };
+  offer: number;
+  startTime: number;
 };
 
 export interface IProviderShowcaseItem {

@@ -1,4 +1,4 @@
-import { ActiveProviderData } from "@/types/Provider";
+import { ActiveProviderInformation } from "@/types/Provider";
 import { Image } from "expo-image";
 import React from "react";
 import { View } from "react-native";
@@ -8,7 +8,7 @@ import { apidonPink } from "@/constants/Colors";
 import Stars from "./Stars";
 
 type Props = {
-  activeProviderData: ActiveProviderData;
+  activeProviderData: ActiveProviderInformation;
   changingProvider: boolean;
 };
 
@@ -122,7 +122,7 @@ const ActiveProviderCard = ({
         <View>
           <Text bold>Overall Profit</Text>
           <Text bold style={{ color: apidonPink }}>
-            ${activeProviderData.yield}
+            ${activeProviderData.offer}
           </Text>
         </View>
         <View>

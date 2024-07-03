@@ -39,7 +39,7 @@ const provider = () => {
       {providerData.isThereActiveProvider && (
         <ActiveProviderCard
           changingProvider={changingProvider}
-          activeProviderData={providerData.providerData.additionalProviderData}
+          activeProviderData={providerData.activeProviderInformation}
         />
       )}
       <FlatList
@@ -49,7 +49,7 @@ const provider = () => {
         data={providerData.providerOptions.filter((op) => {
           if (!providerData.isThereActiveProvider) return true;
           const activeProviderName =
-            providerData.providerData.additionalProviderData.name;
+            providerData.activeProviderInformation.name;
           return activeProviderName !== op.name;
         })}
         renderItem={({ item }) => (

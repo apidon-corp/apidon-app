@@ -6,11 +6,12 @@ import {
   Ionicons,
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { Tabs, router } from "expo-router";
 import React from "react";
-import { StatusBar, View } from "react-native";
+import { Pressable, StatusBar, View } from "react-native";
 
 import { Text } from "@/components/Text/Text";
+import { auth } from "@/firebase/client";
 
 const _layout = () => {
   const notificationData = useNotification();
@@ -55,12 +56,21 @@ const _layout = () => {
               />
             ),
             headerRight: () => (
-              <AntDesign
-                name="user"
-                size={24}
-                color="white"
-                style={{ marginHorizontal: 10 }}
-              />
+              <Pressable
+                onPress={() => {
+                  const currentUserDisplayName = auth.currentUser?.displayName;
+                  if (!currentUserDisplayName) return;
+
+                  router.push(`home/profile/${currentUserDisplayName}`);
+                }}
+              >
+                <AntDesign
+                  name="user"
+                  size={24}
+                  color="white"
+                  style={{ marginHorizontal: 10 }}
+                />
+              </Pressable>
             ),
           }}
         />
