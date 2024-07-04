@@ -36,7 +36,7 @@ const OtherProvidersCard = ({
 
     if (changingProvider) return;
 
-    const route = `${userPanelBaseUrl}/api/provider/changeProvider`;
+    const route = `${userPanelBaseUrl}/api/provider/selectProvider`;
 
     setChangingProvider(true);
 
@@ -86,7 +86,8 @@ const OtherProvidersCard = ({
   };
 
   return (
-    <View
+    <Pressable
+      onPress={handlePressShowDetails}
       style={{
         width: "100%",
         backgroundColor: "rgba(255,255,255,0.1)",
@@ -221,7 +222,7 @@ const OtherProvidersCard = ({
           </View>
         )}
       </View>
-    </View>
+    </Pressable>
   );
 };
 

@@ -55,7 +55,13 @@ const Header = ({ userData }: Props) => {
         <Stack.Screen
           options={{
             headerRight: () => (
-              <Feather name="settings" size={23} color="white" />
+              <Pressable
+                onPress={() => {
+                  router.push("/(modals)/settings");
+                }}
+              >
+                <Feather name="settings" size={23} color="white" />
+              </Pressable>
             ),
           }}
         />

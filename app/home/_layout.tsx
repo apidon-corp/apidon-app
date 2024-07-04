@@ -75,11 +75,14 @@ const _layout = () => {
           }}
         />
         <Tabs.Screen
-          name="highRates"
+          name="search"
           options={{
-            tabBarIcon: () => <Entypo name="star" size={25} color="white" />,
+            tabBarIcon: () => (
+              <AntDesign name="search1" size={25} color="white" />
+            ),
             tabBarLabel: () => <></>,
-            headerShown: false,
+            headerShown: true,
+            title: "Search",
           }}
         />
         <Tabs.Screen

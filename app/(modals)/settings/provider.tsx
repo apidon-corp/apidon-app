@@ -1,6 +1,7 @@
 import ActiveProviderCard from "@/components/Provider/ActiveProviderCard";
 import OtherProvidersCard from "@/components/Provider/OtherProvidersCard";
-import { handleGetActiveProviderStatus } from "@/providers/ProviderProvider";
+import { handleGetActiveProviderStatus } from "@/helpers/Provider";
+
 import { GetProviderInformationAPIResponseBody } from "@/types/Provider";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, ScrollView, View } from "react-native";
@@ -35,12 +36,18 @@ const provider = () => {
   }
 
   return (
-    <ScrollView contentContainerStyle={{ flex: 1, gap: 20, paddingTop: 10 }}>
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      style={{ flex: 1 }}
+      contentContainerStyle={{ gap: 20, paddingTop: 10 }}
+    >
       {providerData.isThereActiveProvider && (
-        <ActiveProviderCard
-          changingProvider={changingProvider}
-          activeProviderData={providerData.activeProviderInformation}
-        />
+        <>
+          <ActiveProviderCard
+            changingProvider={changingProvider}
+            activeProviderData={providerData.activeProviderInformation}
+          />
+        </>
       )}
       <FlatList
         contentContainerStyle={{

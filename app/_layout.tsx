@@ -10,12 +10,11 @@ import AuthProvider from "@/providers/AuthProvider";
 import { StatusBar } from "react-native";
 
 import NotificationProvider from "@/providers/NotificationProvider";
-import ProviderProvider from "@/providers/ProviderProvider";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export {
   // Catch any errors thrown by the Layout component.
-  ErrorBoundary
+  ErrorBoundary,
 } from "expo-router";
 
 export const unstable_settings = {
@@ -55,55 +54,53 @@ function RootLayoutNav() {
   return (
     <>
       <AuthProvider>
-        <ProviderProvider>
-          <NotificationProvider>
-            <StatusBar barStyle="light-content" />
-            <ThemeProvider value={DarkTheme}>
-              <GestureHandlerRootView
-                style={{
-                  flex: 1,
-                }}
-              >
-                <Stack>
-                  <Stack.Screen
-                    name="(modals)"
-                    options={{
-                      headerShown: false,
-                      presentation: "modal",
-                    }}
-                  />
-                  <Stack.Screen
-                    name="index"
-                    options={{
-                      title: "Index",
-                      headerShown: false,
-                    }}
-                  />
-                  <Stack.Screen
-                    name="auth"
-                    options={{
-                      headerShown: false,
-                      title: "Auth",
-                    }}
-                  />
-                  <Stack.Screen
-                    name="home"
-                    options={{
-                      title: "Home",
-                      headerShown: false,
-                    }}
-                  />
-                  <Stack.Screen
-                    name="+not-found"
-                    options={{
-                      title: "Not Found",
-                    }}
-                  />
-                </Stack>
-              </GestureHandlerRootView>
-            </ThemeProvider>
-          </NotificationProvider>
-        </ProviderProvider>
+        <NotificationProvider>
+          <StatusBar barStyle="light-content" />
+          <ThemeProvider value={DarkTheme}>
+            <GestureHandlerRootView
+              style={{
+                flex: 1,
+              }}
+            >
+              <Stack>
+                <Stack.Screen
+                  name="(modals)"
+                  options={{
+                    headerShown: false,
+                    presentation: "modal",
+                  }}
+                />
+                <Stack.Screen
+                  name="index"
+                  options={{
+                    title: "Index",
+                    headerShown: false,
+                  }}
+                />
+                <Stack.Screen
+                  name="auth"
+                  options={{
+                    headerShown: false,
+                    title: "Auth",
+                  }}
+                />
+                <Stack.Screen
+                  name="home"
+                  options={{
+                    title: "Home",
+                    headerShown: false,
+                  }}
+                />
+                <Stack.Screen
+                  name="+not-found"
+                  options={{
+                    title: "Not Found",
+                  }}
+                />
+              </Stack>
+            </GestureHandlerRootView>
+          </ThemeProvider>
+        </NotificationProvider>
       </AuthProvider>
     </>
   );

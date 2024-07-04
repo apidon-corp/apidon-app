@@ -1,33 +1,5 @@
 import { auth } from "@/firebase/client";
 import { GetProviderInformationAPIResponseBody } from "@/types/Provider";
-import {
-  PropsWithChildren,
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import { useAuth } from "./AuthProvider";
-
-const ProviderContext =
-  createContext<null | GetProviderInformationAPIResponseBody>(null);
-
-const ProviderProvider = ({ children }: PropsWithChildren) => {
-  const [providerInformation, setProviderInformation] =
-    useState<null | GetProviderInformationAPIResponseBody>(null);
-
-  const authStatus = useAuth();
-
-  useEffect(() => {
-    if (authStatus === "authenticated") handleGetActiveProviderStatus();
-  }, [authStatus]);
-
-  return (
-    <ProviderContext.Provider value={providerInformation}>
-      {children}
-    </ProviderContext.Provider>
-  );
-};
 
 export const handleGetActiveProviderStatus = async () => {
   const currentUserAuthObject = auth.currentUser;
@@ -69,7 +41,3 @@ export const handleGetActiveProviderStatus = async () => {
     return false;
   }
 };
-
-export const useProvider = () => useContext(ProviderContext);
-
-export default ProviderProvider;

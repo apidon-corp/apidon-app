@@ -1,12 +1,15 @@
-import { View, Text } from "react-native";
-import React from "react";
 import { Stack } from "expo-router";
+import React from "react";
 
-type Props = {};
-
-const _layout = (props: Props) => {
+const _layout = () => {
   return (
-    <Stack>
+    <Stack initialRouteName="index">
+      <Stack.Screen
+        name="index"
+        options={{
+          title: "Settings",
+        }}
+      />
       <Stack.Screen
         name="provider"
         options={{
