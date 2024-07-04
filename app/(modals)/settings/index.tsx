@@ -1,7 +1,8 @@
-import { View, Pressable } from "react-native";
-import React from "react";
 import { Text } from "@/components/Text/Text";
+import SignOut from "@/components/User/SignOut";
 import { router } from "expo-router";
+import React from "react";
+import { Pressable, View } from "react-native";
 
 const settings = () => {
   return (
@@ -9,6 +10,7 @@ const settings = () => {
       style={{
         flex: 1,
         padding: 10,
+        gap: 10,
       }}
     >
       <Pressable
@@ -18,6 +20,7 @@ const settings = () => {
           borderColor: "gray",
           borderRadius: 10,
           width: "100%",
+          gap: 5
         }}
         onPress={() => {
           router.push("/(modals)/settings/provider");
@@ -32,6 +35,7 @@ const settings = () => {
           available providers.
         </Text>
       </Pressable>
+      <SignOut />
     </View>
   );
 };

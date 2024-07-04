@@ -16,12 +16,15 @@ import CreateFrenlet from "../Frenlet/CreateFrenlet";
 import Frenlet from "../Frenlet/Frenlet";
 import Header from "./Header";
 import { UserInServer } from "@/types/User";
+import { useAuth } from "@/providers/AuthProvider";
 
 type Props = {
   username: string;
 };
 
 const UserContent = ({ username }: Props) => {
+  const authStatus = useAuth();
+
   const [postDocPathArray, setPostDocPathArray] = useState<string[]>([]);
   const [frenletDocPaths, setFrenletDocPaths] = useState<string[]>([]);
   const [userData, setUserData] = useState<UserInServer | null>(null);
@@ -36,6 +39,7 @@ const UserContent = ({ username }: Props) => {
 
   // Post Fetching
   useEffect(() => {
+    if (authStatus !== "authenticated") return;
     if (!username) return;
 
     setPostDocPathArray([]);
@@ -62,10 +66,12 @@ const UserContent = ({ username }: Props) => {
     });
 
     return () => unsubscribe();
-  }, [username]);
+  }, [username, authStatus]);
 
   // Frenlet Fetching
   useEffect(() => {
+    if (authStatus !== "authenticated") return;
+
     if (!username) return;
 
     setFrenletDocPaths([]);
@@ -89,10 +95,12 @@ const UserContent = ({ username }: Props) => {
     });
 
     return () => unsubscribe();
-  }, [username]);
+  }, [username, authStatus]);
 
   // Dynamic Data Fetching
   useEffect(() => {
+    if (authStatus !== "authenticated") return;
+
     const userDocRef = doc(firestore, `/users/${username}`);
 
     const unsubscribe = onSnapshot(
@@ -114,7 +122,7 @@ const UserContent = ({ username }: Props) => {
     );
 
     return () => unsubscribe();
-  }, [username]);
+  }, [username, authStatus]);
 
   if (!userData)
     return (

@@ -221,43 +221,27 @@ const Header = ({ userData }: Props) => {
           </View>
         </View>
         {userOwnsPage ? (
-          <>
-            <Pressable
-              onPress={() => {
-                auth.signOut();
-              }}
-            >
-              <Text
-                bold
-                style={{
-                  color: "red",
-                }}
-              >
-                Sign Out
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={handleEditProfileButton}
+          <Pressable
+            onPress={handleEditProfileButton}
+            style={{
+              borderColor: apidonPink,
+              borderWidth: 1,
+              borderRadius: 10,
+              paddingHorizontal: 15,
+              paddingVertical: 5,
+              marginTop: 10,
+            }}
+          >
+            <Text
               style={{
-                borderColor: apidonPink,
-                borderWidth: 1,
-                borderRadius: 10,
-                paddingHorizontal: 15,
-                paddingVertical: 5,
-                marginTop: 10,
+                fontSize: 14,
+                textAlign: "center",
               }}
+              bold
             >
-              <Text
-                style={{
-                  fontSize: 14,
-                  textAlign: "center",
-                }}
-                bold
-              >
-                Edit Profile
-              </Text>
-            </Pressable>
-          </>
+              Edit Profile
+            </Text>
+          </Pressable>
         ) : (
           <FollowButton username={userData.username} />
         )}

@@ -22,12 +22,15 @@ import { router } from "expo-router";
 import { useSetAtom } from "jotai";
 import RateStar from "./Rating/RateStar";
 import Stars from "./Rating/Stars";
+import { useAuth } from "@/providers/AuthProvider";
 
 type Props = {
   postDocPath: string;
 };
 
 const Post = ({ postDocPath }: Props) => {
+  const authStatus = useAuth();
+
   const [loading, setLoading] = useState(false);
 
   const [postDocData, setPostDocData] = useState<PostServerData | null>(null);
@@ -200,6 +203,7 @@ const Post = ({ postDocPath }: Props) => {
 
   // Dynamic Data Fetching / Post Object
   useEffect(() => {
+    if (authStatus !== "authenticated") return;
     if (postDeleted) return;
 
     setLoading(true);
@@ -231,10 +235,12 @@ const Post = ({ postDocPath }: Props) => {
     );
 
     return () => unsubscribe();
-  }, [postDocPath, auth, postDeleted]);
+  }, [postDocPath, authStatus, postDeleted]);
 
   // Dynamic Data Fetching / Current User
   useEffect(() => {
+    if (authStatus !== "authenticated") return;
+
     const displayName = auth.currentUser?.displayName;
     if (!displayName) return;
 
@@ -259,7 +265,7 @@ const Post = ({ postDocPath }: Props) => {
     );
 
     return () => unsubscribe();
-  }, [auth.currentUser, postDocData?.senderUsername]);
+  }, [authStatus, postDocData?.senderUsername]);
 
   if (loading)
     return (

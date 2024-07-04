@@ -11,14 +11,18 @@ type Props = {
   providerData: IProviderShowcaseItem;
   changingProvider: boolean;
   setChangingProvider: Dispatch<SetStateAction<boolean>>;
+  initiallyOpen?: boolean;
+  firstTimeChoosing?: boolean;
 };
 
 const OtherProvidersCard = ({
   changingProvider,
   providerData,
   setChangingProvider,
+  initiallyOpen,
+  firstTimeChoosing,
 }: Props) => {
-  const [showDetails, setShowDetails] = useState(false);
+  const [showDetails, setShowDetails] = useState(initiallyOpen);
 
   const handlePressShowDetails = () => {
     setShowDetails(!showDetails);
@@ -201,7 +205,9 @@ const OtherProvidersCard = ({
               {providerData.description}
             </Text>
             <Pressable
-              onPress={handleChooseButton}
+              onPress={
+                firstTimeChoosing ? handleChangeProvider : handleChooseButton
+              }
               style={{
                 padding: 10,
                 paddingHorizontal: 20,

@@ -117,15 +117,17 @@ const index = () => {
   };
 
   const handleEmailUsernameChange = (input: string) => {
-    setEmailUsername(input);
+    const lowercasedInput = input.toLowerCase();
+
+    setEmailUsername(lowercasedInput);
     setError("");
 
     const emailRegex =
       /^[A-Za-z0-9._%+-]+@(gmail|yahoo|outlook|aol|icloud|protonmail|yandex|mail|zoho)\.(com|net|org)$/i;
-    const emailRegexTestResult = emailRegex.test(input);
+    const emailRegexTestResult = emailRegex.test(lowercasedInput);
 
     const usernameRegex = /^[a-z0-9]{4,20}$/;
-    const usernameRegexTestResult = usernameRegex.test(input);
+    const usernameRegexTestResult = usernameRegex.test(lowercasedInput);
 
     setIsEmail(emailRegexTestResult);
 

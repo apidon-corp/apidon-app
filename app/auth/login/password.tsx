@@ -1,5 +1,6 @@
 import { apidonPink } from "@/constants/Colors";
 import { auth } from "@/firebase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { router, useLocalSearchParams } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import React, { useEffect, useRef, useState } from "react";
@@ -9,8 +10,6 @@ import {
   Dimensions,
   Image,
   Keyboard,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -19,9 +18,10 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const password = () => {
+  const authStatus = useAuth();
+
   const [password, setPassword] = useState("");
 
   const { email, username } = useLocalSearchParams<{
@@ -170,7 +170,7 @@ const password = () => {
             onPress={handleLoginButton}
             disabled={loading}
           >
-            {loading ? (
+            {loading || authStatus === "loading" ? (
               <ActivityIndicator color="white" />
             ) : (
               <Text
