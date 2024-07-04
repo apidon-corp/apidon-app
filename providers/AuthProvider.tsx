@@ -1,5 +1,6 @@
 import { auth } from "@/firebase/client";
 import { handleGetActiveProviderStatus } from "@/helpers/Provider";
+import resetNavigationHistory from "@/helpers/Router";
 import { AuthStatus } from "@/types/AuthType";
 import { router } from "expo-router";
 
@@ -36,31 +37,31 @@ export default function AuthProvider({ children }: PropsWithChildren) {
   };
 
   const handleInitialAuthentication = async () => {
+    resetNavigationHistory();
+
     setAuthStatus("loading");
 
     const currentUserDisplayName = getCurrentUserDisplayName();
 
-    if (currentUserDisplayName) {
-      const providerResult = await handleGetActiveProviderStatus();
-
-      if (!providerResult) {
-        setAuthStatus("unauthenticated");
-        router.replace("/");
-        return;
-      }
-
-      if (!providerResult.isThereActiveProvider) {
-        setAuthStatus("authenticated");
-        router.replace("(modals)/initialProvider");
-        return;
-      }
-
-      setAuthStatus("authenticated");
-      router.replace(`/home`);
-    } else {
+    if (!currentUserDisplayName) {
       setAuthStatus("unauthenticated");
-      router.replace("/");
+      return router.replace("/");
     }
+
+    const providerResult = await handleGetActiveProviderStatus();
+
+    if (!providerResult) {
+      setAuthStatus("unauthenticated");
+      return router.replace("/");
+    }
+
+    if (!providerResult.isThereActiveProvider) {
+      setAuthStatus("authenticated");
+      return router.replace("/(modals)/initialProvider");
+    }
+
+    setAuthStatus("authenticated");
+    return router.replace(`/home`);
   };
 
   useEffect(() => {

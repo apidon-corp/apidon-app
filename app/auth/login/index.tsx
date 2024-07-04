@@ -117,7 +117,7 @@ const index = () => {
   };
 
   const handleEmailUsernameChange = (input: string) => {
-    const lowercasedInput = input.toLowerCase();
+    const lowercasedInput = input.toLowerCase().trim();
 
     setEmailUsername(lowercasedInput);
     setError("");
