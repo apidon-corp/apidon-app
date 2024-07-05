@@ -11,6 +11,7 @@ import { StatusBar } from "react-native";
 
 import NotificationProvider from "@/providers/NotificationProvider";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -62,42 +63,44 @@ function RootLayoutNav() {
                 flex: 1,
               }}
             >
-              <Stack>
-                <Stack.Screen
-                  name="(modals)"
-                  options={{
-                    headerShown: false,
-                    presentation: "modal",
-                  }}
-                />
-                <Stack.Screen
-                  name="index"
-                  options={{
-                    title: "Index",
-                    headerShown: false,
-                  }}
-                />
-                <Stack.Screen
-                  name="auth"
-                  options={{
-                    headerShown: false,
-                    title: "Auth",
-                  }}
-                />
-                <Stack.Screen
-                  name="home"
-                  options={{
-                    title: "Home",
-                    headerShown: false,
-                  }}
-                />
-                <Stack.Screen
-                  name="+not-found"
-                  options={{
-                    title: "Not Found",
-                  }}
-                />
-              </Stack>
+              <BottomSheetModalProvider>
+                <Stack>
+                  <Stack.Screen
+                    name="(modals)"
+                    options={{
+                      headerShown: false,
+                      presentation: "modal",
+                    }}
+                  />
+                  <Stack.Screen
+                    name="index"
+                    options={{
+                      title: "Index",
+                      headerShown: false,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="auth"
+                    options={{
+                      headerShown: false,
+                      title: "Auth",
+                    }}
+                  />
+                  <Stack.Screen
+                    name="home"
+                    options={{
+                      title: "Home",
+                      headerShown: false,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="+not-found"
+                    options={{
+                      title: "Not Found",
+                    }}
+                  />
+                </Stack>
+              </BottomSheetModalProvider>
             </GestureHandlerRootView>
           </ThemeProvider>
         </NotificationProvider>

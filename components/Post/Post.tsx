@@ -12,17 +12,18 @@ import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-
 import { Entypo, Feather } from "@expo/vector-icons";
-
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
+import { useAuth } from "@/providers/AuthProvider";
 import { formatDistanceToNow } from "date-fns";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
 import RateStar from "./Rating/RateStar";
 import Stars from "./Rating/Stars";
-import { useAuth } from "@/providers/AuthProvider";
+import CustomBottomModalSheet from "../BottomSheet/CustomBottomModalSheet";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { apidonPink } from "@/constants/Colors";
 
 type Props = {
   postDocPath: string;
@@ -50,6 +51,8 @@ const Post = ({ postDocPath }: Props) => {
 
   const animatedScaleValue = useRef(new Animated.Value(1)).current;
 
+  const bottomModalSheetRef = useRef<BottomSheetModal>(null);
+
   const overallRating = useMemo(() => {
     if (!postDocData) return 0;
 
@@ -63,6 +66,72 @@ const Post = ({ postDocPath }: Props) => {
 
     return totalRates / rateCount;
   }, [postDocData?.rates]);
+
+  // Dynamic Data Fetching / Post Object
+  useEffect(() => {
+    if (authStatus !== "authenticated") return;
+    if (postDeleted) return;
+
+    setLoading(true);
+
+    const postDocRef = doc(firestore, postDocPath);
+    const unsubscribe = onSnapshot(
+      postDocRef,
+      (snapshot) => {
+        if (!snapshot.exists()) {
+          console.log("Post's realtime data can not be fecthed.");
+          return setLoading(false);
+        }
+        const postDocData = snapshot.data() as PostServerData;
+        setPostDocData(postDocData);
+
+        if (!postSenderData)
+          handleGetPostSenderInformation(postDocData.senderUsername);
+
+        setDoesOwnPost(
+          postDocData.senderUsername === auth.currentUser?.displayName
+        );
+
+        return setLoading(false);
+      },
+      (error) => {
+        console.error("Error on getting realtime data: ", error);
+        return setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [postDocPath, authStatus, postDeleted]);
+
+  // Dynamic Data Fetching / Current User
+  useEffect(() => {
+    if (authStatus !== "authenticated") return;
+
+    const displayName = auth.currentUser?.displayName;
+    if (!displayName) return;
+
+    if (!postDocData) return;
+
+    const postSenderFollowingDocOnCurrentUser = doc(
+      firestore,
+      `/users/${postDocData.senderUsername}/followers/${displayName}`
+    );
+    const unsubscribe = onSnapshot(
+      postSenderFollowingDocOnCurrentUser,
+      (snapshot) => {
+        if (!snapshot.exists()) {
+          setDoesFollow(false);
+        } else {
+          setDoesFollow(true);
+        }
+      },
+      (error) => {
+        console.error("Error on getting realtime data: ", error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [authStatus, postDocData?.senderUsername]);
 
   const handleGetPostSenderInformation = async (senderUsername: string) => {
     try {
@@ -91,6 +160,9 @@ const Post = ({ postDocPath }: Props) => {
   };
 
   const handleDeleteButton = () => {
+    console.log("Delete");
+    return bottomModalSheetRef.current?.present();
+
     Alert.alert("Delete Post", "Are you sure to delete this post?", [
       {
         text: "Cancel",
@@ -200,72 +272,6 @@ const Post = ({ postDocPath }: Props) => {
       return setFollowLoading(false);
     }
   };
-
-  // Dynamic Data Fetching / Post Object
-  useEffect(() => {
-    if (authStatus !== "authenticated") return;
-    if (postDeleted) return;
-
-    setLoading(true);
-
-    const postDocRef = doc(firestore, postDocPath);
-    const unsubscribe = onSnapshot(
-      postDocRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          console.log("Post's realtime data can not be fecthed.");
-          return setLoading(false);
-        }
-        const postDocData = snapshot.data() as PostServerData;
-        setPostDocData(postDocData);
-
-        if (!postSenderData)
-          handleGetPostSenderInformation(postDocData.senderUsername);
-
-        setDoesOwnPost(
-          postDocData.senderUsername === auth.currentUser?.displayName
-        );
-
-        return setLoading(false);
-      },
-      (error) => {
-        console.error("Error on getting realtime data: ", error);
-        return setLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [postDocPath, authStatus, postDeleted]);
-
-  // Dynamic Data Fetching / Current User
-  useEffect(() => {
-    if (authStatus !== "authenticated") return;
-
-    const displayName = auth.currentUser?.displayName;
-    if (!displayName) return;
-
-    if (!postDocData) return;
-
-    const postSenderFollowingDocOnCurrentUser = doc(
-      firestore,
-      `/users/${postDocData.senderUsername}/followers/${displayName}`
-    );
-    const unsubscribe = onSnapshot(
-      postSenderFollowingDocOnCurrentUser,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          setDoesFollow(false);
-        } else {
-          setDoesFollow(true);
-        }
-      },
-      (error) => {
-        console.error("Error on getting realtime data: ", error);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [authStatus, postDocData?.senderUsername]);
 
   if (loading)
     return (
@@ -507,6 +513,41 @@ const Post = ({ postDocPath }: Props) => {
           </Pressable>
         </View>
       </Animated.View>
+      <CustomBottomModalSheet ref={bottomModalSheetRef}>
+        <View style={{ gap: 10 }}>
+          <Pressable
+            style={{
+              padding: 10,
+              borderRadius: 10,
+              backgroundColor: apidonPink,
+              width: "100%",
+              alignItems: "center",
+            }}
+          >
+            <Text bold style={{ fontSize: 16 }}>
+              Create NFT
+            </Text>
+          </Pressable>
+          <Pressable
+            style={{
+              padding: 10,
+              borderRadius: 10,
+              backgroundColor: "red",
+              width: "100%",
+              alignItems: "center",
+            }}
+          >
+            <Text
+              bold
+              style={{
+                fontSize: 16,
+              }}
+            >
+              Delete
+            </Text>
+          </Pressable>
+        </View>
+      </CustomBottomModalSheet>
     </>
   );
 };

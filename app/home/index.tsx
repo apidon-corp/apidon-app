@@ -15,6 +15,23 @@ const index = () => {
     (q) => q.queryId === "createdPostDocPath"
   )?.value as string | undefined;
 
+  useEffect(() => {
+    if (!createdPostDocPath) return;
+
+    const previousValues = postDocPathArray;
+    if (previousValues.includes(createdPostDocPath)) return;
+
+    previousValues.unshift(createdPostDocPath);
+
+    const updatedValues = previousValues;
+
+    setPostDocPathArray(updatedValues);
+  }, [createdPostDocPath]);
+
+  useEffect(() => {
+    handleGetPostRecommendations();
+  }, []);
+
   /**
    * Fetches paths of recommended posts from server.
    * @returns
@@ -70,23 +87,6 @@ const index = () => {
       return setPostDocPathArray([]);
     }
   };
-
-  useEffect(() => {
-    if (!createdPostDocPath) return;
-
-    const previousValues = postDocPathArray;
-    if (previousValues.includes(createdPostDocPath)) return;
-
-    previousValues.unshift(createdPostDocPath);
-
-    const updatedValues = previousValues;
-
-    setPostDocPathArray(updatedValues);
-  }, [createdPostDocPath]);
-
-  useEffect(() => {
-    handleGetPostRecommendations();
-  }, []);
 
   if (loading)
     return (
