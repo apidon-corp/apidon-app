@@ -6,7 +6,6 @@ import {
   Pressable,
   View,
 } from "react-native";
-
 import { auth, firestore } from "@/firebase/client";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
@@ -159,10 +158,12 @@ const Post = ({ postDocPath }: Props) => {
     router.push("/(modals)/comments");
   };
 
-  const handleDeleteButton = () => {
-    console.log("Delete");
-    return bottomModalSheetRef.current?.present();
+  const handleOptionsButton = () => {
+    bottomModalSheetRef.current?.present();
+  };
 
+  const handleDeleteButton = () => {
+    bottomModalSheetRef.current?.close();
     Alert.alert("Delete Post", "Are you sure to delete this post?", [
       {
         text: "Cancel",
@@ -225,6 +226,17 @@ const Post = ({ postDocPath }: Props) => {
       setPostDeleteLoading(false);
       return console.error("Error on deleting post: ", error);
     }
+  };
+
+  const handleCreateNFTButton = () => {
+    if (!postDocData) return;
+    if (!postDocData.image) return;
+
+    bottomModalSheetRef.current?.close();
+
+    setScreenParameters([{ queryId: "postDocPath", value: postDocPath }]);
+
+    router.push("/(modals)/createNFT");
   };
 
   const handleFollowButton = async () => {
@@ -293,14 +305,21 @@ const Post = ({ postDocPath }: Props) => {
     <>
       <Animated.View
         id="post-root"
-        style={{
-          width: "100%",
-          transform: [
-            {
-              scale: animatedScaleValue,
-            },
-          ],
-        }}
+        style={[
+          {
+            width: "100%",
+            transform: [
+              {
+                scale: animatedScaleValue,
+              },
+            ],
+          },
+          postDocData.nftStatus.convertedToNft && {
+            borderWidth: 3,
+            borderColor: apidonPink,
+            borderRadius: 10,
+          },
+        ]}
       >
         <View
           id="header"
@@ -372,13 +391,13 @@ const Post = ({ postDocPath }: Props) => {
           </Pressable>
           {doesOwnPost ? (
             <Pressable
-              onPress={handleDeleteButton}
+              onPress={handleOptionsButton}
               disabled={postDeleteLoading}
             >
               {postDeleteLoading ? (
                 <ActivityIndicator color="red" />
               ) : (
-                <Feather name="delete" size={24} color="red" />
+                <Entypo name="dots-three-vertical" size={18} color="white" />
               )}
             </Pressable>
           ) : (
@@ -513,21 +532,30 @@ const Post = ({ postDocPath }: Props) => {
           </Pressable>
         </View>
       </Animated.View>
-      <CustomBottomModalSheet ref={bottomModalSheetRef}>
-        <View style={{ gap: 10 }}>
-          <Pressable
-            style={{
-              padding: 10,
-              borderRadius: 10,
-              backgroundColor: apidonPink,
-              width: "100%",
-              alignItems: "center",
-            }}
-          >
-            <Text bold style={{ fontSize: 16 }}>
-              Create NFT
-            </Text>
-          </Pressable>
+      <CustomBottomModalSheet ref={bottomModalSheetRef} snapPoint="25%">
+        <View
+          style={{
+            flex: 1,
+            gap: 10,
+          }}
+        >
+          {postDocData.image && (
+            <Pressable
+              onPress={handleCreateNFTButton}
+              style={{
+                padding: 10,
+                borderRadius: 10,
+                backgroundColor: apidonPink,
+                width: "100%",
+                alignItems: "center",
+              }}
+            >
+              <Text bold style={{ fontSize: 16 }}>
+                Create NFT
+              </Text>
+            </Pressable>
+          )}
+
           <Pressable
             style={{
               padding: 10,
@@ -536,6 +564,7 @@ const Post = ({ postDocPath }: Props) => {
               width: "100%",
               alignItems: "center",
             }}
+            onPress={handleDeleteButton}
           >
             <Text
               bold

@@ -41,6 +41,13 @@ const _layout = () => {
             title: "Choose Provider",
           }}
         />
+        <Stack.Screen
+          name="createNFT"
+          options={{
+            presentation: "modal",
+            title: "Create NFT",
+          }}
+        />
       </Stack>
     </>
   );
