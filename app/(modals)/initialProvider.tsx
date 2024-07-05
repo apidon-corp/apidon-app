@@ -4,16 +4,9 @@ import { handleGetActiveProviderStatus } from "@/helpers/Provider";
 import { GetProviderInformationAPIResponseBody } from "@/types/Provider";
 import { Redirect } from "expo-router";
 import React, { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  ScrollView,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, ScrollView, View } from "react-native";
 
 import { Text } from "@/components/Text/Text";
-import { auth } from "@/firebase/client";
 
 const initialProvider = () => {
   const [providerData, setProviderData] =
