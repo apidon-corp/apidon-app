@@ -645,13 +645,12 @@ const Post = ({ postDocPath }: Props) => {
                 <Text
                   bold
                   style={{
-                    fontSize: 12,
+                    fontSize: 14,
                   }}
                 >
                   {postSenderData.username}
                 </Text>
                 <Text
-                  bold
                   style={{
                     fontSize: 14,
                   }}
@@ -659,10 +658,19 @@ const Post = ({ postDocPath }: Props) => {
                   {postSenderData.fullname}
                 </Text>
               </View>
+              <Text
+                bold
+                style={{
+                  fontSize: 14,
+                  color: apidonPink,
+                }}
+              >
+                {postSenderData.nftCount} NFTs
+              </Text>
             </View>
             <View>
               <Image
-                 source={
+                source={
                   postSenderData.profilePhoto ||
                   require("@/assets/images/user.jpg")
                 }
