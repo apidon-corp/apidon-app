@@ -4,12 +4,13 @@ import { View } from "react-native";
 
 type Props = {
   snapPoint: string;
+  backgroundColor?: string;
 };
 
 const CustomBottomModalSheet = forwardRef<
   BottomSheetModal,
   PropsWithChildren<Props>
->(({ children, snapPoint }, ref) => {
+>(({ children, snapPoint, backgroundColor }, ref) => {
   const renderBackdrops = useCallback(
     (props: any) => (
       <BottomSheetBackdrop
@@ -27,7 +28,7 @@ const CustomBottomModalSheet = forwardRef<
       snapPoints={[snapPoint]}
       index={0}
       backdropComponent={renderBackdrops}
-      backgroundStyle={{ backgroundColor: "#353935" }}
+      backgroundStyle={{ backgroundColor: backgroundColor || "#353935" }}
       handleIndicatorStyle={{ backgroundColor: "white" }}
     >
       <View style={{ flex: 1, padding: 10 }}>{children}</View>

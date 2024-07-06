@@ -50,7 +50,9 @@ const Post = ({ postDocPath }: Props) => {
 
   const animatedScaleValue = useRef(new Animated.Value(1)).current;
 
-  const bottomModalSheetRef = useRef<BottomSheetModal>(null);
+  const postOptionsModalRef = useRef<BottomSheetModal>(null);
+
+  const nftOptionsModalRef = useRef<BottomSheetModal>(null);
 
   const overallRating = useMemo(() => {
     if (!postDocData) return 0;
@@ -159,11 +161,11 @@ const Post = ({ postDocPath }: Props) => {
   };
 
   const handleOptionsButton = () => {
-    bottomModalSheetRef.current?.present();
+    postOptionsModalRef.current?.present();
   };
 
   const handleDeleteButton = () => {
-    bottomModalSheetRef.current?.close();
+    postOptionsModalRef.current?.close();
     Alert.alert("Delete Post", "Are you sure to delete this post?", [
       {
         text: "Cancel",
@@ -232,7 +234,7 @@ const Post = ({ postDocPath }: Props) => {
     if (!postDocData) return;
     if (!postDocData.image) return;
 
-    bottomModalSheetRef.current?.close();
+    postOptionsModalRef.current?.close();
 
     setScreenParameters([{ queryId: "postDocPath", value: postDocPath }]);
 
@@ -285,6 +287,10 @@ const Post = ({ postDocPath }: Props) => {
     }
   };
 
+  const handleNFTButton = () => {
+    nftOptionsModalRef.current?.present();
+  };
+
   if (loading)
     return (
       <View
@@ -313,11 +319,6 @@ const Post = ({ postDocPath }: Props) => {
                 scale: animatedScaleValue,
               },
             ],
-          },
-          postDocData.nftStatus.convertedToNft && {
-            borderWidth: 3,
-            borderColor: apidonPink,
-            borderRadius: 10,
           },
         ]}
       >
@@ -389,6 +390,30 @@ const Post = ({ postDocPath }: Props) => {
               </View>
             </View>
           </Pressable>
+          {postDocData.nftStatus.convertedToNft && (
+            <Pressable
+              onPress={handleNFTButton}
+              style={{
+                borderWidth: 1,
+                borderColor: apidonPink,
+                borderRadius: 10,
+                padding: 5,
+                flexDirection: "row",
+                gap: 5,
+              }}
+            >
+              <Text
+                bold
+                style={{
+                  color: apidonPink,
+                }}
+              >
+                NFT
+              </Text>
+              <Text>by</Text>
+              <Text bold>{postSenderData.username}</Text>
+            </Pressable>
+          )}
           {doesOwnPost ? (
             <Pressable
               onPress={handleOptionsButton}
@@ -532,14 +557,15 @@ const Post = ({ postDocPath }: Props) => {
           </Pressable>
         </View>
       </Animated.View>
-      <CustomBottomModalSheet ref={bottomModalSheetRef} snapPoint="25%">
+
+      <CustomBottomModalSheet ref={postOptionsModalRef} snapPoint="25%">
         <View
           style={{
             flex: 1,
             gap: 10,
           }}
         >
-          {postDocData.image && (
+          {postDocData.image && !postDocData.nftStatus.convertedToNft && (
             <Pressable
               onPress={handleCreateNFTButton}
               style={{
@@ -573,6 +599,163 @@ const Post = ({ postDocPath }: Props) => {
               }}
             >
               Delete
+            </Text>
+          </Pressable>
+        </View>
+      </CustomBottomModalSheet>
+
+      <CustomBottomModalSheet
+        ref={nftOptionsModalRef}
+        snapPoint="40%"
+        backgroundColor="#1B1B1B"
+      >
+        <View
+          style={{
+            flex: 1,
+            gap: 10,
+          }}
+        >
+          <View
+            id="creator-information"
+            style={{
+              flexDirection: "row",
+              backgroundColor: "#323232",
+              padding: 20,
+              justifyContent: "space-between",
+              borderRadius: 10,
+            }}
+          >
+            <View
+              style={{
+                justifyContent: "space-between",
+              }}
+            >
+              <Text
+                bold
+                style={{
+                  fontSize: 18,
+                }}
+              >
+                Creator
+              </Text>
+              <View id="username-fullaname">
+                <Text
+                  bold
+                  style={{
+                    fontSize: 12,
+                  }}
+                >
+                  {postSenderData.username}
+                </Text>
+                <Text
+                  bold
+                  style={{
+                    fontSize: 14,
+                  }}
+                >
+                  {postSenderData.fullname}
+                </Text>
+              </View>
+            </View>
+            <View>
+              <Image
+                source={postSenderData.profilePhoto}
+                style={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: 50,
+                }}
+              />
+            </View>
+          </View>
+
+          <View
+            id="price-reminder"
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              gap: 10,
+            }}
+          >
+            <View
+              id="price"
+              style={{
+                flex: 0.5,
+                flexDirection: "row",
+                backgroundColor: "#323232",
+                padding: 20,
+                gap: 5,
+                borderRadius: 10,
+                justifyContent: "space-between",
+              }}
+            >
+              <Text
+                bold
+                style={{
+                  fontSize: 18,
+                }}
+              >
+                Price
+              </Text>
+              <Text
+                bold
+                style={{
+                  fontSize: 18,
+                  color: apidonPink,
+                }}
+              >
+                ₺53
+              </Text>
+            </View>
+            <View
+              id="reminder"
+              style={{
+                flex: 0.5,
+                flexDirection: "row",
+                backgroundColor: "#323232",
+                padding: 20,
+                gap: 5,
+                borderRadius: 10,
+                justifyContent: "space-between",
+              }}
+            >
+              <Text
+                bold
+                style={{
+                  fontSize: 18,
+                }}
+              >
+                Stock
+              </Text>
+              <Text
+                bold
+                style={{
+                  fontSize: 18,
+                  color: apidonPink,
+                }}
+              >
+                4 Left
+              </Text>
+            </View>
+          </View>
+
+          <Pressable
+            style={{
+              backgroundColor: apidonPink,
+              padding: 20,
+              borderRadius: 10,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text
+              bold
+              style={{
+                color: "white",
+                fontSize: 18,
+              }}
+            >
+              Collect
             </Text>
           </Pressable>
         </View>

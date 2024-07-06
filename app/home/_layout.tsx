@@ -124,10 +124,10 @@ const _layout = () => {
           }}
         />
         <Tabs.Screen
-          name="(sidebar)"
+          name="(nft-market)"
           options={{
             tabBarIcon: () => (
-              <Feather name="sidebar" size={25} color="white" />
+              <MaterialCommunityIcons name="shopping" size={25} color="white" />
             ),
             tabBarLabel: () => <></>,
             headerShown: false,

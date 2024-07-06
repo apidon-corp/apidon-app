@@ -27,6 +27,8 @@ const createNFT = () => {
 
   const [postDocData, setPostDocData] = useState<PostServerData | null>(null);
 
+  const titleInputRef = useRef<TextInput>(null);
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
@@ -64,6 +66,8 @@ const createNFT = () => {
     const keyboardWillShowListener = Keyboard.addListener(
       "keyboardWillShow",
       (event) => {
+        if (titleInputRef.current && titleInputRef.current.isFocused()) return;
+
         if (Keyboard.isVisible()) return;
 
         const keyboardHeight = event.endCoordinates.height;
@@ -94,6 +98,8 @@ const createNFT = () => {
     const keyboardWillHideListener = Keyboard.addListener(
       "keyboardWillHide",
       (event) => {
+        if (titleInputRef.current && titleInputRef.current.isFocused()) return;
+
         let toValue = 0;
 
         Animated.timing(animatedTranslateValue, {
@@ -147,8 +153,6 @@ const createNFT = () => {
         return setLoading(false);
       }
 
-      console.log("Success");
-
       setLoading(false);
       return router.dismiss();
     } catch (error) {
@@ -192,6 +196,7 @@ const createNFT = () => {
           Title
         </Text>
         <TextInput
+          ref={titleInputRef}
           value={title}
           onChangeText={setTitle}
           style={{
@@ -253,7 +258,7 @@ const createNFT = () => {
         disabled={loading}
       >
         {loading ? (
-          <ActivityIndicator color="white" size="large" />
+          <ActivityIndicator color="white" />
         ) : (
           <Text
             bold

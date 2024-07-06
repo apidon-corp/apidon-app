@@ -70,8 +70,7 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
       const postSender = elements[2];
       const postId = elements[4];
 
-      router.push(`/home/post?sender=${postSender}&id=${postId}`);
-      return;
+      return router.push(`/home/post?sender=${postSender}&id=${postId}`);
     }
 
     if (notificationData.type === "frenletCreate") {
