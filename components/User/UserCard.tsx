@@ -174,7 +174,9 @@ const UserCard = ({ username }: Props) => {
           }}
         >
           <Image
-            source={userData.profilePhoto}
+            source={
+              userData.profilePhoto || require("@/assets/images/user.jpg")
+            }
             style={{
               width: 50,
               height: 50,

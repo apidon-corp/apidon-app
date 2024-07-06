@@ -76,7 +76,10 @@ const Header = ({ userData }: Props) => {
         }}
       >
         <Image
-          source={userData.profilePhoto}
+          source={
+            userData.profilePhoto ||
+            require("@/assets/images/user.jpg")
+          }
           style={{
             height: 150,
             width: 150,

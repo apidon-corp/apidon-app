@@ -16,5 +16,3 @@ export type UserInServer = {
 export type FollowerDocData = {
   followTime: number;
 };
-
-

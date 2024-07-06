@@ -345,7 +345,10 @@ const Post = ({ postDocPath }: Props) => {
             }}
           >
             <Image
-              source={postSenderData.profilePhoto}
+              source={
+                postSenderData.profilePhoto ||
+                require("@/assets/images/user.jpg")
+              }
               style={{
                 width: 50,
                 height: 50,
@@ -659,12 +662,16 @@ const Post = ({ postDocPath }: Props) => {
             </View>
             <View>
               <Image
-                source={postSenderData.profilePhoto}
+                 source={
+                  postSenderData.profilePhoto ||
+                  require("@/assets/images/user.jpg")
+                }
                 style={{
                   width: 100,
                   height: 100,
                   borderRadius: 50,
                 }}
+                transition={500}
               />
             </View>
           </View>

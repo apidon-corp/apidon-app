@@ -144,12 +144,16 @@ const Replet = ({ repletData, frenletOwners, frenletDocPath }: Props) => {
       }}
     >
       <Image
-        source={senderData.profilePhoto}
+        source={
+          senderData.profilePhoto ||
+          require("@/assets/images/user.jpg")
+        }
         style={{
           width: 48,
           height: 48,
           borderRadius: 24,
         }}
+        transition={500}
       />
       <View
         style={{

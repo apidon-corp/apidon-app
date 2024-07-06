@@ -144,12 +144,16 @@ const NftPreview = ({ postDocPath }: Props) => {
           }}
         >
           <Image
-            source={postSenderData.profilePhoto}
+            source={
+              postSenderData.profilePhoto ||
+              require("@/assets/images/user.jpg")
+            }
             style={{
               width: 40,
               height: 40,
               borderRadius: 20,
             }}
+            transition={500}
           />
         </View>
       </View>

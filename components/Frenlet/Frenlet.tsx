@@ -230,7 +230,9 @@ const Frenlet = ({ frenletDocPath }: Props) => {
         }}
       >
         <Image
-          source={senderData?.profilePhoto}
+          source={
+            senderData?.profilePhoto || require("@/assets/images/user.jpg")
+          }
           style={{
             width: 80,
             height: 80,
@@ -245,7 +247,7 @@ const Frenlet = ({ frenletDocPath }: Props) => {
         <Text
           style={{
             fontSize: 12,
-            color : "#808080"
+            color: "#808080",
           }}
         >
           {formatDistanceToNow(new Date(frenletData.ts))}

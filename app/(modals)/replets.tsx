@@ -100,7 +100,10 @@ const replets = () => {
     >
       <View id="recap" style={{ width: "100%", alignItems: "center", gap: 5 }}>
         <Image
-          source={senderData.profilePhoto}
+          source={
+            senderData.profilePhoto || require("@/assets/images/user.jpg")
+          }
+          transition={500}
           style={{ width: 80, height: 80, borderRadius: 40 }}
         />
         <Text bold>{senderData.username}</Text>
@@ -135,7 +138,7 @@ const replets = () => {
             gap: 20,
           }}
           keyExtractor={(item) => `${item.sender}-${item.ts}`}
-          data={frenletData.replies.sort((b,a) => a.ts- b.ts)}
+          data={frenletData.replies.sort((b, a) => a.ts - b.ts)}
           renderItem={({ item }) => (
             <Replet
               frenletOwners={[

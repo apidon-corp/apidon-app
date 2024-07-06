@@ -158,7 +158,10 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
       >
         <Pressable onPress={handleClickSenderInformation}>
           <Image
-            source={senderData.profilePhoto}
+            source={
+              senderData.profilePhoto ||
+              require("@/assets/images/user.jpg")
+            }
             style={{
               width: 50,
               height: 50,

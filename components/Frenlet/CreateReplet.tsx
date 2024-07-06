@@ -200,7 +200,9 @@ const CreateReplet = ({ frenletDocPath }: Props) => {
           height: 50,
           borderRadius: 25,
         }}
-        source={currentUserData?.profilePhoto}
+        source={
+          currentUserData?.profilePhoto || require("@/assets/images/user.jpg")
+        }
         transition={500}
       />
 

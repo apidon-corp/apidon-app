@@ -296,12 +296,16 @@ const comments = () => {
           }}
         >
           <Image
-            source={currentUserData.profilePhoto}
+            source={
+              currentUserData.profilePhoto ||
+              require("@/assets/images/user.jpg")
+            }
             style={{
               width: 50,
               height: 50,
               borderRadius: 25,
             }}
+            transition={500}
           />
           <TextInput
             placeholderTextColor="#808080"
