@@ -22,6 +22,7 @@ import {
 } from "@/types/ApiResponses";
 import { router, useLocalSearchParams } from "expo-router";
 import { apidonPink } from "@/constants/Colors";
+import apiRoutes from "@/helpers/ApiRoutes";
 
 type Props = {};
 
@@ -279,35 +280,23 @@ const secondPhase = (props: Props) => {
   };
 
   const handleSignUp = async () => {
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      console.error("User panel base url couldnt fetch from .env file");
-      return false;
-    }
-
-    const userPanelApiKey = process.env.EXPO_PUBLIC_USER_PANEL_API_KEY;
-    if (!userPanelApiKey) {
-      console.error("User panel api key couldnt fetch from .env file");
-      return false;
-    }
-
-    const fetchUrl = `${userPanelBaseUrl}/api/user/authentication/signup/verificationCodeSend`;
-
     try {
-      const response = await fetch(fetchUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: userPanelApiKey,
-        },
-        body: JSON.stringify({
-          referralCode: referralCode,
-          email: email,
-          password: password,
-          username: username,
-          fullname: fullname,
-        }),
-      });
+      const response = await fetch(
+        apiRoutes.user.authentication.signup.sendVerificationCode,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            referralCode: referralCode,
+            email: email,
+            password: password,
+            username: username,
+            fullname: fullname,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorResponse =
@@ -315,7 +304,7 @@ const secondPhase = (props: Props) => {
 
         console.error(
           "Response from ",
-          fetchUrl,
+          apiRoutes.user.authentication.signup.sendVerificationCode,
           " is not okay: ",
           errorResponse
         );

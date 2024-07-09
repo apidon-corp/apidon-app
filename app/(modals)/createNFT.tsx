@@ -2,6 +2,7 @@ import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
 import { auth, firestore } from "@/firebase/client";
+import apiRoutes from "@/helpers/ApiRoutes";
 import { PostServerData } from "@/types/Post";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -120,19 +121,13 @@ const createNFT = () => {
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return console.error("No user");
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl)
-      return console.error("User panel base url couldnt fetch from .env file");
-
-    const route = `${userPanelBaseUrl}/api/nft/uploadNFT`;
-
     if (loading) return;
 
     setLoading(true);
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.nft.uploadNFT, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

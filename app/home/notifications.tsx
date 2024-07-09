@@ -1,5 +1,6 @@
 import NotificationItem from "@/components/Notification/NotificationItem";
 import { auth } from "@/firebase/client";
+import apiRoutes from "@/helpers/ApiRoutes";
 import { useNotification } from "@/providers/NotificationProvider";
 import { usePathname } from "expo-router";
 import React, { useEffect } from "react";
@@ -13,21 +14,18 @@ const notifications = () => {
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return console.error("User not found");
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl)
-      return console.error("User panel base url couldnt fetch from .env file");
-
-    const route = `${userPanelBaseUrl}/api/user/notification/updateLastOpenedTime`;
-
     try {
       const idToken = await currentUserAuthObject.getIdToken();
-      const response = await fetch(route, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: `Bearer ${idToken}`,
-        },
-      });
+      const response = await fetch(
+        apiRoutes.user.notification.updateLastOpenedTime,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            authorization: `Bearer ${idToken}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         return console.error(

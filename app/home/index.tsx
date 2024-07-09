@@ -1,6 +1,7 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import Post from "@/components/Post/Post";
 import { auth } from "@/firebase/client";
+import apiRoutes from "@/helpers/ApiRoutes";
 import { useAtomValue } from "jotai";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, SafeAreaView } from "react-native";
@@ -40,21 +41,14 @@ const index = () => {
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return false;
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      console.error("User panel base url couldnt fetch from .env file");
-      return false;
-    }
-
     if (loading) return false;
 
     setLoading(true);
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
-      const route = `${userPanelBaseUrl}/api/feed/main/getPersonalizedMainFeed`;
 
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.feed.getPersonalizedFeed, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

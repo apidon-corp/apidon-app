@@ -1,7 +1,8 @@
 import { apidonPink } from "@/constants/Colors";
 import { auth, firestore } from "@/firebase/client";
+import apiRoutes from "@/helpers/ApiRoutes";
 import { UserInServer } from "@/types/User";
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { doc, getDoc } from "firebase/firestore";
 import React, { useEffect, useRef, useState } from "react";
@@ -77,18 +78,11 @@ const CreateReplet = ({ frenletDocPath }: Props) => {
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return console.error("User is not logged");
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      return console.error("User panel base url couldnt fetch from .env file");
-    }
-
     setMessageSendLoading(true);
-
-    const route = `${userPanelBaseUrl}/api/frenlet/sendReply`;
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.frenlet.sendReply, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

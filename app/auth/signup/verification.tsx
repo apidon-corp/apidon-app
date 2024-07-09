@@ -17,10 +17,9 @@ import { SignUpApiErrorResponseBody } from "@/types/ApiResponses";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/firebase/client";
 import { apidonPink } from "@/constants/Colors";
+import apiRoutes from "@/helpers/ApiRoutes";
 
-type Props = {};
-
-const verification = (props: Props) => {
+const verification = () => {
   const { email, password, username, fullname, referralCode } =
     useLocalSearchParams<{
       email: string;
@@ -135,34 +134,24 @@ const verification = (props: Props) => {
     fullname: string,
     referralCode: string
   ) => {
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      return console.error("User panel base url couldnt fetch from .env file");
-    }
-
-    const userPanelApiKey = process.env.EXPO_PUBLIC_USER_PANEL_API_KEY;
-    if (!userPanelApiKey) {
-      return console.error("User panel api key couldnt fetch from .env file");
-    }
-
-    const fetchUrl = `${userPanelBaseUrl}/api/user/authentication/signup/signup`;
-
     try {
-      const response = await fetch(fetchUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: userPanelApiKey,
-        },
-        body: JSON.stringify({
-          referralCode: referralCode,
-          email: email,
-          password: password,
-          username: username,
-          fullname: fullname,
-          verificationCode: verificationCode,
-        }),
-      });
+      const response = await fetch(
+        apiRoutes.user.authentication.signup.signup,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            referralCode: referralCode,
+            email: email,
+            password: password,
+            username: username,
+            fullname: fullname,
+            verificationCode: verificationCode,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const result = (await response.json()) as SignUpApiErrorResponseBody;
@@ -189,11 +178,7 @@ const verification = (props: Props) => {
       }
 
       // User created successfully...
-      const createdUser = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      await signInWithEmailAndPassword(auth, email, password);
 
       return console.log("User created successfully.");
     } catch (error) {

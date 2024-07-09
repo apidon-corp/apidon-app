@@ -1,6 +1,7 @@
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
 import { auth } from "@/firebase/client";
+import apiRoutes from "@/helpers/ApiRoutes";
 import { FollowStatusAPIResponseBody } from "@/types/ApiResponses";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef, useState } from "react";
@@ -11,7 +12,7 @@ import {
   Keyboard,
   Pressable,
   TextInput,
-  View
+  View,
 } from "react-native";
 
 type Props = {
@@ -167,14 +168,6 @@ const CreateFrenlet = ({ username }: Props) => {
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return;
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      console.error("User panel base url couldnt fetch from .env file");
-      return false;
-    }
-
-    const route = `${userPanelBaseUrl}/api/frenlet/createFrenlet`;
-
     setSendFrenletLoading(true);
     setMessage(trimmedMessage);
     Keyboard.dismiss();
@@ -183,7 +176,7 @@ const CreateFrenlet = ({ username }: Props) => {
       const idToken = await currentUserAuthObject.getIdToken();
 
       // Send frenlet
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.frenlet.createFrenlet, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

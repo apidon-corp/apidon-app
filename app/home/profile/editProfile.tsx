@@ -22,6 +22,7 @@ import createBlobFromURI from "@/utils/createBlobFromURI";
 import { Image } from "expo-image";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { useAtomValue } from "jotai";
+import apiRoutes from "@/helpers/ApiRoutes";
 
 const editProfile = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
@@ -201,19 +202,10 @@ const editProfile = () => {
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return false;
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      console.error("User panel base url couldnt fetch from .env file");
-      setError("Internal Server Error");
-      return false;
-    }
-
     try {
       const idToken = await currentUserAuthObject.getIdToken();
 
-      const route = `${userPanelBaseUrl}/api/mobile/updateProfileImage`;
-
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.user.personal.updateProfileImage, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -258,19 +250,10 @@ const editProfile = () => {
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return false;
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      console.error("User panel base url couldnt fetch from .env file");
-      setError("Internal Server Error");
-      return false;
-    }
-
     try {
       const idToken = await currentUserAuthObject.getIdToken();
 
-      const route = `${userPanelBaseUrl}/api/user/fullnameUpdate`;
-
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.user.personal.fullnameUpdate, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,3 +1,4 @@
+import apiRoutes from "@/helpers/ApiRoutes";
 import { CheckThereIsLinkedAccountApiResponseBody } from "@/types/ApiResponses";
 import { Link, router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -140,39 +141,28 @@ const index = () => {
     setError("");
 
     try {
-      const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-      if (!userPanelBaseUrl) {
-        console.error("User panel base url couldnt fetch from .env file");
-
-        setError("Internal Server Error");
-        return false;
-      }
-
-      const userPanelApiKey = process.env.EXPO_PUBLIC_USER_PANEL_API_KEY;
-      if (!userPanelApiKey) {
-        console.error("User panel api key couldnt fetch from .env file");
-
-        setError("Internal Server Error");
-        return false;
-      }
-
-      const fetchUrl = `${userPanelBaseUrl}/api/user/authentication/login/checkIsThereLinkedAccount`;
-
-      const response = await fetch(fetchUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: userPanelApiKey,
-        },
-        body: JSON.stringify({
-          eu: emailOrUsername,
-        }),
-      });
+      const response = await fetch(
+        apiRoutes.user.authentication.login.checkThereIsLinkedAccount,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            eu: emailOrUsername,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const message = await response.text();
 
-        console.error("Response from ", fetchUrl, " is not okay: ", message);
+        console.error(
+          "Response from ",
+          apiRoutes.user.authentication.login.checkThereIsLinkedAccount,
+          " is not okay: ",
+          message
+        );
 
         setError(message);
 
@@ -184,6 +174,11 @@ const index = () => {
 
       const emailFetched = result.email;
       const usernameFetched = result.username;
+
+      if (!emailFetched || !usernameFetched) {
+        setError("No user found with the provided email or username.");
+        return false;
+      }
 
       return {
         email: emailFetched,

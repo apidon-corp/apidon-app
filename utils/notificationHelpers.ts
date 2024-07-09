@@ -4,6 +4,7 @@ import * as Device from "expo-device";
 
 import Constants from "expo-constants";
 import { auth } from "@/firebase/client";
+import apiRoutes from "@/helpers/ApiRoutes";
 
 async function registerForPushNotifications() {
   // Android specific adjusting for channel.
@@ -61,26 +62,21 @@ async function updateNotificationTokenOnFirebase(token: string) {
   const currentUserAuthObject = auth.currentUser;
   if (!currentUserAuthObject) return false;
 
-  const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-  if (!userPanelBaseUrl) {
-    console.error("User panel base url couldnt fetch from .env file");
-    return false;
-  }
-
-  const route = `${userPanelBaseUrl}/api/user/notification/updateNotificationToken`;
-
   try {
     const idToken = await currentUserAuthObject.getIdToken();
-    const response = await fetch(route, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        authorization: `Bearer ${idToken}`,
-      },
-      body: JSON.stringify({
-        notificationToken: token,
-      }),
-    });
+    const response = await fetch(
+      apiRoutes.user.notification.updateNotificationToken,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          notificationToken: token,
+        }),
+      }
+    );
 
     if (!response.ok) {
       const message = await response.text();

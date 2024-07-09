@@ -19,6 +19,7 @@ import {
 import Replet from "./Replet";
 import { MaterialIcons } from "@expo/vector-icons";
 import { formatDistanceToNow } from "date-fns";
+import apiRoutes from "@/helpers/ApiRoutes";
 
 type Props = {
   frenletDocPath: string;
@@ -136,13 +137,6 @@ const Frenlet = ({ frenletDocPath }: Props) => {
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return false;
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      console.error("User panel base url couldnt fetch from .env file");
-      return false;
-    }
-
-    const route = `${userPanelBaseUrl}/api/frenlet/deleteFrenlet`;
     const frenletDocPath = `/users/${frenletData.frenletSender}/frenlets/frenlets/outgoing/${frenletData.frenletDocId}`;
 
     setFrenletDeleteLoading(true);
@@ -150,7 +144,7 @@ const Frenlet = ({ frenletDocPath }: Props) => {
     try {
       const idToken = await currentUserAuthObject.getIdToken();
 
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.frenlet.deleteFrenlet, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
