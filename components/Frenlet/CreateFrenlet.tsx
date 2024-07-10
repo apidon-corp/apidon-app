@@ -113,19 +113,11 @@ const CreateFrenlet = ({ username }: Props) => {
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return setIsFren(false);
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      console.error("User panel base url couldnt fetch from .env file");
-      return setIsFren(false);
-    }
-
-    const route = `${userPanelBaseUrl}/api/social/followStatus`;
-
     setCheckFrenLoading(true);
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.user.social.getFollowStatus, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -243,18 +243,12 @@ const Post = ({ postDocPath }: Props) => {
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return console.error("No user found!");
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl)
-      return console.error("User panel base url couldnt fetch from .env file");
-
-    const route = `${userPanelBaseUrl}/api/social/follow`;
-
     setFollowLoading(true);
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
 
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.user.social.follow, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

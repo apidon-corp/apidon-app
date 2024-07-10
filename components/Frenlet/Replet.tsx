@@ -8,6 +8,7 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { Image } from "expo-image";
 import { formatDistanceToNow } from "date-fns";
 import { Entypo, Ionicons } from "@expo/vector-icons";
+import apiRoutes from "@/helpers/ApiRoutes";
 
 type Props = {
   repletData: RepletServerData;
@@ -86,17 +87,11 @@ const Replet = ({ repletData, frenletOwners, frenletDocPath }: Props) => {
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return console.error("User is not logged");
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      return console.error("User panel base url couldnt fetch from .env file");
-    }
     setDeleteLoading(true);
-
-    const route = `${userPanelBaseUrl}/api/frenlet/deleteReplet`;
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.frenlet.deleteReplet, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -144,10 +139,7 @@ const Replet = ({ repletData, frenletOwners, frenletDocPath }: Props) => {
       }}
     >
       <Image
-        source={
-          senderData.profilePhoto ||
-          require("@/assets/images/user.jpg")
-        }
+        source={senderData.profilePhoto || require("@/assets/images/user.jpg")}
         style={{
           width: 48,
           height: 48,
