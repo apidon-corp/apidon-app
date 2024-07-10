@@ -8,6 +8,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { Image } from "expo-image";
 import { Entypo, Feather } from "@expo/vector-icons";
 import { formatDistanceToNow } from "date-fns";
+import apiRoutes from "@/helpers/ApiRoutes";
 
 type Props = {
   commentServerData: CommentServerData;
@@ -85,13 +86,6 @@ const CommentItem = ({
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return console.error("User is not logged");
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      return console.error("User panel base url couldnt fetch from .env file");
-    }
-
-    const route = `${userPanelBaseUrl}/api/postv3/postCommentDelete`;
-
     const commentObject: CommentServerData = {
       message: message,
       sender: sender,
@@ -100,7 +94,7 @@ const CommentItem = ({
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.post.comment.postCommentDelete, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -159,10 +153,7 @@ const CommentItem = ({
         }}
       >
         <Image
-           source={
-            userData.profilePhoto ||
-            require("@/assets/images/user.jpg")
-          }
+          source={userData.profilePhoto || require("@/assets/images/user.jpg")}
           style={{
             width: 50,
             height: 50,

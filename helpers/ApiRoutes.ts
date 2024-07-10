@@ -26,6 +26,10 @@ const apiRoutes = {
       updateLastOpenedTime: `${userApisBaseUrl}/user-Notification-updateLastOpenedTime`,
       updateNotificationToken: `${userApisBaseUrl}/user-Notification-updateNotificationToken`,
     },
+    social: {
+      follow: `${userApisBaseUrl}/user-Social-follow`,
+      getFollowStatus: `${userApisBaseUrl}/user-Social-getFollowStatus`,
+    },
   },
   frenlet: {
     createFrenlet: `${userApisBaseUrl}/frenlet-createFrenlet`,
@@ -36,8 +40,24 @@ const apiRoutes = {
     sendReply: `${userApisBaseUrl}/frenlet-sendReply`,
   },
   nft: {
-    uploadNFT: `${userApisBaseUrl}/nft-uploadNFT`
-  }
+    uploadNFT: `${userApisBaseUrl}/nft-uploadNFT`,
+  },
+  post: {
+    comment: {
+      postComment: `${userApisBaseUrl}/post-postComment`,
+      postCommentDelete: `${userApisBaseUrl}/post-postCommentDelete`,
+    },
+    postDelete: `${userApisBaseUrl}/post-postDelete`,
+    rate: {
+      postRate: `${userApisBaseUrl}/post-postRate`,
+    },
+    postUpload: `${userApisBaseUrl}/post-postUpload`,
+  },
+  provider: {
+    getProviderInformation: `${userApisBaseUrl}/provider-getProviderInformation`,
+    rateProvider: `${userApisBaseUrl}/provider-rateProvider`,
+    selectProvider: `${userApisBaseUrl}/provider-selectProvider`,
+  },
 };
 
 export default apiRoutes;

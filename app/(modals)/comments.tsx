@@ -2,6 +2,7 @@ import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import CommentItem from "@/components/Post/CommentItem";
 import { Text } from "@/components/Text/Text";
 import { auth, firestore } from "@/firebase/client";
+import apiRoutes from "@/helpers/ApiRoutes";
 import { CommentServerData, PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
 import { Ionicons } from "@expo/vector-icons";
@@ -182,18 +183,11 @@ const comments = () => {
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return console.error("User is not logged");
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      return console.error("User panel base url couldnt fetch from .env file");
-    }
-
     setSendCommentLoading(true);
-
-    const route = `${userPanelBaseUrl}/api/postv3/postComment`;
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.post.comment.postComment, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

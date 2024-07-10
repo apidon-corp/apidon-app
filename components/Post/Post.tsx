@@ -23,6 +23,7 @@ import Stars from "./Rating/Stars";
 import CustomBottomModalSheet from "../BottomSheet/CustomBottomModalSheet";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { apidonPink } from "@/constants/Colors";
+import apiRoutes from "@/helpers/ApiRoutes";
 
 type Props = {
   postDocPath: string;
@@ -185,18 +186,12 @@ const Post = ({ postDocPath }: Props) => {
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return console.log("No user is logged in.");
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl)
-      return console.error("User panel base url couldnt fetch from .env file");
-
-    const route = `${userPanelBaseUrl}/api/postv2/postDelete`;
-
     setPostDeleteLoading(true);
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
 
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.post.postDelete, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -25,6 +25,7 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
 import { AnimatedCircularProgress } from "react-native-circular-progress";
+import apiRoutes from "@/helpers/ApiRoutes";
 
 type Props = {};
 
@@ -140,20 +141,12 @@ const postCreate = (props: Props) => {
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return false;
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      console.error("User panel base url couldnt fetch from .env file");
-      return false;
-    }
-
     setLoading(true);
-
-    const route = `${userPanelBaseUrl}/api/postv3/postUpload`;
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
 
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.post.postUpload, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -8,6 +8,7 @@ import { FollowStatusAPIResponseBody } from "@/types/ApiResponses";
 import { apidonPink } from "@/constants/Colors";
 import { router } from "expo-router";
 import { Image } from "expo-image";
+import apiRoutes from "@/helpers/ApiRoutes";
 
 type Props = {
   username: string;
@@ -55,16 +56,10 @@ const UserCard = ({ username }: Props) => {
     const displayName = currentUserAuthObject.displayName;
     if (username === displayName) return setDoesFollow(true);
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl)
-      return console.error("User panel base url couldnt fetch from .env file");
-
     try {
       const idToken = await currentUserAuthObject.getIdToken();
 
-      const route = `${userPanelBaseUrl}/api/social/followStatus`;
-
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.user.social.getFollowStatus, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -98,16 +93,10 @@ const UserCard = ({ username }: Props) => {
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return console.error("No user found!");
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl)
-      return console.error("User panel base url couldnt fetch from .env file");
-
-    const route = `${userPanelBaseUrl}/api/social/follow`;
-
     try {
       const idToken = await currentUserAuthObject.getIdToken();
 
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.user.social.follow, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

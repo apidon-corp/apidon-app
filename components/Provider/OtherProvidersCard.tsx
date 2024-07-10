@@ -6,6 +6,7 @@ import { Image } from "expo-image";
 import { apidonPink } from "@/constants/Colors";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 import { auth } from "@/firebase/client";
+import apiRoutes from "@/helpers/ApiRoutes";
 
 type Props = {
   providerData: IProviderShowcaseItem;
@@ -32,21 +33,13 @@ const OtherProvidersCard = ({
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return false;
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      console.error("User panel base url couldnt fetch from .env file");
-      return false;
-    }
-
     if (changingProvider) return;
-
-    const route = `${userPanelBaseUrl}/api/provider/selectProvider`;
 
     setChangingProvider(true);
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.provider.selectProvider, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -2,6 +2,7 @@ import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import React, { useState } from "react";
 import { AntDesign } from "@expo/vector-icons";
 import { auth } from "@/firebase/client";
+import apiRoutes from "@/helpers/ApiRoutes";
 
 type Props = {
   userScore: number;
@@ -34,17 +35,9 @@ const Stars = (props: Props) => {
     const currentUserAuthObject = auth.currentUser;
     if (!currentUserAuthObject) return false;
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      console.error("User panel base url couldnt fetch from .env file");
-      return false;
-    }
-
-    const route = `${userPanelBaseUrl}/api/provider/rateProvider`;
-
     try {
       const idToken = await currentUserAuthObject.getIdToken();
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.provider.rateProvider, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
