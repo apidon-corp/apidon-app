@@ -1,12 +1,11 @@
 import { apidonPink } from "@/constants/Colors";
-import { firestore } from "@/firebase/client";
 import { useAuth } from "@/providers/AuthProvider";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
 import { FontAwesome5 } from "@expo/vector-icons";
+import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import Text from "../Text/Text";
@@ -27,35 +26,35 @@ const NftPreview = ({ postDocPath }: Props) => {
   useEffect(() => {
     if (authStatus !== "authenticated") return;
 
-    const postDocRef = doc(firestore, postDocPath);
-    const unsubscribe = onSnapshot(
-      postDocRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          return console.log("Post's realtime data can not be fecthed.");
+    const unsubscribe = firestore()
+      .doc(postDocPath)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            return console.log("Post's realtime data can not be fecthed.");
+          }
+          const postDocData = snapshot.data() as PostServerData;
+          setPostDocData(postDocData);
+
+          if (!postSenderData)
+            handleGetPostSenderInformation(postDocData.senderUsername);
+
+          return;
+        },
+        (error) => {
+          return console.error("Error on getting realtime data: ", error);
         }
-        const postDocData = snapshot.data() as PostServerData;
-        setPostDocData(postDocData);
-
-        if (!postSenderData)
-          handleGetPostSenderInformation(postDocData.senderUsername);
-
-        return;
-      },
-      (error) => {
-        return console.error("Error on getting realtime data: ", error);
-      }
-    );
+      );
 
     return () => unsubscribe();
   }, [postDocPath, authStatus]);
 
   const handleGetPostSenderInformation = async (senderUsername: string) => {
     try {
-      const userDocRef = doc(firestore, `/users/${senderUsername}`);
-
-      const userDocSnapshot = await getDoc(userDocRef);
-      if (!userDocSnapshot.exists()) return setPostSenderData(null);
+      const userDocSnapshot = await firestore()
+        .doc(`users/${senderUsername}`)
+        .get();
+      if (!userDocSnapshot.exists) return setPostSenderData(null);
 
       const userDocData = userDocSnapshot.data() as UserInServer;
 
@@ -145,8 +144,7 @@ const NftPreview = ({ postDocPath }: Props) => {
         >
           <Image
             source={
-              postSenderData.profilePhoto ||
-              require("@/assets/images/user.jpg")
+              postSenderData.profilePhoto || require("@/assets/images/user.jpg")
             }
             style={{
               width: 40,

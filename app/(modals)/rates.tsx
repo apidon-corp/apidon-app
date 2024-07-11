@@ -1,8 +1,7 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import UserCard from "@/components/User/UserCard";
-import { firestore } from "@/firebase/client";
-import { RateData, PostServerData } from "@/types/Post";
-import { doc, onSnapshot } from "firebase/firestore";
+import { PostServerData, RateData } from "@/types/Post";
+import firestore from "@react-native-firebase/firestore";
 import { useAtomValue } from "jotai";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, SafeAreaView, Text } from "react-native";
@@ -24,24 +23,24 @@ const Likes = () => {
     if (loading) return;
     setLoading(true);
 
-    const postDocRef = doc(firestore, postDocPath);
-    const unsubscribe = onSnapshot(
-      postDocRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          console.log("Post's realtime data can not be fecthed.");
+    const unsubscribe = firestore()
+      .doc(postDocPath)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.log("Post's realtime data can not be fecthed.");
+            return setLoading(false);
+          }
+          const postDocData = snapshot.data() as PostServerData;
+          setRateData(postDocData.rates);
+
+          return setLoading(false);
+        },
+        (error) => {
+          console.error("Error on getting realtime data: ", error);
           return setLoading(false);
         }
-        const postDocData = snapshot.data() as PostServerData;
-        setRateData(postDocData.rates);
-
-        return setLoading(false);
-      },
-      (error) => {
-        console.error("Error on getting realtime data: ", error);
-        return setLoading(false);
-      }
-    );
+      );
 
     return () => unsubscribe();
   }, [postDocPath]);

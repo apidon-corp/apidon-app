@@ -1,11 +1,11 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import UserCard from "@/components/User/UserCard";
-import { firestore } from "@/firebase/client";
 import { FollowerDocData } from "@/types/User";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { useAtomValue } from "jotai";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
+
+import firestore from "@react-native-firebase/firestore";
 
 type FollowingData = {
   following: string;
@@ -34,17 +34,12 @@ const following = () => {
     setLoading(true);
 
     try {
-      const followingsCollectionRef = collection(
-        firestore,
-        `/users/${username}/followings`
-      );
-
-      const followingsQuery = query(
-        followingsCollectionRef,
-        orderBy("followTime", "desc")
-      );
-
-      const followerDocs = (await getDocs(followingsQuery)).docs;
+      const followerDocs = (
+        await firestore()
+          .collection(`users/${username}/followings`)
+          .orderBy("followTime", "desc")
+          .get()
+      ).docs;
 
       const followerDatas = followerDocs.map((followerDoc) => {
         return {

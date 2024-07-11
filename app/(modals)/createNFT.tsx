@@ -1,12 +1,11 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
-import {  firestore } from "@/firebase/client";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { PostServerData } from "@/types/Post";
+import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { doc, onSnapshot } from "firebase/firestore";
 import { useAtomValue } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -45,21 +44,21 @@ const createNFT = () => {
   useEffect(() => {
     if (!postDocPath) return;
 
-    const postDocRef = doc(firestore, postDocPath);
-    const unsubscribe = onSnapshot(
-      postDocRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          return console.log("Post's realtime data can not be fecthed.");
+    const unsubscribe = firestore()
+      .doc(postDocPath)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            return console.log("Post's realtime data can not be fecthed.");
+          }
+          const postDocData = snapshot.data() as PostServerData;
+          setDescription(postDocData.description);
+          return setPostDocData(postDocData);
+        },
+        (error) => {
+          return console.error("Error on getting realtime data: ", error);
         }
-        const postDocData = snapshot.data() as PostServerData;
-        setDescription(postDocData.description);
-        return setPostDocData(postDocData);
-      },
-      (error) => {
-        return console.error("Error on getting realtime data: ", error);
-      }
-    );
+      );
 
     return () => unsubscribe();
   }, [postDocPath]);

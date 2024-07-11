@@ -75,7 +75,12 @@ const index = () => {
         postDocPathArrayFetched.unshift(createdPostDocPath);
 
       setLoading(false);
-      return setPostDocPathArray(postDocPathArrayFetched);
+
+      // We are removing first "/" from post doc path because mr react native firebase firestore doesn't like it.
+      const unSlicedAtFirstPostDocPathArrayFetched =
+        postDocPathArrayFetched.map((p) => p.slice(1));
+
+      return setPostDocPathArray(unSlicedAtFirstPostDocPathArrayFetched);
     } catch (error) {
       console.error("Error while fetching getPersonalizedMainFeed: ", error);
       setLoading(false);

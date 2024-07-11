@@ -1,8 +1,7 @@
 import NftPreview from "@/components/Nft/NftPreview";
-import { firestore } from "@/firebase/client";
 import { useAuth } from "@/providers/AuthProvider";
 import { NftDocDataInServer } from "@/types/Nft";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import firestore from "@react-native-firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { FlatList, SafeAreaView } from "react-native";
 
@@ -16,30 +15,32 @@ const index = () => {
   useEffect(() => {
     if (authStatus !== "authenticated") return;
 
-    const nftCollectionRef = collection(firestore, "/nfts");
-    const nftQuery = query(nftCollectionRef, orderBy("mintTime", "desc"));
-
     setNftConvertedPostDocPaths([]);
 
-    const unsubscribe = onSnapshot(
-      nftQuery,
-      (snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-          if (change.type === "added") {
-            const nftDocData = change.doc.data() as NftDocDataInServer;
+    const unsubscribe = firestore()
+      .collection("nfts")
+      .orderBy("mintTime", "desc")
+      .onSnapshot(
+        (snapshot) => {
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === "added") {
+              const nftDocData = change.doc.data() as NftDocDataInServer;
 
-            setNftConvertedPostDocPaths((prev) => [
-              nftDocData.postDocPath,
-              ...prev,
-            ]);
-          }
-        });
-      },
-      (error) => {
-        console.error("Error on getting realtime nft collection data: ", error);
-        return setNftConvertedPostDocPaths([]);
-      }
-    );
+              setNftConvertedPostDocPaths((prev) => [
+                nftDocData.postDocPath,
+                ...prev,
+              ]);
+            }
+          });
+        },
+        (error) => {
+          console.error(
+            "Error on getting realtime nft collection data: ",
+            error
+          );
+          return setNftConvertedPostDocPaths([]);
+        }
+      );
 
     return () => unsubscribe();
   }, [authStatus]);

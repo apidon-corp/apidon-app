@@ -1,12 +1,14 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
-import { firestore } from "@/firebase/client";
+import apiRoutes from "@/helpers/ApiRoutes";
 import { FrenletServerData } from "@/types/Frenlet";
 import { UserInServer } from "@/types/User";
+import { MaterialIcons } from "@expo/vector-icons";
+import firestore from "@react-native-firebase/firestore";
+import { formatDistanceToNow } from "date-fns";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { doc, onSnapshot } from "firebase/firestore";
 import { useSetAtom } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -17,11 +19,8 @@ import {
   View,
 } from "react-native";
 import Replet from "./Replet";
-import { MaterialIcons } from "@expo/vector-icons";
-import { formatDistanceToNow } from "date-fns";
-import apiRoutes from "@/helpers/ApiRoutes";
 
-import auth from "@react-native-firebase/auth"
+import auth from "@react-native-firebase/auth";
 
 type Props = {
   frenletDocPath: string;
@@ -47,27 +46,26 @@ const Frenlet = ({ frenletDocPath }: Props) => {
     if (!frenletDocPath) return;
     if (loading) return;
 
-    const frenletDocRef = doc(firestore, frenletDocPath);
-
     setLoading(true);
 
-    const unsubscribe = onSnapshot(
-      frenletDocRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          console.log("Frenlet's realtime data can not be fecthed.");
+    const unsubscribe = firestore()
+      .doc(frenletDocPath)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.log("Frenlet's realtime data can not be fecthed.");
+            return setLoading(false);
+          }
+          const frenletDocData = snapshot.data() as FrenletServerData;
+          setFrenletData(frenletDocData);
+
+          return setLoading(false);
+        },
+        (error) => {
+          console.error("Error on getting realtime frenlet data: ", error);
           return setLoading(false);
         }
-        const frenletDocData = snapshot.data() as FrenletServerData;
-        setFrenletData(frenletDocData);
-
-        return setLoading(false);
-      },
-      (error) => {
-        console.error("Error on getting realtime data: ", error);
-        return setLoading(false);
-      }
-    );
+      );
 
     return () => unsubscribe();
   }, [frenletDocPath]);
@@ -76,25 +74,24 @@ const Frenlet = ({ frenletDocPath }: Props) => {
   useEffect(() => {
     if (!frenletData) return;
 
-    const userDocRef = doc(firestore, `/users/${frenletData.frenletSender}`);
+    const unsubscribe = firestore()
+      .doc(`users/${frenletData.frenletSender}`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.error("User's realtime data can not be fecthed.");
+            return setSenderData(null);
+          }
 
-    const unsubscribe = onSnapshot(
-      userDocRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          console.error("User's realtime data can not be fecthed.");
+          const userDocData = snapshot.data() as UserInServer;
+
+          setSenderData(userDocData);
+        },
+        (error) => {
+          console.error("Error on getting realtime data: ", error);
           return setSenderData(null);
         }
-
-        const userDocData = snapshot.data() as UserInServer;
-
-        setSenderData(userDocData);
-      },
-      (error) => {
-        console.error("Error on getting realtime data: ", error);
-        return setSenderData(null);
-      }
-    );
+      );
 
     return () => unsubscribe();
   }, [frenletData]);
@@ -139,7 +136,7 @@ const Frenlet = ({ frenletDocPath }: Props) => {
     const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return false;
 
-    const frenletDocPath = `/users/${frenletData.frenletSender}/frenlets/frenlets/outgoing/${frenletData.frenletDocId}`;
+    const frenletDocPath = `users/${frenletData.frenletSender}/frenlets/frenlets/outgoing/${frenletData.frenletDocId}`;
 
     setFrenletDeleteLoading(true);
 

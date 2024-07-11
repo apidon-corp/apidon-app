@@ -1,14 +1,13 @@
-import { View, ActivityIndicator, Pressable, Alert } from "react-native";
 import { Text } from "@/components/Text/Text";
-import React, { useEffect, useState } from "react";
+import apiRoutes from "@/helpers/ApiRoutes";
 import { RepletServerData } from "@/types/Frenlet";
 import { UserInServer } from "@/types/User";
-import { firestore } from "@/firebase/client";
-import { doc, onSnapshot } from "firebase/firestore";
-import { Image } from "expo-image";
-import { formatDistanceToNow } from "date-fns";
 import { Entypo, Ionicons } from "@expo/vector-icons";
-import apiRoutes from "@/helpers/ApiRoutes";
+import firestore from "@react-native-firebase/firestore";
+import { formatDistanceToNow } from "date-fns";
+import { Image } from "expo-image";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, Pressable, View } from "react-native";
 
 import auth from "@react-native-firebase/auth";
 
@@ -27,24 +26,23 @@ const Replet = ({ repletData, frenletOwners, frenletDocPath }: Props) => {
   useEffect(() => {
     if (!repletData) return;
 
-    const userDocRef = doc(firestore, `/users/${repletData.sender}`);
+    const unsubscribe = firestore()
+      .doc(`users/${repletData.sender}`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.error("User's realtime data can not be fecthed.");
+            return setSenderData(null);
+          }
 
-    const unsubscribe = onSnapshot(
-      userDocRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          console.error("User's realtime data can not be fecthed.");
-          return setSenderData(null);
+          const userData = snapshot.data() as UserInServer;
+          setSenderData(userData);
+        },
+        (error) => {
+          console.error(error);
+          setSenderData(null);
         }
-
-        const userData = snapshot.data() as UserInServer;
-        setSenderData(userData);
-      },
-      (error) => {
-        console.error(error);
-        setSenderData(null);
-      }
-    );
+      );
 
     return () => {
       unsubscribe();

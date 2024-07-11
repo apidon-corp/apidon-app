@@ -1,22 +1,15 @@
+import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
-import { firestore } from "@/firebase/client";
+import { useAuth } from "@/providers/AuthProvider";
+import { UserInServer } from "@/types/User";
+import firestore from "@react-native-firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Dimensions, View } from "react-native";
 import { FlatList, Switch } from "react-native-gesture-handler";
-import Post from "../Post/Post";
-import { Text } from "@/components/Text/Text";
-import {
-  collection,
-  doc,
-  onSnapshot,
-  orderBy,
-  query,
-} from "firebase/firestore";
 import CreateFrenlet from "../Frenlet/CreateFrenlet";
 import Frenlet from "../Frenlet/Frenlet";
+import Post from "../Post/Post";
 import Header from "./Header";
-import { UserInServer } from "@/types/User";
-import { useAuth } from "@/providers/AuthProvider";
 
 type Props = {
   username: string;
@@ -44,26 +37,20 @@ const UserContent = ({ username }: Props) => {
 
     setPostDocPathArray([]);
 
-    const postsCollectionRef = collection(
-      firestore,
-      `/users/${username}/posts`
-    );
-    const postsQuery = query(
-      postsCollectionRef,
-      orderBy("creationTime", "desc")
-    );
-
-    const unsubscribe = onSnapshot(postsQuery, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === "added") {
-          setPostDocPathArray((prev) => [change.doc.ref.path, ...prev]);
-        } else if (change.type === "removed") {
-          setPostDocPathArray((prev) =>
-            prev.filter((path) => path !== change.doc.ref.path)
-          );
-        }
+    const unsubscribe = firestore()
+      .collection(`users/${username}/posts`)
+      .orderBy("creationTime", "desc")
+      .onSnapshot((snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === "added") {
+            setPostDocPathArray((prev) => [change.doc.ref.path, ...prev]);
+          } else if (change.type === "removed") {
+            setPostDocPathArray((prev) =>
+              prev.filter((path) => path !== change.doc.ref.path)
+            );
+          }
+        });
       });
-    });
 
     return () => unsubscribe();
   }, [username, authStatus]);
@@ -76,23 +63,20 @@ const UserContent = ({ username }: Props) => {
 
     setFrenletDocPaths([]);
 
-    const frenletsCollectionRef = collection(
-      firestore,
-      `/users/${username}/frenlets/frenlets/incoming`
-    );
-    const frenletsQuery = query(frenletsCollectionRef, orderBy("ts", "asc"));
-
-    const unsubscribe = onSnapshot(frenletsQuery, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === "added") {
-          setFrenletDocPaths((prev) => [change.doc.ref.path, ...prev]);
-        } else if (change.type === "removed") {
-          setFrenletDocPaths((prev) =>
-            prev.filter((path) => path !== change.doc.ref.path)
-          );
-        }
+    const unsubscribe = firestore()
+      .collection(`users/${username}/frenlets/frenlets/incoming`)
+      .orderBy("ts", "asc")
+      .onSnapshot((snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === "added") {
+            setFrenletDocPaths((prev) => [change.doc.ref.path, ...prev]);
+          } else if (change.type === "removed") {
+            setFrenletDocPaths((prev) =>
+              prev.filter((path) => path !== change.doc.ref.path)
+            );
+          }
+        });
       });
-    });
 
     return () => unsubscribe();
   }, [username, authStatus]);
@@ -100,26 +84,26 @@ const UserContent = ({ username }: Props) => {
   // Dynamic Data Fetching
   useEffect(() => {
     if (authStatus !== "authenticated") return;
+    if (!username) return;
 
-    const userDocRef = doc(firestore, `/users/${username}`);
+    const unsubscribe = firestore()
+      .doc(`users/${username}`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.error("User's realtime data can not be fecthed.");
+            return setUserData(null);
+          }
 
-    const unsubscribe = onSnapshot(
-      userDocRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          console.error("User's realtime data can not be fecthed.");
+          const userDocData = snapshot.data() as UserInServer;
+
+          setUserData(userDocData);
+        },
+        (error) => {
+          console.error("Error on getting realtime data: ", error);
           return setUserData(null);
         }
-
-        const userDocData = snapshot.data() as UserInServer;
-
-        setUserData(userDocData);
-      },
-      (error) => {
-        console.error("Error on getting realtime data: ", error);
-        return setUserData(null);
-      }
-    );
+      );
 
     return () => unsubscribe();
   }, [username, authStatus]);

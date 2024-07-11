@@ -1,11 +1,11 @@
-import { firestore } from "@/firebase/client";
 import { NotificationDocData } from "@/types/Notification";
 import {
   adjustNotificationSettings,
   makeDeviceReadyToGetNotifications,
   resetNotificationBadge,
 } from "@/utils/notificationHelpers";
-import { doc, onSnapshot } from "firebase/firestore";
+import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
 import React, {
   PropsWithChildren,
   createContext,
@@ -13,9 +13,8 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import { useAuth } from "./AuthProvider";
 import { AppState, AppStateStatus } from "react-native";
-import auth from "@react-native-firebase/auth";
+import { useAuth } from "./AuthProvider";
 
 const NotificationContext = createContext<NotificationDocData | null>(null);
 
@@ -30,35 +29,34 @@ const NotificationProvider = ({ children }: PropsWithChildren) => {
     const displayName = auth().currentUser?.displayName;
     if (!displayName) return setNotificationDocData(null);
 
-    const notificationDocPath = `/users/${displayName}/notifications/notifications`;
+    const notificationDocPath = `users/${displayName}/notifications/notifications`;
 
-    const notificationDocRef = doc(firestore, notificationDocPath);
+    const unsubscribe = firestore()
+      .doc(notificationDocPath)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.log("No notification doc found.");
+            return setNotificationDocData(null);
+          }
 
-    const unsubscribe = onSnapshot(
-      notificationDocRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          console.log("No notification doc found.");
+          const notificationDocData = snapshot.data() as NotificationDocData;
+
+          const notificationsFetched = notificationDocData.notifications;
+
+          notificationsFetched.sort((a, b) => b.timestamp - a.timestamp);
+
+          return setNotificationDocData({
+            lastOpenedTime: notificationDocData.lastOpenedTime,
+            notifications: notificationsFetched,
+            notificationToken: notificationDocData.notificationToken,
+          });
+        },
+        (error) => {
+          console.error("Error on getting notification data: ", error);
           return setNotificationDocData(null);
         }
-
-        const notificationDocData = snapshot.data() as NotificationDocData;
-
-        const notificationsFetched = notificationDocData.notifications;
-
-        notificationsFetched.sort((a, b) => b.timestamp - a.timestamp);
-
-        return setNotificationDocData({
-          lastOpenedTime: notificationDocData.lastOpenedTime,
-          notifications: notificationsFetched,
-          notificationToken: notificationDocData.notificationToken,
-        });
-      },
-      (error) => {
-        console.error("Error on getting notification data: ", error);
-        return setNotificationDocData(null);
-      }
-    );
+      );
 
     return () => unsubscribe();
   }, [authStatus]);

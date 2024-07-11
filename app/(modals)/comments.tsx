@@ -1,13 +1,12 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import CommentItem from "@/components/Post/CommentItem";
 import { Text } from "@/components/Text/Text";
-import { firestore } from "@/firebase/client";
+import firestore from "@react-native-firebase/firestore";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { CommentServerData, PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { useAtomValue } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -55,28 +54,28 @@ const comments = () => {
     if (loading) return;
     setLoading(true);
 
-    const postDocRef = doc(firestore, postDocPath);
-    const unsubscribe = onSnapshot(
-      postDocRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          console.log("Post's realtime data can not be fecthed.");
+    const unsubscribe = firestore()
+      .doc(postDocPath)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.log("Post's realtime data can not be fecthed.");
+            return setLoading(false);
+          }
+          const postDocData = snapshot.data() as PostServerData;
+
+          const sortedComments = postDocData.comments;
+          sortedComments.sort((a, b) => b.ts - a.ts);
+
+          setCommentData(sortedComments);
+
+          return setLoading(false);
+        },
+        (error) => {
+          console.error("Error on getting realtime data: ", error);
           return setLoading(false);
         }
-        const postDocData = snapshot.data() as PostServerData;
-
-        const sortedComments = postDocData.comments;
-        sortedComments.sort((a, b) => b.ts - a.ts);
-
-        setCommentData(sortedComments);
-
-        return setLoading(false);
-      },
-      (error) => {
-        console.error("Error on getting realtime data: ", error);
-        return setLoading(false);
-      }
-    );
+      );
 
     return () => unsubscribe();
   }, [postDocPath]);
@@ -155,11 +154,11 @@ const comments = () => {
     }
 
     try {
-      const userDocRef = doc(firestore, `users/${displayName}`);
+      const userDocSnapshot = await firestore()
+        .doc(`users/${displayName}`)
+        .get();
 
-      const userDocSnapshot = await getDoc(userDocRef);
-
-      if (!userDocSnapshot.exists()) {
+      if (!userDocSnapshot.exists) {
         setCurrentUserLoading(false);
         return console.error("User doesn't exist in database.");
       }

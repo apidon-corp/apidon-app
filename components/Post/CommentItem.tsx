@@ -1,16 +1,15 @@
-import { View, ActivityIndicator, Alert, Pressable } from "react-native";
 import { Text } from "@/components/Text/Text";
-import React, { useEffect, useState } from "react";
+import apiRoutes from "@/helpers/ApiRoutes";
 import { CommentServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
-import { firestore } from "@/firebase/client";
-import { doc, getDoc } from "firebase/firestore";
-import { Image } from "expo-image";
 import { Entypo, Feather } from "@expo/vector-icons";
+import firestore from "@react-native-firebase/firestore";
 import { formatDistanceToNow } from "date-fns";
-import apiRoutes from "@/helpers/ApiRoutes";
+import { Image } from "expo-image";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, Pressable, View } from "react-native";
 
-import auth from "@react-native-firebase/auth"
+import auth from "@react-native-firebase/auth";
 
 type Props = {
   commentServerData: CommentServerData;
@@ -45,11 +44,9 @@ const CommentItem = ({
     setLoading(true);
 
     try {
-      const userDocRef = doc(firestore, `/users/${sender}`);
+      const userDocSnapshot = await firestore().doc(`users/${sender}`).get();
 
-      const userDocSnapshot = await getDoc(userDocRef);
-
-      if (!userDocSnapshot.exists()) return;
+      if (!userDocSnapshot.exists) return;
 
       const userDocData = userDocSnapshot.data() as UserInServer;
 

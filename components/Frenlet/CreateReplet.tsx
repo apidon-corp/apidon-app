@@ -1,10 +1,9 @@
 import { apidonPink } from "@/constants/Colors";
-import { firestore } from "@/firebase/client";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { UserInServer } from "@/types/User";
 import { Ionicons } from "@expo/vector-icons";
+import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
-import { doc, getDoc } from "firebase/firestore";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -47,11 +46,11 @@ const CreateReplet = ({ frenletDocPath }: Props) => {
     }
 
     try {
-      const userDocRef = doc(firestore, `users/${displayName}`);
+      const userDocSnapshot = await firestore()
+        .doc(`/users/${displayName}`)
+        .get();
 
-      const userDocSnapshot = await getDoc(userDocRef);
-
-      if (!userDocSnapshot.exists()) {
+      if (!userDocSnapshot.exists) {
         setCurrentUserLoading(false);
         return console.error("User doesn't exist in database.");
       }

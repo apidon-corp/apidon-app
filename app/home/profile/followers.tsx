@@ -3,9 +3,8 @@ import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import UserCard from "@/components/User/UserCard";
-import { firestore } from "@/firebase/client";
 import { FollowerDocData } from "@/types/User";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import firestore from "@react-native-firebase/firestore";
 import { useAtomValue } from "jotai";
 
 type FollowerData = {
@@ -34,17 +33,12 @@ const followers = () => {
     setLoading(true);
 
     try {
-      const followersCollectionRef = collection(
-        firestore,
-        `/users/${username}/followers`
-      );
-
-      const followersQuery = query(
-        followersCollectionRef,
-        orderBy("followTime", "desc")
-      );
-
-      const followerDocs = (await getDocs(followersQuery)).docs;
+      const followerDocs = (
+        await firestore()
+          .collection(`users/${username}/followers`)
+          .orderBy("followTime", "desc")
+          .get()
+      ).docs;
 
       const followerDatas = followerDocs.map((followerDoc) => {
         return {

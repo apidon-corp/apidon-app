@@ -1,4 +1,18 @@
+import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { Text } from "@/components/Text/Text";
+import { apidonPink } from "@/constants/Colors";
+import apiRoutes from "@/helpers/ApiRoutes";
+import { useAuth } from "@/providers/AuthProvider";
+import { PostServerData } from "@/types/Post";
+import { UserInServer } from "@/types/User";
+import { Entypo, Feather } from "@expo/vector-icons";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import firestore from "@react-native-firebase/firestore";
+import { formatDistanceToNow } from "date-fns";
+import { Image } from "expo-image";
+import { router } from "expo-router";
+import { useSetAtom } from "jotai";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -6,24 +20,9 @@ import {
   Pressable,
   View,
 } from "react-native";
-import { firestore } from "@/firebase/client";
-import { PostServerData } from "@/types/Post";
-import { UserInServer } from "@/types/User";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Entypo, Feather } from "@expo/vector-icons";
-import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
-import { useAuth } from "@/providers/AuthProvider";
-import { formatDistanceToNow } from "date-fns";
-import { Image } from "expo-image";
-import { router } from "expo-router";
-import { useSetAtom } from "jotai";
+import CustomBottomModalSheet from "../BottomSheet/CustomBottomModalSheet";
 import RateStar from "./Rating/RateStar";
 import Stars from "./Rating/Stars";
-import CustomBottomModalSheet from "../BottomSheet/CustomBottomModalSheet";
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { apidonPink } from "@/constants/Colors";
-import apiRoutes from "@/helpers/ApiRoutes";
 
 import auth from "@react-native-firebase/auth";
 
@@ -75,34 +74,40 @@ const Post = ({ postDocPath }: Props) => {
   useEffect(() => {
     if (authStatus !== "authenticated") return;
     if (postDeleted) return;
+    if (!postDocPath) return;
 
     setLoading(true);
 
-    const postDocRef = doc(firestore, postDocPath);
-    const unsubscribe = onSnapshot(
-      postDocRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          console.log("Post's realtime data can not be fecthed.");
+    const unsubscribe = firestore()
+      .doc(postDocPath)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.log("Post's realtime data can not be fecthed.");
+            return setLoading(false);
+          }
+          const postDocData = snapshot.data() as PostServerData;
+          setPostDocData(postDocData);
+
+          if (!postSenderData)
+            handleGetPostSenderInformation(postDocData.senderUsername);
+
+          setDoesOwnPost(
+            postDocData.senderUsername === auth().currentUser?.displayName
+          );
+
+          return setLoading(false);
+        },
+        (error) => {
+          console.error(
+            "Error on getting realtime data of post: ",
+            postDocPath,
+            " ",
+            error
+          );
           return setLoading(false);
         }
-        const postDocData = snapshot.data() as PostServerData;
-        setPostDocData(postDocData);
-
-        if (!postSenderData)
-          handleGetPostSenderInformation(postDocData.senderUsername);
-
-        setDoesOwnPost(
-          postDocData.senderUsername === auth().currentUser?.displayName
-        );
-
-        return setLoading(false);
-      },
-      (error) => {
-        console.error("Error on getting realtime data: ", error);
-        return setLoading(false);
-      }
-    );
+      );
 
     return () => unsubscribe();
   }, [postDocPath, authStatus, postDeleted]);
@@ -116,33 +121,30 @@ const Post = ({ postDocPath }: Props) => {
 
     if (!postDocData) return;
 
-    const postSenderFollowingDocOnCurrentUser = doc(
-      firestore,
-      `/users/${postDocData.senderUsername}/followers/${displayName}`
-    );
-    const unsubscribe = onSnapshot(
-      postSenderFollowingDocOnCurrentUser,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          setDoesFollow(false);
-        } else {
-          setDoesFollow(true);
+    const unsubscribe = firestore()
+      .doc(`users/${postDocData.senderUsername}/followers/${displayName}`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            setDoesFollow(false);
+          } else {
+            setDoesFollow(true);
+          }
+        },
+        (error) => {
+          console.error("Error on getting realtime data: ", error);
         }
-      },
-      (error) => {
-        console.error("Error on getting realtime data: ", error);
-      }
-    );
+      );
 
     return () => unsubscribe();
   }, [authStatus, postDocData?.senderUsername]);
 
   const handleGetPostSenderInformation = async (senderUsername: string) => {
     try {
-      const userDocRef = doc(firestore, `/users/${senderUsername}`);
-
-      const userDocSnapshot = await getDoc(userDocRef);
-      if (!userDocSnapshot.exists()) return setPostSenderData(null);
+      const userDocSnapshot = await firestore()
+        .doc(`users/${senderUsername}`)
+        .get();
+      if (!userDocSnapshot.exists) return setPostSenderData(null);
 
       const userDocData = userDocSnapshot.data() as UserInServer;
 

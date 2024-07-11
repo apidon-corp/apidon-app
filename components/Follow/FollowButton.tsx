@@ -2,10 +2,9 @@ import { Text } from "@/components/Text/Text";
 import { ActivityIndicator, Pressable } from "react-native";
 
 import { apidonPink } from "@/constants/Colors";
-import { firestore } from "@/firebase/client";
-import { doc, onSnapshot } from "firebase/firestore";
-import React, { useEffect, useState } from "react";
 import apiRoutes from "@/helpers/ApiRoutes";
+import firestore from "@react-native-firebase/firestore";
+import React, { useEffect, useState } from "react";
 
 import auth from "@react-native-firebase/auth";
 
@@ -68,28 +67,24 @@ const FollowButton = ({ username }: Props) => {
 
     if (!username) return;
 
-    const postSenderFollowingDocOnCurrentUser = doc(
-      firestore,
-      `/users/${username}/followers/${displayName}`
-    );
-
     setLoading(true);
 
-    const unsubscribe = onSnapshot(
-      postSenderFollowingDocOnCurrentUser,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          setDoesFollow(false);
-        } else {
-          setDoesFollow(true);
+    const unsubscribe = firestore()
+      .doc(`users/${username}/followers/${displayName}`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            setDoesFollow(false);
+          } else {
+            setDoesFollow(true);
+          }
+          setLoading(false);
+        },
+        (error) => {
+          console.error("Error on getting realtime data: ", error);
+          setLoading(false);
         }
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Error on getting realtime data: ", error);
-        setLoading(false);
-      }
-    );
+      );
 
     return () => unsubscribe();
   }, [auth().currentUser, username]);

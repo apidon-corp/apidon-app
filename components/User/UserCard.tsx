@@ -1,15 +1,14 @@
-import { ActivityIndicator, Pressable, SafeAreaView, View } from "react-native";
-import React, { useEffect, useState } from "react";
 import { Text } from "@/components/Text/Text";
-import { UserInServer } from "@/types/User";
-import { doc, getDoc } from "firebase/firestore";
-import { firestore } from "@/firebase/client";
-import { FollowStatusAPIResponseBody } from "@/types/ApiResponses";
 import { apidonPink } from "@/constants/Colors";
-import { router } from "expo-router";
-import { Image } from "expo-image";
 import apiRoutes from "@/helpers/ApiRoutes";
+import { FollowStatusAPIResponseBody } from "@/types/ApiResponses";
+import { UserInServer } from "@/types/User";
 import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
+import { Image } from "expo-image";
+import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Pressable, View } from "react-native";
 
 type Props = {
   username: string;
@@ -34,11 +33,9 @@ const UserCard = ({ username }: Props) => {
     setLoading(true);
 
     try {
-      const userDocRef = doc(firestore, `/users/${username}`);
+      const userDocSnapshot = await firestore().doc(`users/${username}`).get();
 
-      const userDocSnapshot = await getDoc(userDocRef);
-
-      if (!userDocSnapshot.exists()) return;
+      if (!userDocSnapshot.exists) return;
 
       const userDocData = userDocSnapshot.data() as UserInServer;
 

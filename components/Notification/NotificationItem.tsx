@@ -1,12 +1,11 @@
 import { Text } from "@/components/Text/Text";
-import { firestore } from "@/firebase/client";
 import { NotificationData } from "@/types/Notification";
 import { UserInServer } from "@/types/User";
 import { Entypo, Feather } from "@expo/vector-icons";
+import firestore from "@react-native-firebase/firestore";
 import { formatDistanceToNow } from "date-fns";
 import { Image } from "expo-image";
 import { router, usePathname } from "expo-router";
-import { doc, getDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
@@ -35,11 +34,11 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
 
   const handleGetSenderData = async () => {
     try {
-      const userDocRef = doc(firestore, `/users/${notificationData.source}`);
+      const userDocSnapshot = await firestore()
+        .doc(`users/${notificationData.source}`)
+        .get();
 
-      const userDocSnapshot = await getDoc(userDocRef);
-
-      if (!userDocSnapshot.exists()) {
+      if (!userDocSnapshot.exists) {
         console.error(
           "User's data can not be fecthed: ",
           notificationData.source
@@ -159,8 +158,7 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
         <Pressable onPress={handleClickSenderInformation}>
           <Image
             source={
-              senderData.profilePhoto ||
-              require("@/assets/images/user.jpg")
+              senderData.profilePhoto || require("@/assets/images/user.jpg")
             }
             style={{
               width: 50,

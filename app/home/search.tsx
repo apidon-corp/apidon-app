@@ -1,7 +1,6 @@
 import UserCard from "@/components/User/UserCard";
-import { firestore } from "@/firebase/client";
 import { UserInServer } from "@/types/User";
-import { collection, getDocs, limit, query, where } from "firebase/firestore";
+import firestore from "@react-native-firebase/firestore";
 import React, { useState } from "react";
 import { FlatList, TextInput, View } from "react-native";
 
@@ -10,30 +9,24 @@ const search = () => {
 
   const handleGetQueryResult = async (input: string) => {
     try {
-      const usersCollection = collection(firestore, "/users");
-
-      const usernameQuery = query(
-        usersCollection,
-        where("username", ">=", input.toLowerCase()),
-        where("username", "<", input.toLowerCase() + "\uf8ff"),
-        limit(5)
-      );
-
       const firstLetter = input[0];
       const firstLetterUpperCase = firstLetter.toUpperCase();
 
       const newInput = firstLetterUpperCase + input.slice(1);
 
-      const fullnameQuery = query(
-        usersCollection,
-        where("fullname", ">=", newInput),
-        where("fullname", "<", newInput + "\uf8ff"),
-        limit(5)
-      );
-
       const [usernameQueryResult, fullnameQueryResult] = await Promise.all([
-        getDocs(usernameQuery),
-        getDocs(fullnameQuery),
+        await firestore()
+          .collection("users")
+          .where("username", ">=", input.toLowerCase())
+          .where("username", "<", input.toLowerCase() + "\uf8ff")
+          .limit(5)
+          .get(),
+        await firestore()
+          .collection("users")
+          .where("fullname", ">=", newInput)
+          .where("fullname", "<", newInput + "\uf8ff")
+          .limit(5)
+          .get(),
       ]);
 
       const usersAll = [
