@@ -1,6 +1,6 @@
 import { ActivityIndicator, Alert, Pressable } from "react-native";
 import React, { useState } from "react";
-import { auth } from "@/firebase/client";
+import auth from "@react-native-firebase/auth"
 import { Text } from "@/components/Text/Text";
 
 const SignOut = () => {
@@ -10,7 +10,7 @@ const SignOut = () => {
     if (loading) return;
 
     setLoading(true);
-    await auth.signOut();
+    await auth().signOut();
     setLoading(false);
   };
 

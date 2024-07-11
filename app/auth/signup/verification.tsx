@@ -15,9 +15,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import { SignUpApiErrorResponseBody } from "@/types/ApiResponses";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/firebase/client";
 import { apidonPink } from "@/constants/Colors";
 import apiRoutes from "@/helpers/ApiRoutes";
+
+import auth from "@react-native-firebase/auth";
 
 const verification = () => {
   const { email, password, username, fullname, referralCode } =
@@ -178,7 +179,7 @@ const verification = () => {
       }
 
       // User created successfully...
-      await signInWithEmailAndPassword(auth, email, password);
+      await auth().signInWithEmailAndPassword(email, password);
 
       return console.log("User created successfully.");
     } catch (error) {

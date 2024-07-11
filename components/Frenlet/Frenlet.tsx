@@ -1,7 +1,7 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
-import { auth, firestore } from "@/firebase/client";
+import { firestore } from "@/firebase/client";
 import { FrenletServerData } from "@/types/Frenlet";
 import { UserInServer } from "@/types/User";
 import { Image } from "expo-image";
@@ -20,6 +20,8 @@ import Replet from "./Replet";
 import { MaterialIcons } from "@expo/vector-icons";
 import { formatDistanceToNow } from "date-fns";
 import apiRoutes from "@/helpers/ApiRoutes";
+
+import auth from "@react-native-firebase/auth"
 
 type Props = {
   frenletDocPath: string;
@@ -104,7 +106,7 @@ const Frenlet = ({ frenletDocPath }: Props) => {
   const checkCanDelete = () => {
     if (!frenletData) return setCanDelete(false);
 
-    const displayName = auth.currentUser?.displayName;
+    const displayName = auth().currentUser?.displayName;
     if (!displayName) return setCanDelete(false);
 
     const owners = [frenletData.frenletSender, frenletData.frenletReceiver];
@@ -134,7 +136,7 @@ const Frenlet = ({ frenletDocPath }: Props) => {
     if (!frenletData) return;
     if (frenletDeleteLoading) return;
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return false;
 
     const frenletDocPath = `/users/${frenletData.frenletSender}/frenlets/frenlets/outgoing/${frenletData.frenletDocId}`;

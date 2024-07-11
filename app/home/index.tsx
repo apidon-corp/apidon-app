@@ -1,10 +1,11 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import Post from "@/components/Post/Post";
-import { auth } from "@/firebase/client";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { useAtomValue } from "jotai";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, SafeAreaView } from "react-native";
+
+import auth from "@react-native-firebase/auth";
 
 const index = () => {
   const [loading, setLoading] = useState(false);
@@ -38,7 +39,7 @@ const index = () => {
    * @returns
    */
   const handleGetPostRecommendations = async () => {
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return false;
 
     if (loading) return false;

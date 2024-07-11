@@ -1,6 +1,5 @@
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
-import { auth } from "@/firebase/client";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { FollowStatusAPIResponseBody } from "@/types/ApiResponses";
 import { Ionicons } from "@expo/vector-icons";
@@ -14,6 +13,8 @@ import {
   TextInput,
   View,
 } from "react-native";
+
+import auth from "@react-native-firebase/auth";
 
 type Props = {
   username: string;
@@ -110,7 +111,7 @@ const CreateFrenlet = ({ username }: Props) => {
   const checkFren = async () => {
     if (checkFrenLoading) return;
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return setIsFren(false);
 
     setCheckFrenLoading(true);
@@ -157,7 +158,7 @@ const CreateFrenlet = ({ username }: Props) => {
     const trimmedMessage = message.trim();
     if (trimmedMessage.length === 0) return;
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return;
 
     setSendFrenletLoading(true);

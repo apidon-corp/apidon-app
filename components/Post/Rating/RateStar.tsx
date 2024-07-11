@@ -9,9 +9,11 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import CurvedStars from "./CurvedStars";
-import { auth } from "@/firebase/client";
+
 import { apidonPink } from "@/constants/Colors";
 import apiRoutes from "@/helpers/ApiRoutes";
+
+import auth from "@react-native-firebase/auth"
 
 type Props = {
   previousValue: number | undefined;
@@ -83,7 +85,7 @@ const RateStar = ({ previousValue, postDocPath }: Props) => {
 
     setLoading(true);
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("User is not logged");
 
     try {

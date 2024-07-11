@@ -1,9 +1,9 @@
-import { auth } from "@/firebase/client";
+import auth from "@react-native-firebase/auth"
 import { GetProviderInformationAPIResponseBody } from "@/types/Provider";
 import apiRoutes from "./ApiRoutes";
 
 export const handleGetActiveProviderStatus = async () => {
-  const currentUserAuthObject = auth.currentUser;
+  const currentUserAuthObject = auth().currentUser;
   if (!currentUserAuthObject) return false;
 
   try {

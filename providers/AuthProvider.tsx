@@ -1,8 +1,9 @@
-import { auth } from "@/firebase/client";
 import { handleGetActiveProviderStatus } from "@/helpers/Provider";
 import resetNavigationHistory from "@/helpers/Router";
 import { AuthStatus } from "@/types/AuthType";
 import { router } from "expo-router";
+
+import auth from "@react-native-firebase/auth";
 
 import {
   PropsWithChildren,
@@ -19,7 +20,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
 
   const getCurrentUserDisplayName = () => {
     try {
-      const currentUserAuthObject = auth.currentUser;
+      const currentUserAuthObject = auth().currentUser;
       if (!currentUserAuthObject) return false;
 
       const displayName = currentUserAuthObject.displayName;
@@ -65,7 +66,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
   };
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = auth().onAuthStateChanged((user) => {
       handleInitialAuthentication();
     });
     return () => unsubscribe();

@@ -1,17 +1,18 @@
 import NotificationItem from "@/components/Notification/NotificationItem";
-import { auth } from "@/firebase/client";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { useNotification } from "@/providers/NotificationProvider";
 import { usePathname } from "expo-router";
 import React, { useEffect } from "react";
 import { FlatList, SafeAreaView } from "react-native";
 
+import auth from "@react-native-firebase/auth";
+
 const notifications = () => {
   const notificationDocData = useNotification();
   const pathName = usePathname();
 
   const updateLastOpenedTime = async () => {
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("User not found");
 
     try {

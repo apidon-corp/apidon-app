@@ -15,7 +15,7 @@ import {
 
 import * as ImagePicker from "expo-image-picker";
 
-import { auth, storage } from "@/firebase/client";
+import { storage } from "@/firebase/client";
 import { ref, uploadBytesResumable } from "firebase/storage";
 
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
@@ -26,6 +26,8 @@ import { router } from "expo-router";
 import { useSetAtom } from "jotai";
 import { AnimatedCircularProgress } from "react-native-circular-progress";
 import apiRoutes from "@/helpers/ApiRoutes";
+
+import auth from "@react-native-firebase/auth";
 
 type Props = {};
 
@@ -78,7 +80,7 @@ const postCreate = (props: Props) => {
   };
 
   const uploadImage = async (image: string) => {
-    const displayName = auth.currentUser?.displayName;
+    const displayName = auth().currentUser?.displayName;
     if (!displayName) {
       console.error("Display name not found");
       return false;
@@ -138,7 +140,7 @@ const postCreate = (props: Props) => {
       return false;
     }
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return false;
 
     setLoading(true);

@@ -1,7 +1,7 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import CommentItem from "@/components/Post/CommentItem";
 import { Text } from "@/components/Text/Text";
-import { auth, firestore } from "@/firebase/client";
+import { firestore } from "@/firebase/client";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { CommentServerData, PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
@@ -21,6 +21,8 @@ import {
   TextInput,
   View,
 } from "react-native";
+
+import auth from "@react-native-firebase/auth";
 
 const comments = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
@@ -146,7 +148,7 @@ const comments = () => {
     if (currentUserLoading) return;
     setCurrentUserLoading(true);
 
-    const displayName = auth.currentUser?.displayName;
+    const displayName = auth().currentUser?.displayName;
     if (!displayName) {
       setCurrentUserLoading(false);
       return console.error("Auth object doesn't have auth object");
@@ -180,7 +182,7 @@ const comments = () => {
 
     if (trimmedComment.length === 0) return;
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("User is not logged");
 
     setSendCommentLoading(true);

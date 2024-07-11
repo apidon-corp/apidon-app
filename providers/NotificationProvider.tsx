@@ -1,4 +1,4 @@
-import { auth, firestore } from "@/firebase/client";
+import { firestore } from "@/firebase/client";
 import { NotificationDocData } from "@/types/Notification";
 import {
   adjustNotificationSettings,
@@ -15,6 +15,7 @@ import React, {
 } from "react";
 import { useAuth } from "./AuthProvider";
 import { AppState, AppStateStatus } from "react-native";
+import auth from "@react-native-firebase/auth";
 
 const NotificationContext = createContext<NotificationDocData | null>(null);
 
@@ -26,7 +27,7 @@ const NotificationProvider = ({ children }: PropsWithChildren) => {
 
   // Notification Data Fetching
   useEffect(() => {
-    const displayName = auth.currentUser?.displayName;
+    const displayName = auth().currentUser?.displayName;
     if (!displayName) return setNotificationDocData(null);
 
     const notificationDocPath = `/users/${displayName}/notifications/notifications`;
@@ -64,7 +65,7 @@ const NotificationProvider = ({ children }: PropsWithChildren) => {
 
   useEffect(() => {
     if (authStatus === "authenticated") {
-      if (auth.currentUser?.displayName) {
+      if (auth().currentUser?.displayName) {
         makeDeviceReadyToGetNotifications();
         adjustNotificationSettings();
       }

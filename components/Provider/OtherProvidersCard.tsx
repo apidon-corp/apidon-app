@@ -5,7 +5,7 @@ import { IProviderShowcaseItem } from "@/types/Provider";
 import { Image } from "expo-image";
 import { apidonPink } from "@/constants/Colors";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
-import { auth } from "@/firebase/client";
+import auth from "@react-native-firebase/auth"
 import apiRoutes from "@/helpers/ApiRoutes";
 
 type Props = {
@@ -30,7 +30,7 @@ const OtherProvidersCard = ({
   };
 
   const handleChangeProvider = async () => {
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return false;
 
     if (changingProvider) return;

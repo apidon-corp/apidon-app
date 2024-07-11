@@ -3,12 +3,13 @@ import React, { useEffect, useState } from "react";
 import { Text } from "@/components/Text/Text";
 import { UserInServer } from "@/types/User";
 import { doc, getDoc } from "firebase/firestore";
-import { auth, firestore } from "@/firebase/client";
+import { firestore } from "@/firebase/client";
 import { FollowStatusAPIResponseBody } from "@/types/ApiResponses";
 import { apidonPink } from "@/constants/Colors";
 import { router } from "expo-router";
 import { Image } from "expo-image";
 import apiRoutes from "@/helpers/ApiRoutes";
+import auth from "@react-native-firebase/auth";
 
 type Props = {
   username: string;
@@ -50,7 +51,7 @@ const UserCard = ({ username }: Props) => {
   };
 
   const handleGetFollowStatus = async () => {
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("No user found!");
 
     const displayName = currentUserAuthObject.displayName;
@@ -90,7 +91,7 @@ const UserCard = ({ username }: Props) => {
 
     setFollowLoading(true);
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("No user found!");
 
     try {

@@ -2,10 +2,12 @@ import { Text } from "@/components/Text/Text";
 import { ActivityIndicator, Pressable } from "react-native";
 
 import { apidonPink } from "@/constants/Colors";
-import { auth, firestore } from "@/firebase/client";
+import { firestore } from "@/firebase/client";
 import { doc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import apiRoutes from "@/helpers/ApiRoutes";
+
+import auth from "@react-native-firebase/auth";
 
 type Props = {
   username: string | undefined;
@@ -21,7 +23,7 @@ const FollowButton = ({ username }: Props) => {
   const handleFollowButton = async (action: "follow" | "unfollow") => {
     if (followLoading) return;
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("No user found!");
 
     setFollowLoading(true);
@@ -61,7 +63,7 @@ const FollowButton = ({ username }: Props) => {
   useEffect(() => {
     if (loading) return;
 
-    const displayName = auth.currentUser?.displayName;
+    const displayName = auth().currentUser?.displayName;
     if (!displayName) return;
 
     if (!username) return;
@@ -90,7 +92,7 @@ const FollowButton = ({ username }: Props) => {
     );
 
     return () => unsubscribe();
-  }, [auth.currentUser, username]);
+  }, [auth().currentUser, username]);
 
   return (
     <Pressable

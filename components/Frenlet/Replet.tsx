@@ -3,12 +3,14 @@ import { Text } from "@/components/Text/Text";
 import React, { useEffect, useState } from "react";
 import { RepletServerData } from "@/types/Frenlet";
 import { UserInServer } from "@/types/User";
-import { auth, firestore } from "@/firebase/client";
+import { firestore } from "@/firebase/client";
 import { doc, onSnapshot } from "firebase/firestore";
 import { Image } from "expo-image";
 import { formatDistanceToNow } from "date-fns";
 import { Entypo, Ionicons } from "@expo/vector-icons";
 import apiRoutes from "@/helpers/ApiRoutes";
+
+import auth from "@react-native-firebase/auth";
 
 type Props = {
   repletData: RepletServerData;
@@ -54,7 +56,7 @@ const Replet = ({ repletData, frenletOwners, frenletDocPath }: Props) => {
   }, [auth, repletData, frenletOwners]);
 
   const checkCanDelete = () => {
-    const displayName = auth.currentUser?.displayName;
+    const displayName = auth().currentUser?.displayName;
     if (!displayName) return setCanDelete(false);
 
     const repletOwners = [repletData.sender, ...frenletOwners];
@@ -84,7 +86,7 @@ const Replet = ({ repletData, frenletOwners, frenletDocPath }: Props) => {
     if (deleteLoading) return;
     if (!canDelete) return;
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("User is not logged");
 
     setDeleteLoading(true);

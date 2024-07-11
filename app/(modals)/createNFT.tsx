@@ -1,7 +1,7 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
-import { auth, firestore } from "@/firebase/client";
+import {  firestore } from "@/firebase/client";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { PostServerData } from "@/types/Post";
 import { Image } from "expo-image";
@@ -18,6 +18,8 @@ import {
   TextInput,
   View,
 } from "react-native";
+
+import auth from "@react-native-firebase/auth";
 
 const createNFT = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
@@ -118,7 +120,7 @@ const createNFT = () => {
   }, [containerRef]);
 
   const handleCreateNFTButton = async () => {
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("No user");
 
     if (loading) return;

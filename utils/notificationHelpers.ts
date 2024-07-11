@@ -3,7 +3,7 @@ import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 
 import Constants from "expo-constants";
-import { auth } from "@/firebase/client";
+import auth from "@react-native-firebase/auth";
 import apiRoutes from "@/helpers/ApiRoutes";
 
 async function registerForPushNotifications() {
@@ -59,7 +59,7 @@ async function registerForPushNotifications() {
 }
 
 async function updateNotificationTokenOnFirebase(token: string) {
-  const currentUserAuthObject = auth.currentUser;
+  const currentUserAuthObject = auth().currentUser;
   if (!currentUserAuthObject) return false;
 
   try {

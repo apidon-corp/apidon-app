@@ -15,7 +15,7 @@ import {
 } from "react-native";
 
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
-import { auth, storage } from "@/firebase/client";
+import { storage } from "@/firebase/client";
 import * as ImagePicker from "expo-image-picker";
 
 import createBlobFromURI from "@/utils/createBlobFromURI";
@@ -23,6 +23,8 @@ import { Image } from "expo-image";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { useAtomValue } from "jotai";
 import apiRoutes from "@/helpers/ApiRoutes";
+
+import auth from "@react-native-firebase/auth";
 
 const editProfile = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
@@ -175,7 +177,7 @@ const editProfile = () => {
   };
 
   const uploadImage = async (image: string) => {
-    const displayName = auth.currentUser?.displayName;
+    const displayName = auth().currentUser?.displayName;
     if (!displayName) {
       console.error("Display name not found");
       return false;
@@ -199,7 +201,7 @@ const editProfile = () => {
   };
 
   const updateImage = async (imageURL: string) => {
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return false;
 
     try {
@@ -247,7 +249,7 @@ const editProfile = () => {
   };
 
   const updateFullname = async (fullname: string) => {
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return false;
 
     try {

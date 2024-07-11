@@ -1,7 +1,7 @@
 import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import React, { useState } from "react";
 import { AntDesign } from "@expo/vector-icons";
-import { auth } from "@/firebase/client";
+import auth from "@react-native-firebase/auth"
 import apiRoutes from "@/helpers/ApiRoutes";
 
 type Props = {
@@ -32,7 +32,7 @@ const Stars = (props: Props) => {
   };
 
   const handleSendRate = async (score: number) => {
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return false;
 
     try {

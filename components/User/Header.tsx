@@ -2,7 +2,7 @@ import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import FollowButton from "@/components/Follow/FollowButton";
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
-import { auth } from "@/firebase/client";
+import auth from "@react-native-firebase/auth";
 import { UserInServer } from "@/types/User";
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -22,7 +22,7 @@ const Header = ({ userData }: Props) => {
 
   useEffect(() => {
     if (userData.username) checkUserOwnsPage();
-  }, [auth.currentUser, userData.username]);
+  }, [auth().currentUser, userData.username]);
 
   const handleEditProfileButton = () => {
     if (!userData) return;
@@ -39,9 +39,10 @@ const Header = ({ userData }: Props) => {
   };
 
   const checkUserOwnsPage = () => {
-    if (!auth.currentUser || !userData.username) return setUserOwnsPage(false);
+    if (!auth().currentUser || !userData.username)
+      return setUserOwnsPage(false);
 
-    const displayName = auth.currentUser.displayName;
+    const displayName = auth().currentUser?.displayName;
     if (!displayName) return setUserOwnsPage(false);
 
     return setUserOwnsPage(displayName === userData.username);
@@ -76,10 +77,7 @@ const Header = ({ userData }: Props) => {
         }}
       >
         <Image
-          source={
-            userData.profilePhoto ||
-            require("@/assets/images/user.jpg")
-          }
+          source={userData.profilePhoto || require("@/assets/images/user.jpg")}
           style={{
             height: 150,
             width: 150,

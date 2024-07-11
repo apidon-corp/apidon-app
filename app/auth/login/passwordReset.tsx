@@ -1,5 +1,5 @@
 import { apidonPink } from "@/constants/Colors";
-import { auth } from "@/firebase/client";
+
 import { router } from "expo-router";
 import { sendPasswordResetEmail } from "firebase/auth";
 import React, { useEffect, useRef, useState } from "react";
@@ -16,6 +16,8 @@ import {
   TextInput,
   View,
 } from "react-native";
+
+import auth from "@react-native-firebase/auth";
 
 type Props = {};
 
@@ -112,7 +114,7 @@ const passwordReset = (props: Props) => {
     setLoading(true);
 
     try {
-      await sendPasswordResetEmail(auth, email);
+      await auth().sendPasswordResetEmail(email);
       router.push("/auth/login/passwordResetSend");
     } catch (error) {
       console.error("Error on sending password reset email.");

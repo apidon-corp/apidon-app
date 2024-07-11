@@ -6,7 +6,7 @@ import {
   Pressable,
   View,
 } from "react-native";
-import { auth, firestore } from "@/firebase/client";
+import { firestore } from "@/firebase/client";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
@@ -24,6 +24,8 @@ import CustomBottomModalSheet from "../BottomSheet/CustomBottomModalSheet";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { apidonPink } from "@/constants/Colors";
 import apiRoutes from "@/helpers/ApiRoutes";
+
+import auth from "@react-native-firebase/auth";
 
 type Props = {
   postDocPath: string;
@@ -91,7 +93,7 @@ const Post = ({ postDocPath }: Props) => {
           handleGetPostSenderInformation(postDocData.senderUsername);
 
         setDoesOwnPost(
-          postDocData.senderUsername === auth.currentUser?.displayName
+          postDocData.senderUsername === auth().currentUser?.displayName
         );
 
         return setLoading(false);
@@ -109,7 +111,7 @@ const Post = ({ postDocPath }: Props) => {
   useEffect(() => {
     if (authStatus !== "authenticated") return;
 
-    const displayName = auth.currentUser?.displayName;
+    const displayName = auth().currentUser?.displayName;
     if (!displayName) return;
 
     if (!postDocData) return;
@@ -183,7 +185,7 @@ const Post = ({ postDocPath }: Props) => {
   const handleDeletePost = async () => {
     if (postDeleteLoading) return;
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.log("No user is logged in.");
 
     setPostDeleteLoading(true);
@@ -240,7 +242,7 @@ const Post = ({ postDocPath }: Props) => {
     if (followLoading) return;
     if (!postDocData?.senderUsername) return;
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("No user found!");
 
     setFollowLoading(true);
@@ -491,7 +493,7 @@ const Post = ({ postDocPath }: Props) => {
               <RateStar
                 previousValue={
                   postDocData.rates.find(
-                    (r) => r.sender === auth.currentUser?.displayName
+                    (r) => r.sender === auth().currentUser?.displayName
                   )?.rate
                 }
                 postDocPath={postDocPath}

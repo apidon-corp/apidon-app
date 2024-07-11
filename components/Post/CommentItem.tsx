@@ -3,12 +3,14 @@ import { Text } from "@/components/Text/Text";
 import React, { useEffect, useState } from "react";
 import { CommentServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
-import { auth, firestore } from "@/firebase/client";
+import { firestore } from "@/firebase/client";
 import { doc, getDoc } from "firebase/firestore";
 import { Image } from "expo-image";
 import { Entypo, Feather } from "@expo/vector-icons";
 import { formatDistanceToNow } from "date-fns";
 import apiRoutes from "@/helpers/ApiRoutes";
+
+import auth from "@react-native-firebase/auth"
 
 type Props = {
   commentServerData: CommentServerData;
@@ -32,7 +34,7 @@ const CommentItem = ({
 
   useEffect(() => {
     if (sender) {
-      const displayName = auth.currentUser?.displayName;
+      const displayName = auth().currentUser?.displayName;
       setDoesOwnComment(sender === displayName);
     }
   }, [sender]);
@@ -83,7 +85,7 @@ const CommentItem = ({
 
     setCommentDeleteLoading(true);
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("User is not logged");
 
     const commentObject: CommentServerData = {
