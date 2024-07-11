@@ -15,15 +15,14 @@ import {
 } from "react-native";
 
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
-import { storage } from "@/firebase/client";
+import storage from "@react-native-firebase/storage";
 import * as ImagePicker from "expo-image-picker";
 
-import createBlobFromURI from "@/utils/createBlobFromURI";
-import { Image } from "expo-image";
-import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
-import { useAtomValue } from "jotai";
 import apiRoutes from "@/helpers/ApiRoutes";
+import { Image } from "expo-image";
+import { useAtomValue } from "jotai";
 
+import createBlobFromURI from "@/utils/createBlobFromURI";
 import auth from "@react-native-firebase/auth";
 
 const editProfile = () => {
@@ -184,14 +183,13 @@ const editProfile = () => {
     }
 
     try {
-      const path = `users/${displayName}/profilePhoto.jpg`;
-      const storageRef = ref(storage, path);
-
       const blob = await createBlobFromURI(image);
 
-      await uploadBytesResumable(storageRef, blob);
+      const path = `users/${displayName}/profilePhoto`;
 
-      const downloadURL = await getDownloadURL(storageRef);
+      await storage().ref(path).put(blob);
+
+      const downloadURL = await storage().ref(path).getDownloadURL();
 
       return downloadURL;
     } catch (error) {

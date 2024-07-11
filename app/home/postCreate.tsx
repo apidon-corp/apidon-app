@@ -1,5 +1,12 @@
+import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { Text } from "@/components/Text/Text";
+import apiRoutes from "@/helpers/ApiRoutes";
 import { Feather } from "@expo/vector-icons";
+import storage from "@react-native-firebase/storage";
+import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
+import { router } from "expo-router";
+import { useSetAtom } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -7,31 +14,18 @@ import {
   Dimensions,
   Keyboard,
   Pressable,
-  SafeAreaView,
   ScrollView,
   TextInput,
   View,
 } from "react-native";
-
-import * as ImagePicker from "expo-image-picker";
-
-import { storage } from "@/firebase/client";
-import { ref, uploadBytesResumable } from "firebase/storage";
-
-import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
-import { apidonPink } from "@/constants/Colors";
-import createBlobFromURI from "@/utils/createBlobFromURI";
-import { Image } from "expo-image";
-import { router } from "expo-router";
-import { useSetAtom } from "jotai";
 import { AnimatedCircularProgress } from "react-native-circular-progress";
-import apiRoutes from "@/helpers/ApiRoutes";
 
+import createBlobFromURI from "@/utils/createBlobFromURI";
 import auth from "@react-native-firebase/auth";
 
-type Props = {};
+import * as Progress from "react-native-progress";
 
-const postCreate = (props: Props) => {
+const postCreate = () => {
   const [pickedImageURI, setPickedImageURI] = useState("");
 
   const [imageUploadLoading, setImageUploadLoading] = useState(false);
@@ -91,12 +85,10 @@ const postCreate = (props: Props) => {
     try {
       const blob = await createBlobFromURI(image);
 
-      const tempLocation = `users/${displayName}/postFiles/temp/${Date.now()}.jpg`;
-      const storageRef = ref(storage, tempLocation);
+      const extension = image.split(".").pop() || ".jpg";
+      const tempLocation = `users/${displayName}/postFiles/temp/${Date.now()}.${extension}`;
 
-      const uploadTask = uploadBytesResumable(storageRef, blob, {
-        contentType: "image/jpeg",
-      });
+      const uploadTask = storage().ref(tempLocation).put(blob);
 
       uploadTask.on(
         "state_changed",
@@ -331,12 +323,18 @@ const postCreate = (props: Props) => {
                     backgroundColor: "rgba(0,0,0,0.5)",
                   }}
                 >
-                  <AnimatedCircularProgress
+                  <Progress.Circle
+                    borderWidth={
+                      imageUploadPercentage < 10 || imageUploadPercentage > 95
+                        ? 5
+                        : undefined
+                    }
                     size={120}
-                    width={15}
-                    fill={imageUploadPercentage}
-                    tintColor={apidonPink}
-                    backgroundColor="gray"
+                    thickness={5}
+                    progress={imageUploadPercentage / 100}
+                    indeterminate={
+                      imageUploadPercentage < 10 || imageUploadPercentage > 95
+                    }
                   />
                 </View>
               )}
