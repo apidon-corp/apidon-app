@@ -20,6 +20,8 @@ import { VerificationCodeSendApiErrorResponseBody } from "@/types/ApiResponses";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 
+import appCheck from "@react-native-firebase/app-check";
+
 const secondPhase = () => {
   const { referralCode } = useLocalSearchParams<{
     referralCode: string;
@@ -183,12 +185,15 @@ const secondPhase = () => {
    */
   const checkUsernameCanBeUsed = async (username: string) => {
     try {
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
       const response = await fetch(
         apiRoutes.user.authentication.login.checkThereIsLinkedAccount,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            appchecktoken,
           },
           body: JSON.stringify({
             eu: username,
@@ -263,12 +268,15 @@ const secondPhase = () => {
 
   const handleSignUp = async () => {
     try {
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
       const response = await fetch(
         apiRoutes.user.authentication.signup.sendVerificationCode,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            appchecktoken,
           },
           body: JSON.stringify({
             referralCode: referralCode,

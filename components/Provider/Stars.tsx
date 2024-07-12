@@ -1,8 +1,10 @@
 import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import React, { useState } from "react";
 import { AntDesign } from "@expo/vector-icons";
-import auth from "@react-native-firebase/auth"
+import auth from "@react-native-firebase/auth";
 import apiRoutes from "@/helpers/ApiRoutes";
+
+import appCheck from "@react-native-firebase/app-check";
 
 type Props = {
   userScore: number;
@@ -37,11 +39,14 @@ const Stars = (props: Props) => {
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
       const response = await fetch(apiRoutes.provider.rateProvider, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           score: score,

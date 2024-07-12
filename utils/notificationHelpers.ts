@@ -6,6 +6,8 @@ import Constants from "expo-constants";
 import auth from "@react-native-firebase/auth";
 import apiRoutes from "@/helpers/ApiRoutes";
 
+import appCheck from "@react-native-firebase/app-check";
+
 async function registerForPushNotifications() {
   // Android specific adjusting for channel.
   if (Platform.OS === "android") {
@@ -64,6 +66,9 @@ async function updateNotificationTokenOnFirebase(token: string) {
 
   try {
     const idToken = await currentUserAuthObject.getIdToken();
+
+    const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
     const response = await fetch(
       apiRoutes.user.notification.updateNotificationToken,
       {
@@ -71,6 +76,7 @@ async function updateNotificationTokenOnFirebase(token: string) {
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           notificationToken: token,

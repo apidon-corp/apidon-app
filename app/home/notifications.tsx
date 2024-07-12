@@ -7,6 +7,8 @@ import { FlatList, SafeAreaView } from "react-native";
 
 import auth from "@react-native-firebase/auth";
 
+import appCheck from "@react-native-firebase/app-check";
+
 const notifications = () => {
   const notificationDocData = useNotification();
   const pathName = usePathname();
@@ -17,6 +19,9 @@ const notifications = () => {
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
+
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
       const response = await fetch(
         apiRoutes.user.notification.updateLastOpenedTime,
         {
@@ -24,6 +29,7 @@ const notifications = () => {
           headers: {
             "Content-Type": "application/json",
             authorization: `Bearer ${idToken}`,
+            appchecktoken,
           },
         }
       );

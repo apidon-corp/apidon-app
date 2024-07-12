@@ -11,6 +11,8 @@ import { ActivityIndicator, Alert, Pressable, View } from "react-native";
 
 import auth from "@react-native-firebase/auth";
 
+import appCheck from "@react-native-firebase/app-check";
+
 type Props = {
   repletData: RepletServerData;
   frenletOwners: string[];
@@ -91,11 +93,13 @@ const Replet = ({ repletData, frenletOwners, frenletDocPath }: Props) => {
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
       const response = await fetch(apiRoutes.frenlet.deleteReplet, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           frenletDocPath: frenletDocPath,

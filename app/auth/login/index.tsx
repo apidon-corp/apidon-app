@@ -17,13 +17,13 @@ import {
   View,
 } from "react-native";
 
+import appCheck from "@react-native-firebase/app-check";
+
 const index = () => {
   const [emailUsername, setEmailUsername] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("regex");
-
-  const [isEmail, setIsEmail] = useState(false);
 
   const opacity = useRef(new Animated.Value(1)).current;
 
@@ -130,8 +130,6 @@ const index = () => {
     const usernameRegex = /^[a-z0-9]{4,20}$/;
     const usernameRegexTestResult = usernameRegex.test(lowercasedInput);
 
-    setIsEmail(emailRegexTestResult);
-
     if (!(emailRegexTestResult || usernameRegexTestResult)) {
       setError("regex");
     }
@@ -141,12 +139,15 @@ const index = () => {
     setError("");
 
     try {
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
       const response = await fetch(
         apiRoutes.user.authentication.login.checkThereIsLinkedAccount,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            appchecktoken,
           },
           body: JSON.stringify({
             eu: emailOrUsername,

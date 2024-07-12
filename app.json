@@ -55,7 +55,8 @@
             "useFrameworks": "static"
           }
         }
-      ]
+      ],
+      "./helpers/customPlugins/AppCheckPlugin.js"
     ],
     "experiments": {
       "typedRoutes": true

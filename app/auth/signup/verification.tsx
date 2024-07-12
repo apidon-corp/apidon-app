@@ -1,24 +1,25 @@
-import {
-  View,
-  Text,
-  Image,
-  TextInput,
-  Pressable,
-  Animated,
-  Dimensions,
-  ScrollView,
-  Keyboard,
-  ActivityIndicator,
-} from "react-native";
-import React, { useEffect, useRef, useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { router, useLocalSearchParams } from "expo-router";
-import { SignUpApiErrorResponseBody } from "@/types/ApiResponses";
-import { signInWithEmailAndPassword } from "firebase/auth";
 import { apidonPink } from "@/constants/Colors";
 import apiRoutes from "@/helpers/ApiRoutes";
+import { SignUpApiErrorResponseBody } from "@/types/ApiResponses";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Animated,
+  Dimensions,
+  Image,
+  Keyboard,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import auth from "@react-native-firebase/auth";
+
+import appCheck from "@react-native-firebase/app-check";
 
 const verification = () => {
   const { email, password, username, fullname, referralCode } =
@@ -136,12 +137,15 @@ const verification = () => {
     referralCode: string
   ) => {
     try {
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
       const response = await fetch(
         apiRoutes.user.authentication.signup.signup,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            appchecktoken,
           },
           body: JSON.stringify({
             referralCode: referralCode,

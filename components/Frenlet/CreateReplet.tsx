@@ -17,6 +17,8 @@ import {
 
 import auth from "@react-native-firebase/auth";
 
+import appCheck from "@react-native-firebase/app-check";
+
 type Props = {
   frenletDocPath: string;
 };
@@ -83,11 +85,14 @@ const CreateReplet = ({ frenletDocPath }: Props) => {
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
       const response = await fetch(apiRoutes.frenlet.sendReply, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           message: trimmedMessage,

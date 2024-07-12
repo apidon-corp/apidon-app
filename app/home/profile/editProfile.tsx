@@ -25,6 +25,8 @@ import { useAtomValue } from "jotai";
 import createBlobFromURI from "@/utils/createBlobFromURI";
 import auth from "@react-native-firebase/auth";
 
+import appCheck from "@react-native-firebase/app-check";
+
 const editProfile = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
 
@@ -205,11 +207,14 @@ const editProfile = () => {
     try {
       const idToken = await currentUserAuthObject.getIdToken();
 
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
       const response = await fetch(apiRoutes.user.personal.updateProfileImage, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           image: imageURL,
@@ -253,11 +258,14 @@ const editProfile = () => {
     try {
       const idToken = await currentUserAuthObject.getIdToken();
 
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
       const response = await fetch(apiRoutes.user.personal.fullnameUpdate, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           fullname: fullname,

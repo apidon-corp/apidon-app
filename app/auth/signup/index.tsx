@@ -17,6 +17,8 @@ import {
   View,
 } from "react-native";
 
+import appCheck from "@react-native-firebase/app-check";
+
 const index = () => {
   const [referralCode, setReferralCode] = useState("");
 
@@ -85,12 +87,15 @@ const index = () => {
 
   const getReferralCodeStatus = async (referralCodeInput: string) => {
     try {
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
       const response = await fetch(
         apiRoutes.user.authentication.signup.checkReferralCode,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            appchecktoken,
           },
           body: JSON.stringify({
             referralCode: referralCodeInput,

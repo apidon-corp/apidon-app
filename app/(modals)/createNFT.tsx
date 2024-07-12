@@ -20,6 +20,8 @@ import {
 
 import auth from "@react-native-firebase/auth";
 
+import appCheck from "@react-native-firebase/app-check";
+
 const createNFT = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
 
@@ -128,11 +130,13 @@ const createNFT = () => {
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
       const response = await fetch(apiRoutes.nft.uploadNFT, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           postDocPath: postDocPath,

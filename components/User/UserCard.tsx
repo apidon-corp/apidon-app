@@ -10,6 +10,8 @@ import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
+import appCheck from "@react-native-firebase/app-check";
+
 type Props = {
   username: string;
 };
@@ -57,11 +59,14 @@ const UserCard = ({ username }: Props) => {
     try {
       const idToken = await currentUserAuthObject.getIdToken();
 
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
       const response = await fetch(apiRoutes.user.social.getFollowStatus, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          token: appchecktoken,
         },
         body: JSON.stringify({
           suspectUsername: username,
@@ -93,12 +98,14 @@ const UserCard = ({ username }: Props) => {
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
       const response = await fetch(apiRoutes.user.social.follow, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           operationTo: username,

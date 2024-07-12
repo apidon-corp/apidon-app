@@ -26,6 +26,8 @@ import Stars from "./Rating/Stars";
 
 import auth from "@react-native-firebase/auth";
 
+import appCheck from "@react-native-firebase/app-check";
+
 type Props = {
   postDocPath: string;
 };
@@ -195,11 +197,14 @@ const Post = ({ postDocPath }: Props) => {
     try {
       const idToken = await currentUserAuthObject.getIdToken();
 
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
       const response = await fetch(apiRoutes.post.postDelete, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           postDocPath: postDocPath,
@@ -251,12 +256,14 @@ const Post = ({ postDocPath }: Props) => {
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
       const response = await fetch(apiRoutes.user.social.follow, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           operationTo: postDocData.senderUsername,

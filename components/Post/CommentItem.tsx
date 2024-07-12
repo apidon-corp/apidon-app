@@ -11,6 +11,8 @@ import { ActivityIndicator, Alert, Pressable, View } from "react-native";
 
 import auth from "@react-native-firebase/auth";
 
+import appCheck from "@react-native-firebase/app-check";
+
 type Props = {
   commentServerData: CommentServerData;
   postDocPath: string;
@@ -93,11 +95,13 @@ const CommentItem = ({
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
       const response = await fetch(apiRoutes.post.comment.postCommentDelete, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken: appchecktoken,
         },
         body: JSON.stringify({
           postDocPath: postDocPath,

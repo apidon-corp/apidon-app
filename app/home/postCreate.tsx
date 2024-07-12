@@ -18,10 +18,11 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { AnimatedCircularProgress } from "react-native-circular-progress";
 
 import createBlobFromURI from "@/utils/createBlobFromURI";
 import auth from "@react-native-firebase/auth";
+
+import appCheck from "@react-native-firebase/app-check";
 
 import * as Progress from "react-native-progress";
 
@@ -139,12 +140,14 @@ const postCreate = () => {
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
       const response = await fetch(apiRoutes.post.postUpload, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           description: description,

@@ -5,8 +5,10 @@ import { IProviderShowcaseItem } from "@/types/Provider";
 import { Image } from "expo-image";
 import { apidonPink } from "@/constants/Colors";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
-import auth from "@react-native-firebase/auth"
+import auth from "@react-native-firebase/auth";
 import apiRoutes from "@/helpers/ApiRoutes";
+
+import appCheck from "@react-native-firebase/app-check";
 
 type Props = {
   providerData: IProviderShowcaseItem;
@@ -39,11 +41,13 @@ const OtherProvidersCard = ({
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
       const response = await fetch(apiRoutes.provider.selectProvider, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           providerName: providerData.name,

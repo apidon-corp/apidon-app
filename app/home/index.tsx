@@ -7,6 +7,8 @@ import { ActivityIndicator, FlatList, SafeAreaView } from "react-native";
 
 import auth from "@react-native-firebase/auth";
 
+import appCheck from "@react-native-firebase/app-check";
+
 const index = () => {
   const [loading, setLoading] = useState(false);
   const [postDocPathArray, setPostDocPathArray] = useState<string[]>([]);
@@ -49,11 +51,14 @@ const index = () => {
     try {
       const idToken = await currentUserAuthObject.getIdToken();
 
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
       const response = await fetch(apiRoutes.feed.getPersonalizedFeed, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
       });
 

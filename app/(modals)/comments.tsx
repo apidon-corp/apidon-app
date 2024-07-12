@@ -23,6 +23,8 @@ import {
 
 import auth from "@react-native-firebase/auth";
 
+import appCheck from "@react-native-firebase/app-check";
+
 const comments = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
 
@@ -188,11 +190,13 @@ const comments = () => {
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
       const response = await fetch(apiRoutes.post.comment.postComment, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           message: trimmedComment,

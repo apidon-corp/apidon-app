@@ -16,6 +16,8 @@ import {
 
 import auth from "@react-native-firebase/auth";
 
+import appCheck from "@react-native-firebase/app-check";
+
 type Props = {
   username: string;
 };
@@ -118,11 +120,13 @@ const CreateFrenlet = ({ username }: Props) => {
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
       const response = await fetch(apiRoutes.user.social.getFollowStatus, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           suspectUsername: username,
@@ -167,6 +171,7 @@ const CreateFrenlet = ({ username }: Props) => {
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
       // Send frenlet
       const response = await fetch(apiRoutes.frenlet.createFrenlet, {
@@ -174,6 +179,7 @@ const CreateFrenlet = ({ username }: Props) => {
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           fren: username,
