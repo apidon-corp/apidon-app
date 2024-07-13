@@ -62,7 +62,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
     }
 
     setAuthStatus("authenticated");
-    return router.replace(`/(modals)/listNFT`);
+    return router.replace(`/home`);
   };
 
   useEffect(() => {

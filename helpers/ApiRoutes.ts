@@ -41,6 +41,7 @@ const apiRoutes = {
   },
   nft: {
     uploadNFT: `${userApisBaseUrl}/nft-uploadNFT`,
+    listNFT: `${userApisBaseUrl}/nft-listNFT`,
   },
   post: {
     comment: {

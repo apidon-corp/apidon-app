@@ -187,7 +187,7 @@ const NftBottomSheetContent = ({ postData, postSenderData }: Props) => {
                 color: apidonPink,
               }}
             >
-              ₺53
+              {nftDocData.listStatus.price}
             </Text>
           </View>
           <View
@@ -217,7 +217,7 @@ const NftBottomSheetContent = ({ postData, postSenderData }: Props) => {
                 color: apidonPink,
               }}
             >
-              4 Left
+               {nftDocData.listStatus.stock} Left
             </Text>
           </View>
         </View>

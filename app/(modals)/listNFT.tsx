@@ -20,6 +20,11 @@ import { Image } from "expo-image";
 import { TextInput } from "react-native-gesture-handler";
 import { apidonPink } from "@/constants/Colors";
 
+import auth from "@react-native-firebase/auth";
+import appCheck from "@react-native-firebase/app-check";
+import apiRoutes from "@/helpers/ApiRoutes";
+import { router } from "expo-router";
+
 const listNFT = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
 
@@ -39,6 +44,8 @@ const listNFT = () => {
   const screenHeight = Dimensions.get("window").height;
   const animatedTranslateValue = useRef(new Animated.Value(0)).current;
   const containerRef = useRef<null | View>(null);
+
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     getInitialData();
@@ -201,12 +208,53 @@ const listNFT = () => {
         },
         {
           text: "List",
-          onPress: () => {
-            console.log("List NFT");
-          },
+          onPress: handleList,
         },
       ]
     );
+  };
+
+  const handleList = async () => {
+    const currentUserAuthObject = auth().currentUser;
+    if (!currentUserAuthObject) return console.error("No user");
+
+    if (loading) return;
+
+    setLoading(true);
+
+    try {
+      const idToken = await currentUserAuthObject.getIdToken();
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
+      const response = await fetch(apiRoutes.nft.listNFT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${idToken}`,
+          appchecktoken,
+        },
+        body: JSON.stringify({
+          postDocPath: postDocPath,
+          price: price,
+          stock: stock,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error(
+          "Response from listNFT api is not okay: \n",
+          await response.text()
+        );
+        return setLoading(false);
+      }
+
+      router.dismiss();
+
+      return setLoading(false);
+    } catch (error) {
+      console.error("Error on listing NFT: ", error);
+      return setLoading(false);
+    }
   };
 
   if (!postDocPath) {
@@ -316,6 +364,7 @@ const listNFT = () => {
         </View>
         <View id="list">
           <Pressable
+            disabled={loading}
             onPress={handleListButton}
             style={{
               backgroundColor: apidonPink,
@@ -325,15 +374,19 @@ const listNFT = () => {
               justifyContent: "center",
             }}
           >
-            <Text
-              bold
-              style={{
-                color: "white",
-                fontSize: 18,
-              }}
-            >
-              List
-            </Text>
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text
+                bold
+                style={{
+                  color: "white",
+                  fontSize: 18,
+                }}
+              >
+                List
+              </Text>
+            )}
           </Pressable>
         </View>
       </Animated.View>
