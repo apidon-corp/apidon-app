@@ -59,6 +59,9 @@ const apiRoutes = {
     rateProvider: `${userApisBaseUrl}/provider-rateProvider`,
     selectProvider: `${userApisBaseUrl}/provider-selectProvider`,
   },
+  payment: {
+    createPayment: `${userApisBaseUrl}/payment-createPayment`,
+  },
 };
 
 export default apiRoutes;

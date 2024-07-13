@@ -14,6 +14,10 @@ import { useSetAtom } from "jotai";
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { router } from "expo-router";
 
+import appCheck from "@react-native-firebase/app-check";
+import apiRoutes from "@/helpers/ApiRoutes";
+import { useStripe } from "@stripe/stripe-react-native";
+
 type Props = {
   postData: PostServerData;
   postSenderData: UserInServer;
@@ -25,6 +29,8 @@ const NftBottomSheetContent = ({ postData, postSenderData }: Props) => {
   const [nftDocData, setNftDocData] = useState<NftDocDataInServer | null>(null);
 
   const setScreenParameters = useSetAtom(screenParametersAtom);
+
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
   useEffect(() => {
     if (authStatus !== "authenticated") return;
@@ -50,7 +56,7 @@ const NftBottomSheetContent = ({ postData, postSenderData }: Props) => {
         (error) => {
           console.log(
             "Error on getting realtime nft data at: \n",
-            postData.nftStatus.convertedToNft,
+            postData.nftStatus.nftDocPath,
             "\n",
             error
           );
@@ -69,6 +75,61 @@ const NftBottomSheetContent = ({ postData, postSenderData }: Props) => {
     ]);
 
     return router.push("/(modals)/listNFT");
+  };
+
+  const handleBuyButton = async () => {
+    const currentUserAuthObject = auth().currentUser;
+    if (!currentUserAuthObject) return console.error("No user");
+
+    try {
+      const idToken = await currentUserAuthObject.getIdToken();
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
+      const response = await fetch(apiRoutes.payment.createPayment, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          appchecktoken,
+        },
+      });
+
+      if (!response.ok) {
+        console.error(
+          "Response from createPayment API is not okay: ",
+          await response.text()
+        );
+        return;
+      }
+
+      const { paymentIntent, ephemeralKey, customer } = await response.json();
+
+      const { error } = await initPaymentSheet({
+        merchantDisplayName: "Apidon Corp",
+        customerId: customer,
+        customerEphemeralKeySecret: ephemeralKey,
+        paymentIntentClientSecret: paymentIntent,
+        defaultBillingDetails: {
+          name: "Kendall Roy",
+        },
+      });
+
+      if (error) {
+        console.error("Error from stripe initPaymentSheet: ", error);
+        return;
+      }
+
+      const { error: presentError } = await presentPaymentSheet();
+      if (error) {
+        console.error("Error from stripe presentPaymentSheet: ", presentError);
+        return;
+      }
+
+      console.log("All Operations are successfull.");
+      return;
+    } catch (error) {
+      console.error("Error on creating payment: ", error);
+      return;
+    }
   };
 
   if (!nftDocData) {
@@ -217,7 +278,7 @@ const NftBottomSheetContent = ({ postData, postSenderData }: Props) => {
                 color: apidonPink,
               }}
             >
-               {nftDocData.listStatus.stock} Left
+              {nftDocData.listStatus.stock} Left
             </Text>
           </View>
         </View>
@@ -242,11 +303,12 @@ const NftBottomSheetContent = ({ postData, postSenderData }: Props) => {
                   fontSize: 18,
                 }}
               >
-                Set Price
+                See Collectors
               </Text>
             </Pressable>
           ) : (
             <Pressable
+              onPress={handleBuyButton}
               style={{
                 backgroundColor: apidonPink,
                 padding: 20,
@@ -267,11 +329,32 @@ const NftBottomSheetContent = ({ postData, postSenderData }: Props) => {
             </Pressable>
           )}
         </>
-      ) : (
-        postData.senderUsername === auth().currentUser?.displayName && (
-          <Pressable
-            onPress={handleSetPriceButton}
+      ) : postData.senderUsername === auth().currentUser?.displayName ? (
+        <Pressable
+          onPress={handleSetPriceButton}
+          style={{
+            backgroundColor: apidonPink,
+            padding: 20,
+            borderRadius: 10,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text
+            bold
             style={{
+              color: "white",
+              fontSize: 18,
+            }}
+          >
+            Set Price
+          </Text>
+        </Pressable>
+      ) : (
+        <>
+          <Pressable
+            style={{
+              opacity: 0.5,
               backgroundColor: apidonPink,
               padding: 20,
               borderRadius: 10,
@@ -286,10 +369,10 @@ const NftBottomSheetContent = ({ postData, postSenderData }: Props) => {
                 fontSize: 18,
               }}
             >
-              Set Price
+              Not Listed
             </Text>
           </Pressable>
-        )
+        </>
       )}
     </View>
   );
