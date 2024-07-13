@@ -27,6 +27,7 @@ import Stars from "./Rating/Stars";
 import auth from "@react-native-firebase/auth";
 
 import appCheck from "@react-native-firebase/app-check";
+import NftBottomSheetContent from "./NFT/NftBottomSheetContent";
 
 type Props = {
   postDocPath: string;
@@ -104,7 +105,7 @@ const Post = ({ postDocPath }: Props) => {
           console.error(
             "Error on getting realtime data of post: ",
             postDocPath,
-            " ",
+            "\n",
             error
           );
           return setLoading(false);
@@ -612,168 +613,10 @@ const Post = ({ postDocPath }: Props) => {
         snapPoint="40%"
         backgroundColor="#1B1B1B"
       >
-        <View
-          style={{
-            flex: 1,
-            gap: 10,
-          }}
-        >
-          <View
-            id="creator-information"
-            style={{
-              flexDirection: "row",
-              backgroundColor: "#323232",
-              padding: 20,
-              justifyContent: "space-between",
-              borderRadius: 10,
-            }}
-          >
-            <View
-              style={{
-                justifyContent: "space-between",
-              }}
-            >
-              <Text
-                bold
-                style={{
-                  fontSize: 18,
-                }}
-              >
-                Creator
-              </Text>
-              <View id="username-fullaname">
-                <Text
-                  bold
-                  style={{
-                    fontSize: 14,
-                  }}
-                >
-                  {postSenderData.username}
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 14,
-                  }}
-                >
-                  {postSenderData.fullname}
-                </Text>
-              </View>
-              <Text
-                bold
-                style={{
-                  fontSize: 14,
-                  color: apidonPink,
-                }}
-              >
-                {postSenderData.nftCount} NFTs
-              </Text>
-            </View>
-            <View>
-              <Image
-                source={
-                  postSenderData.profilePhoto ||
-                  require("@/assets/images/user.jpg")
-                }
-                style={{
-                  width: 100,
-                  height: 100,
-                  borderRadius: 50,
-                }}
-                transition={500}
-              />
-            </View>
-          </View>
-
-          <View
-            id="price-reminder"
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              gap: 10,
-            }}
-          >
-            <View
-              id="price"
-              style={{
-                flex: 0.5,
-                flexDirection: "row",
-                backgroundColor: "#323232",
-                padding: 20,
-                gap: 5,
-                borderRadius: 10,
-                justifyContent: "space-between",
-              }}
-            >
-              <Text
-                bold
-                style={{
-                  fontSize: 18,
-                }}
-              >
-                Price
-              </Text>
-              <Text
-                bold
-                style={{
-                  fontSize: 18,
-                  color: apidonPink,
-                }}
-              >
-                ₺53
-              </Text>
-            </View>
-            <View
-              id="reminder"
-              style={{
-                flex: 0.5,
-                flexDirection: "row",
-                backgroundColor: "#323232",
-                padding: 20,
-                gap: 5,
-                borderRadius: 10,
-                justifyContent: "space-between",
-              }}
-            >
-              <Text
-                bold
-                style={{
-                  fontSize: 18,
-                }}
-              >
-                Stock
-              </Text>
-              <Text
-                bold
-                style={{
-                  fontSize: 18,
-                  color: apidonPink,
-                }}
-              >
-                4 Left
-              </Text>
-            </View>
-          </View>
-
-          <Pressable
-            style={{
-              backgroundColor: apidonPink,
-              padding: 20,
-              borderRadius: 10,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text
-              bold
-              style={{
-                color: "white",
-                fontSize: 18,
-              }}
-            >
-              Collect
-            </Text>
-          </Pressable>
-        </View>
+        <NftBottomSheetContent
+          postData={postDocData}
+          postSenderData={postSenderData}
+        />
       </CustomBottomModalSheet>
     </>
   );
