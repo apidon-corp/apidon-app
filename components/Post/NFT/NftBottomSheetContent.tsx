@@ -17,9 +17,14 @@ import { useSetAtom } from "jotai";
 type Props = {
   postData: PostServerData;
   postSenderData: UserInServer;
+  closeNFTBottomSheet: () => void;
 };
 
-const NftBottomSheetContent = ({ postData, postSenderData }: Props) => {
+const NftBottomSheetContent = ({
+  postData,
+  postSenderData,
+  closeNFTBottomSheet,
+}: Props) => {
   const authStatus = useAuth();
 
   const [nftDocData, setNftDocData] = useState<NftDocDataInServer | null>(null);
@@ -71,7 +76,9 @@ const NftBottomSheetContent = ({ postData, postSenderData }: Props) => {
     return router.push("/(modals)/listNFT");
   };
 
-  const handleBuyButton = () => {
+  const handleCollectButton = () => {
+    closeNFTBottomSheet();
+
     setScreenParameters([
       {
         queryId: "postDocPath",
@@ -258,7 +265,7 @@ const NftBottomSheetContent = ({ postData, postSenderData }: Props) => {
             </Pressable>
           ) : (
             <Pressable
-              onPress={handleBuyButton}
+              onPress={handleCollectButton}
               style={{
                 backgroundColor: apidonPink,
                 padding: 20,

@@ -292,6 +292,10 @@ const Post = ({ postDocPath }: Props) => {
     nftOptionsModalRef.current?.present();
   };
 
+  function closeNFTBottomSheet(){
+    nftOptionsModalRef.current?.close();
+  }
+
   if (loading)
     return (
       <View
@@ -616,6 +620,7 @@ const Post = ({ postDocPath }: Props) => {
         <NftBottomSheetContent
           postData={postDocData}
           postSenderData={postSenderData}
+          closeNFTBottomSheet={closeNFTBottomSheet}
         />
       </CustomBottomModalSheet>
     </>
