@@ -1,22 +1,18 @@
-import { View, Pressable, ActivityIndicator } from "react-native";
 import { Text } from "@/components/Text/Text";
-import React, { useEffect, useState } from "react";
 import { apidonPink } from "@/constants/Colors";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
 import { Image } from "expo-image";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Pressable, View } from "react-native";
 
-import auth from "@react-native-firebase/auth";
-import { useAuth } from "@/providers/AuthProvider";
-import firestore from "@react-native-firebase/firestore";
-import { NftDocDataInServer } from "@/types/Nft";
-import { useSetAtom } from "jotai";
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
+import { useAuth } from "@/providers/AuthProvider";
+import { NftDocDataInServer } from "@/types/Nft";
+import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
 import { router } from "expo-router";
-
-import appCheck from "@react-native-firebase/app-check";
-import apiRoutes from "@/helpers/ApiRoutes";
-import { useStripe } from "@stripe/stripe-react-native";
+import { useSetAtom } from "jotai";
 
 type Props = {
   postData: PostServerData;
@@ -29,8 +25,6 @@ const NftBottomSheetContent = ({ postData, postSenderData }: Props) => {
   const [nftDocData, setNftDocData] = useState<NftDocDataInServer | null>(null);
 
   const setScreenParameters = useSetAtom(screenParametersAtom);
-
-  const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
   useEffect(() => {
     if (authStatus !== "authenticated") return;
@@ -77,59 +71,15 @@ const NftBottomSheetContent = ({ postData, postSenderData }: Props) => {
     return router.push("/(modals)/listNFT");
   };
 
-  const handleBuyButton = async () => {
-    const currentUserAuthObject = auth().currentUser;
-    if (!currentUserAuthObject) return console.error("No user");
+  const handleBuyButton = () => {
+    setScreenParameters([
+      {
+        queryId: "postDocPath",
+        value: `users/${postSenderData.username}/posts/${postData.id}`,
+      },
+    ]);
 
-    try {
-      const idToken = await currentUserAuthObject.getIdToken();
-      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
-
-      const response = await fetch(apiRoutes.payment.createPayment, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          appchecktoken,
-        },
-      });
-
-      if (!response.ok) {
-        console.error(
-          "Response from createPayment API is not okay: ",
-          await response.text()
-        );
-        return;
-      }
-
-      const { paymentIntent, ephemeralKey, customer } = await response.json();
-
-      const { error } = await initPaymentSheet({
-        merchantDisplayName: "Apidon Corp",
-        customerId: customer,
-        customerEphemeralKeySecret: ephemeralKey,
-        paymentIntentClientSecret: paymentIntent,
-        defaultBillingDetails: {
-          name: "Kendall Roy",
-        },
-      });
-
-      if (error) {
-        console.error("Error from stripe initPaymentSheet: ", error);
-        return;
-      }
-
-      const { error: presentError } = await presentPaymentSheet();
-      if (error) {
-        console.error("Error from stripe presentPaymentSheet: ", presentError);
-        return;
-      }
-
-      console.log("All Operations are successfull.");
-      return;
-    } catch (error) {
-      console.error("Error on creating payment: ", error);
-      return;
-    }
+    router.push("/(modals)/buyNFT");
   };
 
   if (!nftDocData) {

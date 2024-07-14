@@ -42,6 +42,7 @@ const apiRoutes = {
   nft: {
     uploadNFT: `${userApisBaseUrl}/nft-uploadNFT`,
     listNFT: `${userApisBaseUrl}/nft-listNFT`,
+    buyNFT: `${userApisBaseUrl}/nft-buyNFT`,
   },
   post: {
     comment: {
@@ -58,9 +59,6 @@ const apiRoutes = {
     getProviderInformation: `${userApisBaseUrl}/provider-getProviderInformation`,
     rateProvider: `${userApisBaseUrl}/provider-rateProvider`,
     selectProvider: `${userApisBaseUrl}/provider-selectProvider`,
-  },
-  payment: {
-    createPayment: `${userApisBaseUrl}/payment-createPayment`,
   },
 };
 

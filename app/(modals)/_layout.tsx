@@ -55,6 +55,13 @@ const _layout = () => {
             title: "List NFT",
           }}
         />
+        <Stack.Screen
+          name="buyNFT"
+          options={{
+            presentation: "modal",
+            title: "Collect",
+          }}
+        />
       </Stack>
     </>
   );

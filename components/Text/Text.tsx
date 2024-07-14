@@ -9,11 +9,13 @@ import React, { ReactNode } from "react";
 interface CustomTextProps extends TextProps {
   children: ReactNode;
   bold?: boolean;
+  fontSize?: number;
 }
 
 export const Text: React.FC<CustomTextProps> = ({
   style,
   bold,
+  fontSize,
   children,
   ...props
 }) => {
@@ -23,7 +25,8 @@ export const Text: React.FC<CustomTextProps> = ({
         style={[
           styles.defaultStyle,
           style,
-          bold && [{ fontFamily: "Poppins-Bold" }],
+          bold ? [{ fontFamily: "Poppins-Bold" }] : undefined,
+          fontSize ? [{ fontSize: fontSize }] : undefined,
         ]}
         {...props}
       >

@@ -28,9 +28,9 @@ import { router } from "expo-router";
 const listNFT = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
 
-  const postDocPath =
-    screenParameters.find((q) => q.queryId === "postDocPath")?.value ||
-    "users/abovestars/posts/1720549024180";
+  const postDocPath = screenParameters.find(
+    (q) => q.queryId === "postDocPath"
+  )?.value;
 
   const [postData, setPostData] = useState<PostServerData | null>(null);
   const [nftData, setNftData] = useState<NftDocDataInServer | null>(null);
