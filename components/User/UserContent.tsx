@@ -10,6 +10,7 @@ import CreateFrenlet from "../Frenlet/CreateFrenlet";
 import Frenlet from "../Frenlet/Frenlet";
 import Post from "../Post/Post";
 import Header from "./Header";
+import { NFTTradeDocData } from "@/types/Trade";
 
 type Props = {
   username: string;
@@ -20,14 +21,18 @@ const UserContent = ({ username }: Props) => {
 
   const [postDocPathArray, setPostDocPathArray] = useState<string[]>([]);
   const [frenletDocPaths, setFrenletDocPaths] = useState<string[]>([]);
+  const [boughtNFTsPostDocPaths, setBoughtNFTsPostDocPaths] = useState<
+    string[]
+  >([]);
+
   const [userData, setUserData] = useState<UserInServer | null>(null);
 
-  const [toggleValue, setToggleValue] = useState<"posts" | "frenlets">("posts");
+  const [toggleValue, setToggleValue] = useState<"posts" | "nfts">("posts");
 
   const { height } = Dimensions.get("window");
 
   const onToggleValueChange = () => {
-    setToggleValue((prev) => (prev === "posts" ? "frenlets" : "posts"));
+    setToggleValue((prev) => (prev === "posts" ? "nfts" : "posts"));
   };
 
   // Post Fetching
@@ -81,7 +86,51 @@ const UserContent = ({ username }: Props) => {
     return () => unsubscribe();
   }, [username, authStatus]);
 
-  // Dynamic Data Fetching
+  // Bought NFTs Fetching
+  useEffect(() => {
+    if (authStatus !== "authenticated") return;
+    if (!username) return;
+
+    const unsubscribe = firestore()
+      .doc(`users/${username}/nftTrade/nftTrade`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.error("NFT Trade doc doesn't exist.");
+            return setBoughtNFTsPostDocPaths([]);
+          }
+
+          const nftTradeData = snapshot.data() as NFTTradeDocData;
+          if (!nftTradeData) {
+            console.error("NFT Trade doc doesn't exist.");
+            return setBoughtNFTsPostDocPaths([]);
+          }
+
+          const boughtNFTs = nftTradeData.boughtNFTs;
+          if (!boughtNFTs) {
+            console.error("BoughtNFTs is undefined on nftTrade doc");
+            return setBoughtNFTsPostDocPaths([]);
+          }
+
+          return setBoughtNFTsPostDocPaths(
+            boughtNFTs
+              .map((b) => b.postDocPath)
+              .reduce((acc, current) => {
+                if (!acc.includes(current)) return [current, ...acc];
+                return acc;
+              }, [] as string[])
+          );
+        },
+        (error) => {
+          console.error("Error on getting realtime nftTrade data: ", error);
+          return setBoughtNFTsPostDocPaths([]);
+        }
+      );
+
+    () => unsubscribe();
+  }, [username, authStatus]);
+
+  // User Data Fetching
   useEffect(() => {
     if (authStatus !== "authenticated") return;
     if (!username) return;
@@ -156,7 +205,7 @@ const UserContent = ({ username }: Props) => {
             fontSize: 14,
           }}
         >
-          Frens
+          NFTs
         </Text>
       </View>
 
@@ -172,7 +221,7 @@ const UserContent = ({ username }: Props) => {
           scrollEnabled={false}
         />
       )}
-      {toggleValue === "frenlets" && (
+      {/* {toggleValue === "frenlets" && (
         <>
           <CreateFrenlet username={username} />
           <FlatList
@@ -180,10 +229,24 @@ const UserContent = ({ username }: Props) => {
               gap: 20,
             }}
             keyExtractor={(item) => item}
-            data={frenletDocPaths}
+            data={boughtNFTsPostDocPaths}
             renderItem={({ item }) => (
               <Frenlet frenletDocPath={item} key={item} />
             )}
+            showsVerticalScrollIndicator={false}
+            scrollEnabled={false}
+          />
+        </>
+      )} */}
+      {toggleValue === "nfts" && (
+        <>
+          <FlatList
+            contentContainerStyle={{
+              gap: 20,
+            }}
+            keyExtractor={(item) => item}
+            data={boughtNFTsPostDocPaths}
+            renderItem={({ item }) => <Post postDocPath={item} key={item} />}
             showsVerticalScrollIndicator={false}
             scrollEnabled={false}
           />

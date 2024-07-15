@@ -172,6 +172,7 @@ const buyNFT = () => {
         defaultBillingDetails: {
           name: "Kendall Roy",
         },
+        returnURL: "apidon://home",
       });
 
       if (error) {
