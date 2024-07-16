@@ -2,19 +2,21 @@ import { apidonPink } from "@/constants/Colors";
 import { useAuth } from "@/providers/AuthProvider";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
-import { FontAwesome5 } from "@expo/vector-icons";
+import { Entypo, FontAwesome5 } from "@expo/vector-icons";
 import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import Text from "../Text/Text";
+import { NftDocDataInServer } from "@/types/Nft";
 
 type Props = {
   postDocPath: string;
+  nftDocData: NftDocDataInServer;
 };
 
-const NftPreview = ({ postDocPath }: Props) => {
+const NftPreview = ({ postDocPath, nftDocData }: Props) => {
   const [postDocData, setPostDocData] = useState<PostServerData | null>(null);
   const [postSenderData, setPostSenderData] = useState<UserInServer | null>(
     null
@@ -131,7 +133,37 @@ const NftPreview = ({ postDocPath }: Props) => {
             }}
             bold
           >
-            53
+            {nftDocData.listStatus.price}
+          </Text>
+        </View>
+      </View>
+      <View
+        style={{
+          position: "absolute",
+          bottom: 20,
+          right: 20,
+          padding: 5,
+          opacity: 1,
+        }}
+      >
+        <View
+          style={{
+            paddingHorizontal: 5,
+            flexDirection: "row",
+            backgroundColor: "white",
+            borderRadius: 10,
+            alignItems: "center",
+          }}
+        >
+          <Entypo name="cross" size={20} color={apidonPink} />
+          <Text
+            style={{
+              color: apidonPink,
+              fontSize: 16,
+            }}
+            bold
+          >
+            {nftDocData.listStatus.stock}
           </Text>
         </View>
       </View>

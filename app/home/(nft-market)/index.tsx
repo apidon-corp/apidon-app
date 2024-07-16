@@ -8,14 +8,14 @@ import { FlatList, SafeAreaView } from "react-native";
 const index = () => {
   const authStatus = useAuth();
 
-  const [nftConvertedPostDocPaths, setNftConvertedPostDocPaths] = useState<
-    string[]
+  const [listedNftDocDatas, setListedNftDocDatas] = useState<
+    NftDocDataInServer[]
   >([]);
 
   useEffect(() => {
     if (authStatus !== "authenticated") return;
 
-    setNftConvertedPostDocPaths([]);
+    setListedNftDocDatas([]);
 
     const unsubscribe = firestore()
       .collection("nfts")
@@ -23,13 +23,29 @@ const index = () => {
       .onSnapshot(
         (snapshot) => {
           snapshot.docChanges().forEach((change) => {
-            if (change.type === "added") {
-              const nftDocData = change.doc.data() as NftDocDataInServer;
+            const nftDocData = change.doc.data() as NftDocDataInServer;
 
-              setNftConvertedPostDocPaths((prev) => [
-                nftDocData.postDocPath,
-                ...prev,
-              ]);
+            if (change.type === "added") {
+              if (nftDocData.listStatus.isListed) {
+                setListedNftDocDatas((prev) => [nftDocData, ...prev]);
+              }
+            } else if (change.type === "modified") {
+              if (nftDocData.listStatus.isListed) {
+                setListedNftDocDatas((prev) => {
+                  const updatedNftDocDatas = prev.map((n) => {
+                    return n.tokenId === nftDocData.tokenId ? nftDocData : n;
+                  });
+
+                  if (
+                    !updatedNftDocDatas.some(
+                      (n) => n.tokenId === nftDocData.tokenId
+                    )
+                  )
+                    return [nftDocData, ...prev];
+
+                  return updatedNftDocDatas;
+                });
+              }
             }
           });
         },
@@ -38,7 +54,7 @@ const index = () => {
             "Error on getting realtime nft collection data: ",
             error
           );
-          return setNftConvertedPostDocPaths([]);
+          return setListedNftDocDatas([]);
         }
       );
 
@@ -57,9 +73,15 @@ const index = () => {
       <FlatList
         style={{ width: "100%" }}
         numColumns={2}
-        data={nftConvertedPostDocPaths}
-        renderItem={({ item }) => <NftPreview postDocPath={item} key={item} />}
-        keyExtractor={(item) => item}
+        data={listedNftDocDatas}
+        renderItem={({ item }) => (
+          <NftPreview
+            postDocPath={item.postDocPath}
+            nftDocData={item}
+            key={item.tokenId}
+          />
+        )}
+        keyExtractor={(item) => item.tokenId.toString()}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
