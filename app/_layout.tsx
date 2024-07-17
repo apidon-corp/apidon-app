@@ -137,7 +137,7 @@ function RootLayout() {
 
       provider.configure({
         apple: {
-          provider: "debug",
+          provider: "deviceCheck",
           debugToken: process.env.EXPO_PUBLIC_DEBUG_TOKEN,
         },
       });
