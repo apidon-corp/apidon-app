@@ -8,7 +8,7 @@ import { UserInServer } from "@/types/User";
 import { Entypo, Feather } from "@expo/vector-icons";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import firestore from "@react-native-firebase/firestore";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNowStrict } from "date-fns";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
@@ -292,7 +292,7 @@ const Post = ({ postDocPath }: Props) => {
     nftOptionsModalRef.current?.present();
   };
 
-  function closeNFTBottomSheet(){
+  function closeNFTBottomSheet() {
     nftOptionsModalRef.current?.close();
   }
 
@@ -331,123 +331,185 @@ const Post = ({ postDocPath }: Props) => {
           id="header"
           style={{
             width: "100%",
-            height: 75,
             flexDirection: "row",
             alignItems: "center",
-            paddingHorizontal: 10,
-            gap: 10,
-            justifyContent: "space-between",
+            padding: 10,
           }}
         >
-          <Pressable
+          <View
+            id="sender-information"
             style={{
-              flexDirection: "row",
-              gap: 10,
-              alignItems: "center",
-            }}
-            onPress={() => {
-              router.push(`/home/profile/${postSenderData.username}`);
+              width: "55%",
+              overflow: "hidden",
             }}
           >
-            <Image
-              source={
-                postSenderData.profilePhoto ||
-                require("@/assets/images/user.jpg")
-              }
-              style={{
-                width: 50,
-                height: 50,
-                borderRadius: 25,
-              }}
-              transition={500}
-            />
-            <View
-              id="username-fullname-time"
+            <Pressable
+              id="user-data"
               style={{
                 flexDirection: "row",
-                gap: 5,
+                gap: 10,
+                alignItems: "center",
+              }}
+              onPress={() => {
+                router.push(`/home/profile/${postSenderData.username}`);
               }}
             >
-              <View
-                id="username-fullname"
+              <Image
+                source={
+                  postSenderData.profilePhoto ||
+                  require("@/assets/images/user.jpg")
+                }
                 style={{
-                  gap: 1,
+                  width: 50,
+                  height: 50,
+                  borderRadius: 25,
+                }}
+                transition={500}
+              />
+              <View
+                id="username-fullname-time"
+                style={{
+                  flexDirection: "row",
+                  gap: 5,
+                }}
+              >
+                <View
+                  id="username-fullname"
+                  style={{
+                    gap: 1,
+                  }}
+                >
+                  <Text
+                    bold
+                    style={{
+                      fontSize: 12,
+                    }}
+                  >
+                    {postSenderData.username}
+                  </Text>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 12,
+                      }}
+                    >
+                      {postSenderData.fullname}
+                    </Text>
+                    <Entypo name="dot-single" size={15} color="gray" />
+                    <Text style={{ fontSize: 12, color: "gray" }}>
+                      {formatDistanceToNowStrict(
+                        new Date(postDocData.creationTime)
+                      )}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </Pressable>
+          </View>
+
+          <View
+            style={{
+              width: "5%",
+            }}
+          />
+
+          {postDocData.nftStatus.convertedToNft && (
+            <View
+              id="nft-tag"
+              style={{
+                width: "30%",
+                overflow: "hidden",
+              }}
+            >
+              <Pressable
+                onPress={handleNFTButton}
+                style={{
+                  width: "100%",
+                  borderWidth: 1,
+                  borderColor: apidonPink,
+                  borderRadius: 6,
+                  flexDirection: "row",
+                  padding: 4,
+                  gap: 2,
                 }}
               >
                 <Text
                   bold
                   style={{
-                    fontSize: 15,
+                    color: apidonPink,
+                    textAlign: "center",
+                  }}
+                  fontSize={12}
+                >
+                  NFT
+                </Text>
+                <Text fontSize={12}>by</Text>
+                <Text
+                  bold
+                  fontSize={12}
+                  numberOfLines={1}
+                  style={{
+                    overflow: "hidden",
                   }}
                 >
                   {postSenderData.username}
                 </Text>
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <Text
-                    style={{
-                      fontSize: 15,
-                    }}
-                  >
-                    {postSenderData.fullname}
-                  </Text>
-                  <Entypo name="dot-single" size={15} color="gray" />
-                  <Text style={{ fontSize: 12, color: "gray" }}>
-                    {formatDistanceToNow(new Date(postDocData.creationTime))}
-                  </Text>
-                </View>
-              </View>
+              </Pressable>
             </View>
-          </Pressable>
-          {postDocData.nftStatus.convertedToNft && (
-            <Pressable
-              onPress={handleNFTButton}
+          )}
+          <View
+            style={{
+              width: "5%",
+            }}
+          />
+          {doesOwnPost ? (
+            <View
+              id="settings-button"
               style={{
-                borderWidth: 1,
-                borderColor: apidonPink,
-                borderRadius: 10,
-                padding: 5,
-                flexDirection: "row",
-                gap: 5,
+                width: "5%",
+                alignItems: "flex-end",
+                overflow: "hidden",
               }}
             >
-              <Text
-                bold
-                style={{
-                  color: apidonPink,
-                }}
-              >
-                NFT
-              </Text>
-              <Text>by</Text>
-              <Text bold>{postSenderData.username}</Text>
-            </Pressable>
-          )}
-          {doesOwnPost ? (
-            <Pressable
-              onPress={handleOptionsButton}
-              disabled={postDeleteLoading}
-            >
-              {postDeleteLoading ? (
-                <ActivityIndicator color="red" />
-              ) : (
-                <Entypo name="dots-three-vertical" size={18} color="white" />
-              )}
-            </Pressable>
-          ) : (
-            !doesFollow && (
               <Pressable
-                onPress={handleFollowButton}
-                style={{
-                  padding: 5,
-                }}
-                disabled={followLoading}
+                onPress={handleOptionsButton}
+                disabled={postDeleteLoading}
               >
-                {followLoading ? (
-                  <ActivityIndicator color="white" />
+                {postDeleteLoading ? (
+                  <ActivityIndicator color="red" />
                 ) : (
-                  <Feather name="user-plus" size={24} color="white" />
+                  <Entypo name="dots-three-vertical" size={18} color="white" />
                 )}
               </Pressable>
+            </View>
+          ) : (
+            !doesFollow && (
+              <View
+                style={{
+                  borderWidth: 1,
+                  borderColor: "red",
+                }}
+              >
+                <Pressable
+                  onPress={handleFollowButton}
+                  style={{
+                    padding: 5,
+                  }}
+                  disabled={followLoading}
+                >
+                  {followLoading ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <Feather name="user-plus" size={24} color="white" />
+                  )}
+                </Pressable>
+              </View>
             )
           )}
         </View>
