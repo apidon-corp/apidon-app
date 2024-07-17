@@ -4,6 +4,8 @@ import apiRoutes from "./ApiRoutes";
 
 import appCheck from "@react-native-firebase/app-check";
 
+import { captureException } from "@sentry/react-native";
+
 export const handleGetActiveProviderStatus = async () => {
   const currentUserAuthObject = auth().currentUser;
   if (!currentUserAuthObject) return false;
@@ -22,11 +24,9 @@ export const handleGetActiveProviderStatus = async () => {
 
     if (!response.ok) {
       const message = await response.text();
-      console.error(
-        "Response from getProviderInformation API is not okay: ",
-        message
+      throw new Error(
+        `Response from getProviderInformation API is not okay: \n ${message}`
       );
-      return false;
     }
 
     const result =
@@ -35,6 +35,7 @@ export const handleGetActiveProviderStatus = async () => {
     return result;
   } catch (error) {
     console.error("Error on getting provider information: ", error);
+    captureException(`Error on getting provider information: \n${error}`);
     return false;
   }
 };

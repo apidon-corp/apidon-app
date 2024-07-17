@@ -5,17 +5,19 @@ import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack, useNavigationContainerRef } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import "react-native-reanimated";
 
 import AuthProvider from "@/providers/AuthProvider";
-import { StatusBar } from "react-native";
+import { Linking, StatusBar } from "react-native";
 
 import NotificationProvider from "@/providers/NotificationProvider";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
-import { StripeProvider } from "@stripe/stripe-react-native";
+import { StripeProvider, useStripe } from "@stripe/stripe-react-native";
+
+import appCheck from "@react-native-firebase/app-check";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -28,7 +30,7 @@ import { isRunningInExpoGo } from "expo";
 const routingInstrumentation = new Sentry.ReactNavigationInstrumentation();
 
 Sentry.init({
-  dsn: "YOUR DSN HERE",
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
   debug: true, // If `true`, Sentry will try to print out useful debugging information if something goes wrong with sending the event. Set it to `false` in production
   integrations: [
     new Sentry.ReactNativeTracing({
@@ -74,13 +76,7 @@ function RootLayoutNav() {
                         presentation: "modal",
                       }}
                     />
-                    <Stack.Screen
-                      name="index"
-                      options={{
-                        title: "Index",
-                        headerShown: false,
-                      }}
-                    />
+
                     <Stack.Screen
                       name="auth"
                       options={{
@@ -88,6 +84,7 @@ function RootLayoutNav() {
                         title: "Auth",
                       }}
                     />
+
                     <Stack.Screen
                       name="home"
                       options={{
@@ -95,6 +92,15 @@ function RootLayoutNav() {
                         headerShown: false,
                       }}
                     />
+
+                    <Stack.Screen
+                      name="index"
+                      options={{
+                        title: "index",
+                        headerShown: false,
+                      }}
+                    />
+
                     <Stack.Screen
                       name="+not-found"
                       options={{
@@ -118,6 +124,67 @@ function RootLayout() {
     "Poppins-Bold": require("../assets/fonts/Poppins-Bold.ttf"),
     ...FontAwesome.font,
   });
+
+  useEffect(() => {
+    handleConnectAppCheckServers();
+  }, []);
+
+  const handleConnectAppCheckServers = async () => {
+    try {
+      const provider = appCheck().newReactNativeFirebaseAppCheckProvider();
+
+      provider.configure({
+        apple: {
+          provider: "debug",
+          debugToken: process.env.EXPO_PUBLIC_DEBUG_TOKEN,
+        },
+      });
+
+      await appCheck().initializeAppCheck({
+        provider: provider,
+        isTokenAutoRefreshEnabled: true,
+      });
+
+      const { token } = await appCheck().getToken();
+    } catch (error) {
+      console.error(
+        "Error on connecting and creating app check token: ",
+        error
+      );
+    }
+  };
+
+  const { handleURLCallback } = useStripe();
+  const handleDeepLink = useCallback(
+    async (url: string | null) => {
+      if (url) {
+        const stripeHandled = await handleURLCallback(url);
+        if (stripeHandled) {
+          // This was a Stripe URL - you can return or add extra handling here as you see fit
+        } else {
+          // This was NOT a Stripe URL – handle as you normally would
+        }
+      }
+    },
+    [handleURLCallback]
+  );
+  useEffect(() => {
+    const getUrlAsync = async () => {
+      const initialUrl = await Linking.getInitialURL();
+      handleDeepLink(initialUrl);
+    };
+
+    getUrlAsync();
+
+    const deepLinkListener = Linking.addEventListener(
+      "url",
+      (event: { url: string }) => {
+        handleDeepLink(event.url);
+      }
+    );
+
+    return () => deepLinkListener.remove();
+  }, [handleDeepLink]);
 
   const ref = useNavigationContainerRef();
   useEffect(() => {

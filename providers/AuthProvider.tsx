@@ -13,6 +13,8 @@ import {
   useState,
 } from "react";
 
+import { captureException } from "@sentry/react-native";
+
 const AuthContext = createContext<AuthStatus>("loading");
 
 export default function AuthProvider({ children }: PropsWithChildren) {
@@ -46,14 +48,14 @@ export default function AuthProvider({ children }: PropsWithChildren) {
 
     if (!currentUserDisplayName) {
       setAuthStatus("unauthenticated");
-      return router.replace("/");
+      return router.replace("/auth");
     }
 
     const providerResult = await handleGetActiveProviderStatus();
 
     if (!providerResult) {
       setAuthStatus("unauthenticated");
-      return router.replace("/");
+      return router.replace("/auth");
     }
 
     if (!providerResult.isThereActiveProvider) {
