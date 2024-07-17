@@ -66,7 +66,7 @@ const UserCard = ({ username }: Props) => {
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
-          token: appchecktoken,
+          appchecktoken: appchecktoken,
         },
         body: JSON.stringify({
           suspectUsername: username,

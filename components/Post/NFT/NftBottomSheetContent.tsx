@@ -5,7 +5,6 @@ import { UserInServer } from "@/types/User";
 import { Image } from "expo-image";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
-
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { useAuth } from "@/providers/AuthProvider";
 import { NftDocDataInServer } from "@/types/Nft";
@@ -20,6 +19,19 @@ type Props = {
   closeNFTBottomSheet: () => void;
 };
 
+type NftStatus =
+  | "not-converted-to-nft"
+  | {
+      isListed: true;
+      fromCurrentUser: boolean;
+      price: number;
+      currency: string;
+      stock: number;
+      alreadyBought: boolean;
+    }
+  | { isListed: false; fromCurrentUser: boolean }
+  | null;
+
 const NftBottomSheetContent = ({
   postData,
   postSenderData,
@@ -28,6 +40,7 @@ const NftBottomSheetContent = ({
   const authStatus = useAuth();
 
   const [nftDocData, setNftDocData] = useState<NftDocDataInServer | null>(null);
+  const [nftStatus, setNftStatus] = useState<NftStatus>(null);
 
   const setScreenParameters = useSetAtom(screenParametersAtom);
 
@@ -41,7 +54,7 @@ const NftBottomSheetContent = ({
       .onSnapshot(
         (snapshot) => {
           if (!snapshot.exists) {
-            console.log(
+            console.error(
               "NFT doc does not exist: ",
               postData.nftStatus.nftDocPath
             );
@@ -53,7 +66,7 @@ const NftBottomSheetContent = ({
           return setNftDocData(nftDocDataFetched);
         },
         (error) => {
-          console.log(
+          console.error(
             "Error on getting realtime nft data at: \n",
             postData.nftStatus.nftDocPath,
             "\n",
@@ -64,6 +77,50 @@ const NftBottomSheetContent = ({
       );
     () => unsubscribe();
   }, [authStatus]);
+
+  useEffect(() => {
+    if (!nftDocData) return setNftStatus(null);
+
+    const currentUserDisplayName = auth().currentUser?.displayName;
+    if (!currentUserDisplayName) return setNftStatus(null);
+
+    if (nftDocData) {
+      if (nftDocData.listStatus.isListed) {
+        let alreadyBoughtStatus = true;
+
+        if (nftDocData.listStatus.buyers) {
+          const buyersUsername = nftDocData.listStatus.buyers.map(
+            (b) => b.username
+          );
+          alreadyBoughtStatus = buyersUsername.includes(currentUserDisplayName);
+        } else {
+          alreadyBoughtStatus = false;
+        }
+
+        const { currency, price, stock } = nftDocData.listStatus;
+
+        if (!currency || !price || stock === undefined) {
+          return setNftStatus(null);
+        }
+
+        setNftStatus({
+          isListed: true,
+          alreadyBought: alreadyBoughtStatus,
+          currency: currency,
+          fromCurrentUser: postData.senderUsername === currentUserDisplayName,
+          price: price,
+          stock: stock,
+        });
+      } else {
+        setNftStatus({
+          isListed: false,
+          fromCurrentUser: postData.senderUsername === currentUserDisplayName,
+        });
+      }
+    } else {
+      setNftStatus("not-converted-to-nft");
+    }
+  }, [nftDocData]);
 
   const handleSetPriceButton = () => {
     setScreenParameters([
@@ -89,12 +146,27 @@ const NftBottomSheetContent = ({
     router.push("/(modals)/buyNFT");
   };
 
-  if (!nftDocData) {
+  const handleSeeCollectors = () => {
+    setScreenParameters([
+      {
+        queryId: "postDocPath",
+        value: `users/${postSenderData.username}/posts/${postData.id}`,
+      },
+    ]);
+
+    router.push("/(modals)/collectors");
+  };
+
+  if (!nftStatus) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator color="white" />
       </View>
     );
+  }
+
+  if (nftStatus === "not-converted-to-nft") {
+    return <Text>Not converted to NFT</Text>;
   }
 
   return (
@@ -169,7 +241,7 @@ const NftBottomSheetContent = ({
         </View>
       </View>
 
-      {nftDocData.listStatus.isListed && (
+      {nftStatus.isListed && (
         <View
           id="price-reminder"
           style={{
@@ -205,7 +277,7 @@ const NftBottomSheetContent = ({
                 color: apidonPink,
               }}
             >
-              {nftDocData.listStatus.price}
+              ${nftStatus.price}
             </Text>
           </View>
           <View
@@ -235,58 +307,13 @@ const NftBottomSheetContent = ({
                 color: apidonPink,
               }}
             >
-              {nftDocData.listStatus.stock} Left
+              {nftStatus.stock} Left
             </Text>
           </View>
         </View>
       )}
 
-      {nftDocData.listStatus.isListed ? (
-        <>
-          {postSenderData.username === auth().currentUser?.displayName ? (
-            <Pressable
-              style={{
-                backgroundColor: apidonPink,
-                padding: 20,
-                borderRadius: 10,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text
-                bold
-                style={{
-                  color: "white",
-                  fontSize: 18,
-                }}
-              >
-                See Collectors
-              </Text>
-            </Pressable>
-          ) : (
-            <Pressable
-              onPress={handleCollectButton}
-              style={{
-                backgroundColor: apidonPink,
-                padding: 20,
-                borderRadius: 10,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text
-                bold
-                style={{
-                  color: "white",
-                  fontSize: 18,
-                }}
-              >
-                Collect
-              </Text>
-            </Pressable>
-          )}
-        </>
-      ) : postData.senderUsername === auth().currentUser?.displayName ? (
+      {!nftStatus.isListed && nftStatus.fromCurrentUser && (
         <Pressable
           onPress={handleSetPriceButton}
           style={{
@@ -307,8 +334,109 @@ const NftBottomSheetContent = ({
             Set Price
           </Text>
         </Pressable>
-      ) : (
-        <>
+      )}
+
+      {!nftStatus.isListed && !nftStatus.fromCurrentUser && (
+        <Pressable
+          style={{
+            opacity: 0.5,
+            backgroundColor: apidonPink,
+            padding: 20,
+            borderRadius: 10,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text
+            bold
+            style={{
+              color: "white",
+              fontSize: 18,
+            }}
+          >
+            Not Listed
+          </Text>
+        </Pressable>
+      )}
+
+      {nftStatus.isListed && nftStatus.fromCurrentUser && (
+        <Pressable
+          onPress={handleSeeCollectors}
+          style={{
+            backgroundColor: apidonPink,
+            padding: 20,
+            borderRadius: 10,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text
+            bold
+            style={{
+              color: "white",
+              fontSize: 18,
+            }}
+          >
+            See Collectors
+          </Text>
+        </Pressable>
+      )}
+
+      {nftStatus.isListed &&
+        !nftStatus.fromCurrentUser &&
+        nftStatus.alreadyBought && (
+          <Pressable
+            style={{
+              backgroundColor: apidonPink,
+              opacity: 0.5,
+              padding: 20,
+              borderRadius: 10,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text
+              bold
+              style={{
+                color: "white",
+                fontSize: 18,
+              }}
+            >
+              Collected
+            </Text>
+          </Pressable>
+        )}
+
+      {nftStatus.isListed &&
+        !nftStatus.fromCurrentUser &&
+        !nftStatus.alreadyBought &&
+        nftStatus.stock > 0 && (
+          <Pressable
+            onPress={handleCollectButton}
+            style={{
+              backgroundColor: apidonPink,
+              padding: 20,
+              borderRadius: 10,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text
+              bold
+              style={{
+                color: "white",
+                fontSize: 18,
+              }}
+            >
+              Collect
+            </Text>
+          </Pressable>
+        )}
+
+      {nftStatus.isListed &&
+        !nftStatus.fromCurrentUser &&
+        !nftStatus.alreadyBought &&
+        nftStatus.stock <= 0 && (
           <Pressable
             style={{
               opacity: 0.5,
@@ -326,11 +454,10 @@ const NftBottomSheetContent = ({
                 fontSize: 18,
               }}
             >
-              Not Listed
+              Out of Stock
             </Text>
           </Pressable>
-        </>
-      )}
+        )}
     </View>
   );
 };

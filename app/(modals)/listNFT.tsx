@@ -1,3 +1,9 @@
+import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
+import { Text } from "@/components/Text/Text";
+import { NftDocDataInServer } from "@/types/Nft";
+import { PostServerData } from "@/types/Post";
+import { useAtomValue } from "jotai";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -8,21 +14,15 @@ import {
   ScrollView,
   View,
 } from "react-native";
-import { Text } from "@/components/Text/Text";
-import React, { useEffect, useRef, useState } from "react";
-import { useAtomValue } from "jotai";
-import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
-import { PostServerData } from "@/types/Post";
-import { NftDocDataInServer } from "@/types/Nft";
 
+import { apidonPink } from "@/constants/Colors";
 import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
 import { TextInput } from "react-native-gesture-handler";
-import { apidonPink } from "@/constants/Colors";
 
-import auth from "@react-native-firebase/auth";
-import appCheck from "@react-native-firebase/app-check";
 import apiRoutes from "@/helpers/ApiRoutes";
+import appCheck from "@react-native-firebase/app-check";
+import auth from "@react-native-firebase/auth";
 import { router } from "expo-router";
 
 const listNFT = () => {
@@ -182,7 +182,11 @@ const listNFT = () => {
     setPriceInput(input);
 
     if (input.length > 0 && input !== ".") {
-      setPrice(parseFloat(input));
+      const floatPrice = parseFloat(input);
+      if (isNaN(floatPrice)) {
+        return setPrice(0);
+      }
+      setPrice(floatPrice);
     } else {
       setPrice(0);
     }
@@ -192,7 +196,12 @@ const listNFT = () => {
     setStockInput(input);
 
     if (input.length === 0) return setStock(0);
-    setStock(parseInt(input));
+
+    const numberVersion = parseInt(input);
+
+    if (isNaN(numberVersion)) return setStock(0);
+
+    setStock(numberVersion);
   };
 
   const handleListButton = () => {
@@ -348,7 +357,7 @@ const listNFT = () => {
             Stock
           </Text>
           <TextInput
-            value={stockInput}
+            value={stockInput === "" ? "" : stock.toString()}
             onChangeText={handleStockChange}
             placeholder="10"
             placeholderTextColor="#808080"
@@ -356,7 +365,7 @@ const listNFT = () => {
               color: "white",
               padding: 10,
               borderWidth: 1,
-              borderColor: stockInput ? "#808080" : "red",
+              borderColor: stock ? "#808080" : "red",
               borderRadius: 10,
             }}
             keyboardType="number-pad"

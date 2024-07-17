@@ -334,6 +334,7 @@ const Post = ({ postDocPath }: Props) => {
             flexDirection: "row",
             alignItems: "center",
             padding: 10,
+            justifyContent: "space-between",
           }}
         >
           <View
@@ -437,6 +438,7 @@ const Post = ({ postDocPath }: Props) => {
                   flexDirection: "row",
                   padding: 4,
                   gap: 2,
+                  justifyContent: "center",
                 }}
               >
                 <Text
@@ -463,11 +465,14 @@ const Post = ({ postDocPath }: Props) => {
               </Pressable>
             </View>
           )}
-          <View
-            style={{
-              width: "5%",
-            }}
-          />
+          {(doesOwnPost || !doesFollow) && (
+            <View
+              style={{
+                width: "5%",
+              }}
+            />
+          )}
+
           {doesOwnPost ? (
             <View
               id="settings-button"
@@ -492,8 +497,9 @@ const Post = ({ postDocPath }: Props) => {
             !doesFollow && (
               <View
                 style={{
-                  borderWidth: 1,
-                  borderColor: "red",
+                  width: "5%",
+                  alignItems: "flex-end",
+                  overflow: "hidden",
                 }}
               >
                 <Pressable

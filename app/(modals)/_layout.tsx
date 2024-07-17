@@ -62,6 +62,13 @@ const _layout = () => {
             title: "Collect",
           }}
         />
+        <Stack.Screen
+          name="collectors"
+          options={{
+            presentation: "modal",
+            title: "Collectors",
+          }}
+        />
       </Stack>
     </>
   );
