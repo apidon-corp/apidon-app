@@ -5,7 +5,7 @@ import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack, useNavigationContainerRef } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import "react-native-reanimated";
 
 import AuthProvider from "@/providers/AuthProvider";
@@ -125,6 +125,8 @@ function RootLayout() {
     ...FontAwesome.font,
   });
 
+  const [appCheckLoaded, setAppCheckLoaded] = useState(false);
+
   useEffect(() => {
     handleConnectAppCheckServers();
   }, []);
@@ -146,11 +148,21 @@ function RootLayout() {
       });
 
       const { token } = await appCheck().getToken();
+
+      if (token.length > 0) {
+        setAppCheckLoaded(true);
+      } else {
+        setAppCheckLoaded(false);
+      }
     } catch (error) {
+      Sentry.captureException(
+        `Error on connecting and creating app check token: \n ${error}`
+      );
       console.error(
         "Error on connecting and creating app check token: ",
         error
       );
+      setAppCheckLoaded(false);
     }
   };
 
@@ -205,6 +217,10 @@ function RootLayout() {
   }, [loaded]);
 
   if (!loaded) {
+    return null;
+  }
+
+  if (!appCheckLoaded) {
     return null;
   }
 
