@@ -108,7 +108,7 @@ const password = () => {
       Sentry.captureException(
         `Error happened on pressing 'login' button on login after entering password:\n${error}`
       );
-      setError(error as string);
+      setError("Invalid Password");
     }
 
     setLoading(false);
