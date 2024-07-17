@@ -1,4 +1,10 @@
-import { ActivityIndicator, Alert, Pressable, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  View,
+} from "react-native";
 import { Text } from "@/components/Text/Text";
 import React, { useEffect, useState } from "react";
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
@@ -224,10 +230,18 @@ const buyNFT = () => {
   }
 
   return (
-    <View style={{ gap: 10, padding: 10 }}>
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={{
+        padding: 10,
+        gap: 10,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       <View
         style={{
-          width: "100%",
+          width: "75%",
         }}
       >
         <Image
@@ -242,6 +256,7 @@ const buyNFT = () => {
       <View
         id="price"
         style={{
+          width: "100%",
           borderWidth: 1,
           borderColor: "#808080",
           borderRadius: 10,
@@ -264,6 +279,7 @@ const buyNFT = () => {
       <View
         id="creator-information"
         style={{
+          width: "100%",
           flexDirection: "row",
           borderWidth: 1,
           borderColor: "#808080",
@@ -313,7 +329,7 @@ const buyNFT = () => {
           />
         </View>
       </View>
-      <View id="buy-button">
+      <View id="buy-button" style={{ width: "100%" }}>
         <Pressable
           disabled={loading}
           onPress={handleBuyButton}
@@ -340,7 +356,7 @@ const buyNFT = () => {
           )}
         </Pressable>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 

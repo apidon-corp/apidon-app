@@ -1,4 +1,8 @@
-import { BottomSheetBackdrop, BottomSheetModal } from "@gorhom/bottom-sheet";
+import {
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetScrollView,
+} from "@gorhom/bottom-sheet";
 import React, { PropsWithChildren, forwardRef, useCallback } from "react";
 import { View } from "react-native";
 
@@ -25,13 +29,20 @@ const CustomBottomModalSheet = forwardRef<
   return (
     <BottomSheetModal
       ref={ref}
-      snapPoints={[snapPoint]}
+      //snapPoints={[snapPoint]}
       index={0}
       backdropComponent={renderBackdrops}
       backgroundStyle={{ backgroundColor: backgroundColor || "#353935" }}
       handleIndicatorStyle={{ backgroundColor: "white" }}
+      enableDynamicSizing={true}
     >
-      <View style={{ flex: 1, padding: 10 }}>{children}</View>
+      <BottomSheetScrollView
+        contentContainerStyle={{
+          padding: 10,
+        }}
+      >
+        {children}
+      </BottomSheetScrollView>
     </BottomSheetModal>
   );
 });

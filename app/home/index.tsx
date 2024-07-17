@@ -8,6 +8,7 @@ import { ActivityIndicator, FlatList, SafeAreaView } from "react-native";
 import auth from "@react-native-firebase/auth";
 
 import appCheck from "@react-native-firebase/app-check";
+import { ScrollView } from "react-native-gesture-handler";
 
 const index = () => {
   const [loading, setLoading] = useState(false);
@@ -106,22 +107,23 @@ const index = () => {
     <SafeAreaView
       style={{
         flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
       }}
     >
-      <FlatList
-        style={{
-          width: "100%",
-        }}
-        contentContainerStyle={{
-          gap: 20,
-        }}
-        keyExtractor={(item) => item}
-        data={postDocPathArray}
-        renderItem={({ item }) => <Post postDocPath={item} key={item} />}
-        showsVerticalScrollIndicator={false}
-      />
+      <ScrollView>
+        <FlatList
+          style={{
+            width: "100%",
+          }}
+          contentContainerStyle={{
+            gap: 20,
+          }}
+          keyExtractor={(item) => item}
+          data={postDocPathArray}
+          renderItem={({ item }) => <Post postDocPath={item} key={item} />}
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={false}
+        />
+      </ScrollView>
     </SafeAreaView>
   );
 };
