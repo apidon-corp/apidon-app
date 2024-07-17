@@ -62,6 +62,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     "./helpers/customPlugins/AppCheckPlugin.js",
+    [
+      "@sentry/react-native/expo",
+      {
+        organization: process.env.EXPO_PUBLIC_SENTRY_ORG,
+        project: process.env.EXPO_PUBLIC_SENTRY_PROJECT,
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

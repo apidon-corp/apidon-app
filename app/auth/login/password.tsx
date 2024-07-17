@@ -19,6 +19,8 @@ import {
 
 import auth from "@react-native-firebase/auth";
 
+import * as Sentry from "@sentry/react-native";
+
 const password = () => {
   const authStatus = useAuth();
 
@@ -102,8 +104,11 @@ const password = () => {
     try {
       await auth().signInWithEmailAndPassword(decodedEmail as string, password);
     } catch (error) {
-      console.error("Error during login: ", error);
-      setError("Invalid Password");
+      console.error("Error during login:");
+      Sentry.captureException(
+        `Error happened on pressing 'login' button on login after entering password:\n${error}`
+      );
+      setError(error as string);
     }
 
     setLoading(false);
