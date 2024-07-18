@@ -318,7 +318,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
         id="post-root"
         style={[
           {
-            flex : 1,
+            flex: 1,
             transform: [
               {
                 scale: animatedScaleValue,
@@ -525,7 +525,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
             source={postDocData.image}
             style={{
               width: "100%",
-              height: 350,
+              aspectRatio: 1,
             }}
             transition={500}
           />

@@ -91,6 +91,10 @@ const NftMarketPreviewItem = ({ postDocPath, nftDocData }: Props) => {
     );
   }
 
+  if (!nftDocData.listStatus.isListed) {
+    return null;
+  }
+
   return (
     <Pressable
       onPress={handlePressPreview}
@@ -133,7 +137,7 @@ const NftMarketPreviewItem = ({ postDocPath, nftDocData }: Props) => {
             }}
             bold
           >
-            {nftDocData.listStatus.price}
+            {nftDocData.listStatus.price.price}
           </Text>
         </View>
       </View>
@@ -163,7 +167,7 @@ const NftMarketPreviewItem = ({ postDocPath, nftDocData }: Props) => {
             }}
             bold
           >
-            {nftDocData.listStatus.stock}
+            {nftDocData.listStatus.stock.remainingStock}
           </Text>
         </View>
       </View>

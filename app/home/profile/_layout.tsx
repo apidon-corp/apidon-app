@@ -53,6 +53,13 @@ const _layout = () => {
           ),
         }}
       />
+      <Stack.Screen
+        name="post"
+        options={{
+          headerShown: true,
+          title: "Collectible",
+        }}
+      />
     </Stack>
   );
 };

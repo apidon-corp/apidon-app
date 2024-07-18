@@ -3,19 +3,24 @@ import { Text } from "@/components/Text/Text";
 import React, { useState } from "react";
 import NftOnUserPreviewItem from "../Nft/NftOnUserPreviewItem";
 
+
+
 type Props = {
+  createdNFTs: { postDocPath: string; nftDocPath: string }[];
   boughtNFTs: { postDocPath: string; nftDocPath: string }[];
   soldNFTs: { postDocPath: string; nftDocPath: string }[];
 };
 
-type Option = "all" | "collected" | "selling";
+type Option = "all" | "collected" | "created";
 
-const NftContent = ({ boughtNFTs, soldNFTs }: Props) => {
-  const [option, setOption] = useState<Option>("selling");
+const NftContent = ({ createdNFTs, boughtNFTs, soldNFTs }: Props) => {
+  const [option, setOption] = useState<Option>("created");
 
   const handleChangeOption = (option: Option) => {
     setOption(option);
   };
+
+
 
   return (
     <>
@@ -54,6 +59,20 @@ const NftContent = ({ boughtNFTs, soldNFTs }: Props) => {
 
           <Pressable
             onPress={() => {
+              handleChangeOption("created");
+            }}
+            style={[
+              { paddingVertical: 4, paddingHorizontal: 15 },
+              option === "created" && { backgroundColor: "#707070" },
+            ]}
+          >
+            <Text>Created</Text>
+          </Pressable>
+
+          <View style={{ width: 1, backgroundColor: "black" }} />
+
+          <Pressable
+            onPress={() => {
               handleChangeOption("collected");
             }}
             style={[
@@ -63,22 +82,9 @@ const NftContent = ({ boughtNFTs, soldNFTs }: Props) => {
           >
             <Text>Collected</Text>
           </Pressable>
-
-          <View style={{ width: 1, backgroundColor: "black" }} />
-
-          <Pressable
-            onPress={() => {
-              handleChangeOption("selling");
-            }}
-            style={[
-              { paddingVertical: 4, paddingHorizontal: 15 },
-              option === "selling" && { backgroundColor: "#707070" },
-            ]}
-          >
-            <Text>Selling</Text>
-          </Pressable>
         </View>
       </View>
+
       {option === "all" && (
         <FlatList
           contentContainerStyle={{
@@ -87,7 +93,7 @@ const NftContent = ({ boughtNFTs, soldNFTs }: Props) => {
           keyExtractor={(item) => item.postDocPath}
           numColumns={1}
           scrollEnabled={false}
-          data={[...boughtNFTs, ...soldNFTs]}
+          data={[...createdNFTs, ...boughtNFTs, ...soldNFTs]}
           renderItem={({ item }) => (
             <NftOnUserPreviewItem
               nftDocPath={item.nftDocPath}
@@ -111,12 +117,11 @@ const NftContent = ({ boughtNFTs, soldNFTs }: Props) => {
               nftDocPath={item.nftDocPath}
               postDocPath={item.postDocPath}
               key={item.postDocPath}
-              
             />
           )}
         />
       )}
-      {option === "selling" && (
+      {option === "created" && (
         <FlatList
           contentContainerStyle={{
             gap: 20,
@@ -124,7 +129,7 @@ const NftContent = ({ boughtNFTs, soldNFTs }: Props) => {
           keyExtractor={(item) => item.postDocPath}
           numColumns={1}
           scrollEnabled={false}
-          data={[...soldNFTs]}
+          data={[...createdNFTs]}
           renderItem={({ item }) => (
             <NftOnUserPreviewItem
               nftDocPath={item.nftDocPath}

@@ -12,7 +12,6 @@ import {
 } from "react-native";
 
 import auth from "@react-native-firebase/auth";
-
 import appCheck from "@react-native-firebase/app-check";
 
 const index = () => {
@@ -31,14 +30,10 @@ const index = () => {
   useEffect(() => {
     if (!createdPostDocPath) return;
 
-    const previousValues = recommendedPostsDocPathArray;
-    if (previousValues.includes(createdPostDocPath)) return;
-
-    previousValues.unshift(createdPostDocPath);
-
-    const updatedValues = previousValues;
-
-    setRecommendedPostsDocPathArray(updatedValues);
+    setServedPosts((prev) => {
+      if (prev.includes(createdPostDocPath)) return prev;
+      return [createdPostDocPath, ...prev];
+    });
   }, [createdPostDocPath]);
 
   useEffect(() => {

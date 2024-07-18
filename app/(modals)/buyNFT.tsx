@@ -121,9 +121,11 @@ const buyNFT = () => {
   };
 
   const handleBuyButton = () => {
+    if (!nftData?.listStatus.isListed) return;
+
     Alert.alert(
       "Buy this NFT?",
-      `This NFT costs $${nftData?.listStatus.price}`,
+      `This NFT costs $${nftData.listStatus.price.price}`,
       [
         {
           text: "Cancel",
@@ -273,7 +275,7 @@ const buyNFT = () => {
             color: "#808080",
           }}
         >
-          ${nftData.listStatus.price}
+          ${nftData.listStatus.price.price}
         </Text>
       </View>
       <View
@@ -351,7 +353,7 @@ const buyNFT = () => {
                 fontSize: 18,
               }}
             >
-              Buy for ${nftData.listStatus.price}
+              Buy for ${nftData.listStatus.price.price}
             </Text>
           )}
         </Pressable>

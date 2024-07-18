@@ -20,9 +20,11 @@ const UserContent = ({ username }: Props) => {
 
   const [postDocPathArray, setPostDocPathArray] = useState<string[]>([]);
   const [nftData, setNftData] = useState<{
+    createdNFTs: { nftDocPath: string; postDocPath: string }[];
     boughtNFTs: { nftDocPath: string; postDocPath: string }[];
     soldNFTs: { nftDocPath: string; postDocPath: string }[];
   }>({
+    createdNFTs: [],
     boughtNFTs: [],
     soldNFTs: [],
   });
@@ -74,6 +76,7 @@ const UserContent = ({ username }: Props) => {
           if (!snapshot.exists) {
             console.error("NFT Trade doc doesn't exist.");
             return setNftData({
+              createdNFTs: [],
               boughtNFTs: [],
               soldNFTs: [],
             });
@@ -83,6 +86,7 @@ const UserContent = ({ username }: Props) => {
           if (!nftTradeData) {
             console.error("NFT Trade doc doesn't exist.");
             return setNftData({
+              createdNFTs: [],
               boughtNFTs: [],
               soldNFTs: [],
             });
@@ -92,6 +96,7 @@ const UserContent = ({ username }: Props) => {
           if (!boughtNFTs) {
             console.error("BoughtNFTs is undefined on nftTrade doc");
             return setNftData({
+              createdNFTs: [],
               boughtNFTs: [],
               soldNFTs: [],
             });
@@ -101,12 +106,29 @@ const UserContent = ({ username }: Props) => {
           if (!soldNFTs) {
             console.error("SoldNFTs is undefined on nftTrade doc");
             return setNftData({
+              createdNFTs: [],
+              boughtNFTs: [],
+              soldNFTs: [],
+            });
+          }
+
+          const createdNFTs = nftTradeData.createdNFTs;
+          if (!createdNFTs) {
+            console.error("CreatedNFTs is undefined on nftTrade doc");
+            return setNftData({
+              createdNFTs: [],
               boughtNFTs: [],
               soldNFTs: [],
             });
           }
 
           return setNftData({
+            createdNFTs: createdNFTs.map((c) => {
+              return {
+                nftDocPath: c.nftDocPath,
+                postDocPath: c.postDocPath,
+              };
+            }),
             boughtNFTs: boughtNFTs.map((b) => {
               return {
                 nftDocPath: b.nftDocPath,
@@ -124,6 +146,7 @@ const UserContent = ({ username }: Props) => {
         (error) => {
           console.error("Error on getting realtime nftTrade data: ", error);
           return setNftData({
+            createdNFTs: [],
             boughtNFTs: [],
             soldNFTs: [],
           });
@@ -228,6 +251,7 @@ const UserContent = ({ username }: Props) => {
       {toggleValue === "nfts" && (
         <>
           <NftContent
+            createdNFTs={nftData.createdNFTs}
             boughtNFTs={nftData.boughtNFTs}
             soldNFTs={nftData.soldNFTs}
           />

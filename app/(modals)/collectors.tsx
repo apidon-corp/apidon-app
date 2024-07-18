@@ -94,10 +94,18 @@ const collectors = () => {
     );
   }
 
+  if (!nftData.listStatus.isListed) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>This NFT is not listed yet.</Text>
+      </View>
+    );
+  }
+
   if (!nftData.listStatus.buyers || nftData.listStatus.buyers.length === 0) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>No one bought this NFT yet.</Text>
+        <Text>No one collected this NFT yet.</Text>
       </View>
     );
   }

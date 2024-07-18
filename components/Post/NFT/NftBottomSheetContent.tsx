@@ -27,6 +27,7 @@ type NftStatus =
       price: number;
       currency: string;
       stock: number;
+      totalStock: number;
       alreadyBought: boolean;
     }
   | { isListed: false; fromCurrentUser: boolean }
@@ -97,19 +98,16 @@ const NftBottomSheetContent = ({
           alreadyBoughtStatus = false;
         }
 
-        const { currency, price, stock } = nftDocData.listStatus;
-
-        if (!currency || !price || stock === undefined) {
-          return setNftStatus(null);
-        }
+        const { price, stock } = nftDocData.listStatus;
 
         setNftStatus({
           isListed: true,
           alreadyBought: alreadyBoughtStatus,
-          currency: currency,
+          currency: price.currency,
           fromCurrentUser: postData.senderUsername === currentUserDisplayName,
-          price: price,
-          stock: stock,
+          price: price.price,
+          stock: stock.remainingStock,
+          totalStock: stock.initialStock,
         });
       } else {
         setNftStatus({
@@ -243,7 +241,7 @@ const NftBottomSheetContent = ({
 
       {nftStatus.isListed && (
         <View
-          id="price-reminder"
+          id="price-stock"
           style={{
             flexDirection: "row",
             justifyContent: "space-between",
@@ -281,7 +279,7 @@ const NftBottomSheetContent = ({
             </Text>
           </View>
           <View
-            id="reminder"
+            id="stock"
             style={{
               flex: 0.5,
               flexDirection: "row",

@@ -98,7 +98,7 @@ const NftOnUserPreviewItem = ({ postDocPath, nftDocPath }: Props) => {
   const handlePressPreview = () => {
     if (!postDocData || !postSenderData) return;
     return router.push(
-      `/home/(nft-market)/post?sender=${postDocData.senderUsername}&id=${postDocData.id}`
+      `/home/profile/post?sender=${postDocData.senderUsername}&id=${postDocData.id}`
     );
   };
 
@@ -134,67 +134,74 @@ const NftOnUserPreviewItem = ({ postDocPath, nftDocPath }: Props) => {
           }}
         />
       </View>
-      <View
-        style={{
-          position: "absolute",
-          top: 20,
-          right: 20,
-          padding: 5,
-          opacity: 0.85,
-        }}
-      >
-        <View
-          style={{
-            paddingHorizontal: 10,
-            flexDirection: "row",
-            backgroundColor: "white",
-            borderRadius: 10,
-            alignItems: "center",
-            gap: 4,
-          }}
-        >
-          <FontAwesome5 name="lira-sign" size={13} color="#036704" />
-          <Text
+
+      {nftDocData.listStatus.isListed && (
+        <>
+          <View
             style={{
-              color: "#036704",
-              fontSize: 13,
+              position: "absolute",
+              top: 20,
+              right: 20,
+              padding: 5,
+              opacity: 0.85,
             }}
-            bold
           >
-            {nftDocData.listStatus.price}
-          </Text>
-        </View>
-      </View>
-      <View
-        style={{
-          position: "absolute",
-          bottom: 20,
-          right: 20,
-          padding: 5,
-          opacity: 1,
-        }}
-      >
-        <View
-          style={{
-            paddingHorizontal: 5,
-            flexDirection: "row",
-            backgroundColor: "white",
-            borderRadius: 10,
-            alignItems: "center",
-          }}
-        >
-          <Entypo name="cross" size={20} color={apidonPink} />
-          <Text
+            <View
+              style={{
+                paddingHorizontal: 10,
+                flexDirection: "row",
+                backgroundColor: "white",
+                borderRadius: 10,
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              <FontAwesome5 name="lira-sign" size={13} color="#036704" />
+              <Text
+                style={{
+                  color: "#036704",
+                  fontSize: 13,
+                }}
+                bold
+              >
+                {nftDocData.listStatus.price.price}
+              </Text>
+            </View>
+          </View>
+
+          <View
             style={{
-              color: apidonPink,
-              fontSize: 16,
+              position: "absolute",
+              bottom: 20,
+              right: 20,
+              padding: 5,
+              opacity: 1,
             }}
-            bold
           >
-            {nftDocData.listStatus.stock}
-          </Text>
-        </View>
-      </View>
+            <View
+              style={{
+                paddingHorizontal: 5,
+                flexDirection: "row",
+                backgroundColor: "white",
+                borderRadius: 10,
+                alignItems: "center",
+              }}
+            >
+              <Entypo name="cross" size={20} color={apidonPink} />
+              <Text
+                style={{
+                  color: apidonPink,
+                  fontSize: 16,
+                }}
+                bold
+              >
+                {nftDocData.listStatus.stock.remainingStock}
+              </Text>
+            </View>
+          </View>
+        </>
+      )}
+
       <View style={{ position: "absolute", bottom: 20, left: 20, padding: 5 }}>
         <View
           style={{
