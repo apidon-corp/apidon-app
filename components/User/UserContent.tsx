@@ -135,7 +135,7 @@ const UserContent = ({ username }: Props) => {
                 postDocPath: b.postDocPath,
               };
             }),
-            soldNFTs: boughtNFTs.map((s) => {
+            soldNFTs: soldNFTs.map((s) => {
               return {
                 nftDocPath: s.nftDocPath,
                 postDocPath: s.postDocPath,

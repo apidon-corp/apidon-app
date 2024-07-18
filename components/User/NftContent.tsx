@@ -3,8 +3,6 @@ import { Text } from "@/components/Text/Text";
 import React, { useState } from "react";
 import NftOnUserPreviewItem from "../Nft/NftOnUserPreviewItem";
 
-
-
 type Props = {
   createdNFTs: { postDocPath: string; nftDocPath: string }[];
   boughtNFTs: { postDocPath: string; nftDocPath: string }[];
@@ -19,8 +17,6 @@ const NftContent = ({ createdNFTs, boughtNFTs, soldNFTs }: Props) => {
   const handleChangeOption = (option: Option) => {
     setOption(option);
   };
-
-
 
   return (
     <>
@@ -93,7 +89,7 @@ const NftContent = ({ createdNFTs, boughtNFTs, soldNFTs }: Props) => {
           keyExtractor={(item) => item.postDocPath}
           numColumns={1}
           scrollEnabled={false}
-          data={[...createdNFTs, ...boughtNFTs, ...soldNFTs]}
+          data={[...createdNFTs, ...boughtNFTs]}
           renderItem={({ item }) => (
             <NftOnUserPreviewItem
               nftDocPath={item.nftDocPath}

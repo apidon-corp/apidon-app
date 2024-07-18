@@ -89,6 +89,14 @@ const index = () => {
     }
   }, [error]);
 
+  useEffect(() => {
+    if (loading) {
+      changeOpacity(0.5);
+    } else {
+      changeOpacity(1);
+    }
+  }, [loading]);
+
   const changeOpacity = (toValue: number) => {
     Animated.timing(opacity, {
       toValue: toValue,
@@ -249,7 +257,7 @@ const index = () => {
               disabled={error.length > 0}
             >
               {loading ? (
-                <ActivityIndicator color="white" />
+                <ActivityIndicator color="white" size={16} />
               ) : (
                 <Text
                   style={{
