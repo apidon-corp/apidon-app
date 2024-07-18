@@ -5,19 +5,17 @@ import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack, useNavigationContainerRef } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import "react-native-reanimated";
 
 import AuthProvider from "@/providers/AuthProvider";
 import { Linking, StatusBar } from "react-native";
 
 import NotificationProvider from "@/providers/NotificationProvider";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { StripeProvider, useStripe } from "@stripe/stripe-react-native";
-
-import appCheck from "@react-native-firebase/app-check";
 
 import * as Device from "expo-device";
 
@@ -28,6 +26,7 @@ export {
 
 import * as Sentry from "@sentry/react-native";
 import { isRunningInExpoGo } from "expo";
+import useAppCheck from "@/hooks/useAppCheck";
 
 const routingInstrumentation = new Sentry.ReactNavigationInstrumentation();
 
@@ -127,49 +126,6 @@ function RootLayout() {
     ...FontAwesome.font,
   });
 
-  const [appCheckLoaded, setAppCheckLoaded] = useState(false);
-
-  useEffect(() => {
-    handleConnectAppCheckServers();
-  }, []);
-
-  const handleConnectAppCheckServers = async () => {
-    try {
-      const provider = appCheck().newReactNativeFirebaseAppCheckProvider();
-
-      provider.configure({
-        apple: {
-          provider: Device.isDevice
-            ? "appAttestWithDeviceCheckFallback"
-            : "debug",
-          debugToken: process.env.EXPO_PUBLIC_DEBUG_TOKEN,
-        },
-      });
-
-      await appCheck().initializeAppCheck({
-        provider: provider,
-        isTokenAutoRefreshEnabled: true,
-      });
-
-      const { token } = await appCheck().getToken();
-
-      if (token.length > 0) {
-        setAppCheckLoaded(true);
-      } else {
-        setAppCheckLoaded(false);
-      }
-    } catch (error) {
-      Sentry.captureException(
-        `Error on connecting and creating app check token: \n ${error}`
-      );
-      console.error(
-        "Error on connecting and creating app check token: ",
-        error
-      );
-      setAppCheckLoaded(false);
-    }
-  };
-
   const { handleURLCallback } = useStripe();
   const handleDeepLink = useCallback(
     async (url: string | null) => {
@@ -209,6 +165,8 @@ function RootLayout() {
     }
   }, [ref]);
 
+  const appCheckLoaded = useAppCheck();
+
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
@@ -223,7 +181,6 @@ function RootLayout() {
   if (!loaded) {
     return null;
   }
-
   if (!appCheckLoaded) {
     return null;
   }
