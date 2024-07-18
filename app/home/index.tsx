@@ -3,16 +3,24 @@ import Post from "@/components/Post/Post";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { useAtomValue } from "jotai";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, SafeAreaView } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  NativeScrollEvent,
+  SafeAreaView,
+  ScrollView,
+} from "react-native";
 
 import auth from "@react-native-firebase/auth";
 
 import appCheck from "@react-native-firebase/app-check";
-import { ScrollView } from "react-native-gesture-handler";
 
 const index = () => {
   const [loading, setLoading] = useState(false);
-  const [postDocPathArray, setPostDocPathArray] = useState<string[]>([]);
+  const [recommendedPostsDocPathArray, setRecommendedPostsDocPathArray] =
+    useState<string[]>([]);
+
+  const [servedPosts, setServedPosts] = useState<string[]>([]);
 
   const screenParameters = useAtomValue(screenParametersAtom);
 
@@ -23,14 +31,14 @@ const index = () => {
   useEffect(() => {
     if (!createdPostDocPath) return;
 
-    const previousValues = postDocPathArray;
+    const previousValues = recommendedPostsDocPathArray;
     if (previousValues.includes(createdPostDocPath)) return;
 
     previousValues.unshift(createdPostDocPath);
 
     const updatedValues = previousValues;
 
-    setPostDocPathArray(updatedValues);
+    setRecommendedPostsDocPathArray(updatedValues);
   }, [createdPostDocPath]);
 
   useEffect(() => {
@@ -70,7 +78,7 @@ const index = () => {
           message
         );
         setLoading(false);
-        return setPostDocPathArray([]);
+        return setRecommendedPostsDocPathArray([]);
       }
 
       const result = await response.json();
@@ -86,12 +94,41 @@ const index = () => {
       const unSlicedAtFirstPostDocPathArrayFetched =
         postDocPathArrayFetched.map((p) => p.slice(1));
 
-      return setPostDocPathArray(unSlicedAtFirstPostDocPathArrayFetched);
+      const onlyFourPosts = unSlicedAtFirstPostDocPathArrayFetched.slice(0, 4);
+
+      setRecommendedPostsDocPathArray(unSlicedAtFirstPostDocPathArrayFetched);
+      return setServedPosts(onlyFourPosts);
     } catch (error) {
       console.error("Error while fetching getPersonalizedMainFeed: ", error);
       setLoading(false);
-      return setPostDocPathArray([]);
+      return setRecommendedPostsDocPathArray([]);
     }
+  };
+
+  const handleScroll = (event: NativeScrollEvent) => {
+    const threshold = 500;
+
+    const { layoutMeasurement, contentOffset, contentSize } = event;
+    const isCloseToBottom =
+      layoutMeasurement.height + contentOffset.y >=
+      contentSize.height - threshold;
+    if (isCloseToBottom) {
+      serveMorePosts();
+    }
+  };
+
+  const serveMorePosts = () => {
+    if (servedPosts.length === recommendedPostsDocPathArray.length) {
+      console.log("No more posts to serve.");
+      return;
+    }
+
+    setServedPosts((prev) => {
+      return [
+        ...prev,
+        ...recommendedPostsDocPathArray.slice(prev.length, prev.length + 4),
+      ];
+    });
   };
 
   if (loading)
@@ -104,27 +141,25 @@ const index = () => {
     );
 
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-      }}
+    <ScrollView
+      onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
+      scrollEventThrottle={500}
+      showsVerticalScrollIndicator={false}
     >
-      <ScrollView>
-        <FlatList
-          style={{
-            width: "100%",
-          }}
-          contentContainerStyle={{
-            gap: 20,
-          }}
-          keyExtractor={(item) => item}
-          data={postDocPathArray}
-          renderItem={({ item }) => <Post postDocPath={item} key={item} />}
-          showsVerticalScrollIndicator={false}
-          scrollEnabled={false}
-        />
-      </ScrollView>
-    </SafeAreaView>
+      <FlatList
+        style={{
+          width: "100%",
+        }}
+        contentContainerStyle={{
+          gap: 20,
+        }}
+        keyExtractor={(item) => item}
+        data={servedPosts}
+        renderItem={({ item }) => <Post postDocPath={item} key={item} />}
+        showsVerticalScrollIndicator={false}
+        scrollEnabled={false}
+      />
+    </ScrollView>
   );
 };
 

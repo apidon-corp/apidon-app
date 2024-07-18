@@ -33,7 +33,7 @@ type Props = {
   postDocPath: string;
 };
 
-const Post = ({ postDocPath }: Props) => {
+const Post = React.memo(({ postDocPath }: Props) => {
   const authStatus = useAuth();
 
   const [loading, setLoading] = useState(false);
@@ -693,6 +693,6 @@ const Post = ({ postDocPath }: Props) => {
       </CustomBottomModalSheet>
     </>
   );
-};
+});
 
 export default Post;

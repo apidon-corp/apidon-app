@@ -19,6 +19,8 @@ import { StripeProvider, useStripe } from "@stripe/stripe-react-native";
 
 import appCheck from "@react-native-firebase/app-check";
 
+import * as Device from "expo-device";
+
 export {
   // Catch any errors thrown by the Layout component.
   ErrorBoundary,
@@ -30,8 +32,8 @@ import { isRunningInExpoGo } from "expo";
 const routingInstrumentation = new Sentry.ReactNavigationInstrumentation();
 
 Sentry.init({
-  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
-  debug: true, // If `true`, Sentry will try to print out useful debugging information if something goes wrong with sending the event. Set it to `false` in production
+  dsn: Device.isDevice ? process.env.EXPO_PUBLIC_SENTRY_DSN : "",
+  debug: false, // If `true`, Sentry will try to print out useful debugging information if something goes wrong with sending the event. Set it to `false` in production
   integrations: [
     new Sentry.ReactNativeTracing({
       // Pass instrumentation to be used as `routingInstrumentation`
@@ -137,7 +139,9 @@ function RootLayout() {
 
       provider.configure({
         apple: {
-          provider: "deviceCheck",
+          provider: Device.isDevice
+            ? "appAttestWithDeviceCheckFallback"
+            : "debug",
           debugToken: process.env.EXPO_PUBLIC_DEBUG_TOKEN,
         },
       });
