@@ -6,11 +6,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: "apidon-app-dev",
   version: "1.0.0",
   orientation: "portrait",
-  icon: "./assets/images/icon_small.png",
+  icon: "./assets/images/icon.png",
   scheme: "apidon",
   userInterfaceStyle: "automatic",
   splash: {
-    image: "./assets/images/icon_small.png",
+    image: "./assets/images/splash.png",
     resizeMode: "contain",
     backgroundColor: "#000000",
   },
@@ -23,7 +23,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     adaptiveIcon: {
-      foregroundImage: "./assets/images/icon_small.png",
+      foregroundImage: "./assets/images/adaptive-icon.png",
       backgroundColor: "#000000",
     },
     permissions: ["android.permission.RECORD_AUDIO"],
