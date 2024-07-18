@@ -1,4 +1,4 @@
-import NftPreview from "@/components/Nft/NftPreview";
+import NftMarketPreviewItem from "@/components/Nft/NftMarketPreviewItem";
 import { useAuth } from "@/providers/AuthProvider";
 import { NftDocDataInServer } from "@/types/Nft";
 import firestore from "@react-native-firebase/firestore";
@@ -75,7 +75,7 @@ const index = () => {
         numColumns={2}
         data={listedNftDocDatas}
         renderItem={({ item }) => (
-          <NftPreview
+          <NftMarketPreviewItem
             postDocPath={item.postDocPath}
             nftDocData={item}
             key={item.tokenId}

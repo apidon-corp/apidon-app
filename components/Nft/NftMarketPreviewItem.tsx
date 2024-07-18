@@ -16,7 +16,7 @@ type Props = {
   nftDocData: NftDocDataInServer;
 };
 
-const NftPreview = ({ postDocPath, nftDocData }: Props) => {
+const NftMarketPreviewItem = ({ postDocPath, nftDocData }: Props) => {
   const [postDocData, setPostDocData] = useState<PostServerData | null>(null);
   const [postSenderData, setPostSenderData] = useState<UserInServer | null>(
     null
@@ -191,4 +191,4 @@ const NftPreview = ({ postDocPath, nftDocData }: Props) => {
   );
 };
 
-export default NftPreview;
+export default NftMarketPreviewItem;

@@ -318,7 +318,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
         id="post-root"
         style={[
           {
-            width: "100%",
+            flex : 1,
             transform: [
               {
                 scale: animatedScaleValue,
@@ -497,7 +497,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
             !doesFollow && (
               <View
                 style={{
-                  width: "5%",
+                  width: "10%",
                   alignItems: "flex-end",
                   overflow: "hidden",
                 }}

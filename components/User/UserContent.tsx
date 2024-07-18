@@ -1,16 +1,15 @@
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
 import { useAuth } from "@/providers/AuthProvider";
+import { NFTTradeDocData } from "@/types/Trade";
 import { UserInServer } from "@/types/User";
 import firestore from "@react-native-firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Dimensions, View } from "react-native";
 import { FlatList, Switch } from "react-native-gesture-handler";
-import CreateFrenlet from "../Frenlet/CreateFrenlet";
-import Frenlet from "../Frenlet/Frenlet";
 import Post from "../Post/Post";
 import Header from "./Header";
-import { NFTTradeDocData } from "@/types/Trade";
+import NftContent from "./NftContent";
 
 type Props = {
   username: string;
@@ -20,10 +19,13 @@ const UserContent = ({ username }: Props) => {
   const authStatus = useAuth();
 
   const [postDocPathArray, setPostDocPathArray] = useState<string[]>([]);
-  const [frenletDocPaths, setFrenletDocPaths] = useState<string[]>([]);
-  const [boughtNFTsPostDocPaths, setBoughtNFTsPostDocPaths] = useState<
-    string[]
-  >([]);
+  const [nftData, setNftData] = useState<{
+    boughtNFTs: { nftDocPath: string; postDocPath: string }[];
+    soldNFTs: { nftDocPath: string; postDocPath: string }[];
+  }>({
+    boughtNFTs: [],
+    soldNFTs: [],
+  });
 
   const [userData, setUserData] = useState<UserInServer | null>(null);
 
@@ -60,32 +62,6 @@ const UserContent = ({ username }: Props) => {
     return () => unsubscribe();
   }, [username, authStatus]);
 
-  // Frenlet Fetching
-  useEffect(() => {
-    if (authStatus !== "authenticated") return;
-
-    if (!username) return;
-
-    setFrenletDocPaths([]);
-
-    const unsubscribe = firestore()
-      .collection(`users/${username}/frenlets/frenlets/incoming`)
-      .orderBy("ts", "asc")
-      .onSnapshot((snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-          if (change.type === "added") {
-            setFrenletDocPaths((prev) => [change.doc.ref.path, ...prev]);
-          } else if (change.type === "removed") {
-            setFrenletDocPaths((prev) =>
-              prev.filter((path) => path !== change.doc.ref.path)
-            );
-          }
-        });
-      });
-
-    return () => unsubscribe();
-  }, [username, authStatus]);
-
   // Bought NFTs Fetching
   useEffect(() => {
     if (authStatus !== "authenticated") return;
@@ -97,33 +73,60 @@ const UserContent = ({ username }: Props) => {
         (snapshot) => {
           if (!snapshot.exists) {
             console.error("NFT Trade doc doesn't exist.");
-            return setBoughtNFTsPostDocPaths([]);
+            return setNftData({
+              boughtNFTs: [],
+              soldNFTs: [],
+            });
           }
 
           const nftTradeData = snapshot.data() as NFTTradeDocData;
           if (!nftTradeData) {
             console.error("NFT Trade doc doesn't exist.");
-            return setBoughtNFTsPostDocPaths([]);
+            return setNftData({
+              boughtNFTs: [],
+              soldNFTs: [],
+            });
           }
 
           const boughtNFTs = nftTradeData.boughtNFTs;
           if (!boughtNFTs) {
             console.error("BoughtNFTs is undefined on nftTrade doc");
-            return setBoughtNFTsPostDocPaths([]);
+            return setNftData({
+              boughtNFTs: [],
+              soldNFTs: [],
+            });
           }
 
-          return setBoughtNFTsPostDocPaths(
-            boughtNFTs
-              .map((b) => b.postDocPath)
-              .reduce((acc, current) => {
-                if (!acc.includes(current)) return [current, ...acc];
-                return acc;
-              }, [] as string[])
-          );
+          const soldNFTs = nftTradeData.soldNFTs;
+          if (!soldNFTs) {
+            console.error("SoldNFTs is undefined on nftTrade doc");
+            return setNftData({
+              boughtNFTs: [],
+              soldNFTs: [],
+            });
+          }
+
+          return setNftData({
+            boughtNFTs: boughtNFTs.map((b) => {
+              return {
+                nftDocPath: b.nftDocPath,
+                postDocPath: b.postDocPath,
+              };
+            }),
+            soldNFTs: boughtNFTs.map((s) => {
+              return {
+                nftDocPath: s.nftDocPath,
+                postDocPath: s.postDocPath,
+              };
+            }),
+          });
         },
         (error) => {
           console.error("Error on getting realtime nftTrade data: ", error);
-          return setBoughtNFTsPostDocPaths([]);
+          return setNftData({
+            boughtNFTs: [],
+            soldNFTs: [],
+          });
         }
       );
 
@@ -221,34 +224,12 @@ const UserContent = ({ username }: Props) => {
           scrollEnabled={false}
         />
       )}
-      {/* {toggleValue === "frenlets" && (
-        <>
-          <CreateFrenlet username={username} />
-          <FlatList
-            contentContainerStyle={{
-              gap: 20,
-            }}
-            keyExtractor={(item) => item}
-            data={boughtNFTsPostDocPaths}
-            renderItem={({ item }) => (
-              <Frenlet frenletDocPath={item} key={item} />
-            )}
-            showsVerticalScrollIndicator={false}
-            scrollEnabled={false}
-          />
-        </>
-      )} */}
+
       {toggleValue === "nfts" && (
         <>
-          <FlatList
-            contentContainerStyle={{
-              gap: 20,
-            }}
-            keyExtractor={(item) => item}
-            data={boughtNFTsPostDocPaths}
-            renderItem={({ item }) => <Post postDocPath={item} key={item} />}
-            showsVerticalScrollIndicator={false}
-            scrollEnabled={false}
+          <NftContent
+            boughtNFTs={nftData.boughtNFTs}
+            soldNFTs={nftData.soldNFTs}
           />
         </>
       )}
