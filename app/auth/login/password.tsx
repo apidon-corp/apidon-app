@@ -104,7 +104,7 @@ const password = () => {
     try {
       await auth().signInWithEmailAndPassword(decodedEmail as string, password);
     } catch (error) {
-      console.error("Error during login:");
+      console.error("Error during login: \n", error);
       Sentry.captureException(
         `Error happened on pressing 'login' button on login after entering password:\n${error}`
       );

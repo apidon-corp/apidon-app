@@ -126,7 +126,7 @@ const _layout = () => {
           }}
         />
         <Tabs.Screen
-          name="(nft-market)"
+          name="nftMarket"
           options={{
             tabBarIcon: () => (
               <MaterialCommunityIcons name="shopping" size={25} color="white" />

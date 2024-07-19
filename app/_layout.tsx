@@ -5,17 +5,15 @@ import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack, useNavigationContainerRef } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 import "react-native-reanimated";
 
 import AuthProvider from "@/providers/AuthProvider";
-import { Linking, StatusBar } from "react-native";
+import { StatusBar } from "react-native";
 
 import NotificationProvider from "@/providers/NotificationProvider";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-
-import { StripeProvider, useStripe } from "@stripe/stripe-react-native";
 
 import * as Device from "expo-device";
 
@@ -24,9 +22,9 @@ export {
   ErrorBoundary,
 } from "expo-router";
 
+import useAppCheck from "@/hooks/useAppCheck";
 import * as Sentry from "@sentry/react-native";
 import { isRunningInExpoGo } from "expo";
-import useAppCheck from "@/hooks/useAppCheck";
 
 const routingInstrumentation = new Sentry.ReactNavigationInstrumentation();
 
@@ -63,54 +61,48 @@ function RootLayoutNav() {
                 flex: 1,
               }}
             >
-              <StripeProvider
-                publishableKey={
-                  process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
-                }
-              >
-                <BottomSheetModalProvider>
-                  <Stack>
-                    <Stack.Screen
-                      name="(modals)"
-                      options={{
-                        headerShown: false,
-                        presentation: "modal",
-                      }}
-                    />
+              <BottomSheetModalProvider>
+                <Stack>
+                  <Stack.Screen
+                    name="(modals)"
+                    options={{
+                      headerShown: false,
+                      presentation: "modal",
+                    }}
+                  />
 
-                    <Stack.Screen
-                      name="auth"
-                      options={{
-                        headerShown: false,
-                        title: "Auth",
-                      }}
-                    />
+                  <Stack.Screen
+                    name="auth"
+                    options={{
+                      headerShown: false,
+                      title: "Auth",
+                    }}
+                  />
 
-                    <Stack.Screen
-                      name="home"
-                      options={{
-                        title: "Home",
-                        headerShown: false,
-                      }}
-                    />
+                  <Stack.Screen
+                    name="home"
+                    options={{
+                      title: "Home",
+                      headerShown: false,
+                    }}
+                  />
 
-                    <Stack.Screen
-                      name="index"
-                      options={{
-                        title: "index",
-                        headerShown: false,
-                      }}
-                    />
+                  <Stack.Screen
+                    name="index"
+                    options={{
+                      title: "index",
+                      headerShown: false,
+                    }}
+                  />
 
-                    <Stack.Screen
-                      name="+not-found"
-                      options={{
-                        title: "Not Found",
-                      }}
-                    />
-                  </Stack>
-                </BottomSheetModalProvider>
-              </StripeProvider>
+                  <Stack.Screen
+                    name="+not-found"
+                    options={{
+                      title: "Not Found",
+                    }}
+                  />
+                </Stack>
+              </BottomSheetModalProvider>
             </GestureHandlerRootView>
           </ThemeProvider>
         </NotificationProvider>
@@ -125,38 +117,6 @@ function RootLayout() {
     "Poppins-Bold": require("../assets/fonts/Poppins-Bold.ttf"),
     ...FontAwesome.font,
   });
-
-  const { handleURLCallback } = useStripe();
-  const handleDeepLink = useCallback(
-    async (url: string | null) => {
-      if (url) {
-        const stripeHandled = await handleURLCallback(url);
-        if (stripeHandled) {
-          // This was a Stripe URL - you can return or add extra handling here as you see fit
-        } else {
-          // This was NOT a Stripe URL – handle as you normally would
-        }
-      }
-    },
-    [handleURLCallback]
-  );
-  useEffect(() => {
-    const getUrlAsync = async () => {
-      const initialUrl = await Linking.getInitialURL();
-      handleDeepLink(initialUrl);
-    };
-
-    getUrlAsync();
-
-    const deepLinkListener = Linking.addEventListener(
-      "url",
-      (event: { url: string }) => {
-        handleDeepLink(event.url);
-      }
-    );
-
-    return () => deepLinkListener.remove();
-  }, [handleDeepLink]);
 
   const ref = useNavigationContainerRef();
   useEffect(() => {

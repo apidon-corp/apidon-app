@@ -1,3 +1,4 @@
+import { Text } from "@/components/Text/Text";
 import {
   ActivityIndicator,
   Alert,
@@ -5,23 +6,20 @@ import {
   ScrollView,
   View,
 } from "react-native";
-import { Text } from "@/components/Text/Text";
+
 import React, { useEffect, useState } from "react";
+
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
-import { useAtomValue } from "jotai";
+import { apidonPink } from "@/constants/Colors";
 import { NftDocDataInServer } from "@/types/Nft";
 import { PostServerData } from "@/types/Post";
-import firestore from "@react-native-firebase/firestore";
-import { Image } from "expo-image";
 import { UserInServer } from "@/types/User";
 import { MaterialIcons } from "@expo/vector-icons";
-import { apidonPink } from "@/constants/Colors";
+import firestore from "@react-native-firebase/firestore";
+import { Image } from "expo-image";
+import { useAtomValue } from "jotai";
 
 import auth from "@react-native-firebase/auth";
-import appCheck from "@react-native-firebase/app-check";
-import apiRoutes from "@/helpers/ApiRoutes";
-import { useStripe } from "@stripe/stripe-react-native";
-import { router } from "expo-router";
 
 const buyNFT = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
@@ -34,8 +32,6 @@ const buyNFT = () => {
   const [creatorData, setCreatorData] = useState<UserInServer | null>(null);
 
   const [loading, setLoading] = useState(false);
-
-  const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
   useEffect(() => {
     getInitialData();
@@ -131,7 +127,7 @@ const buyNFT = () => {
           text: "Cancel",
           style: "cancel",
         },
-        { text: "Buy", onPress: handleBuy },
+        { text: "Buy", onPress: () => {} },
       ],
       { cancelable: false }
     );
@@ -146,65 +142,7 @@ const buyNFT = () => {
 
     setLoading(true);
 
-    try {
-      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
-      const idToken = await currentUserAuthObject.getIdToken();
-
-      const response = await fetch(apiRoutes.nft.buyNFT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: `Bearer ${idToken}`,
-          appchecktoken,
-        },
-        body: JSON.stringify({
-          postDocPath: postDocPath,
-        }),
-      });
-
-      if (!response.ok) {
-        console.error(
-          "Response from buyNFT API is not okay: ",
-          await response.text()
-        );
-        return setLoading(false);
-      }
-
-      const { paymentIntent, ephemeralKey, customer } = await response.json();
-
-      const { error } = await initPaymentSheet({
-        merchantDisplayName: "Apidon Corp",
-        customerId: customer,
-        customerEphemeralKeySecret: ephemeralKey,
-        paymentIntentClientSecret: paymentIntent,
-        defaultBillingDetails: {
-          name: "Kendall Roy",
-        },
-        returnURL: "apidon://home",
-      });
-
-      if (error) {
-        console.error("Error from stripe initPaymentSheet: ", error);
-        return setLoading(false);
-      }
-
-      const { error: presentError } = await presentPaymentSheet();
-      if (error) {
-        console.error("Error from stripe presentPaymentSheet: ", presentError);
-        return setLoading(false);
-      }
-
-      console.log("All Operations are successfull.");
-
-      router.dismiss();
-
-      router.push(`/home/profile/${currentUserAuthObject.displayName}`);
-
-      return setLoading(false);
-    } catch (error) {
-      console.error("Error on buy process: ", error);
-      setLoading(false);
-    }
+    setLoading(false);
   };
 
   if (!postDocPath) {
