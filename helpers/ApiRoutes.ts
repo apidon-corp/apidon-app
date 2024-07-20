@@ -1,7 +1,12 @@
 const userApisBaseUrl = process.env.EXPO_PUBLIC_USER_APIS_BASE_URL;
+const userApisPreviewBaseUrl =
+  process.env.EXPO_PUBLIC_USER_APIS_PREVIEW_BASE_URL;
 
 if (!userApisBaseUrl)
   console.error("User APIs Base URL is undefined. (from .env file)");
+
+if (!userApisPreviewBaseUrl)
+  console.error("User APIs Preview Base URL is undefined. (from .env file)");
 
 const apiRoutes = {
   feed: {
