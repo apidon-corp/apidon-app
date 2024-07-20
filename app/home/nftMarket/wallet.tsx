@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -55,10 +54,6 @@ const wallet = () => {
 
     return () => subscribe();
   }, [authStatus]);
-
-  const handlePressPlusButton = () => {
-    router.push("/home/nftMarket/topUp");
-  };
 
   if (!balanceData) {
     return (
@@ -179,19 +174,27 @@ const wallet = () => {
           </Text>
         </View>
 
-        <FlatList
-          contentContainerStyle={{
-            gap: 10,
-          }}
-          columnWrapperStyle={{
-            gap: 10,
-          }}
-          data={products}
-          renderItem={({ item }) => <TopUpProduct id={item.id} key={item.id} />}
-          numColumns={3}
-          scrollEnabled={false}
-          keyExtractor={(item) => item.id}
-        />
+        {products.length === 0 ? (
+          <View>
+            <ActivityIndicator />
+          </View>
+        ) : (
+          <FlatList
+            contentContainerStyle={{
+              gap: 10,
+            }}
+            columnWrapperStyle={{
+              gap: 10,
+            }}
+            data={products}
+            renderItem={({ item }) => (
+              <TopUpProduct id={item.id} key={item.id} />
+            )}
+            numColumns={3}
+            scrollEnabled={false}
+            keyExtractor={(item) => item.id}
+          />
+        )}
       </View>
     </ScrollView>
   );
