@@ -11,6 +11,10 @@ import {
   purchaseUpdatedListener,
 } from "react-native-iap";
 
+import appCheck from "@react-native-firebase/app-check";
+import auth from "@react-native-firebase/auth";
+import apiRoutes from "@/helpers/ApiRoutes";
+
 const itemSKUs: ItemSKU[] =
   Platform.select({
     ios: [
@@ -29,6 +33,7 @@ const itemSKUs: ItemSKU[] =
 const IapService = () => {
   const [products, setProducts] = useState<ProductQuickData[]>([]);
 
+  // App Initialization
   useEffect(() => {
     const initializeIAP = async () => {
       try {
@@ -57,30 +62,97 @@ const IapService = () => {
             price: f.price,
           }))
         );
-
-        purchaseUpdatedListener(async (purchase) => {
-          try {
-            await finishTransaction({ purchase, isConsumable: true });
-          } catch (error) {
-            console.log("Error finishing transaction: ", error);
-          }
-        });
-        purchaseErrorListener((error) => {
-          console.log("Error in purchase: ", error);
-        });
       } catch (error) {
         return console.log("Error initializing IAP: ", error);
       }
     };
+
     initializeIAP();
     return () => {
       endConnection();
     };
   }, []);
 
+  // Purchase Handling
+  useEffect(() => {
+    const purchaseSubscriber = purchaseUpdatedListener(async (purchase) => {
+      console.log("Purchase updated: ", purchase);
+
+      try {
+        if (!purchase.transactionId)
+          return console.error("Transaction ID is undefined");
+
+        const createPaymentIntentOnDatabaseResult =
+          await createPaymentIntentOnDatabase(purchase.transactionId);
+
+        if (!createPaymentIntentOnDatabaseResult)
+          return console.error("Error creating payment intent on database");
+
+        await finishTransaction({ purchase, isConsumable: true });
+      } catch (error) {
+        console.log("Error finishing transaction: ", error);
+      }
+    });
+
+    return () => {
+      purchaseSubscriber.remove();
+    };
+  }, []);
+
+  // Error Handling
+  useEffect(() => {
+    const errorSubscriber = purchaseErrorListener((error) => {
+      console.log("Error in purchase: ", error);
+    });
+    return () => {
+      errorSubscriber.remove();
+    };
+  }, []);
+
   return {
     products,
   };
+};
+
+const createPaymentIntentOnDatabase = async (
+  transactionId: string
+): Promise<Boolean> => {
+  const currentUserAuthObject = auth().currentUser;
+
+  if (!currentUserAuthObject) {
+    console.error("User not authenticated");
+    return false;
+  }
+
+  try {
+    const idToken = await currentUserAuthObject.getIdToken();
+    const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
+    const response = await fetch(apiRoutes.payment.createPayment, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        authorization: `Bearer ${idToken}`,
+        appchecktoken,
+      },
+      body: JSON.stringify({
+        transactionId,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(
+        "Response from createPayment API is not okay: \n",
+        await response.text()
+      );
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error creating payment intent: (fetch) \n", error);
+    return false;
+  }
 };
 
 export default IapService;
