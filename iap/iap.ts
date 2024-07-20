@@ -1,4 +1,5 @@
-import { ProductQuickData } from "@/types/Wallet";
+import { ItemSKU, ProductQuickData } from "@/types/IAP";
+
 import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import {
@@ -10,19 +11,20 @@ import {
   purchaseUpdatedListener,
 } from "react-native-iap";
 
-const itemSKUs = Platform.select({
-  ios: [
-    "1_dollar_in_app_credit",
-    "5_dollar_in_app_credit",
-    "10_dollar_in_app_credit",
-    "25_dollar_in_app_credit",
-    "50_dolar_in_app_credit",
-    "100_dolar_in_app_credit",
-    "250_dollar_in_app_credit",
-    "500_dollar_in_app_credit",
-    "1000_dollar_in_app_credit",
-  ],
-});
+const itemSKUs: ItemSKU[] =
+  Platform.select({
+    ios: [
+      "1_dollar_in_app_credit",
+      "5_dollar_in_app_credit",
+      "10_dollar_in_app_credit",
+      "25_dollar_in_app_credit",
+      "50_dolar_in_app_credit",
+      "100_dolar_in_app_credit",
+      "250_dollar_in_app_credit",
+      "500_dollar_in_app_credit",
+      "1000_dollar_in_app_credit",
+    ],
+  }) || [];
 
 const IapService = () => {
   const [products, setProducts] = useState<ProductQuickData[]>([]);
@@ -51,7 +53,7 @@ const IapService = () => {
         setProducts(
           fetchedProducts.map((f) => ({
             currency: f.currency as ProductQuickData["currency"],
-            id: f.productId,
+            id: f.productId as ItemSKU,
             price: f.price,
           }))
         );

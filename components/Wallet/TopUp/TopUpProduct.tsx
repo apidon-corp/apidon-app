@@ -9,16 +9,18 @@ import { Text } from "@/components/Text/Text";
 
 import React, { useState } from "react";
 import { requestPurchase } from "react-native-iap";
+import { ItemSKU } from "@/types/IAP";
 
 type Props = {
-  id: string;
-  price: string;
+  id: ItemSKU;
 };
 
-const TopUpProduct = ({ id, price }: Props) => {
+const TopUpProduct = ({ id }: Props) => {
   const { width } = Dimensions.get("screen");
 
   const [loading, setLoading] = useState(false);
+
+  const price = id.split("_")[0];
 
   const handlePressProduct = () => {
     if (loading) return;

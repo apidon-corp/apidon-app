@@ -11,7 +11,7 @@ import {
 import { Text } from "@/components/Text/Text";
 import { useAuth } from "@/providers/AuthProvider";
 import { BalanceDocData } from "@/types/Wallet";
-import { AntDesign, FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
+import { FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 
 import TopUpProduct from "@/components/Wallet/TopUp/TopUpProduct";
 import IapService from "@/iap/iap";
@@ -104,7 +104,6 @@ const wallet = () => {
             borderRadius: 15,
           }}
         >
-          
           <Text fontSize={18}>Balance</Text>
 
           <Text bold fontSize={48}>
@@ -188,9 +187,7 @@ const wallet = () => {
             gap: 10,
           }}
           data={products}
-          renderItem={({ item }) => (
-            <TopUpProduct price={item.price} id={item.id} key={item.id} />
-          )}
+          renderItem={({ item }) => <TopUpProduct id={item.id} key={item.id} />}
           numColumns={3}
           scrollEnabled={false}
           keyExtractor={(item) => item.id}
