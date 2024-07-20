@@ -3,8 +3,11 @@ import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import {
   endConnection,
+  finishTransaction,
   getProducts,
-  initConnection
+  initConnection,
+  purchaseErrorListener,
+  purchaseUpdatedListener,
 } from "react-native-iap";
 
 const itemSKUs = Platform.select({
@@ -52,6 +55,18 @@ const IapService = () => {
             price: f.price,
           }))
         );
+
+        purchaseUpdatedListener(async (purchase) => {
+          try {
+            console.log("Purchase updated: ", purchase);
+            await finishTransaction({ purchase, isConsumable: true });
+          } catch (error) {
+            console.log("Error finishing transaction: ", error);
+          }
+        });
+        purchaseErrorListener((error) => {
+          console.log("Error in purchase: ", error);
+        });
       } catch (error) {
         return console.log("Error initializing IAP: ", error);
       }
