@@ -58,7 +58,6 @@ const IapService = () => {
 
         purchaseUpdatedListener(async (purchase) => {
           try {
-            console.log("Purchase updated: ", purchase);
             await finishTransaction({ purchase, isConsumable: true });
           } catch (error) {
             console.log("Error finishing transaction: ", error);
