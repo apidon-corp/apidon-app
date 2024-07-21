@@ -8,14 +8,16 @@ import {
 import { Text } from "@/components/Text/Text";
 
 import React, { useState } from "react";
-import { requestPurchase } from "react-native-iap";
 import { ItemSKU } from "@/types/IAP";
+
+import Purchases, { PurchasesStoreProduct } from "react-native-purchases";
 
 type Props = {
   id: ItemSKU;
+  product: PurchasesStoreProduct;
 };
 
-const TopUpProduct = ({ id }: Props) => {
+const TopUpProduct = ({ id, product }: Props) => {
   const { width } = Dimensions.get("screen");
 
   const [loading, setLoading] = useState(false);
@@ -45,8 +47,12 @@ const TopUpProduct = ({ id }: Props) => {
     setLoading(true);
 
     try {
-      await requestPurchase({ sku: id });
-    } catch (error) {
+      await Purchases.purchaseStoreProduct(product);
+
+      // await requestPurchase({ sku: id });
+    } catch (error: any) {
+      if (error.userCancelled) return console.log("User cancelled");
+
       Alert.alert("Error", "Error on purchasing product.");
       console.error("Error purchasing product: \n", id, "\n", error);
     }

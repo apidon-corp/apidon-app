@@ -13,15 +13,17 @@ import { BalanceDocData } from "@/types/Wallet";
 import { FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 
 import TopUpProduct from "@/components/Wallet/TopUp/TopUpProduct";
-import IapService from "@/iap/iap";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
+import { ItemSKU } from "@/types/IAP";
+import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 
 const wallet = () => {
   const authStatus = useAuth();
 
   const [balanceData, setBalanceData] = useState<BalanceDocData | null>(null);
-  const { products } = IapService();
+
+  const { products } = useInAppPurchases();
 
   useEffect(() => {
     if (authStatus !== "authenticated") return;
@@ -188,11 +190,15 @@ const wallet = () => {
             }}
             data={products}
             renderItem={({ item }) => (
-              <TopUpProduct id={item.id} key={item.id} />
+              <TopUpProduct
+                id={item.identifier as ItemSKU}
+                product={item}
+                key={item.identifier}
+              />
             )}
             numColumns={3}
             scrollEnabled={false}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.identifier}
           />
         )}
       </View>
