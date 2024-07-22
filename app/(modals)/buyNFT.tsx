@@ -17,14 +17,14 @@ import { UserInServer } from "@/types/User";
 import { MaterialIcons } from "@expo/vector-icons";
 import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 
-import auth from "@react-native-firebase/auth";
 import appCheck from "@react-native-firebase/app-check";
+import auth from "@react-native-firebase/auth";
 
 import apiRoutes from "@/helpers/ApiRoutes";
-import { router } from "expo-router";
 import { useBalance } from "@/hooks/useBalance";
+import { router } from "expo-router";
 
 const buyNFT = () => {
   const [screenParameters, setScreenParameters] = useAtom(screenParametersAtom);
