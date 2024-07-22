@@ -341,7 +341,7 @@ const buyNFT = () => {
       </View>
       <View id="buy-button" style={{ width: "100%" }}>
         <Pressable
-          disabled={loading}
+          disabled={loading || balanceStatus !== "enough"}
           onPress={handleBuyButton}
           style={{
             opacity: loading ? 1 : balanceStatus !== "enough" ? 0.5 : 1,
