@@ -4,15 +4,14 @@ import React, { useState } from "react";
 import NftOnUserPreviewItem from "../Nft/NftOnUserPreviewItem";
 
 type Props = {
-  createdNFTs: { postDocPath: string; nftDocPath: string }[];
-  boughtNFTs: { postDocPath: string; nftDocPath: string }[];
-  soldNFTs: { postDocPath: string; nftDocPath: string }[];
+  createdNFTs: { postDocPath: string; nftDocPath: string; ts: number }[];
+  boughtNFTs: { postDocPath: string; nftDocPath: string; ts: number }[];
 };
 
 type Option = "all" | "collected" | "created";
 
-const NftContent = ({ createdNFTs, boughtNFTs, soldNFTs }: Props) => {
-  const [option, setOption] = useState<Option>("created");
+const NftContent = ({ createdNFTs, boughtNFTs }: Props) => {
+  const [option, setOption] = useState<Option>("all");
 
   const handleChangeOption = (option: Option) => {
     setOption(option);
@@ -89,7 +88,7 @@ const NftContent = ({ createdNFTs, boughtNFTs, soldNFTs }: Props) => {
           keyExtractor={(item) => item.postDocPath}
           numColumns={1}
           scrollEnabled={false}
-          data={[...createdNFTs, ...boughtNFTs]}
+          data={[...createdNFTs, ...boughtNFTs].sort((a, b) => b.ts - a.ts)}
           renderItem={({ item }) => (
             <NftOnUserPreviewItem
               nftDocPath={item.nftDocPath}

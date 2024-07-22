@@ -10,6 +10,8 @@ import { FlatList, Switch } from "react-native-gesture-handler";
 import Post from "../Post/Post";
 import Header from "./Header";
 import NftContent from "./NftContent";
+import { useAtomValue } from "jotai";
+import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 
 type Props = {
   username: string;
@@ -18,20 +20,23 @@ type Props = {
 const UserContent = ({ username }: Props) => {
   const authStatus = useAuth();
 
+  const screenParameters = useAtomValue(screenParametersAtom);
+  const collectedNFTPostDocPath = screenParameters.find(
+    (q) => q.queryId === "collectedNFTPostDocPath"
+  )?.value as string;
+
   const [postDocPathArray, setPostDocPathArray] = useState<string[]>([]);
   const [nftData, setNftData] = useState<{
-    createdNFTs: { nftDocPath: string; postDocPath: string }[];
-    boughtNFTs: { nftDocPath: string; postDocPath: string }[];
-    soldNFTs: { nftDocPath: string; postDocPath: string }[];
+    createdNFTs: { nftDocPath: string; postDocPath: string; ts: number }[];
+    boughtNFTs: { nftDocPath: string; postDocPath: string; ts: number }[];
   }>({
     createdNFTs: [],
     boughtNFTs: [],
-    soldNFTs: [],
   });
 
   const [userData, setUserData] = useState<UserInServer | null>(null);
 
-  const [toggleValue, setToggleValue] = useState<"posts" | "nfts">("posts");
+  const [toggleValue, setToggleValue] = useState<"posts" | "nfts">("nfts");
 
   const { height } = Dimensions.get("window");
 
@@ -64,7 +69,7 @@ const UserContent = ({ username }: Props) => {
     return () => unsubscribe();
   }, [username, authStatus]);
 
-  // Bought NFTs Fetching
+  // NFTs Fetching
   useEffect(() => {
     if (authStatus !== "authenticated") return;
     if (!username) return;
@@ -78,7 +83,6 @@ const UserContent = ({ username }: Props) => {
             return setNftData({
               createdNFTs: [],
               boughtNFTs: [],
-              soldNFTs: [],
             });
           }
 
@@ -88,37 +92,30 @@ const UserContent = ({ username }: Props) => {
             return setNftData({
               createdNFTs: [],
               boughtNFTs: [],
-              soldNFTs: [],
             });
           }
 
           const boughtNFTs = nftTradeData.boughtNFTs;
+
+          boughtNFTs.sort((a, b) => b.ts - a.ts);
+
           if (!boughtNFTs) {
             console.error("BoughtNFTs is undefined on nftTrade doc");
             return setNftData({
               createdNFTs: [],
               boughtNFTs: [],
-              soldNFTs: [],
-            });
-          }
-
-          const soldNFTs = nftTradeData.soldNFTs;
-          if (!soldNFTs) {
-            console.error("SoldNFTs is undefined on nftTrade doc");
-            return setNftData({
-              createdNFTs: [],
-              boughtNFTs: [],
-              soldNFTs: [],
             });
           }
 
           const createdNFTs = nftTradeData.createdNFTs;
+
+          createdNFTs.sort((a, b) => b.ts - a.ts);
+
           if (!createdNFTs) {
             console.error("CreatedNFTs is undefined on nftTrade doc");
             return setNftData({
               createdNFTs: [],
               boughtNFTs: [],
-              soldNFTs: [],
             });
           }
 
@@ -127,18 +124,14 @@ const UserContent = ({ username }: Props) => {
               return {
                 nftDocPath: c.nftDocPath,
                 postDocPath: c.postDocPath,
+                ts: c.ts,
               };
             }),
             boughtNFTs: boughtNFTs.map((b) => {
               return {
                 nftDocPath: b.nftDocPath,
                 postDocPath: b.postDocPath,
-              };
-            }),
-            soldNFTs: soldNFTs.map((s) => {
-              return {
-                nftDocPath: s.nftDocPath,
-                postDocPath: s.postDocPath,
+                ts: b.ts,
               };
             }),
           });
@@ -148,7 +141,6 @@ const UserContent = ({ username }: Props) => {
           return setNftData({
             createdNFTs: [],
             boughtNFTs: [],
-            soldNFTs: [],
           });
         }
       );
@@ -182,6 +174,13 @@ const UserContent = ({ username }: Props) => {
 
     return () => unsubscribe();
   }, [username, authStatus]);
+
+  // New Purchased NFT Showing
+  useEffect(() => {
+    if (!collectedNFTPostDocPath) return;
+
+    setToggleValue("nfts");
+  }, [collectedNFTPostDocPath]);
 
   if (!userData)
     return (
@@ -253,7 +252,6 @@ const UserContent = ({ username }: Props) => {
           <NftContent
             createdNFTs={nftData.createdNFTs}
             boughtNFTs={nftData.boughtNFTs}
-            soldNFTs={nftData.soldNFTs}
           />
         </>
       )}

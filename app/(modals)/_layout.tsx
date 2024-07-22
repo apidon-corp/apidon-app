@@ -69,6 +69,12 @@ const _layout = () => {
             title: "Collectors",
           }}
         />
+        <Stack.Screen
+          name="wallet"
+          options={{
+            title: "Wallet",
+          }}
+        />
       </Stack>
     </>
   );

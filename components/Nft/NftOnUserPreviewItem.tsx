@@ -1,15 +1,15 @@
 import { apidonPink } from "@/constants/Colors";
 import { useAuth } from "@/providers/AuthProvider";
+import { NftDocDataInServer } from "@/types/Nft";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
-import { Entypo, FontAwesome5 } from "@expo/vector-icons";
+import { Entypo, Foundation } from "@expo/vector-icons";
 import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import Text from "../Text/Text";
-import { NftDocDataInServer } from "@/types/Nft";
 
 type Props = {
   postDocPath: string;
@@ -153,10 +153,10 @@ const NftOnUserPreviewItem = ({ postDocPath, nftDocPath }: Props) => {
                 backgroundColor: "white",
                 borderRadius: 10,
                 alignItems: "center",
-                gap: 4,
+                gap: 1,
               }}
             >
-              <FontAwesome5 name="lira-sign" size={13} color="#036704" />
+              <Foundation name="dollar" size={20} color="black" />
               <Text
                 style={{
                   color: "#036704",

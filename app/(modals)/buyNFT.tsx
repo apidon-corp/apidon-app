@@ -17,21 +17,27 @@ import { UserInServer } from "@/types/User";
 import { MaterialIcons } from "@expo/vector-icons";
 import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 
 import auth from "@react-native-firebase/auth";
+import appCheck from "@react-native-firebase/app-check";
+
+import apiRoutes from "@/helpers/ApiRoutes";
+import { router } from "expo-router";
+import { useBalance } from "@/hooks/useBalance";
 
 const buyNFT = () => {
-  const screenParameters = useAtomValue(screenParametersAtom);
-  const postDocPath = screenParameters.find(
-    (q) => q.queryId === "postDocPath"
-  )?.value;
+  const [screenParameters, setScreenParameters] = useAtom(screenParametersAtom);
+  const postDocPath = screenParameters.find((q) => q.queryId === "postDocPath")
+    ?.value as string;
 
   const [postData, setPostData] = useState<PostServerData | null>(null);
   const [nftData, setNftData] = useState<NftDocDataInServer | null>(null);
   const [creatorData, setCreatorData] = useState<UserInServer | null>(null);
 
   const [loading, setLoading] = useState(false);
+
+  const { balance } = useBalance();
 
   useEffect(() => {
     getInitialData();
@@ -117,19 +123,22 @@ const buyNFT = () => {
   };
 
   const handleBuyButton = () => {
-    if (!nftData?.listStatus.isListed) return;
+    if (!nftData) return;
+    if (!nftData.listStatus.isListed) return;
 
     Alert.alert(
-      "Buy this NFT?",
-      `This NFT costs $${nftData.listStatus.price.price}`,
+      "Buy NFT",
+      `Are you sure you want to buy this NFT for $${nftData.listStatus.price.price}?`,
       [
         {
           text: "Cancel",
           style: "cancel",
         },
-        { text: "Buy", onPress: () => {} },
-      ],
-      { cancelable: false }
+        {
+          text: "Buy",
+          onPress: handleBuy,
+        },
+      ]
     );
   };
 
@@ -142,7 +151,45 @@ const buyNFT = () => {
 
     setLoading(true);
 
-    setLoading(false);
+    try {
+      const idToken = await currentUserAuthObject.getIdToken();
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
+      const response = await fetch(apiRoutes.nft.buyNFT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${idToken}`,
+          appchecktoken,
+        },
+        body: JSON.stringify({
+          postDocPath,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error(
+          "Resonse from buyNFT API is not okay: ",
+          await response.text()
+        );
+        return setLoading(false);
+      }
+
+      // Good to go...
+      setLoading(false);
+      setScreenParameters([
+        { queryId: "collectedNFTPostDocPath", value: postDocPath },
+      ]);
+      router.dismiss();
+      return router.push(`/home/profile/${currentUserAuthObject.displayName}?`);
+    } catch (error) {
+      console.error("Error on buying NFT ", error);
+      return setLoading(false);
+    }
+  };
+
+  const handleTopUpButton = () => {
+    router.push("/(modals)/wallet");
   };
 
   if (!postDocPath) {
@@ -169,14 +216,21 @@ const buyNFT = () => {
     );
   }
 
+  let balanceStatus: "loading" | "error" | "enough" | "not-enough" =
+    balance === "error"
+      ? "error"
+      : balance === "getting-balance"
+      ? "loading"
+      : balance >= nftData.listStatus.price.price
+      ? "enough"
+      : "not-enough";
+
   return (
     <ScrollView
       style={{ flex: 1 }}
       contentContainerStyle={{
         padding: 10,
         gap: 10,
-        alignItems: "center",
-        justifyContent: "center",
       }}
     >
       <View
@@ -269,11 +323,28 @@ const buyNFT = () => {
           />
         </View>
       </View>
+
+      <View id="balance">
+        <Text bold>Your balance</Text>
+        {balanceStatus === "loading" || balanceStatus === "error" ? (
+          <ActivityIndicator />
+        ) : (
+          <Text
+            bold
+            style={{
+              color: "#808080",
+            }}
+          >
+            ${balance}
+          </Text>
+        )}
+      </View>
       <View id="buy-button" style={{ width: "100%" }}>
         <Pressable
           disabled={loading}
           onPress={handleBuyButton}
           style={{
+            opacity: loading ? 1 : balanceStatus !== "enough" ? 0.5 : 1,
             backgroundColor: apidonPink,
             padding: 10,
             borderRadius: 10,
@@ -296,6 +367,28 @@ const buyNFT = () => {
           )}
         </Pressable>
       </View>
+      {balanceStatus === "not-enough" && !loading && (
+        <Pressable
+          onPress={handleTopUpButton}
+          id="top-up"
+          style={{
+            width: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text
+            bold
+            style={{
+              color: "red",
+              fontSize: 14,
+              textDecorationLine: "underline",
+            }}
+          >
+            Not enough balance? Top Up!
+          </Text>
+        </Pressable>
+      )}
     </ScrollView>
   );
 };
