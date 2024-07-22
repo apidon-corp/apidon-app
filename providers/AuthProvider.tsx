@@ -3,7 +3,7 @@ import resetNavigationHistory from "@/helpers/Router";
 import { AuthStatus } from "@/types/AuthType";
 import { router } from "expo-router";
 
-import auth from "@react-native-firebase/auth";
+import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
 import {
   PropsWithChildren,
@@ -12,8 +12,6 @@ import {
   useEffect,
   useState,
 } from "react";
-
-import { captureException } from "@sentry/react-native";
 
 const AuthContext = createContext<AuthStatus>("loading");
 
@@ -25,10 +23,12 @@ export default function AuthProvider({ children }: PropsWithChildren) {
       const currentUserAuthObject = auth().currentUser;
       if (!currentUserAuthObject) return false;
 
+      console.log(currentUserAuthObject);
+
       const displayName = currentUserAuthObject.displayName;
 
       if (!displayName) {
-        console.error("currentUser has no display name on it");
+        console.log("currentUser has no display name on it");
         return false;
       }
 
@@ -39,8 +39,15 @@ export default function AuthProvider({ children }: PropsWithChildren) {
     }
   };
 
-  const handleInitialAuthentication = async () => {
+  const handleInitialAuthentication = async (
+    user: FirebaseAuthTypes.User | null
+  ) => {
     resetNavigationHistory();
+
+    if (!user) {
+      setAuthStatus("unauthenticated");
+      return router.replace("/auth/login");
+    }
 
     setAuthStatus("loading");
 
@@ -48,7 +55,8 @@ export default function AuthProvider({ children }: PropsWithChildren) {
 
     if (!currentUserDisplayName) {
       setAuthStatus("unauthenticated");
-      return router.replace("/auth");
+      router.replace("/auth/login");
+      return router.navigate("/auth/login/extraInformation");
     }
 
     const providerResult = await handleGetActiveProviderStatus();
@@ -69,7 +77,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     const unsubscribe = auth().onAuthStateChanged((user) => {
-      handleInitialAuthentication();
+      handleInitialAuthentication(user);
     });
     return () => unsubscribe();
   }, []);

@@ -19,6 +19,13 @@ import {
 
 import appCheck from "@react-native-firebase/app-check";
 
+import {
+  appleAuth,
+  AppleButton,
+} from "@invertase/react-native-apple-authentication";
+
+import auth from "@react-native-firebase/auth";
+
 const index = () => {
   const [emailUsername, setEmailUsername] = useState("");
 
@@ -203,6 +210,30 @@ const index = () => {
     }
   };
 
+  const handleAppleSignInButton = async () => {
+    try {
+      const appleAuthRequestResponse = await appleAuth.performRequest({
+        requestedOperation: appleAuth.Operation.LOGIN,
+        requestedScopes: [appleAuth.Scope.FULL_NAME, appleAuth.Scope.EMAIL],
+      });
+
+      if (!appleAuthRequestResponse.identityToken) {
+        return console.error("No identity token found in the response");
+      }
+
+      const { identityToken, nonce } = appleAuthRequestResponse;
+
+      const appleCredential = auth.AppleAuthProvider.credential(
+        identityToken,
+        nonce
+      );
+
+      return auth().signInWithCredential(appleCredential);
+    } catch (error) {
+      return console.error("Error on Apple Sign In: ", error);
+    }
+  };
+
   return (
     <SafeAreaView
       style={{
@@ -289,6 +320,21 @@ const index = () => {
             <Link style={{ color: "#d53f8cd9" }} href="/auth/signup">
               Sign Up!
             </Link>
+          </View>
+
+          <View id="apple-sign-in">
+            <AppleButton
+              buttonStyle={AppleButton.Style.BLACK}
+              buttonType={AppleButton.Type.CONTINUE}
+              onPress={handleAppleSignInButton}
+              style={{
+                width: 160,
+                height: 45,
+                borderWidth: 1,
+                borderColor: "white",
+                borderRadius: 10,
+              }}
+            />
           </View>
         </Animated.View>
       </ScrollView>
