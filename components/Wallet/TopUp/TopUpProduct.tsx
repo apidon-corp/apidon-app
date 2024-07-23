@@ -48,16 +48,14 @@ const TopUpProduct = ({ id, product }: Props) => {
 
     try {
       await Purchases.purchaseStoreProduct(product);
-
-      // await requestPurchase({ sku: id });
     } catch (error: any) {
+      setLoading(false);
+
       if (error.userCancelled) return console.log("User cancelled");
 
       Alert.alert("Error", "Error on purchasing product.");
       console.error("Error purchasing product: \n", id, "\n", error);
     }
-
-    setLoading(false);
   };
 
   return (

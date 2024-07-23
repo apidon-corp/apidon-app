@@ -211,6 +211,10 @@ const index = () => {
   };
 
   const handleAppleSignInButton = async () => {
+    if (loading) return;
+
+    setLoading(true);
+
     try {
       const appleAuthRequestResponse = await appleAuth.performRequest({
         requestedOperation: appleAuth.Operation.LOGIN,
@@ -218,7 +222,9 @@ const index = () => {
       });
 
       if (!appleAuthRequestResponse.identityToken) {
-        return console.error("No identity token found in the response");
+        setLoading(false);
+        console.error("No identity token found in the response");
+        return setError("No identity token found");
       }
 
       const { identityToken, nonce } = appleAuthRequestResponse;
@@ -228,8 +234,11 @@ const index = () => {
         nonce
       );
 
-      return auth().signInWithCredential(appleCredential);
+      await auth().signInWithCredential(appleCredential);
+
+      return setLoading(false);
     } catch (error) {
+      setLoading(false);
       return console.error("Error on Apple Sign In: ", error);
     }
   };

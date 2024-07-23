@@ -173,9 +173,14 @@ const extraInformation = () => {
         return;
       }
 
+      if (!currentUserAuthObject.displayName) {
+        await currentUserAuthObject.getIdToken(true);
+        await currentUserAuthObject.reload();
+      }
+
       setLoading(false);
 
-      return router.replace("/home");
+      return router.replace("/initialProvider");
 
       // Good to go...
     } catch (error) {

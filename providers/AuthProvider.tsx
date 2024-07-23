@@ -18,14 +18,19 @@ const AuthContext = createContext<AuthStatus>("loading");
 export default function AuthProvider({ children }: PropsWithChildren) {
   const [authStatus, setAuthStatus] = useState<AuthStatus>("loading");
 
-  const getCurrentUserDisplayName = () => {
+  const getCurrentUserDisplayName = async () => {
     try {
       const currentUserAuthObject = auth().currentUser;
       if (!currentUserAuthObject) return false;
 
-      console.log(currentUserAuthObject);
+      if (!currentUserAuthObject.displayName) {
+        await currentUserAuthObject.getIdToken(true);
+        await currentUserAuthObject.reload();
+      }
 
       const displayName = currentUserAuthObject.displayName;
+
+      console.log("Display Name: ", displayName);
 
       if (!displayName) {
         console.log("currentUser has no display name on it");
@@ -51,7 +56,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
 
     setAuthStatus("loading");
 
-    const currentUserDisplayName = getCurrentUserDisplayName();
+    const currentUserDisplayName = await getCurrentUserDisplayName();
 
     if (!currentUserDisplayName) {
       setAuthStatus("unauthenticated");
