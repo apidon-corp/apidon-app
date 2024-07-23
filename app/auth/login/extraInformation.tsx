@@ -173,7 +173,13 @@ const extraInformation = () => {
         return;
       }
 
-      if (!currentUserAuthObject.displayName) {
+      const isValidAuthObject = (await currentUserAuthObject.getIdTokenResult())
+        .claims.isValidAuthObject;
+
+      if (!isValidAuthObject) {
+        console.error(
+          "User's auth object is not valid. After extra information,... We are updating our tokens..."
+        );
         await currentUserAuthObject.getIdToken(true);
         await currentUserAuthObject.reload();
       }

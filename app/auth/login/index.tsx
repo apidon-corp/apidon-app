@@ -24,6 +24,11 @@ import {
   AppleButton,
 } from "@invertase/react-native-apple-authentication";
 
+import {
+  GoogleSignin,
+  GoogleSigninButton,
+} from "@react-native-google-signin/google-signin";
+
 import auth from "@react-native-firebase/auth";
 
 const index = () => {
@@ -243,6 +248,34 @@ const index = () => {
     }
   };
 
+  async function handleGoogleSignInButton() {
+    setLoading(true);
+
+    try {
+      GoogleSignin.configure({
+        webClientId: "",
+      });
+
+      // Check if your device supports Google Play
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
+      // Get the users ID token
+      const { idToken } = await GoogleSignin.signIn();
+
+      // Create a Google credential with the token
+      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+
+      // Sign-in the user with the credential
+      await auth().signInWithCredential(googleCredential);
+
+      return setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      return console.error("Error on Google Sign In: ", error);
+    }
+  }
+
   return (
     <SafeAreaView
       style={{
@@ -343,6 +376,13 @@ const index = () => {
                 borderColor: "white",
                 borderRadius: 10,
               }}
+            />
+          </View>
+          <View id="google-sign-in">
+            <GoogleSigninButton
+              size={GoogleSigninButton.Size.Icon}
+              color={GoogleSigninButton.Color.Light}
+              onPress={handleGoogleSignInButton}
             />
           </View>
         </Animated.View>

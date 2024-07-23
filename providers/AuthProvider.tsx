@@ -23,15 +23,22 @@ export default function AuthProvider({ children }: PropsWithChildren) {
       const currentUserAuthObject = auth().currentUser;
       if (!currentUserAuthObject) return false;
 
-      if (!currentUserAuthObject.displayName) {
-        await currentUserAuthObject.getIdToken(true);
-        await currentUserAuthObject.reload();
+      await currentUserAuthObject.getIdToken(true);
+      await currentUserAuthObject.reload();
+
+      const userRecord = await currentUserAuthObject.getIdTokenResult();
+
+      // Here means, user just authencticated with social provider like "google" or "apple" but not finished authentication completely like username and fullname.
+      if (!userRecord.claims.isValidAuthObject) {
+        console.log("User's auth object is not valid.");
+        return false;
       }
 
       const displayName = currentUserAuthObject.displayName;
 
       console.log("Display Name: ", displayName);
 
+      // Here is impossible condition. Can be deleted.
       if (!displayName) {
         console.log("currentUser has no display name on it");
         return false;
