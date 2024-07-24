@@ -88,8 +88,9 @@ export default function AuthProvider({ children }: PropsWithChildren) {
   };
 
   useEffect(() => {
+    router.replace("/auth/welcome")
     const unsubscribe = auth().onAuthStateChanged((user) => {
-      handleInitialAuthentication(user);
+      //handleInitialAuthentication(user);
     });
     return () => unsubscribe();
   }, []);

@@ -26,6 +26,8 @@ const NotificationProvider = ({ children }: PropsWithChildren) => {
 
   // Notification Data Fetching
   useEffect(() => {
+    if (authStatus !== "authenticated") return setNotificationDocData(null);
+
     const displayName = auth().currentUser?.displayName;
     if (!displayName) return setNotificationDocData(null);
 

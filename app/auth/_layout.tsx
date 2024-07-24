@@ -24,6 +24,19 @@ const _layout = (props: Props) => {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="welcome"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="additionalInfo"
+        options={{
+          headerTitle: "",
+          headerBackTitle: "Back",
+        }}
+      />
     </Stack>
   );
 };
