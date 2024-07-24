@@ -1,7 +1,6 @@
-import { handleGetActiveProviderStatus } from "@/helpers/Provider";
 import resetNavigationHistory from "@/helpers/Router";
 import { AuthStatus } from "@/types/AuthType";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
@@ -13,90 +12,119 @@ import {
   useState,
 } from "react";
 
-const AuthContext = createContext<AuthStatus>("loading");
+type AuthContextType = {
+  authStatus: AuthStatus;
+  setAuthStatus: (status: AuthStatus) => void;
+};
+
+const AuthContext = createContext<AuthContextType>({
+  authStatus: "unauthenticated",
+  setAuthStatus: () => {},
+});
 
 export default function AuthProvider({ children }: PropsWithChildren) {
   const [authStatus, setAuthStatus] = useState<AuthStatus>("loading");
 
-  const getCurrentUserDisplayName = async () => {
-    try {
-      const currentUserAuthObject = auth().currentUser;
-      if (!currentUserAuthObject) return false;
+  const pathname = usePathname();
 
-      await currentUserAuthObject.getIdToken(true);
-      await currentUserAuthObject.reload();
+  console.log("Pathname: ", pathname);
 
-      const userRecord = await currentUserAuthObject.getIdTokenResult();
-
-      // Here means, user just authencticated with social provider like "google" or "apple" but not finished authentication completely like username and fullname.
-      if (!userRecord.claims.isValidAuthObject) {
-        console.log("User's auth object is not valid.");
-        return false;
-      }
-
-      const displayName = currentUserAuthObject.displayName;
-
-      console.log("Display Name: ", displayName);
-
-      // Here is impossible condition. Can be deleted.
-      if (!displayName) {
-        console.log("currentUser has no display name on it");
-        return false;
-      }
-
-      return displayName;
-    } catch (error) {
-      console.error("Error on checking if there is a current user: ", error);
-      return false;
-    }
-  };
-
-  const handleInitialAuthentication = async (
-    user: FirebaseAuthTypes.User | null
-  ) => {
-    resetNavigationHistory();
+  const handleAuthentication = async (user: FirebaseAuthTypes.User | null) => {
+    if (authStatus === "dontMess") return;
 
     if (!user) {
+      console.log("There is no user.");
+      console.log("We are switching to welcome page now.");
       setAuthStatus("unauthenticated");
-      return router.replace("/auth/login");
+
+      resetNavigationHistory();
+      return router.replace("/auth/welcome");
     }
 
     setAuthStatus("loading");
 
-    const currentUserDisplayName = await getCurrentUserDisplayName();
+    console.log("It seems there is a user, let's make some tests...");
 
-    if (!currentUserDisplayName) {
+    const currentUserAuthObject = auth().currentUser;
+    if (!currentUserAuthObject) {
+      console.error("There is no current user object.");
+      console.error(
+        "This is a weird situation because there was before.(Upper comments)"
+      );
+      console.error("We are switching to welcome page now., again.");
       setAuthStatus("unauthenticated");
-      router.replace("/auth/login");
-      return router.navigate("/auth/login/extraInformation");
+
+      resetNavigationHistory();
+      return router.replace("/auth/welcome");
     }
 
-    const providerResult = await handleGetActiveProviderStatus();
+    console.log("We got the current user object successfully.");
 
-    if (!providerResult) {
+    try {
+      await currentUserAuthObject.reload();
+
+      const idTokenResult = await currentUserAuthObject.getIdTokenResult(true);
+
+      const isValidAuthObject = idTokenResult.claims.isValidAuthObject;
+
+      if (!isValidAuthObject) {
+        setAuthStatus("unauthenticated");
+
+        console.log("User didn't complete sign-up operation or a new user.");
+        console.log("We are switching additionalInfo page now.");
+
+        console.log("We are on path: ", pathname);
+
+        if (
+          pathname === "/auth/welcome" ||
+          pathname === "/auth/emailPasswordSignUp"
+        ) {
+          console.log(
+            "We found that it is actullay normal that we don't have a valid object."
+          );
+          console.log("Because we are signing-up already....");
+          console.log("We don't need to reset screens or things like that...");
+
+          return router.push("/auth/additionalInfo");
+        }
+
+        resetNavigationHistory();
+        router.replace("/auth/welcome");
+        return router.navigate("/auth/additionalInfo");
+      }
+    } catch (error) {
       setAuthStatus("unauthenticated");
-      return router.replace("/auth");
-    }
+      console.log("Error on making auth test...: ", error);
 
-    if (!providerResult.isThereActiveProvider) {
-      setAuthStatus("authenticated");
-      return router.replace("/(modals)/initialProvider");
+      resetNavigationHistory();
+      return router.replace("/auth/welcome");
     }
 
     setAuthStatus("authenticated");
-    return router.replace(`/home`);
+
+    console.log("All test are looking good...");
+    console.log("We need to switch provider or home page for now...");
+
+    resetNavigationHistory();
+    return router.replace("/(modals)/initialProvider");
   };
 
   useEffect(() => {
-    router.replace("/auth/welcome")
-    const unsubscribe = auth().onAuthStateChanged((user) => {
-      //handleInitialAuthentication(user);
-    });
+    const unsubscribe = auth().onAuthStateChanged(handleAuthentication);
+
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    // const unsubscribe = auth().onIdTokenChanged(handleAuthentication);
+  }, []);
+
   return (
-    <AuthContext.Provider value={authStatus}>{children}</AuthContext.Provider>
+    <AuthContext.Provider
+      value={{ authStatus: authStatus, setAuthStatus: setAuthStatus }}
+    >
+      {children}
+    </AuthContext.Provider>
   );
 }
 

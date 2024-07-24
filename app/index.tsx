@@ -3,7 +3,7 @@ import React from "react";
 import { ActivityIndicator, SafeAreaView } from "react-native";
 
 const index = () => {
-  const authStatus = useAuth();
+  const {authStatus} = useAuth();
 
   if (authStatus === "loading")
     return (

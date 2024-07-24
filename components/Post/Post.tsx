@@ -34,7 +34,7 @@ type Props = {
 };
 
 const Post = React.memo(({ postDocPath }: Props) => {
-  const authStatus = useAuth();
+  const {authStatus} = useAuth();
 
   const [loading, setLoading] = useState(false);
 

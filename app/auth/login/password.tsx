@@ -22,7 +22,7 @@ import auth from "@react-native-firebase/auth";
 import * as Sentry from "@sentry/react-native";
 
 const password = () => {
-  const authStatus = useAuth();
+  const { authStatus } = useAuth();
 
   const [password, setPassword] = useState("");
 

@@ -1,18 +1,16 @@
-import { ActivityIndicator, Animated, Pressable, View } from "react-native";
 import { Text } from "@/components/Text/Text";
-import React, { useEffect, useRef, useState } from "react";
-import { SafeAreaView } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import appleAuth from "@invertase/react-native-apple-authentication";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, Pressable, SafeAreaView, View } from "react-native";
 
 import auth from "@react-native-firebase/auth";
-import { router } from "expo-router";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { Image } from "expo-image";
+import { router } from "expo-router";
 
 const welcome = () => {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const opacity = useRef(new Animated.Value(1)).current;
 
@@ -32,12 +30,14 @@ const welcome = () => {
     }).start();
   };
 
-  const handleAppleSignInButton = async () => {
+  async function handleContinueWithAppleButton() {
     if (loading) return;
 
     setLoading(true);
 
     try {
+      if (auth().currentUser) await auth().signOut();
+
       const appleAuthRequestResponse = await appleAuth.performRequest({
         requestedOperation: appleAuth.Operation.LOGIN,
         requestedScopes: [appleAuth.Scope.FULL_NAME, appleAuth.Scope.EMAIL],
@@ -45,8 +45,7 @@ const welcome = () => {
 
       if (!appleAuthRequestResponse.identityToken) {
         setLoading(false);
-        console.error("No identity token found in the response");
-        return setError("No identity token found");
+        return console.error("No identity token found in the response");
       }
 
       const { identityToken, nonce } = appleAuthRequestResponse;
@@ -73,19 +72,19 @@ const welcome = () => {
       console.log("User signed in successfully");
       console.log("We are switching home page now.");
 
-      setLoading(false);
-
-      return router.replace("/home");
+      return setLoading(false);
     } catch (error) {
       setLoading(false);
       return console.log("Error on Apple Sign In: ", error);
     }
-  };
+  }
 
-  async function handleGoogleSignInButton() {
+  async function handleContinueWithGoogleButton() {
     setLoading(true);
 
     try {
+      if (auth().currentUser) await auth().signOut();
+
       GoogleSignin.configure({
         webClientId: "",
       });
@@ -98,29 +97,31 @@ const welcome = () => {
 
       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
 
-      const user = (await auth().signInWithCredential(googleCredential)).user;
+      await auth().signInWithCredential(googleCredential);
 
-      const idTokenResult = await user.getIdTokenResult(true);
-      const isValidAuthObject = idTokenResult.claims.isValidAuthObject;
+      // const idTokenResult = await user.getIdTokenResult(true);
+      // const isValidAuthObject = idTokenResult.claims.isValidAuthObject;
 
-      if (!isValidAuthObject) {
-        console.log("User didn't complete sign-up operation or a new user.");
-        console.log("We are switching additionalInfo page now.");
-        setLoading(false);
+      // if (!isValidAuthObject) {
+      //   console.log("User didn't complete sign-up operation or a new user.");
+      //   console.log("We are switching additionalInfo page now.");
+      //   setLoading(false);
 
-        return router.push("/auth/additionalInfo");
-      }
+      //   return router.push("/auth/additionalInfo");
+      // }
 
-      console.log("User signed in successfully");
-      console.log("We are switching home page now.");
+      // console.log("User signed in successfully");
+      // console.log("We are switching home page now.");
 
-      setLoading(false);
-
-      return router.replace("/home");
+      return setLoading(false);
     } catch (error) {
       setLoading(false);
       return console.log("Error on Google Sign In: ", error);
     }
+  }
+
+  function handleContinueWithEmailButon() {
+    router.push("/auth/emailPasswordSignUp");
   }
 
   return (
@@ -181,7 +182,7 @@ const welcome = () => {
         >
           <Pressable
             disabled={loading}
-            onPress={handleAppleSignInButton}
+            onPress={handleContinueWithAppleButton}
             id="apple-continue"
             style={{
               borderRadius: 10,
@@ -199,7 +200,7 @@ const welcome = () => {
             </Text>
           </Pressable>
           <Pressable
-            onPress={handleGoogleSignInButton}
+            onPress={handleContinueWithGoogleButton}
             id="google-continue"
             style={{
               borderRadius: 10,
@@ -258,6 +259,7 @@ const welcome = () => {
           }}
         >
           <Pressable
+            onPress={handleContinueWithEmailButon}
             style={{
               flexDirection: "row",
               alignItems: "center",

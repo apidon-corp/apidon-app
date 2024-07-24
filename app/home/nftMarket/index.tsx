@@ -6,7 +6,7 @@ import React, { useEffect, useState } from "react";
 import { FlatList, SafeAreaView } from "react-native";
 
 const index = () => {
-  const authStatus = useAuth();
+  const {authStatus} = useAuth();
 
   const [listedNftDocDatas, setListedNftDocDatas] = useState<
     NftDocDataInServer[]

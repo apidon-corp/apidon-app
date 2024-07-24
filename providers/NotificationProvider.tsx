@@ -19,7 +19,7 @@ import { useAuth } from "./AuthProvider";
 const NotificationContext = createContext<NotificationDocData | null>(null);
 
 const NotificationProvider = ({ children }: PropsWithChildren) => {
-  const authStatus = useAuth();
+  const {authStatus} = useAuth();
 
   const [notificationDocData, setNotificationDocData] =
     useState<NotificationDocData | null>(null);

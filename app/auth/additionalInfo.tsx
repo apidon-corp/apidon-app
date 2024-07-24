@@ -20,8 +20,11 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { ScrollView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAuth } from "@/providers/AuthProvider";
 
 const additionalInfo = () => {
+  const { setAuthStatus } = useAuth();
+
   const [username, setUsername] = useState("");
   const [isUsernameValid, setIsUsernameValid] = useState(false);
 
@@ -324,7 +327,9 @@ const additionalInfo = () => {
         return;
       }
 
-      console.log("We are checking if user has valid auth object now...");
+      console.log(
+        "We are checking if user has valid auth object now...(additional info page...)"
+      );
 
       const isValidAuthObject = (
         await currentUserAuthObject.getIdTokenResult(true)
@@ -342,6 +347,9 @@ const additionalInfo = () => {
       console.log("We are switching initialProvider page now.");
 
       setLoading(false);
+
+      setAuthStatus("authenticated");
+      await currentUserAuthObject.reload();
 
       return router.replace("/initialProvider");
 
@@ -631,6 +639,7 @@ const additionalInfo = () => {
             }}
           >
             <Pressable
+              onPress={handleDeleteAccountButton}
               disabled={loading || deleteAccountLoading}
               style={{
                 padding: 10,

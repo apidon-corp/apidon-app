@@ -6,7 +6,7 @@ import firestore from "@react-native-firebase/firestore";
 import { BalanceDocData } from "@/types/Wallet";
 
 export const useBalance = () => {
-  const authStatus = useAuth();
+  const {authStatus} = useAuth();
 
   const [balance, setBalance] = useState<"getting-balance" | number | "error">(
     "getting-balance"

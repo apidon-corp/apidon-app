@@ -22,7 +22,7 @@ const NftMarketPreviewItem = ({ postDocPath, nftDocData }: Props) => {
     null
   );
 
-  const authStatus = useAuth();
+  const {authStatus} = useAuth();
 
   // Dynamic Data Fetching / Post Object
   useEffect(() => {
