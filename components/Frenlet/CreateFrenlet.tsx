@@ -1,6 +1,6 @@
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
-import { auth } from "@/firebase/client";
+import apiRoutes from "@/helpers/ApiRoutes";
 import { FollowStatusAPIResponseBody } from "@/types/ApiResponses";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef, useState } from "react";
@@ -11,8 +11,12 @@ import {
   Keyboard,
   Pressable,
   TextInput,
-  View
+  View,
 } from "react-native";
+
+import auth from "@react-native-firebase/auth";
+
+import appCheck from "@react-native-firebase/app-check";
 
 type Props = {
   username: string;
@@ -109,26 +113,20 @@ const CreateFrenlet = ({ username }: Props) => {
   const checkFren = async () => {
     if (checkFrenLoading) return;
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return setIsFren(false);
-
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      console.error("User panel base url couldnt fetch from .env file");
-      return setIsFren(false);
-    }
-
-    const route = `${userPanelBaseUrl}/api/social/followStatus`;
 
     setCheckFrenLoading(true);
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
-      const response = await fetch(route, {
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+      const response = await fetch(apiRoutes.user.social.getFollowStatus, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           suspectUsername: username,
@@ -164,16 +162,8 @@ const CreateFrenlet = ({ username }: Props) => {
     const trimmedMessage = message.trim();
     if (trimmedMessage.length === 0) return;
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return;
-
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      console.error("User panel base url couldnt fetch from .env file");
-      return false;
-    }
-
-    const route = `${userPanelBaseUrl}/api/frenlet/createFrenlet`;
 
     setSendFrenletLoading(true);
     setMessage(trimmedMessage);
@@ -181,13 +171,15 @@ const CreateFrenlet = ({ username }: Props) => {
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
       // Send frenlet
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.frenlet.createFrenlet, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           fren: username,

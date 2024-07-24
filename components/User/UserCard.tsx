@@ -1,13 +1,16 @@
-import { ActivityIndicator, Pressable, SafeAreaView, View } from "react-native";
-import React, { useEffect, useState } from "react";
 import { Text } from "@/components/Text/Text";
-import { UserInServer } from "@/types/User";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, firestore } from "@/firebase/client";
-import { FollowStatusAPIResponseBody } from "@/types/ApiResponses";
 import { apidonPink } from "@/constants/Colors";
-import { router } from "expo-router";
+import apiRoutes from "@/helpers/ApiRoutes";
+import { FollowStatusAPIResponseBody } from "@/types/ApiResponses";
+import { UserInServer } from "@/types/User";
+import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
+import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Pressable, View } from "react-native";
+
+import appCheck from "@react-native-firebase/app-check";
 
 type Props = {
   username: string;
@@ -32,11 +35,9 @@ const UserCard = ({ username }: Props) => {
     setLoading(true);
 
     try {
-      const userDocRef = doc(firestore, `/users/${username}`);
+      const userDocSnapshot = await firestore().doc(`users/${username}`).get();
 
-      const userDocSnapshot = await getDoc(userDocRef);
-
-      if (!userDocSnapshot.exists()) return;
+      if (!userDocSnapshot.exists) return;
 
       const userDocData = userDocSnapshot.data() as UserInServer;
 
@@ -49,26 +50,23 @@ const UserCard = ({ username }: Props) => {
   };
 
   const handleGetFollowStatus = async () => {
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("No user found!");
 
     const displayName = currentUserAuthObject.displayName;
     if (username === displayName) return setDoesFollow(true);
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl)
-      return console.error("User panel base url couldnt fetch from .env file");
-
     try {
       const idToken = await currentUserAuthObject.getIdToken();
 
-      const route = `${userPanelBaseUrl}/api/social/followStatus`;
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.user.social.getFollowStatus, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken: appchecktoken,
         },
         body: JSON.stringify({
           suspectUsername: username,
@@ -95,23 +93,19 @@ const UserCard = ({ username }: Props) => {
 
     setFollowLoading(true);
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("No user found!");
-
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl)
-      return console.error("User panel base url couldnt fetch from .env file");
-
-    const route = `${userPanelBaseUrl}/api/social/follow`;
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.user.social.follow, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           operationTo: username,
@@ -174,7 +168,9 @@ const UserCard = ({ username }: Props) => {
           }}
         >
           <Image
-            source={userData.profilePhoto}
+            source={
+              userData.profilePhoto || require("@/assets/images/user.jpg")
+            }
             style={{
               width: 50,
               height: 50,

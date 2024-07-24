@@ -1,13 +1,25 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import Post from "@/components/Post/Post";
-import { auth } from "@/firebase/client";
+import apiRoutes from "@/helpers/ApiRoutes";
 import { useAtomValue } from "jotai";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, SafeAreaView } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  NativeScrollEvent,
+  SafeAreaView,
+  ScrollView,
+} from "react-native";
+
+import auth from "@react-native-firebase/auth";
+import appCheck from "@react-native-firebase/app-check";
 
 const index = () => {
   const [loading, setLoading] = useState(false);
-  const [postDocPathArray, setPostDocPathArray] = useState<string[]>([]);
+  const [recommendedPostsDocPathArray, setRecommendedPostsDocPathArray] =
+    useState<string[]>([]);
+
+  const [servedPosts, setServedPosts] = useState<string[]>([]);
 
   const screenParameters = useAtomValue(screenParametersAtom);
 
@@ -15,19 +27,26 @@ const index = () => {
     (q) => q.queryId === "createdPostDocPath"
   )?.value as string | undefined;
 
+  useEffect(() => {
+    if (!createdPostDocPath) return;
+
+    setServedPosts((prev) => {
+      if (prev.includes(createdPostDocPath)) return prev;
+      return [createdPostDocPath, ...prev];
+    });
+  }, [createdPostDocPath]);
+
+  useEffect(() => {
+    handleGetPostRecommendations();
+  }, []);
+
   /**
    * Fetches paths of recommended posts from server.
    * @returns
    */
   const handleGetPostRecommendations = async () => {
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return false;
-
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      console.error("User panel base url couldnt fetch from .env file");
-      return false;
-    }
 
     if (loading) return false;
 
@@ -35,13 +54,15 @@ const index = () => {
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
-      const route = `${userPanelBaseUrl}/api/feed/main/getPersonalizedMainFeed`;
 
-      const response = await fetch(route, {
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
+      const response = await fetch(apiRoutes.feed.getPersonalizedFeed, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
       });
 
@@ -52,7 +73,7 @@ const index = () => {
           message
         );
         setLoading(false);
-        return setPostDocPathArray([]);
+        return setRecommendedPostsDocPathArray([]);
       }
 
       const result = await response.json();
@@ -63,30 +84,47 @@ const index = () => {
         postDocPathArrayFetched.unshift(createdPostDocPath);
 
       setLoading(false);
-      return setPostDocPathArray(postDocPathArrayFetched);
+
+      // We are removing first "/" from post doc path because mr react native firebase firestore doesn't like it.
+      const unSlicedAtFirstPostDocPathArrayFetched =
+        postDocPathArrayFetched.map((p) => p.slice(1));
+
+      const onlyFourPosts = unSlicedAtFirstPostDocPathArrayFetched.slice(0, 4);
+
+      setRecommendedPostsDocPathArray(unSlicedAtFirstPostDocPathArrayFetched);
+      return setServedPosts(onlyFourPosts);
     } catch (error) {
       console.error("Error while fetching getPersonalizedMainFeed: ", error);
       setLoading(false);
-      return setPostDocPathArray([]);
+      return setRecommendedPostsDocPathArray([]);
     }
   };
 
-  useEffect(() => {
-    if (!createdPostDocPath) return;
+  const handleScroll = (event: NativeScrollEvent) => {
+    const threshold = 500;
 
-    const previousValues = postDocPathArray;
-    if (previousValues.includes(createdPostDocPath)) return;
+    const { layoutMeasurement, contentOffset, contentSize } = event;
+    const isCloseToBottom =
+      layoutMeasurement.height + contentOffset.y >=
+      contentSize.height - threshold;
+    if (isCloseToBottom) {
+      serveMorePosts();
+    }
+  };
 
-    previousValues.unshift(createdPostDocPath);
+  const serveMorePosts = () => {
+    if (servedPosts.length === recommendedPostsDocPathArray.length) {
+      console.log("No more posts to serve.");
+      return;
+    }
 
-    const updatedValues = previousValues;
-
-    setPostDocPathArray(updatedValues);
-  }, [createdPostDocPath]);
-
-  useEffect(() => {
-    handleGetPostRecommendations();
-  }, []);
+    setServedPosts((prev) => {
+      return [
+        ...prev,
+        ...recommendedPostsDocPathArray.slice(prev.length, prev.length + 4),
+      ];
+    });
+  };
 
   if (loading)
     return (
@@ -98,12 +136,10 @@ const index = () => {
     );
 
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
+    <ScrollView
+      onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
+      scrollEventThrottle={500}
+      showsVerticalScrollIndicator={false}
     >
       <FlatList
         style={{
@@ -113,11 +149,12 @@ const index = () => {
           gap: 20,
         }}
         keyExtractor={(item) => item}
-        data={postDocPathArray}
+        data={servedPosts}
         renderItem={({ item }) => <Post postDocPath={item} key={item} />}
         showsVerticalScrollIndicator={false}
+        scrollEnabled={false}
       />
-    </SafeAreaView>
+    </ScrollView>
   );
 };
 

@@ -41,6 +41,40 @@ const _layout = () => {
             title: "Choose Provider",
           }}
         />
+        <Stack.Screen
+          name="createNFT"
+          options={{
+            presentation: "modal",
+            title: "Create NFT",
+          }}
+        />
+        <Stack.Screen
+          name="listNFT"
+          options={{
+            presentation: "modal",
+            title: "List NFT",
+          }}
+        />
+        <Stack.Screen
+          name="buyNFT"
+          options={{
+            presentation: "modal",
+            title: "Collect",
+          }}
+        />
+        <Stack.Screen
+          name="collectors"
+          options={{
+            presentation: "modal",
+            title: "Collectors",
+          }}
+        />
+        <Stack.Screen
+          name="wallet"
+          options={{
+            title: "Wallet",
+          }}
+        />
       </Stack>
     </>
   );

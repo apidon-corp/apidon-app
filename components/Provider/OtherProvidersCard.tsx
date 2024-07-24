@@ -5,7 +5,10 @@ import { IProviderShowcaseItem } from "@/types/Provider";
 import { Image } from "expo-image";
 import { apidonPink } from "@/constants/Colors";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
-import { auth } from "@/firebase/client";
+import auth from "@react-native-firebase/auth";
+import apiRoutes from "@/helpers/ApiRoutes";
+
+import appCheck from "@react-native-firebase/app-check";
 
 type Props = {
   providerData: IProviderShowcaseItem;
@@ -29,28 +32,22 @@ const OtherProvidersCard = ({
   };
 
   const handleChangeProvider = async () => {
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return false;
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      console.error("User panel base url couldnt fetch from .env file");
-      return false;
-    }
-
     if (changingProvider) return;
-
-    const route = `${userPanelBaseUrl}/api/provider/selectProvider`;
 
     setChangingProvider(true);
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
-      const response = await fetch(route, {
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+      const response = await fetch(apiRoutes.provider.selectProvider, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           providerName: providerData.name,

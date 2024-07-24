@@ -1,8 +1,6 @@
 import { apidonPink } from "@/constants/Colors";
-import { auth } from "@/firebase/client";
 import { useAuth } from "@/providers/AuthProvider";
 import { router, useLocalSearchParams } from "expo-router";
-import { signInWithEmailAndPassword } from "firebase/auth";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -18,6 +16,10 @@ import {
   TextInput,
   View,
 } from "react-native";
+
+import auth from "@react-native-firebase/auth";
+
+import * as Sentry from "@sentry/react-native";
 
 const password = () => {
   const authStatus = useAuth();
@@ -100,9 +102,12 @@ const password = () => {
     const decodedEmail = decodeURI(email);
 
     try {
-      await signInWithEmailAndPassword(auth, decodedEmail as string, password);
+      await auth().signInWithEmailAndPassword(decodedEmail as string, password);
     } catch (error) {
-      console.error("Error during login: ", error);
+      console.error("Error during login: \n", error);
+      Sentry.captureException(
+        `Error happened on pressing 'login' button on login after entering password:\n${error}`
+      );
       setError("Invalid Password");
     }
 

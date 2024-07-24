@@ -1,13 +1,17 @@
-import { View, ActivityIndicator, Pressable, Alert } from "react-native";
 import { Text } from "@/components/Text/Text";
-import React, { useEffect, useState } from "react";
+import apiRoutes from "@/helpers/ApiRoutes";
 import { RepletServerData } from "@/types/Frenlet";
 import { UserInServer } from "@/types/User";
-import { auth, firestore } from "@/firebase/client";
-import { doc, onSnapshot } from "firebase/firestore";
-import { Image } from "expo-image";
-import { formatDistanceToNow } from "date-fns";
 import { Entypo, Ionicons } from "@expo/vector-icons";
+import firestore from "@react-native-firebase/firestore";
+import { formatDistanceToNow } from "date-fns";
+import { Image } from "expo-image";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, Pressable, View } from "react-native";
+
+import auth from "@react-native-firebase/auth";
+
+import appCheck from "@react-native-firebase/app-check";
 
 type Props = {
   repletData: RepletServerData;
@@ -24,24 +28,23 @@ const Replet = ({ repletData, frenletOwners, frenletDocPath }: Props) => {
   useEffect(() => {
     if (!repletData) return;
 
-    const userDocRef = doc(firestore, `/users/${repletData.sender}`);
+    const unsubscribe = firestore()
+      .doc(`users/${repletData.sender}`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.error("User's realtime data can not be fecthed.");
+            return setSenderData(null);
+          }
 
-    const unsubscribe = onSnapshot(
-      userDocRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          console.error("User's realtime data can not be fecthed.");
-          return setSenderData(null);
+          const userData = snapshot.data() as UserInServer;
+          setSenderData(userData);
+        },
+        (error) => {
+          console.error(error);
+          setSenderData(null);
         }
-
-        const userData = snapshot.data() as UserInServer;
-        setSenderData(userData);
-      },
-      (error) => {
-        console.error(error);
-        setSenderData(null);
-      }
-    );
+      );
 
     return () => {
       unsubscribe();
@@ -53,7 +56,7 @@ const Replet = ({ repletData, frenletOwners, frenletDocPath }: Props) => {
   }, [auth, repletData, frenletOwners]);
 
   const checkCanDelete = () => {
-    const displayName = auth.currentUser?.displayName;
+    const displayName = auth().currentUser?.displayName;
     if (!displayName) return setCanDelete(false);
 
     const repletOwners = [repletData.sender, ...frenletOwners];
@@ -83,24 +86,20 @@ const Replet = ({ repletData, frenletOwners, frenletDocPath }: Props) => {
     if (deleteLoading) return;
     if (!canDelete) return;
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("User is not logged");
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      return console.error("User panel base url couldnt fetch from .env file");
-    }
     setDeleteLoading(true);
-
-    const route = `${userPanelBaseUrl}/api/frenlet/deleteReplet`;
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
-      const response = await fetch(route, {
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+      const response = await fetch(apiRoutes.frenlet.deleteReplet, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           frenletDocPath: frenletDocPath,
@@ -144,12 +143,13 @@ const Replet = ({ repletData, frenletOwners, frenletDocPath }: Props) => {
       }}
     >
       <Image
-        source={senderData.profilePhoto}
+        source={senderData.profilePhoto || require("@/assets/images/user.jpg")}
         style={{
           width: 48,
           height: 48,
           borderRadius: 24,
         }}
+        transition={500}
       />
       <View
         style={{

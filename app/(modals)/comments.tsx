@@ -1,12 +1,12 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import CommentItem from "@/components/Post/CommentItem";
 import { Text } from "@/components/Text/Text";
-import { auth, firestore } from "@/firebase/client";
+import firestore from "@react-native-firebase/firestore";
+import apiRoutes from "@/helpers/ApiRoutes";
 import { CommentServerData, PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { useAtomValue } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -20,6 +20,10 @@ import {
   TextInput,
   View,
 } from "react-native";
+
+import auth from "@react-native-firebase/auth";
+
+import appCheck from "@react-native-firebase/app-check";
 
 const comments = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
@@ -52,28 +56,28 @@ const comments = () => {
     if (loading) return;
     setLoading(true);
 
-    const postDocRef = doc(firestore, postDocPath);
-    const unsubscribe = onSnapshot(
-      postDocRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          console.log("Post's realtime data can not be fecthed.");
+    const unsubscribe = firestore()
+      .doc(postDocPath)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.log("Post's realtime data can not be fecthed.");
+            return setLoading(false);
+          }
+          const postDocData = snapshot.data() as PostServerData;
+
+          const sortedComments = postDocData.comments;
+          sortedComments.sort((a, b) => b.ts - a.ts);
+
+          setCommentData(sortedComments);
+
+          return setLoading(false);
+        },
+        (error) => {
+          console.error("Error on getting realtime data: ", error);
           return setLoading(false);
         }
-        const postDocData = snapshot.data() as PostServerData;
-
-        const sortedComments = postDocData.comments;
-        sortedComments.sort((a, b) => b.ts - a.ts);
-
-        setCommentData(sortedComments);
-
-        return setLoading(false);
-      },
-      (error) => {
-        console.error("Error on getting realtime data: ", error);
-        return setLoading(false);
-      }
-    );
+      );
 
     return () => unsubscribe();
   }, [postDocPath]);
@@ -145,18 +149,18 @@ const comments = () => {
     if (currentUserLoading) return;
     setCurrentUserLoading(true);
 
-    const displayName = auth.currentUser?.displayName;
+    const displayName = auth().currentUser?.displayName;
     if (!displayName) {
       setCurrentUserLoading(false);
       return console.error("Auth object doesn't have auth object");
     }
 
     try {
-      const userDocRef = doc(firestore, `users/${displayName}`);
+      const userDocSnapshot = await firestore()
+        .doc(`users/${displayName}`)
+        .get();
 
-      const userDocSnapshot = await getDoc(userDocRef);
-
-      if (!userDocSnapshot.exists()) {
+      if (!userDocSnapshot.exists) {
         setCurrentUserLoading(false);
         return console.error("User doesn't exist in database.");
       }
@@ -179,25 +183,20 @@ const comments = () => {
 
     if (trimmedComment.length === 0) return;
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("User is not logged");
-
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      return console.error("User panel base url couldnt fetch from .env file");
-    }
 
     setSendCommentLoading(true);
 
-    const route = `${userPanelBaseUrl}/api/postv3/postComment`;
-
     try {
       const idToken = await currentUserAuthObject.getIdToken();
-      const response = await fetch(route, {
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+      const response = await fetch(apiRoutes.post.comment.postComment, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           message: trimmedComment,
@@ -296,12 +295,16 @@ const comments = () => {
           }}
         >
           <Image
-            source={currentUserData.profilePhoto}
+            source={
+              currentUserData.profilePhoto ||
+              require("@/assets/images/user.jpg")
+            }
             style={{
               width: 50,
               height: 50,
               borderRadius: 25,
             }}
+            transition={500}
           />
           <TextInput
             placeholderTextColor="#808080"

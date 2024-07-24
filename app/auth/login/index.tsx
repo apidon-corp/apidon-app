@@ -1,3 +1,4 @@
+import apiRoutes from "@/helpers/ApiRoutes";
 import { CheckThereIsLinkedAccountApiResponseBody } from "@/types/ApiResponses";
 import { Link, router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -16,13 +17,25 @@ import {
   View,
 } from "react-native";
 
+import appCheck from "@react-native-firebase/app-check";
+
+import {
+  appleAuth,
+  AppleButton,
+} from "@invertase/react-native-apple-authentication";
+
+import {
+  GoogleSignin,
+  GoogleSigninButton,
+} from "@react-native-google-signin/google-signin";
+
+import auth from "@react-native-firebase/auth";
+
 const index = () => {
   const [emailUsername, setEmailUsername] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("regex");
-
-  const [isEmail, setIsEmail] = useState(false);
 
   const opacity = useRef(new Animated.Value(1)).current;
 
@@ -88,6 +101,14 @@ const index = () => {
     }
   }, [error]);
 
+  useEffect(() => {
+    if (loading) {
+      changeOpacity(0.5);
+    } else {
+      changeOpacity(1);
+    }
+  }, [loading]);
+
   const changeOpacity = (toValue: number) => {
     Animated.timing(opacity, {
       toValue: toValue,
@@ -129,8 +150,6 @@ const index = () => {
     const usernameRegex = /^[a-z0-9]{4,20}$/;
     const usernameRegexTestResult = usernameRegex.test(lowercasedInput);
 
-    setIsEmail(emailRegexTestResult);
-
     if (!(emailRegexTestResult || usernameRegexTestResult)) {
       setError("regex");
     }
@@ -140,39 +159,31 @@ const index = () => {
     setError("");
 
     try {
-      const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-      if (!userPanelBaseUrl) {
-        console.error("User panel base url couldnt fetch from .env file");
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
-        setError("Internal Server Error");
-        return false;
-      }
-
-      const userPanelApiKey = process.env.EXPO_PUBLIC_USER_PANEL_API_KEY;
-      if (!userPanelApiKey) {
-        console.error("User panel api key couldnt fetch from .env file");
-
-        setError("Internal Server Error");
-        return false;
-      }
-
-      const fetchUrl = `${userPanelBaseUrl}/api/user/authentication/login/checkIsThereLinkedAccount`;
-
-      const response = await fetch(fetchUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: userPanelApiKey,
-        },
-        body: JSON.stringify({
-          eu: emailOrUsername,
-        }),
-      });
+      const response = await fetch(
+        apiRoutes.user.authentication.login.checkThereIsLinkedAccount,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            appchecktoken,
+          },
+          body: JSON.stringify({
+            eu: emailOrUsername,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const message = await response.text();
 
-        console.error("Response from ", fetchUrl, " is not okay: ", message);
+        console.error(
+          "Response from ",
+          apiRoutes.user.authentication.login.checkThereIsLinkedAccount,
+          " is not okay: ",
+          message
+        );
 
         setError(message);
 
@@ -184,6 +195,11 @@ const index = () => {
 
       const emailFetched = result.email;
       const usernameFetched = result.username;
+
+      if (!emailFetched || !usernameFetched) {
+        setError("No user found with the provided email or username.");
+        return false;
+      }
 
       return {
         email: emailFetched,
@@ -198,6 +214,67 @@ const index = () => {
       return false;
     }
   };
+
+  const handleAppleSignInButton = async () => {
+    if (loading) return;
+
+    setLoading(true);
+
+    try {
+      const appleAuthRequestResponse = await appleAuth.performRequest({
+        requestedOperation: appleAuth.Operation.LOGIN,
+        requestedScopes: [appleAuth.Scope.FULL_NAME, appleAuth.Scope.EMAIL],
+      });
+
+      if (!appleAuthRequestResponse.identityToken) {
+        setLoading(false);
+        console.error("No identity token found in the response");
+        return setError("No identity token found");
+      }
+
+      const { identityToken, nonce } = appleAuthRequestResponse;
+
+      const appleCredential = auth.AppleAuthProvider.credential(
+        identityToken,
+        nonce
+      );
+
+      await auth().signInWithCredential(appleCredential);
+
+      return setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      return console.error("Error on Apple Sign In: ", error);
+    }
+  };
+
+  async function handleGoogleSignInButton() {
+    setLoading(true);
+
+    try {
+      GoogleSignin.configure({
+        webClientId: "",
+      });
+
+      // Check if your device supports Google Play
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
+      // Get the users ID token
+      const { idToken } = await GoogleSignin.signIn();
+
+      // Create a Google credential with the token
+      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+
+      // Sign-in the user with the credential
+      await auth().signInWithCredential(googleCredential);
+
+      return setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      return console.error("Error on Google Sign In: ", error);
+    }
+  }
 
   return (
     <SafeAreaView
@@ -253,7 +330,7 @@ const index = () => {
               disabled={error.length > 0}
             >
               {loading ? (
-                <ActivityIndicator color="white" />
+                <ActivityIndicator color="white" size={16} />
               ) : (
                 <Text
                   style={{
@@ -285,6 +362,28 @@ const index = () => {
             <Link style={{ color: "#d53f8cd9" }} href="/auth/signup">
               Sign Up!
             </Link>
+          </View>
+
+          <View id="apple-sign-in">
+            <AppleButton
+              buttonStyle={AppleButton.Style.BLACK}
+              buttonType={AppleButton.Type.CONTINUE}
+              onPress={handleAppleSignInButton}
+              style={{
+                width: 160,
+                height: 45,
+                borderWidth: 1,
+                borderColor: "white",
+                borderRadius: 10,
+              }}
+            />
+          </View>
+          <View id="google-sign-in">
+            <GoogleSigninButton
+              size={GoogleSigninButton.Size.Icon}
+              color={GoogleSigninButton.Color.Light}
+              onPress={handleGoogleSignInButton}
+            />
           </View>
         </Animated.View>
       </ScrollView>

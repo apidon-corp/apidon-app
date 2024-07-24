@@ -1,12 +1,14 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
-import { auth, firestore } from "@/firebase/client";
+import apiRoutes from "@/helpers/ApiRoutes";
 import { FrenletServerData } from "@/types/Frenlet";
 import { UserInServer } from "@/types/User";
+import { MaterialIcons } from "@expo/vector-icons";
+import firestore from "@react-native-firebase/firestore";
+import { formatDistanceToNow } from "date-fns";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { doc, onSnapshot } from "firebase/firestore";
 import { useSetAtom } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -17,8 +19,10 @@ import {
   View,
 } from "react-native";
 import Replet from "./Replet";
-import { MaterialIcons } from "@expo/vector-icons";
-import { formatDistanceToNow } from "date-fns";
+
+import auth from "@react-native-firebase/auth";
+
+import appCheck from "@react-native-firebase/app-check";
 
 type Props = {
   frenletDocPath: string;
@@ -44,27 +48,26 @@ const Frenlet = ({ frenletDocPath }: Props) => {
     if (!frenletDocPath) return;
     if (loading) return;
 
-    const frenletDocRef = doc(firestore, frenletDocPath);
-
     setLoading(true);
 
-    const unsubscribe = onSnapshot(
-      frenletDocRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          console.log("Frenlet's realtime data can not be fecthed.");
+    const unsubscribe = firestore()
+      .doc(frenletDocPath)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.log("Frenlet's realtime data can not be fecthed.");
+            return setLoading(false);
+          }
+          const frenletDocData = snapshot.data() as FrenletServerData;
+          setFrenletData(frenletDocData);
+
+          return setLoading(false);
+        },
+        (error) => {
+          console.error("Error on getting realtime frenlet data: ", error);
           return setLoading(false);
         }
-        const frenletDocData = snapshot.data() as FrenletServerData;
-        setFrenletData(frenletDocData);
-
-        return setLoading(false);
-      },
-      (error) => {
-        console.error("Error on getting realtime data: ", error);
-        return setLoading(false);
-      }
-    );
+      );
 
     return () => unsubscribe();
   }, [frenletDocPath]);
@@ -73,25 +76,24 @@ const Frenlet = ({ frenletDocPath }: Props) => {
   useEffect(() => {
     if (!frenletData) return;
 
-    const userDocRef = doc(firestore, `/users/${frenletData.frenletSender}`);
+    const unsubscribe = firestore()
+      .doc(`users/${frenletData.frenletSender}`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.error("User's realtime data can not be fecthed.");
+            return setSenderData(null);
+          }
 
-    const unsubscribe = onSnapshot(
-      userDocRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          console.error("User's realtime data can not be fecthed.");
+          const userDocData = snapshot.data() as UserInServer;
+
+          setSenderData(userDocData);
+        },
+        (error) => {
+          console.error("Error on getting realtime data: ", error);
           return setSenderData(null);
         }
-
-        const userDocData = snapshot.data() as UserInServer;
-
-        setSenderData(userDocData);
-      },
-      (error) => {
-        console.error("Error on getting realtime data: ", error);
-        return setSenderData(null);
-      }
-    );
+      );
 
     return () => unsubscribe();
   }, [frenletData]);
@@ -103,7 +105,7 @@ const Frenlet = ({ frenletDocPath }: Props) => {
   const checkCanDelete = () => {
     if (!frenletData) return setCanDelete(false);
 
-    const displayName = auth.currentUser?.displayName;
+    const displayName = auth().currentUser?.displayName;
     if (!displayName) return setCanDelete(false);
 
     const owners = [frenletData.frenletSender, frenletData.frenletReceiver];
@@ -133,28 +135,23 @@ const Frenlet = ({ frenletDocPath }: Props) => {
     if (!frenletData) return;
     if (frenletDeleteLoading) return;
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return false;
 
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      console.error("User panel base url couldnt fetch from .env file");
-      return false;
-    }
-
-    const route = `${userPanelBaseUrl}/api/frenlet/deleteFrenlet`;
-    const frenletDocPath = `/users/${frenletData.frenletSender}/frenlets/frenlets/outgoing/${frenletData.frenletDocId}`;
+    const frenletDocPath = `users/${frenletData.frenletSender}/frenlets/frenlets/outgoing/${frenletData.frenletDocId}`;
 
     setFrenletDeleteLoading(true);
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.frenlet.deleteFrenlet, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           frenletDocPath: frenletDocPath,
@@ -230,7 +227,9 @@ const Frenlet = ({ frenletDocPath }: Props) => {
         }}
       >
         <Image
-          source={senderData?.profilePhoto}
+          source={
+            senderData?.profilePhoto || require("@/assets/images/user.jpg")
+          }
           style={{
             width: 80,
             height: 80,
@@ -245,7 +244,7 @@ const Frenlet = ({ frenletDocPath }: Props) => {
         <Text
           style={{
             fontSize: 12,
-            color : "#808080"
+            color: "#808080",
           }}
         >
           {formatDistanceToNow(new Date(frenletData.ts))}

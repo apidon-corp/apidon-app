@@ -11,7 +11,8 @@ import React from "react";
 import { Pressable, StatusBar, View } from "react-native";
 
 import { Text } from "@/components/Text/Text";
-import { auth } from "@/firebase/client";
+
+import auth from "@react-native-firebase/auth";
 
 const _layout = () => {
   const notificationData = useNotification();
@@ -58,7 +59,8 @@ const _layout = () => {
             headerRight: () => (
               <Pressable
                 onPress={() => {
-                  const currentUserDisplayName = auth.currentUser?.displayName;
+                  const currentUserDisplayName =
+                    auth().currentUser?.displayName;
                   if (!currentUserDisplayName) return;
 
                   router.push(`home/profile/${currentUserDisplayName}`);
@@ -124,10 +126,10 @@ const _layout = () => {
           }}
         />
         <Tabs.Screen
-          name="(sidebar)"
+          name="nftMarket"
           options={{
             tabBarIcon: () => (
-              <Feather name="sidebar" size={25} color="white" />
+              <MaterialCommunityIcons name="shopping" size={25} color="white" />
             ),
             tabBarLabel: () => <></>,
             headerShown: false,

@@ -1,22 +1,17 @@
+import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
-import { firestore } from "@/firebase/client";
+import { useAuth } from "@/providers/AuthProvider";
+import { NFTTradeDocData } from "@/types/Trade";
+import { UserInServer } from "@/types/User";
+import firestore from "@react-native-firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Dimensions, View } from "react-native";
 import { FlatList, Switch } from "react-native-gesture-handler";
 import Post from "../Post/Post";
-import { Text } from "@/components/Text/Text";
-import {
-  collection,
-  doc,
-  onSnapshot,
-  orderBy,
-  query,
-} from "firebase/firestore";
-import CreateFrenlet from "../Frenlet/CreateFrenlet";
-import Frenlet from "../Frenlet/Frenlet";
 import Header from "./Header";
-import { UserInServer } from "@/types/User";
-import { useAuth } from "@/providers/AuthProvider";
+import NftContent from "./NftContent";
+import { useAtomValue } from "jotai";
+import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 
 type Props = {
   username: string;
@@ -25,16 +20,28 @@ type Props = {
 const UserContent = ({ username }: Props) => {
   const authStatus = useAuth();
 
+  const screenParameters = useAtomValue(screenParametersAtom);
+  const collectedNFTPostDocPath = screenParameters.find(
+    (q) => q.queryId === "collectedNFTPostDocPath"
+  )?.value as string;
+
   const [postDocPathArray, setPostDocPathArray] = useState<string[]>([]);
-  const [frenletDocPaths, setFrenletDocPaths] = useState<string[]>([]);
+  const [nftData, setNftData] = useState<{
+    createdNFTs: { nftDocPath: string; postDocPath: string; ts: number }[];
+    boughtNFTs: { nftDocPath: string; postDocPath: string; ts: number }[];
+  }>({
+    createdNFTs: [],
+    boughtNFTs: [],
+  });
+
   const [userData, setUserData] = useState<UserInServer | null>(null);
 
-  const [toggleValue, setToggleValue] = useState<"posts" | "frenlets">("posts");
+  const [toggleValue, setToggleValue] = useState<"posts" | "nfts">("nfts");
 
   const { height } = Dimensions.get("window");
 
   const onToggleValueChange = () => {
-    setToggleValue((prev) => (prev === "posts" ? "frenlets" : "posts"));
+    setToggleValue((prev) => (prev === "posts" ? "nfts" : "posts"));
   };
 
   // Post Fetching
@@ -44,85 +51,136 @@ const UserContent = ({ username }: Props) => {
 
     setPostDocPathArray([]);
 
-    const postsCollectionRef = collection(
-      firestore,
-      `/users/${username}/posts`
-    );
-    const postsQuery = query(
-      postsCollectionRef,
-      orderBy("creationTime", "desc")
-    );
-
-    const unsubscribe = onSnapshot(postsQuery, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === "added") {
-          setPostDocPathArray((prev) => [change.doc.ref.path, ...prev]);
-        } else if (change.type === "removed") {
-          setPostDocPathArray((prev) =>
-            prev.filter((path) => path !== change.doc.ref.path)
-          );
-        }
+    const unsubscribe = firestore()
+      .collection(`users/${username}/posts`)
+      .orderBy("creationTime", "desc")
+      .onSnapshot((snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === "added") {
+            setPostDocPathArray((prev) => [change.doc.ref.path, ...prev]);
+          } else if (change.type === "removed") {
+            setPostDocPathArray((prev) =>
+              prev.filter((path) => path !== change.doc.ref.path)
+            );
+          }
+        });
       });
-    });
 
     return () => unsubscribe();
   }, [username, authStatus]);
 
-  // Frenlet Fetching
+  // NFTs Fetching
   useEffect(() => {
     if (authStatus !== "authenticated") return;
-
     if (!username) return;
 
-    setFrenletDocPaths([]);
+    const unsubscribe = firestore()
+      .doc(`users/${username}/nftTrade/nftTrade`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.error("NFT Trade doc doesn't exist.");
+            return setNftData({
+              createdNFTs: [],
+              boughtNFTs: [],
+            });
+          }
 
-    const frenletsCollectionRef = collection(
-      firestore,
-      `/users/${username}/frenlets/frenlets/incoming`
-    );
-    const frenletsQuery = query(frenletsCollectionRef, orderBy("ts", "asc"));
+          const nftTradeData = snapshot.data() as NFTTradeDocData;
+          if (!nftTradeData) {
+            console.error("NFT Trade doc doesn't exist.");
+            return setNftData({
+              createdNFTs: [],
+              boughtNFTs: [],
+            });
+          }
 
-    const unsubscribe = onSnapshot(frenletsQuery, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === "added") {
-          setFrenletDocPaths((prev) => [change.doc.ref.path, ...prev]);
-        } else if (change.type === "removed") {
-          setFrenletDocPaths((prev) =>
-            prev.filter((path) => path !== change.doc.ref.path)
-          );
+          const boughtNFTs = nftTradeData.boughtNFTs;
+
+          boughtNFTs.sort((a, b) => b.ts - a.ts);
+
+          if (!boughtNFTs) {
+            console.error("BoughtNFTs is undefined on nftTrade doc");
+            return setNftData({
+              createdNFTs: [],
+              boughtNFTs: [],
+            });
+          }
+
+          const createdNFTs = nftTradeData.createdNFTs;
+
+          createdNFTs.sort((a, b) => b.ts - a.ts);
+
+          if (!createdNFTs) {
+            console.error("CreatedNFTs is undefined on nftTrade doc");
+            return setNftData({
+              createdNFTs: [],
+              boughtNFTs: [],
+            });
+          }
+
+          return setNftData({
+            createdNFTs: createdNFTs.map((c) => {
+              return {
+                nftDocPath: c.nftDocPath,
+                postDocPath: c.postDocPath,
+                ts: c.ts,
+              };
+            }),
+            boughtNFTs: boughtNFTs.map((b) => {
+              return {
+                nftDocPath: b.nftDocPath,
+                postDocPath: b.postDocPath,
+                ts: b.ts,
+              };
+            }),
+          });
+        },
+        (error) => {
+          console.error("Error on getting realtime nftTrade data: ", error);
+          return setNftData({
+            createdNFTs: [],
+            boughtNFTs: [],
+          });
         }
-      });
-    });
+      );
 
-    return () => unsubscribe();
+    () => unsubscribe();
   }, [username, authStatus]);
 
-  // Dynamic Data Fetching
+  // User Data Fetching
   useEffect(() => {
     if (authStatus !== "authenticated") return;
+    if (!username) return;
 
-    const userDocRef = doc(firestore, `/users/${username}`);
+    const unsubscribe = firestore()
+      .doc(`users/${username}`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.error("User's realtime data can not be fecthed.");
+            return setUserData(null);
+          }
 
-    const unsubscribe = onSnapshot(
-      userDocRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          console.error("User's realtime data can not be fecthed.");
+          const userDocData = snapshot.data() as UserInServer;
+
+          setUserData(userDocData);
+        },
+        (error) => {
+          console.error("Error on getting realtime data: ", error);
           return setUserData(null);
         }
-
-        const userDocData = snapshot.data() as UserInServer;
-
-        setUserData(userDocData);
-      },
-      (error) => {
-        console.error("Error on getting realtime data: ", error);
-        return setUserData(null);
-      }
-    );
+      );
 
     return () => unsubscribe();
   }, [username, authStatus]);
+
+  // New Purchased NFT Showing
+  useEffect(() => {
+    if (!collectedNFTPostDocPath) return;
+
+    setToggleValue("nfts");
+  }, [collectedNFTPostDocPath]);
 
   if (!userData)
     return (
@@ -172,7 +230,7 @@ const UserContent = ({ username }: Props) => {
             fontSize: 14,
           }}
         >
-          Frens
+          NFTs
         </Text>
       </View>
 
@@ -188,20 +246,12 @@ const UserContent = ({ username }: Props) => {
           scrollEnabled={false}
         />
       )}
-      {toggleValue === "frenlets" && (
+
+      {toggleValue === "nfts" && (
         <>
-          <CreateFrenlet username={username} />
-          <FlatList
-            contentContainerStyle={{
-              gap: 20,
-            }}
-            keyExtractor={(item) => item}
-            data={frenletDocPaths}
-            renderItem={({ item }) => (
-              <Frenlet frenletDocPath={item} key={item} />
-            )}
-            showsVerticalScrollIndicator={false}
-            scrollEnabled={false}
+          <NftContent
+            createdNFTs={nftData.createdNFTs}
+            boughtNFTs={nftData.boughtNFTs}
           />
         </>
       )}

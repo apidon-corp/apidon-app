@@ -1,7 +1,10 @@
 import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import React, { useState } from "react";
 import { AntDesign } from "@expo/vector-icons";
-import { auth } from "@/firebase/client";
+import auth from "@react-native-firebase/auth";
+import apiRoutes from "@/helpers/ApiRoutes";
+
+import appCheck from "@react-native-firebase/app-check";
 
 type Props = {
   userScore: number;
@@ -31,24 +34,19 @@ const Stars = (props: Props) => {
   };
 
   const handleSendRate = async (score: number) => {
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return false;
-
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      console.error("User panel base url couldnt fetch from .env file");
-      return false;
-    }
-
-    const route = `${userPanelBaseUrl}/api/provider/rateProvider`;
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
-      const response = await fetch(route, {
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
+      const response = await fetch(apiRoutes.provider.rateProvider, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           score: score,

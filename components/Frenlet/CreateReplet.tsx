@@ -1,9 +1,9 @@
 import { apidonPink } from "@/constants/Colors";
-import { auth, firestore } from "@/firebase/client";
+import apiRoutes from "@/helpers/ApiRoutes";
 import { UserInServer } from "@/types/User";
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
+import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
-import { doc, getDoc } from "firebase/firestore";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -14,6 +14,10 @@ import {
   TextInput,
   View,
 } from "react-native";
+
+import auth from "@react-native-firebase/auth";
+
+import appCheck from "@react-native-firebase/app-check";
 
 type Props = {
   frenletDocPath: string;
@@ -37,18 +41,18 @@ const CreateReplet = ({ frenletDocPath }: Props) => {
     if (currentUserLoading) return;
     setCurrentUserLoading(true);
 
-    const displayName = auth.currentUser?.displayName;
+    const displayName = auth().currentUser?.displayName;
     if (!displayName) {
       setCurrentUserLoading(false);
       return console.error("Auth object doesn't have auth object");
     }
 
     try {
-      const userDocRef = doc(firestore, `users/${displayName}`);
+      const userDocSnapshot = await firestore()
+        .doc(`/users/${displayName}`)
+        .get();
 
-      const userDocSnapshot = await getDoc(userDocRef);
-
-      if (!userDocSnapshot.exists()) {
+      if (!userDocSnapshot.exists) {
         setCurrentUserLoading(false);
         return console.error("User doesn't exist in database.");
       }
@@ -74,25 +78,21 @@ const CreateReplet = ({ frenletDocPath }: Props) => {
     const trimmedMessage = message.trim();
     if (trimmedMessage.length === 0) return;
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("User is not logged");
-
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      return console.error("User panel base url couldnt fetch from .env file");
-    }
 
     setMessageSendLoading(true);
 
-    const route = `${userPanelBaseUrl}/api/frenlet/sendReply`;
-
     try {
       const idToken = await currentUserAuthObject.getIdToken();
-      const response = await fetch(route, {
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
+      const response = await fetch(apiRoutes.frenlet.sendReply, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           message: trimmedMessage,
@@ -200,7 +200,9 @@ const CreateReplet = ({ frenletDocPath }: Props) => {
           height: 50,
           borderRadius: 25,
         }}
-        source={currentUserData?.profilePhoto}
+        source={
+          currentUserData?.profilePhoto || require("@/assets/images/user.jpg")
+        }
         transition={500}
       />
 

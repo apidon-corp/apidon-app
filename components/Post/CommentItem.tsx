@@ -1,13 +1,17 @@
-import { View, ActivityIndicator, Alert, Pressable } from "react-native";
 import { Text } from "@/components/Text/Text";
-import React, { useEffect, useState } from "react";
+import apiRoutes from "@/helpers/ApiRoutes";
 import { CommentServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
-import { auth, firestore } from "@/firebase/client";
-import { doc, getDoc } from "firebase/firestore";
-import { Image } from "expo-image";
 import { Entypo, Feather } from "@expo/vector-icons";
+import firestore from "@react-native-firebase/firestore";
 import { formatDistanceToNow } from "date-fns";
+import { Image } from "expo-image";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, Pressable, View } from "react-native";
+
+import auth from "@react-native-firebase/auth";
+
+import appCheck from "@react-native-firebase/app-check";
 
 type Props = {
   commentServerData: CommentServerData;
@@ -31,7 +35,7 @@ const CommentItem = ({
 
   useEffect(() => {
     if (sender) {
-      const displayName = auth.currentUser?.displayName;
+      const displayName = auth().currentUser?.displayName;
       setDoesOwnComment(sender === displayName);
     }
   }, [sender]);
@@ -42,11 +46,9 @@ const CommentItem = ({
     setLoading(true);
 
     try {
-      const userDocRef = doc(firestore, `/users/${sender}`);
+      const userDocSnapshot = await firestore().doc(`users/${sender}`).get();
 
-      const userDocSnapshot = await getDoc(userDocRef);
-
-      if (!userDocSnapshot.exists()) return;
+      if (!userDocSnapshot.exists) return;
 
       const userDocData = userDocSnapshot.data() as UserInServer;
 
@@ -82,15 +84,8 @@ const CommentItem = ({
 
     setCommentDeleteLoading(true);
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("User is not logged");
-
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      return console.error("User panel base url couldnt fetch from .env file");
-    }
-
-    const route = `${userPanelBaseUrl}/api/postv3/postCommentDelete`;
 
     const commentObject: CommentServerData = {
       message: message,
@@ -100,11 +95,13 @@ const CommentItem = ({
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
-      const response = await fetch(route, {
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+      const response = await fetch(apiRoutes.post.comment.postCommentDelete, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken: appchecktoken,
         },
         body: JSON.stringify({
           postDocPath: postDocPath,
@@ -159,7 +156,7 @@ const CommentItem = ({
         }}
       >
         <Image
-          source={userData.profilePhoto}
+          source={userData.profilePhoto || require("@/assets/images/user.jpg")}
           style={{
             width: 50,
             height: 50,

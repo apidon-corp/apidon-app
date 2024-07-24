@@ -1,4 +1,18 @@
+import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { Text } from "@/components/Text/Text";
+import { apidonPink } from "@/constants/Colors";
+import apiRoutes from "@/helpers/ApiRoutes";
+import { useAuth } from "@/providers/AuthProvider";
+import { PostServerData } from "@/types/Post";
+import { UserInServer } from "@/types/User";
+import { Entypo, Feather } from "@expo/vector-icons";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import firestore from "@react-native-firebase/firestore";
+import { formatDistanceToNowStrict } from "date-fns";
+import { Image } from "expo-image";
+import { router } from "expo-router";
+import { useSetAtom } from "jotai";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -6,29 +20,20 @@ import {
   Pressable,
   View,
 } from "react-native";
-
-import { auth, firestore } from "@/firebase/client";
-import { PostServerData } from "@/types/Post";
-import { UserInServer } from "@/types/User";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-
-import { Entypo, Feather } from "@expo/vector-icons";
-
-import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
-import { formatDistanceToNow } from "date-fns";
-import { Image } from "expo-image";
-import { router } from "expo-router";
-import { useSetAtom } from "jotai";
+import CustomBottomModalSheet from "../BottomSheet/CustomBottomModalSheet";
 import RateStar from "./Rating/RateStar";
 import Stars from "./Rating/Stars";
-import { useAuth } from "@/providers/AuthProvider";
+
+import auth from "@react-native-firebase/auth";
+
+import appCheck from "@react-native-firebase/app-check";
+import NftBottomSheetContent from "./NFT/NftBottomSheetContent";
 
 type Props = {
   postDocPath: string;
 };
 
-const Post = ({ postDocPath }: Props) => {
+const Post = React.memo(({ postDocPath }: Props) => {
   const authStatus = useAuth();
 
   const [loading, setLoading] = useState(false);
@@ -50,6 +55,10 @@ const Post = ({ postDocPath }: Props) => {
 
   const animatedScaleValue = useRef(new Animated.Value(1)).current;
 
+  const postOptionsModalRef = useRef<BottomSheetModal>(null);
+
+  const nftOptionsModalRef = useRef<BottomSheetModal>(null);
+
   const overallRating = useMemo(() => {
     if (!postDocData) return 0;
 
@@ -64,12 +73,81 @@ const Post = ({ postDocPath }: Props) => {
     return totalRates / rateCount;
   }, [postDocData?.rates]);
 
+  // Dynamic Data Fetching / Post Object
+  useEffect(() => {
+    if (authStatus !== "authenticated") return;
+    if (postDeleted) return;
+    if (!postDocPath) return;
+
+    setLoading(true);
+
+    const unsubscribe = firestore()
+      .doc(postDocPath)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.log("Post's realtime data can not be fecthed.");
+            return setLoading(false);
+          }
+          const postDocData = snapshot.data() as PostServerData;
+          setPostDocData(postDocData);
+
+          if (!postSenderData)
+            handleGetPostSenderInformation(postDocData.senderUsername);
+
+          setDoesOwnPost(
+            postDocData.senderUsername === auth().currentUser?.displayName
+          );
+
+          return setLoading(false);
+        },
+        (error) => {
+          console.error(
+            "Error on getting realtime data of post: ",
+            postDocPath,
+            "\n",
+            error
+          );
+          return setLoading(false);
+        }
+      );
+
+    return () => unsubscribe();
+  }, [postDocPath, authStatus, postDeleted]);
+
+  // Dynamic Data Fetching / Current User
+  useEffect(() => {
+    if (authStatus !== "authenticated") return;
+
+    const displayName = auth().currentUser?.displayName;
+    if (!displayName) return;
+
+    if (!postDocData) return;
+
+    const unsubscribe = firestore()
+      .doc(`users/${postDocData.senderUsername}/followers/${displayName}`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            setDoesFollow(false);
+          } else {
+            setDoesFollow(true);
+          }
+        },
+        (error) => {
+          console.error("Error on getting realtime data: ", error);
+        }
+      );
+
+    return () => unsubscribe();
+  }, [authStatus, postDocData?.senderUsername]);
+
   const handleGetPostSenderInformation = async (senderUsername: string) => {
     try {
-      const userDocRef = doc(firestore, `/users/${senderUsername}`);
-
-      const userDocSnapshot = await getDoc(userDocRef);
-      if (!userDocSnapshot.exists()) return setPostSenderData(null);
+      const userDocSnapshot = await firestore()
+        .doc(`users/${senderUsername}`)
+        .get();
+      if (!userDocSnapshot.exists) return setPostSenderData(null);
 
       const userDocData = userDocSnapshot.data() as UserInServer;
 
@@ -90,7 +168,12 @@ const Post = ({ postDocPath }: Props) => {
     router.push("/(modals)/comments");
   };
 
+  const handleOptionsButton = () => {
+    postOptionsModalRef.current?.present();
+  };
+
   const handleDeleteButton = () => {
+    postOptionsModalRef.current?.close();
     Alert.alert("Delete Post", "Are you sure to delete this post?", [
       {
         text: "Cancel",
@@ -107,25 +190,22 @@ const Post = ({ postDocPath }: Props) => {
   const handleDeletePost = async () => {
     if (postDeleteLoading) return;
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.log("No user is logged in.");
-
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl)
-      return console.error("User panel base url couldnt fetch from .env file");
-
-    const route = `${userPanelBaseUrl}/api/postv2/postDelete`;
 
     setPostDeleteLoading(true);
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
 
-      const response = await fetch(route, {
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
+      const response = await fetch(apiRoutes.post.postDelete, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           postDocPath: postDocPath,
@@ -155,29 +235,36 @@ const Post = ({ postDocPath }: Props) => {
     }
   };
 
+  const handleCreateNFTButton = () => {
+    if (!postDocData) return;
+    if (!postDocData.image) return;
+
+    postOptionsModalRef.current?.close();
+
+    setScreenParameters([{ queryId: "postDocPath", value: postDocPath }]);
+
+    router.push("/(modals)/createNFT");
+  };
+
   const handleFollowButton = async () => {
     if (followLoading) return;
     if (!postDocData?.senderUsername) return;
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("No user found!");
-
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl)
-      return console.error("User panel base url couldnt fetch from .env file");
-
-    const route = `${userPanelBaseUrl}/api/social/follow`;
 
     setFollowLoading(true);
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.user.social.follow, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           operationTo: postDocData.senderUsername,
@@ -201,71 +288,13 @@ const Post = ({ postDocPath }: Props) => {
     }
   };
 
-  // Dynamic Data Fetching / Post Object
-  useEffect(() => {
-    if (authStatus !== "authenticated") return;
-    if (postDeleted) return;
+  const handleNFTButton = () => {
+    nftOptionsModalRef.current?.present();
+  };
 
-    setLoading(true);
-
-    const postDocRef = doc(firestore, postDocPath);
-    const unsubscribe = onSnapshot(
-      postDocRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          console.log("Post's realtime data can not be fecthed.");
-          return setLoading(false);
-        }
-        const postDocData = snapshot.data() as PostServerData;
-        setPostDocData(postDocData);
-
-        if (!postSenderData)
-          handleGetPostSenderInformation(postDocData.senderUsername);
-
-        setDoesOwnPost(
-          postDocData.senderUsername === auth.currentUser?.displayName
-        );
-
-        return setLoading(false);
-      },
-      (error) => {
-        console.error("Error on getting realtime data: ", error);
-        return setLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [postDocPath, authStatus, postDeleted]);
-
-  // Dynamic Data Fetching / Current User
-  useEffect(() => {
-    if (authStatus !== "authenticated") return;
-
-    const displayName = auth.currentUser?.displayName;
-    if (!displayName) return;
-
-    if (!postDocData) return;
-
-    const postSenderFollowingDocOnCurrentUser = doc(
-      firestore,
-      `/users/${postDocData.senderUsername}/followers/${displayName}`
-    );
-    const unsubscribe = onSnapshot(
-      postSenderFollowingDocOnCurrentUser,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          setDoesFollow(false);
-        } else {
-          setDoesFollow(true);
-        }
-      },
-      (error) => {
-        console.error("Error on getting realtime data: ", error);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [authStatus, postDocData?.senderUsername]);
+  function closeNFTBottomSheet() {
+    nftOptionsModalRef.current?.close();
+  }
 
   if (loading)
     return (
@@ -287,109 +316,206 @@ const Post = ({ postDocPath }: Props) => {
     <>
       <Animated.View
         id="post-root"
-        style={{
-          width: "100%",
-          transform: [
-            {
-              scale: animatedScaleValue,
-            },
-          ],
-        }}
+        style={[
+          {
+            flex: 1,
+            transform: [
+              {
+                scale: animatedScaleValue,
+              },
+            ],
+          },
+        ]}
       >
         <View
           id="header"
           style={{
             width: "100%",
-            height: 75,
             flexDirection: "row",
             alignItems: "center",
-            paddingHorizontal: 10,
-            gap: 10,
+            padding: 10,
             justifyContent: "space-between",
           }}
         >
-          <Pressable
+          <View
+            id="sender-information"
             style={{
-              flexDirection: "row",
-              gap: 10,
-              alignItems: "center",
-            }}
-            onPress={() => {
-              router.push(`/home/profile/${postSenderData.username}`);
+              width: "55%",
+              overflow: "hidden",
             }}
           >
-            <Image
-              source={postSenderData.profilePhoto}
-              style={{
-                width: 50,
-                height: 50,
-                borderRadius: 25,
-              }}
-              transition={500}
-            />
-            <View
-              id="username-fullname-time"
+            <Pressable
+              id="user-data"
               style={{
                 flexDirection: "row",
-                gap: 5,
+                gap: 10,
+                alignItems: "center",
+              }}
+              onPress={() => {
+                router.push(`/home/profile/${postSenderData.username}`);
               }}
             >
-              <View
-                id="username-fullname"
+              <Image
+                source={
+                  postSenderData.profilePhoto ||
+                  require("@/assets/images/user.jpg")
+                }
                 style={{
-                  gap: 1,
+                  width: 50,
+                  height: 50,
+                  borderRadius: 25,
+                }}
+                transition={500}
+              />
+              <View
+                id="username-fullname-time"
+                style={{
+                  flexDirection: "row",
+                  gap: 5,
+                }}
+              >
+                <View
+                  id="username-fullname"
+                  style={{
+                    gap: 1,
+                  }}
+                >
+                  <Text
+                    bold
+                    style={{
+                      fontSize: 12,
+                    }}
+                  >
+                    {postSenderData.username}
+                  </Text>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 12,
+                      }}
+                    >
+                      {postSenderData.fullname}
+                    </Text>
+                    <Entypo name="dot-single" size={15} color="gray" />
+                    <Text style={{ fontSize: 12, color: "gray" }}>
+                      {formatDistanceToNowStrict(
+                        new Date(postDocData.creationTime)
+                      )}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </Pressable>
+          </View>
+
+          <View
+            style={{
+              width: "5%",
+            }}
+          />
+
+          {postDocData.nftStatus.convertedToNft && (
+            <View
+              id="nft-tag"
+              style={{
+                width: "30%",
+                overflow: "hidden",
+              }}
+            >
+              <Pressable
+                onPress={handleNFTButton}
+                style={{
+                  width: "100%",
+                  borderWidth: 1,
+                  borderColor: apidonPink,
+                  borderRadius: 6,
+                  flexDirection: "row",
+                  padding: 4,
+                  gap: 2,
+                  justifyContent: "center",
                 }}
               >
                 <Text
                   bold
                   style={{
-                    fontSize: 15,
+                    color: apidonPink,
+                    textAlign: "center",
+                  }}
+                  fontSize={12}
+                >
+                  NFT
+                </Text>
+                <Text fontSize={12}>by</Text>
+                <Text
+                  bold
+                  fontSize={12}
+                  numberOfLines={1}
+                  style={{
+                    overflow: "hidden",
                   }}
                 >
                   {postSenderData.username}
                 </Text>
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <Text
-                    style={{
-                      fontSize: 15,
-                    }}
-                  >
-                    {postSenderData.fullname}
-                  </Text>
-                  <Entypo name="dot-single" size={15} color="gray" />
-                  <Text style={{ fontSize: 12, color: "gray" }}>
-                    {formatDistanceToNow(new Date(postDocData.creationTime))}
-                  </Text>
-                </View>
-              </View>
+              </Pressable>
             </View>
-          </Pressable>
+          )}
+          {(doesOwnPost || !doesFollow) && (
+            <View
+              style={{
+                width: "5%",
+              }}
+            />
+          )}
+
           {doesOwnPost ? (
-            <Pressable
-              onPress={handleDeleteButton}
-              disabled={postDeleteLoading}
+            <View
+              id="settings-button"
+              style={{
+                width: "5%",
+                alignItems: "flex-end",
+                overflow: "hidden",
+              }}
             >
-              {postDeleteLoading ? (
-                <ActivityIndicator color="red" />
-              ) : (
-                <Feather name="delete" size={24} color="red" />
-              )}
-            </Pressable>
-          ) : (
-            !doesFollow && (
               <Pressable
-                onPress={handleFollowButton}
-                style={{
-                  padding: 5,
-                }}
-                disabled={followLoading}
+                onPress={handleOptionsButton}
+                disabled={postDeleteLoading}
               >
-                {followLoading ? (
-                  <ActivityIndicator color="white" />
+                {postDeleteLoading ? (
+                  <ActivityIndicator color="red" />
                 ) : (
-                  <Feather name="user-plus" size={24} color="white" />
+                  <Entypo name="dots-three-vertical" size={18} color="white" />
                 )}
               </Pressable>
+            </View>
+          ) : (
+            !doesFollow && (
+              <View
+                style={{
+                  width: "10%",
+                  alignItems: "flex-end",
+                  overflow: "hidden",
+                }}
+              >
+                <Pressable
+                  onPress={handleFollowButton}
+                  style={{
+                    padding: 5,
+                  }}
+                  disabled={followLoading}
+                >
+                  {followLoading ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <Feather name="user-plus" size={24} color="white" />
+                  )}
+                </Pressable>
+              </View>
             )
           )}
         </View>
@@ -399,7 +525,7 @@ const Post = ({ postDocPath }: Props) => {
             source={postDocData.image}
             style={{
               width: "100%",
-              height: 350,
+              aspectRatio: 1,
             }}
             transition={500}
           />
@@ -449,7 +575,7 @@ const Post = ({ postDocPath }: Props) => {
               <RateStar
                 previousValue={
                   postDocData.rates.find(
-                    (r) => r.sender === auth.currentUser?.displayName
+                    (r) => r.sender === auth().currentUser?.displayName
                   )?.rate
                 }
                 postDocPath={postDocPath}
@@ -507,8 +633,66 @@ const Post = ({ postDocPath }: Props) => {
           </Pressable>
         </View>
       </Animated.View>
+
+      <CustomBottomModalSheet ref={postOptionsModalRef} snapPoint="25%">
+        <View
+          style={{
+            flex: 1,
+            gap: 10,
+          }}
+        >
+          {postDocData.image && !postDocData.nftStatus.convertedToNft && (
+            <Pressable
+              onPress={handleCreateNFTButton}
+              style={{
+                padding: 10,
+                borderRadius: 10,
+                backgroundColor: apidonPink,
+                width: "100%",
+                alignItems: "center",
+              }}
+            >
+              <Text bold style={{ fontSize: 16 }}>
+                Create NFT
+              </Text>
+            </Pressable>
+          )}
+
+          <Pressable
+            style={{
+              padding: 10,
+              borderRadius: 10,
+              backgroundColor: "red",
+              width: "100%",
+              alignItems: "center",
+            }}
+            onPress={handleDeleteButton}
+          >
+            <Text
+              bold
+              style={{
+                fontSize: 16,
+              }}
+            >
+              Delete
+            </Text>
+          </Pressable>
+        </View>
+      </CustomBottomModalSheet>
+
+      <CustomBottomModalSheet
+        ref={nftOptionsModalRef}
+        snapPoint="40%"
+        backgroundColor="#1B1B1B"
+      >
+        <NftBottomSheetContent
+          postData={postDocData}
+          postSenderData={postSenderData}
+          closeNFTBottomSheet={closeNFTBottomSheet}
+        />
+      </CustomBottomModalSheet>
     </>
   );
-};
+});
 
 export default Post;

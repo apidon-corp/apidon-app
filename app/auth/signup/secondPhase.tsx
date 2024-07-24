@@ -1,31 +1,28 @@
+import React, { useEffect, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  SafeAreaView,
-  TextInput,
-  StyleSheet,
-  Image,
-  Pressable,
-  ScrollView,
+  ActivityIndicator,
   Animated,
   Dimensions,
+  Image,
   Keyboard,
-  ActivityIndicator,
-  TurboModuleRegistry,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
 
-import { MaterialIcons } from "@expo/vector-icons";
-import {
-  CheckThereIsLinkedAccountApiResponseBody,
-  VerificationCodeSendApiErrorResponseBody,
-} from "@/types/ApiResponses";
-import { router, useLocalSearchParams } from "expo-router";
 import { apidonPink } from "@/constants/Colors";
+import apiRoutes from "@/helpers/ApiRoutes";
+import { VerificationCodeSendApiErrorResponseBody } from "@/types/ApiResponses";
+import { MaterialIcons } from "@expo/vector-icons";
+import { router, useLocalSearchParams } from "expo-router";
 
-type Props = {};
+import appCheck from "@react-native-firebase/app-check";
 
-const secondPhase = (props: Props) => {
+const secondPhase = () => {
   const { referralCode } = useLocalSearchParams<{
     referralCode: string;
   }>();
@@ -188,35 +185,26 @@ const secondPhase = (props: Props) => {
    */
   const checkUsernameCanBeUsed = async (username: string) => {
     try {
-      const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-      if (!userPanelBaseUrl) {
-        console.error("User panel base url couldnt fetch from .env file");
-        return false;
-      }
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
-      const userPanelApiKey = process.env.EXPO_PUBLIC_USER_PANEL_API_KEY;
-      if (!userPanelApiKey) {
-        console.error("User panel api key couldnt fetch from .env file");
-        return false;
-      }
-
-      const fetchUrl = `${userPanelBaseUrl}/api/user/authentication/login/checkIsThereLinkedAccount`;
-
-      const response = await fetch(fetchUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: userPanelApiKey,
-        },
-        body: JSON.stringify({
-          eu: username,
-        }),
-      });
+      const response = await fetch(
+        apiRoutes.user.authentication.login.checkThereIsLinkedAccount,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            appchecktoken,
+          },
+          body: JSON.stringify({
+            eu: username,
+          }),
+        }
+      );
 
       if (!response.ok) {
         console.log(
           "Response from ",
-          fetchUrl,
+          apiRoutes.user.authentication.login.checkThereIsLinkedAccount,
           " is not okay: ",
           await response.text()
         );
@@ -279,35 +267,26 @@ const secondPhase = (props: Props) => {
   };
 
   const handleSignUp = async () => {
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      console.error("User panel base url couldnt fetch from .env file");
-      return false;
-    }
-
-    const userPanelApiKey = process.env.EXPO_PUBLIC_USER_PANEL_API_KEY;
-    if (!userPanelApiKey) {
-      console.error("User panel api key couldnt fetch from .env file");
-      return false;
-    }
-
-    const fetchUrl = `${userPanelBaseUrl}/api/user/authentication/signup/verificationCodeSend`;
-
     try {
-      const response = await fetch(fetchUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: userPanelApiKey,
-        },
-        body: JSON.stringify({
-          referralCode: referralCode,
-          email: email,
-          password: password,
-          username: username,
-          fullname: fullname,
-        }),
-      });
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
+      const response = await fetch(
+        apiRoutes.user.authentication.signup.sendVerificationCode,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            appchecktoken,
+          },
+          body: JSON.stringify({
+            referralCode: referralCode,
+            email: email,
+            password: password,
+            username: username,
+            fullname: fullname,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorResponse =
@@ -315,7 +294,7 @@ const secondPhase = (props: Props) => {
 
         console.error(
           "Response from ",
-          fetchUrl,
+          apiRoutes.user.authentication.signup.sendVerificationCode,
           " is not okay: ",
           errorResponse
         );

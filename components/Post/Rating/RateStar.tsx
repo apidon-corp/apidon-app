@@ -9,8 +9,13 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import CurvedStars from "./CurvedStars";
-import { auth } from "@/firebase/client";
+
 import { apidonPink } from "@/constants/Colors";
+import apiRoutes from "@/helpers/ApiRoutes";
+
+import auth from "@react-native-firebase/auth";
+
+import appCheck from "@react-native-firebase/app-check";
 
 type Props = {
   previousValue: number | undefined;
@@ -82,24 +87,19 @@ const RateStar = ({ previousValue, postDocPath }: Props) => {
 
     setLoading(true);
 
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("User is not logged");
-
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      return console.error("User panel base url couldnt fetch from .env file");
-    }
-
-    const route = `${userPanelBaseUrl}/api/postv3/postRate`;
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
 
-      const response = await fetch(route, {
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+      const response = await fetch(apiRoutes.post.rate.postRate, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           rating: rateValue,

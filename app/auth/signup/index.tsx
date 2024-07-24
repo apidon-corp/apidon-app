@@ -1,4 +1,5 @@
 import { apidonPink } from "@/constants/Colors";
+import apiRoutes from "@/helpers/ApiRoutes";
 import { Link, router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -15,6 +16,8 @@ import {
   TextInput,
   View,
 } from "react-native";
+
+import appCheck from "@react-native-firebase/app-check";
 
 const index = () => {
   const [referralCode, setReferralCode] = useState("");
@@ -84,30 +87,21 @@ const index = () => {
 
   const getReferralCodeStatus = async (referralCodeInput: string) => {
     try {
-      const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-      if (!userPanelBaseUrl) {
-        console.error("User panel base url couldnt fetch from .env file");
-        return false;
-      }
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
-      const userPanelApiKey = process.env.EXPO_PUBLIC_USER_PANEL_API_KEY;
-      if (!userPanelApiKey) {
-        console.error("User panel api key couldnt fetch from .env file");
-        return false;
-      }
-
-      const fetchUrl = `${userPanelBaseUrl}/api/user/authentication/signup/checkReferralCode`;
-
-      const response = await fetch(fetchUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: userPanelApiKey,
-        },
-        body: JSON.stringify({
-          referralCode: referralCodeInput,
-        }),
-      });
+      const response = await fetch(
+        apiRoutes.user.authentication.signup.checkReferralCode,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            appchecktoken,
+          },
+          body: JSON.stringify({
+            referralCode: referralCodeInput,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const message = await response.text();

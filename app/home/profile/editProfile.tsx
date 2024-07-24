@@ -15,13 +15,17 @@ import {
 } from "react-native";
 
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
-import { auth, storage } from "@/firebase/client";
+import storage from "@react-native-firebase/storage";
 import * as ImagePicker from "expo-image-picker";
 
-import createBlobFromURI from "@/utils/createBlobFromURI";
+import apiRoutes from "@/helpers/ApiRoutes";
 import { Image } from "expo-image";
-import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { useAtomValue } from "jotai";
+
+import createBlobFromURI from "@/utils/createBlobFromURI";
+import auth from "@react-native-firebase/auth";
+
+import appCheck from "@react-native-firebase/app-check";
 
 const editProfile = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
@@ -174,21 +178,20 @@ const editProfile = () => {
   };
 
   const uploadImage = async (image: string) => {
-    const displayName = auth.currentUser?.displayName;
+    const displayName = auth().currentUser?.displayName;
     if (!displayName) {
       console.error("Display name not found");
       return false;
     }
 
     try {
-      const path = `users/${displayName}/profilePhoto.jpg`;
-      const storageRef = ref(storage, path);
-
       const blob = await createBlobFromURI(image);
 
-      await uploadBytesResumable(storageRef, blob);
+      const path = `users/${displayName}/profilePhoto`;
 
-      const downloadURL = await getDownloadURL(storageRef);
+      await storage().ref(path).put(blob);
+
+      const downloadURL = await storage().ref(path).getDownloadURL();
 
       return downloadURL;
     } catch (error) {
@@ -198,26 +201,20 @@ const editProfile = () => {
   };
 
   const updateImage = async (imageURL: string) => {
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return false;
-
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      console.error("User panel base url couldnt fetch from .env file");
-      setError("Internal Server Error");
-      return false;
-    }
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
 
-      const route = `${userPanelBaseUrl}/api/mobile/updateProfileImage`;
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.user.personal.updateProfileImage, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           image: imageURL,
@@ -255,26 +252,20 @@ const editProfile = () => {
   };
 
   const updateFullname = async (fullname: string) => {
-    const currentUserAuthObject = auth.currentUser;
+    const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return false;
-
-    const userPanelBaseUrl = process.env.EXPO_PUBLIC_USER_PANEL_ROOT_URL;
-    if (!userPanelBaseUrl) {
-      console.error("User panel base url couldnt fetch from .env file");
-      setError("Internal Server Error");
-      return false;
-    }
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
 
-      const route = `${userPanelBaseUrl}/api/user/fullnameUpdate`;
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
-      const response = await fetch(route, {
+      const response = await fetch(apiRoutes.user.personal.fullnameUpdate, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           authorization: `Bearer ${idToken}`,
+          appchecktoken,
         },
         body: JSON.stringify({
           fullname: fullname,
