@@ -221,17 +221,35 @@ const welcome = () => {
           id="or-header"
           style={{
             alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "row",
+            gap: 5,
           }}
         >
+          <View
+            style={{
+              borderWidth: 1,
+              borderColor: "gray",
+              height: 1,
+              width: 100,
+            }}
+          />
           <Text
-            bold
             style={{
               color: "white",
-              fontSize: 16,
+              fontSize: 14,
             }}
           >
             Or
           </Text>
+          <View
+            style={{
+              borderWidth: 1,
+              borderColor: "gray",
+              height: 1,
+              width: 100,
+            }}
+          />
         </View>
         <View
           id="email-auth"

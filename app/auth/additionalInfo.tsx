@@ -1,32 +1,186 @@
-import {
-  View,
-  SafeAreaView,
-  Pressable,
-  ActivityIndicator,
-  Button,
-  TextInput,
-} from "react-native";
 import { Text } from "@/components/Text/Text";
-import React, { useState } from "react";
 import apiRoutes from "@/helpers/ApiRoutes";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Dimensions,
+  Keyboard,
+  Pressable,
+  TextInput,
+  View,
+} from "react-native";
 
+import { Entypo, Ionicons } from "@expo/vector-icons";
+import appleAuth from "@invertase/react-native-apple-authentication";
 import appCheck from "@react-native-firebase/app-check";
-import { router } from "expo-router";
 import auth from "@react-native-firebase/auth";
+import { Image } from "expo-image";
+import { router } from "expo-router";
+import { ScrollView } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const additionalInfo = () => {
   const [username, setUsername] = useState("");
-  const [isUsernameValid, setIsUsernameValid] = useState(true);
+  const [isUsernameValid, setIsUsernameValid] = useState(false);
 
   const [fullname, setFullname] = useState("");
-  const [isFullnameValid, setIsFullnameValid] = useState(true);
+  const [isFullnameValid, setIsFullnameValid] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [checkUsernameLoading, setCheckUsernameLoading] = useState(false);
+
+  const [buttonActiveStatus, setButtonActiveStatus] = useState(false);
+
+  const [usernameError, setUsernameError] = useState("");
+  const [fullnameError, setFullnameError] = useState("");
 
   const [error, setError] = useState("");
 
+  const { bottom } = useSafeAreaInsets();
+
+  const bodyContainerRef = useRef<null | View>(null);
+  const containerRef = useRef<null | View>(null);
+  const screenHeight = Dimensions.get("window").height;
+  const animatedTranslateValue = useRef(new Animated.Value(0)).current;
+
+  const errorOpacity = useRef(new Animated.Value(1)).current;
+  const buttonOpactiy = useRef(new Animated.Value(1)).current;
+
+  const timeout = useRef<NodeJS.Timeout | null>(null);
+
+  const [isProviderApple, setIsProviderApple] = useState(false);
+  const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
+
+  // Error Handling
+  useEffect(() => {
+    if (usernameError && username.length > 0) return setError(usernameError);
+    if (fullnameError && fullname.length > 0) return setError(fullnameError);
+    return setError("");
+  }, [username, usernameError, fullname, fullnameError]);
+
+  // Error Opacity Handling
+  useEffect(() => {
+    if (error.length === 0) {
+      changeErrorOpacity(0);
+    } else {
+      changeErrorOpacity(1);
+    }
+  }, [error]);
+
+  // Continue Button Status Handling
+  useEffect(() => {
+    const buttonActiveStatusDetermined =
+      isUsernameValid &&
+      isFullnameValid &&
+      !loading &&
+      !checkUsernameLoading &&
+      !deleteAccountLoading;
+
+    setButtonActiveStatus(buttonActiveStatusDetermined);
+  }, [
+    isUsernameValid,
+    isFullnameValid,
+    checkUsernameLoading,
+    loading,
+    deleteAccountLoading,
+  ]);
+
+  // Continue Button Opacity Handling
+  useEffect(() => {
+    if (buttonActiveStatus) {
+      changeButtonOpacity(1);
+    } else {
+      changeButtonOpacity(0.5);
+    }
+  }, [buttonActiveStatus]);
+
+  // Check proivder if apple
+  useEffect(() => {
+    const currentUser = auth().currentUser;
+    if (!currentUser) return setIsProviderApple(false);
+
+    const providerData = currentUser.providerData;
+    const providerId = providerData[0].providerId;
+
+    const isApple = providerId === "apple.com";
+
+    setIsProviderApple(isApple);
+  }, []);
+
+  // Keyboard-Layout Change
+  useEffect(() => {
+    const keyboardWillShowListener = Keyboard.addListener(
+      "keyboardWillShow",
+      (event) => {
+        if (Keyboard.isVisible()) return;
+
+        const keyboardHeight = event.endCoordinates.height;
+
+        if (bodyContainerRef.current) {
+          bodyContainerRef.current.measure(
+            (x, y, width, height, pageX, pageY) => {
+              const containerBottom = pageY + height;
+              const distanceFromBottom = screenHeight - containerBottom;
+
+              let toValue = 0;
+              if (distanceFromBottom > keyboardHeight) {
+                toValue = 0;
+              } else {
+                toValue = keyboardHeight - distanceFromBottom;
+              }
+
+              Animated.timing(animatedTranslateValue, {
+                toValue: -toValue,
+                duration: 250,
+                useNativeDriver: true,
+              }).start();
+            }
+          );
+        }
+      }
+    );
+
+    const keyboardWillHideListener = Keyboard.addListener(
+      "keyboardWillHide",
+      (event) => {
+        let toValue = 0;
+
+        Animated.timing(animatedTranslateValue, {
+          toValue: toValue,
+          duration: 250,
+          useNativeDriver: true,
+        }).start();
+      }
+    );
+
+    return () => {
+      keyboardWillShowListener.remove();
+      keyboardWillHideListener.remove();
+    };
+  }, []);
+
+  const changeErrorOpacity = (toValue: number) => {
+    Animated.timing(errorOpacity, {
+      toValue: toValue,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const changeButtonOpacity = (toValue: number) => {
+    Animated.timing(buttonOpactiy, {
+      toValue: toValue,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+  };
+
   const handleUsernameChange = async (input: string) => {
-    setError("");
+    setCheckUsernameLoading(true);
+
+    setUsernameError("");
 
     // Transform input
     input = input
@@ -41,16 +195,28 @@ const additionalInfo = () => {
     setIsUsernameValid(isValid);
 
     if (!isValid) {
-      setError(
+      setUsernameError(
         "Please enter a username consisting of 4 to 20 characters, using only lowercase letters (a-z) and digits (0-9)."
       );
-      return;
+      setCheckUsernameLoading(false);
+      return false;
     }
 
-    const canUse = await checkUsernameCanBeUsed(input);
-    if (!canUse) {
-      setIsUsernameValid(false);
+    if (timeout.current) {
+      clearTimeout(timeout.current);
     }
+
+    timeout.current = setTimeout(async () => {
+      const canUse = await checkUsernameCanBeUsed(input);
+      if (!canUse) {
+        setIsUsernameValid(false);
+        setUsernameError("This username is already taken.");
+      } else {
+        setIsUsernameValid(true);
+        setUsernameError("");
+      }
+      setCheckUsernameLoading(false);
+    }, 2000);
   };
 
   const checkUsernameCanBeUsed = async (username: string) => {
@@ -70,41 +236,31 @@ const additionalInfo = () => {
       );
 
       if (!response.ok) {
-        console.log(
+        console.error(
           "Response from ",
           apiRoutes.user.authentication.login.checkThereIsLinkedAccount,
           " is not okay: ",
           await response.text()
         );
-        setError("");
-        setIsUsernameValid(true);
         return false;
       }
 
       const { username: usernameFetched, email } = await response.json();
 
-      if (!usernameFetched || !email) {
-        setError("");
-        setIsUsernameValid(true);
-        return true;
-      }
+      if (!usernameFetched && !email) return true;
 
-      setError("Username is used.");
-      setIsUsernameValid(false);
       return false;
     } catch (error) {
       console.error(
         "Error on fetching to checkThereIsLinkedAccount API from apidon-user side: ",
         error
       );
-      setError("Internal Server Error");
-      setIsUsernameValid(false);
       return false;
     }
   };
 
   const handleFullnameChange = (input: string) => {
-    setError("");
+    setFullnameError("");
     input = input.replace(/[^\p{L}\p{N}\s]/gu, "");
     setFullname(input);
 
@@ -115,23 +271,29 @@ const additionalInfo = () => {
 
     // Explain Error
     if (!regexTestResult)
-      setError(
+      setFullnameError(
         "Please enter your full name consisting of 3 to 20 characters, using letters and spaces."
       );
   };
 
   const handleContinueButton = async () => {
     if (loading) return;
+    if (!buttonActiveStatus) return;
+
+    setLoading(true);
 
     const currentUserAuthObject = auth().currentUser;
 
     if (!currentUserAuthObject) {
       console.error("User not logged in.");
       setError("You are not logged in.");
-      return;
+      return setLoading(false);
     }
 
-    setLoading(true);
+    const usernameAvaliable = await checkUsernameCanBeUsed(username);
+    if (!usernameAvaliable) return setLoading(false);
+
+    setError("");
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
@@ -194,148 +356,295 @@ const additionalInfo = () => {
     }
   };
 
+  const handleDeleteAccountButton = () => {
+    if (loading) return;
+    if (deleteAccountLoading) return;
+
+    Alert.alert(
+      "Delete Account",
+      "Are you sure you want to delete your account? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        { text: "Delete", onPress: () => handleDeleteAccount() },
+      ]
+    );
+  };
+
+  const handleDeleteAccount = async () => {
+    if (loading || deleteAccountLoading) return;
+
+    setDeleteAccountLoading(true);
+
+    try {
+      const { authorizationCode } = await appleAuth.performRequest({
+        requestedOperation: appleAuth.Operation.REFRESH,
+      });
+
+      if (!authorizationCode) {
+        console.error(
+          "Apple Revocation failed - no authorizationCode returned"
+        );
+        return setDeleteAccountLoading(false);
+      }
+
+      await auth().revokeToken(authorizationCode);
+
+      setDeleteAccountLoading(false);
+
+      return router.back();
+    } catch (error) {
+      console.error("Error on deleting account: ", error);
+      setDeleteAccountLoading(false);
+    }
+  };
+
   return (
-    <SafeAreaView
-      style={{
+    <ScrollView
+      contentContainerStyle={{
         flex: 1,
-        gap: 20,
       }}
     >
-      <View id="finish-header">
-        <Text
-          bold
-          style={{
-            fontSize: 32,
-          }}
-        >
-          Set your account
-        </Text>
-      </View>
-
-      <View id="username" style={{ gap: 10 }}>
-        <Text bold>Username</Text>
-        <TextInput
-          style={[
-            {
-              width: "100%",
-              height: 45,
-              color: "white",
-              backgroundColor: "black",
-              borderWidth: 1,
-              borderColor: "white",
-              borderRadius: 10,
-              padding: 10,
-            },
-            {
-              borderColor:
-                isUsernameValid || username.length === 0 ? "white" : "red",
-            },
-          ]}
-          placeholder="Username"
-          placeholderTextColor="#808080"
-          autoCapitalize="none"
-          keyboardType="default"
-          value={username}
-          onChangeText={handleUsernameChange}
-          onSubmitEditing={() => {}}
-        />
-      </View>
-      <View id="fullname" style={{ gap: 10 }}>
-        <Text bold>Full Name</Text>
-        <TextInput
-          style={[
-            {
-              width: "100%",
-              height: 45,
-              color: "white",
-              backgroundColor: "black",
-              borderWidth: 1,
-              borderColor: "white",
-              borderRadius: 10,
-              padding: 10,
-            },
-            {
-              borderColor:
-                isFullnameValid || fullname.length === 0 ? "white" : "red",
-            },
-          ]}
-          placeholder="Full Name"
-          placeholderTextColor="#808080"
-          autoCapitalize="words"
-          keyboardType="default"
-          value={fullname}
-          onChangeText={handleFullnameChange}
-          onSubmitEditing={() => {}}
-        />
-      </View>
-
-      {error.length > 0 && (
-        <View
-          id="error"
-          style={{
-            width: "100%",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text
-            style={{
-              color: "red",
-            }}
-          >
-            {error}
-          </Text>
-        </View>
-      )}
-
-      <View
+      <Animated.View
+        ref={containerRef}
         style={{
+          position: "relative",
           flex: 1,
           width: "100%",
-
+          justifyContent: "center",
           alignItems: "center",
+          transform: [{ translateY: animatedTranslateValue }],
         }}
       >
-        <Pressable
-          disabled={
-            !isUsernameValid ||
-            !isFullnameValid ||
-            username.length === 0 ||
-            fullname.length === 0
-          }
-          id="continue-button"
+        <View
+          id="set-account-header"
           style={{
-            backgroundColor: "white",
-            borderRadius: 10,
-            padding: 10,
-            width: "50%",
+            width: "100%",
+            justifyContent: "center",
             alignItems: "center",
+            gap: 20,
           }}
-          onPress={handleContinueButton}
         >
-          {loading ? (
-            <ActivityIndicator color="black" />
-          ) : (
+          <View
+            id="apidon-image"
+            style={{
+              width: "100%",
+              alignItems: "center",
+            }}
+          >
+            <Image
+              source={require("@/assets/images/logo.png")}
+              style={{
+                width: 100,
+                height: 100,
+              }}
+            />
+          </View>
+          <Text
+            bold
+            style={{
+              fontSize: 32,
+            }}
+          >
+            Set Your Account
+          </Text>
+        </View>
+
+        <View
+          ref={bodyContainerRef}
+          id="body"
+          style={{
+            width: "100%",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 20,
+            gap: 20,
+          }}
+        >
+          <View id="inputs" style={{ width: "100%", gap: 20 }}>
+            <View id="username" style={{ gap: 10 }}>
+              <Text bold>Username</Text>
+              <View
+                style={{
+                  position: "relative",
+                  justifyContent: "center",
+                  borderWidth: 1,
+                  borderColor: "white",
+                  borderRadius: 10,
+                }}
+              >
+                <View id="input" style={{ paddingRight: 40 }}>
+                  <TextInput
+                    style={[
+                      {
+                        width: "100%",
+                        height: 45,
+                        color: "white",
+                        padding: 10,
+                      },
+                      {
+                        borderColor:
+                          isUsernameValid || username.length === 0
+                            ? "white"
+                            : "red",
+                      },
+                    ]}
+                    placeholder="Username"
+                    placeholderTextColor="#808080"
+                    autoCapitalize="none"
+                    keyboardType="default"
+                    value={username}
+                    onChangeText={handleUsernameChange}
+                  />
+                </View>
+
+                <View
+                  id="indicator"
+                  style={{
+                    position: "absolute",
+                    right: 10,
+                  }}
+                >
+                  {checkUsernameLoading ? (
+                    <ActivityIndicator color="white" />
+                  ) : username.length === 0 ? (
+                    <></>
+                  ) : isUsernameValid ? (
+                    <Ionicons name="checkmark-circle" size={24} color="green" />
+                  ) : (
+                    <Entypo name="circle-with-cross" size={24} color="red" />
+                  )}
+                </View>
+              </View>
+            </View>
+            <View id="fullname" style={{ gap: 10 }}>
+              <Text bold>Fullname</Text>
+              <View
+                style={{
+                  position: "relative",
+                  justifyContent: "center",
+                  borderWidth: 1,
+                  borderColor: "white",
+                  borderRadius: 10,
+                }}
+              >
+                <View id="input" style={{ paddingRight: 40 }}>
+                  <TextInput
+                    style={{
+                      width: "100%",
+                      height: 45,
+                      color: "white",
+                      padding: 10,
+                    }}
+                    placeholder="Fullname"
+                    placeholderTextColor="#808080"
+                    keyboardType="default"
+                    value={fullname}
+                    onChangeText={handleFullnameChange}
+                  />
+                </View>
+
+                <View
+                  id="indicator"
+                  style={{
+                    position: "absolute",
+                    right: 10,
+                  }}
+                >
+                  {fullname.length === 0 ? (
+                    <></>
+                  ) : isFullnameValid ? (
+                    <Ionicons name="checkmark-circle" size={24} color="green" />
+                  ) : (
+                    <Entypo name="circle-with-cross" size={24} color="red" />
+                  )}
+                </View>
+              </View>
+            </View>
+          </View>
+
+          <Animated.View
+            style={{
+              width: "100%",
+              alignItems: "center",
+              opacity: buttonOpactiy,
+            }}
+          >
+            <Pressable
+              disabled={!buttonActiveStatus}
+              id="continue-button"
+              style={{
+                backgroundColor: "white",
+                borderRadius: 10,
+                padding: 10,
+                width: "50%",
+                alignItems: "center",
+              }}
+              onPress={handleContinueButton}
+            >
+              {loading ? (
+                <ActivityIndicator color="black" />
+              ) : (
+                <Text
+                  style={{
+                    color: "black",
+                  }}
+                >
+                  Continue
+                </Text>
+              )}
+            </Pressable>
+          </Animated.View>
+
+          <Animated.View
+            id="error"
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              height: 50,
+              opacity: errorOpacity,
+            }}
+          >
             <Text
               style={{
-                color: "black",
+                color: "red",
+                textAlign: "center",
+              }}
+              fontSize={12}
+            >
+              {error}
+            </Text>
+          </Animated.View>
+        </View>
+
+        {isProviderApple && (
+          <View
+            style={{
+              position: "absolute",
+              bottom: bottom,
+              width: "100%",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 20,
+            }}
+          >
+            <Pressable
+              disabled={loading || deleteAccountLoading}
+              style={{
+                padding: 10,
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: "gray",
               }}
             >
-              Continue
-            </Text>
-          )}
-        </Pressable>
-      </View>
-
-      <View>
-        <Button
-          title="Sign Out"
-          onPress={() => {
-            auth().signOut();
-          }}
-        />
-      </View>
-    </SafeAreaView>
+              <Text fontSize={10}>Delete Account</Text>
+            </Pressable>
+          </View>
+        )}
+      </Animated.View>
+    </ScrollView>
   );
 };
 
