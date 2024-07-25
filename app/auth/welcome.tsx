@@ -10,6 +10,8 @@ import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 
+import * as Sentry from "@sentry/react-native";
+
 const welcome = () => {
   const { setAuthStatus } = useAuth();
 
@@ -78,6 +80,9 @@ const welcome = () => {
 
       return router.replace("/(modals)/initialProvider");
     } catch (error) {
+      Sentry.captureMessage(
+        `Error on apple sign in (welcome screen): \n ${error}`
+      );
       setAuthStatus("unauthenticated");
       setLoading(false);
       return console.log("Error on Apple Sign In: ", error);
@@ -121,6 +126,9 @@ const welcome = () => {
 
       return router.replace("/(modals)/initialProvider");
     } catch (error) {
+      Sentry.captureMessage(
+        `Error on google sign in (welcome screen): \n ${error}`
+      );
       setAuthStatus("unauthenticated");
       setLoading(false);
       return console.log("Error on Google Sign In: ", error);
@@ -219,7 +227,13 @@ const welcome = () => {
               justifyContent: "center",
             }}
           >
-            <AntDesign name="google" size={24} color="black" />
+            <Image
+              source={require("@/assets/images/google.png")}
+              style={{
+                height: 21,
+                aspectRatio: 1,
+              }}
+            />
             <Text style={{ color: "black" }} fontSize={16} bold>
               Continue with Google
             </Text>

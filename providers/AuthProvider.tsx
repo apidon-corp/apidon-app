@@ -94,7 +94,6 @@ export default function AuthProvider({ children }: PropsWithChildren) {
   }, [authStatusRef]);
 
   useEffect(() => {
-    console.log("Auth Status: ", authStatus);
     authStatusRef.current = authStatus;
   }, [authStatus]);
 
