@@ -151,14 +151,6 @@ const _layout = () => {
             href: null,
           }}
         />
-        <Tabs.Screen
-          name="frenlet"
-          options={{
-            headerShown: true,
-            title: "Frenlet",
-            href: null,
-          }}
-        />
       </Tabs>
     </>
   );

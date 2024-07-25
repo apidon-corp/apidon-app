@@ -23,13 +23,6 @@ const _layout = () => {
           }}
         />
         <Stack.Screen
-          name="replets"
-          options={{
-            title: "Replets",
-            presentation: "modal",
-          }}
-        />
-        <Stack.Screen
           name="settings"
           options={{
             headerShown: false,
