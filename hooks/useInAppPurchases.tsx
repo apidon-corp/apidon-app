@@ -47,10 +47,11 @@ export const useInAppPurchases = () => {
   }
 
   useEffect(() => {
-    Purchases.configure({
-      apiKey: appleAPIKey,
-      appUserID: currentUserDisplayName,
-    });
+    if (currentUserDisplayName && appleAPIKey)
+      Purchases.configure({
+        apiKey: appleAPIKey,
+        appUserID: currentUserDisplayName,
+      });
 
     getProducts();
   }, [currentUserDisplayName]);
