@@ -327,10 +327,6 @@ const additionalInfo = () => {
         return;
       }
 
-      console.log(
-        "We are checking if user has valid auth object now...(additional info page...)"
-      );
-
       const isValidAuthObject = (
         await currentUserAuthObject.getIdTokenResult(true)
       ).claims.isValidAuthObject;
@@ -344,9 +340,6 @@ const additionalInfo = () => {
       }
 
       await currentUserAuthObject.reload();
-
-      console.log("There is a valid auth object now.");
-      console.log("We are switching initialProvider page now.");
 
       setLoading(false);
 

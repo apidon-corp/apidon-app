@@ -67,15 +67,9 @@ const welcome = () => {
       const isValidAuthObject = idTokenResult.claims.isValidAuthObject;
 
       if (!isValidAuthObject) {
-        console.log("User didn't complete sign-up operation or a new user.");
-        console.log("We are switching additionalInfo page now.");
         setLoading(false);
-
         return router.push("/auth/additionalInfo");
       }
-
-      console.log("User signed in successfully");
-      console.log("We are switching home page or initial provider now.");
 
       setLoading(false);
 
@@ -116,15 +110,9 @@ const welcome = () => {
       const isValidAuthObject = idTokenResult.claims.isValidAuthObject;
 
       if (!isValidAuthObject) {
-        console.log("User didn't complete sign-up operation or a new user.");
-        console.log("We are switching additionalInfo page now.");
         setLoading(false);
-
         return router.push("/auth/additionalInfo");
       }
-
-      console.log("User signed in successfully");
-      console.log("We are switching home page or initialProvider page now.");
 
       setLoading(false);
 

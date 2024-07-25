@@ -14,7 +14,7 @@ import {
   Pressable,
   ScrollView,
   TextInput,
-  View
+  View,
 } from "react-native";
 
 const verifyEmail = () => {
@@ -123,11 +123,6 @@ const verifyEmail = () => {
 
       setLoading(false);
 
-      // Good to go....
-      // New auth object is created on the server with above request while verifying code.
-
-      // We are now signing-in user...
-
       await auth().signInWithEmailAndPassword(email, password);
 
       const currentUser = auth().currentUser;
@@ -145,12 +140,7 @@ const verifyEmail = () => {
       const isValidAuthObject = idToken.claims.isValidAuthObject;
 
       if (!isValidAuthObject) {
-        console.log("User's auth object is not valid...");
-        console.log("User didn't complete sign-up operation or a new user.");
-        console.log("We are switching additionalInfo page now.");
-
         router.push("/auth/additionalInfo");
-
         return setLoading(false);
       }
 

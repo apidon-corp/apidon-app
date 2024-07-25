@@ -158,9 +158,6 @@ const emailPasswordSignIn = () => {
         return router.push("/auth/additionalInfo");
       }
 
-      console.log("User signed in successfully");
-      console.log("We are switching home page or initial provider now.");
-
       setLoading(false);
 
       // We are setting this manually due to dontMess state...
