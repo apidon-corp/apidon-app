@@ -35,18 +35,17 @@ const useAppCheck = () => {
           throw new Error("Token length is 0");
         }
       } catch (error) {
-        Sentry.captureException(
-          `Error on connecting and creating app check token: \n ${error}`
-        );
-        console.error(
-          "Error on connecting and creating app check token: ",
-          error
-        );
-
         if (retryCount < MAX_RETRIES) {
           setRetryCount((prev) => prev + 1);
           setTimeout(initializeAppCheck, RETRY_DELAY);
         } else {
+          Sentry.captureException(
+            `Error on connecting and creating app check token: \n ${error}`
+          );
+          console.error(
+            "Error on connecting and creating app check token: ",
+            error
+          );
           setAppCheckLoaded(false);
         }
       }
