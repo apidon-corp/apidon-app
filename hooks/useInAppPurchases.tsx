@@ -22,20 +22,17 @@ export const useInAppPurchases = () => {
 
   if (authStatus !== "authenticated") {
     console.log("User is not logged in to use in app purchases");
-    return setProducts([]);
   }
 
   const currentUserDisplayName = auth().currentUser?.displayName;
   if (!currentUserDisplayName) {
     console.error("User display name is not defined to use in app purchases");
-    return setProducts([]);
   }
 
   const appleAPIKey =
     process.env.EXPO_PUBLIC_REVENUE_CAT_IOS_IAP_PUBLIC_KEY || "";
   if (!appleAPIKey) {
     console.error("Apple API key is not defined to use in app purchases");
-    return setProducts([]);
   }
 
   async function getProducts() {
@@ -54,7 +51,7 @@ export const useInAppPurchases = () => {
       });
 
     getProducts();
-  }, [currentUserDisplayName]);
+  }, [currentUserDisplayName, appleAPIKey]);
 
   return {
     products,
