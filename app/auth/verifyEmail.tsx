@@ -1,23 +1,25 @@
-import {
-  View,
-  SafeAreaView,
-  ScrollView,
-  TextInput,
-  Animated,
-  Pressable,
-  ActivityIndicator,
-} from "react-native";
-import { Text } from "@/components/Text/Text";
-import React, { useEffect, useRef, useState } from "react";
-import { useAtomValue } from "jotai";
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
-import { Ionicons, Entypo } from "@expo/vector-icons";
+import { Text } from "@/components/Text/Text";
 import apiRoutes from "@/helpers/ApiRoutes";
+import { useAuth } from "@/providers/AuthProvider";
+import { Entypo, Ionicons } from "@expo/vector-icons";
 import appCheck from "@react-native-firebase/app-check";
 import auth from "@react-native-firebase/auth";
 import { router } from "expo-router";
+import { useAtomValue } from "jotai";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Animated,
+  Pressable,
+  ScrollView,
+  TextInput,
+  View
+} from "react-native";
 
 const verifyEmail = () => {
+  const { setAuthStatus } = useAuth();
+
   const parameters = useAtomValue(screenParametersAtom);
 
   const email = parameters.find((p) => p.queryId === "email")?.value || "";
@@ -85,6 +87,8 @@ const verifyEmail = () => {
 
     setLoading(true);
 
+    setAuthStatus("dontMess");
+
     try {
       const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
@@ -113,6 +117,7 @@ const verifyEmail = () => {
         }
 
         setError(message);
+        setAuthStatus("unauthenticated");
         return setLoading(false);
       }
 
@@ -131,6 +136,7 @@ const verifyEmail = () => {
           "No current user found after sign-in with email password after verify email."
         );
         setError("Server Error");
+        setAuthStatus("unauthenticated");
         return setLoading(false);
       }
 
@@ -153,9 +159,11 @@ const verifyEmail = () => {
 
       setError("Server Error");
 
+      setAuthStatus("unauthenticated");
+
       return setLoading(false);
     } catch (error) {
-      console.error("Error during verifyEmail: ", error);
+      console.error("Error during verifyEmail or sign-in ", error);
       setError("Server Error");
       setLoading(false);
     }

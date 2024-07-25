@@ -1,7 +1,7 @@
-import Purchases, { PurchasesStoreProduct } from "react-native-purchases";
+import { useAuth } from "@/providers/AuthProvider";
 import auth from "@react-native-firebase/auth";
 import { useEffect, useState } from "react";
-import { ItemSKU, ProductQuickData } from "@/types/IAP";
+import Purchases, { PurchasesStoreProduct } from "react-native-purchases";
 
 const appStoreProductIds = [
   "1_dollar_in_app_credit",
@@ -16,18 +16,26 @@ const appStoreProductIds = [
 ];
 
 export const useInAppPurchases = () => {
-  const currentUserDisplayName = auth().currentUser?.displayName;
+  const { authStatus } = useAuth();
 
   const [products, setProducts] = useState<PurchasesStoreProduct[]>([]);
 
+  if (authStatus !== "authenticated") {
+    console.log("User is not logged in to use in app purchases");
+    return setProducts([]);
+  }
+
+  const currentUserDisplayName = auth().currentUser?.displayName;
   if (!currentUserDisplayName) {
-    console.error("User is not logged in to use in app purchases");
+    console.error("User display name is not defined to use in app purchases");
+    return setProducts([]);
   }
 
   const appleAPIKey =
     process.env.EXPO_PUBLIC_REVENUE_CAT_IOS_IAP_PUBLIC_KEY || "";
   if (!appleAPIKey) {
-    console.error("Apple API key is not defined");
+    console.error("Apple API key is not defined to use in app purchases");
+    return setProducts([]);
   }
 
   async function getProducts() {

@@ -9,6 +9,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -27,10 +28,17 @@ export default function AuthProvider({ children }: PropsWithChildren) {
 
   const pathname = usePathname();
 
-  console.log("Pathname: ", pathname);
+  const authStatusRef = useRef<AuthStatus>("loading");
 
-  const handleAuthentication = async (user: FirebaseAuthTypes.User | null) => {
-    if (authStatus === "dontMess") return;
+  const handleAuthentication = async (
+    user: FirebaseAuthTypes.User | null,
+    authStatusRef: React.MutableRefObject<AuthStatus>
+  ) => {
+    console.log("Auth Status Ref Value: ", authStatusRef.current);
+    if (authStatusRef.current === "dontMess") {
+      console.log("We are on dontMess status.");
+      return;
+    }
 
     if (!user) {
       console.log("There is no user.");
@@ -75,19 +83,6 @@ export default function AuthProvider({ children }: PropsWithChildren) {
 
         console.log("We are on path: ", pathname);
 
-        if (
-          pathname === "/auth/welcome" ||
-          pathname === "/auth/emailPasswordSignUp"
-        ) {
-          console.log(
-            "We found that it is actullay normal that we don't have a valid object."
-          );
-          console.log("Because we are signing-up already....");
-          console.log("We don't need to reset screens or things like that...");
-
-          return router.push("/auth/additionalInfo");
-        }
-
         resetNavigationHistory();
         router.replace("/auth/welcome");
         return router.navigate("/auth/additionalInfo");
@@ -110,14 +105,17 @@ export default function AuthProvider({ children }: PropsWithChildren) {
   };
 
   useEffect(() => {
-    const unsubscribe = auth().onAuthStateChanged(handleAuthentication);
+    const unsubscribe = auth().onAuthStateChanged((user) => {
+      handleAuthentication(user, authStatusRef);
+    });
 
     return () => unsubscribe();
-  }, []);
+  }, [authStatusRef]);
 
   useEffect(() => {
-    // const unsubscribe = auth().onIdTokenChanged(handleAuthentication);
-  }, []);
+    console.log("Auth Status: ", authStatus);
+    authStatusRef.current = authStatus;
+  }, [authStatus]);
 
   return (
     <AuthContext.Provider

@@ -25,6 +25,7 @@ const _layout = () => {
       <Stack.Screen
         name="welcome"
         options={{
+          headerTitle: "Welcome",
           headerShown: false,
         }}
       />
@@ -32,7 +33,7 @@ const _layout = () => {
         name="emailPasswordSignUp"
         options={{
           headerTitle: "",
-          headerBackTitle: "Back",
+          headerBackTitle: "Welcome",
         }}
       />
       <Stack.Screen
@@ -46,7 +47,20 @@ const _layout = () => {
         name="additionalInfo"
         options={{
           headerTitle: "",
-          headerBackTitle: "Back",
+        }}
+      />
+      <Stack.Screen
+        name="emailPasswordSignIn"
+        options={{
+          headerBackTitle: "Welcome",
+          headerTitle: "",
+        }}
+      />
+      <Stack.Screen
+        name="forgotPassword"
+        options={{
+          headerTitle: "",
+          headerBackTitle: "Sign In",
         }}
       />
     </Stack>

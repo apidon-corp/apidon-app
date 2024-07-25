@@ -4,12 +4,15 @@ import appleAuth from "@invertase/react-native-apple-authentication";
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Pressable, SafeAreaView, View } from "react-native";
 
+import { useAuth } from "@/providers/AuthProvider";
 import auth from "@react-native-firebase/auth";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 
 const welcome = () => {
+  const { setAuthStatus } = useAuth();
+
   const [loading, setLoading] = useState(false);
 
   const opacity = useRef(new Animated.Value(1)).current;
@@ -37,6 +40,8 @@ const welcome = () => {
 
     try {
       if (auth().currentUser) await auth().signOut();
+
+      setAuthStatus("dontMess");
 
       const appleAuthRequestResponse = await appleAuth.performRequest({
         requestedOperation: appleAuth.Operation.LOGIN,
@@ -70,10 +75,16 @@ const welcome = () => {
       }
 
       console.log("User signed in successfully");
-      console.log("We are switching home page now.");
+      console.log("We are switching home page or initial provider now.");
 
-      return setLoading(false);
+      setLoading(false);
+
+      // We are setting this manually due to dontMess state...
+      setAuthStatus("authenticated");
+
+      return router.replace("/(modals)/initialProvider");
     } catch (error) {
+      setAuthStatus("unauthenticated");
       setLoading(false);
       return console.log("Error on Apple Sign In: ", error);
     }
@@ -84,6 +95,8 @@ const welcome = () => {
 
     try {
       if (auth().currentUser) await auth().signOut();
+
+      setAuthStatus("dontMess");
 
       GoogleSignin.configure({
         webClientId: "",
@@ -97,24 +110,30 @@ const welcome = () => {
 
       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
 
-      await auth().signInWithCredential(googleCredential);
+      const user = (await auth().signInWithCredential(googleCredential)).user;
 
-      // const idTokenResult = await user.getIdTokenResult(true);
-      // const isValidAuthObject = idTokenResult.claims.isValidAuthObject;
+      const idTokenResult = await user.getIdTokenResult(true);
+      const isValidAuthObject = idTokenResult.claims.isValidAuthObject;
 
-      // if (!isValidAuthObject) {
-      //   console.log("User didn't complete sign-up operation or a new user.");
-      //   console.log("We are switching additionalInfo page now.");
-      //   setLoading(false);
+      if (!isValidAuthObject) {
+        console.log("User didn't complete sign-up operation or a new user.");
+        console.log("We are switching additionalInfo page now.");
+        setLoading(false);
 
-      //   return router.push("/auth/additionalInfo");
-      // }
+        return router.push("/auth/additionalInfo");
+      }
 
-      // console.log("User signed in successfully");
-      // console.log("We are switching home page now.");
+      console.log("User signed in successfully");
+      console.log("We are switching home page or initialProvider page now.");
 
-      return setLoading(false);
+      setLoading(false);
+
+      // We are setting this manually due to dontMess state...
+      setAuthStatus("authenticated");
+
+      return router.replace("/(modals)/initialProvider");
     } catch (error) {
+      setAuthStatus("unauthenticated");
       setLoading(false);
       return console.log("Error on Google Sign In: ", error);
     }

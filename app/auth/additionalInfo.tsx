@@ -343,13 +343,14 @@ const additionalInfo = () => {
         return setLoading(false);
       }
 
+      await currentUserAuthObject.reload();
+
       console.log("There is a valid auth object now.");
       console.log("We are switching initialProvider page now.");
 
       setLoading(false);
 
       setAuthStatus("authenticated");
-      await currentUserAuthObject.reload();
 
       return router.replace("/initialProvider");
 

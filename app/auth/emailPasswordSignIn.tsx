@@ -1,5 +1,4 @@
 import { Text } from "@/components/Text/Text";
-import { Entypo, Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -13,22 +12,17 @@ import {
   View,
 } from "react-native";
 
-import appCheck from "@react-native-firebase/app-check";
-
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import apiRoutes from "@/helpers/ApiRoutes";
-import { useSetAtom } from "jotai";
-import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { router } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const emailPasswordSignUp = () => {
-  const [isEmailValid, setIsEmailValid] = useState(false);
+import { useAuth } from "@/providers/AuthProvider";
+import auth from "@react-native-firebase/auth";
+
+const emailPasswordSignIn = () => {
+  const { setAuthStatus } = useAuth();
+
   const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
-
-  const [isPasswordValid, setIsPasswordValid] = useState(false);
   const [password, setPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
 
   const [error, setError] = useState("");
 
@@ -45,15 +39,6 @@ const emailPasswordSignUp = () => {
 
   const { bottom } = useSafeAreaInsets();
 
-  const setScreenParameters = useSetAtom(screenParametersAtom);
-
-  // Error Handling
-  useEffect(() => {
-    if (emailError && email.length > 0) return setError(emailError);
-    if (passwordError && password.length > 0) return setError(passwordError);
-    return setError("");
-  }, [email, emailError, password, passwordError]);
-
   // Error Opacity Handling
   useEffect(() => {
     if (error.length === 0) {
@@ -66,10 +51,10 @@ const emailPasswordSignUp = () => {
   // Continue Button Status Handling
   useEffect(() => {
     const buttonActiveStatusDetermined =
-      isEmailValid && isPasswordValid && !loading;
+      email.length > 0 && password.length > 0 && !loading && error.length === 0;
 
     setButtonActiveStatus(buttonActiveStatusDetermined);
-  }, [isEmailValid, isPasswordValid, loading]);
+  }, [email, password, loading, error]);
 
   // Continue Button Opacity Handling
   useEffect(() => {
@@ -133,106 +118,63 @@ const emailPasswordSignUp = () => {
   }, []);
 
   const handleEmailChange = (input: string) => {
-    const lowercasedInput = input.toLowerCase().trim();
-
-    setEmail(lowercasedInput);
     setError("");
-
-    const emailRegex =
-      /^[a-zA-Z0-9._%+-]+@(gmail\.com|icloud\.com|yahoo\.com|outlook\.com)$/i;
-    const emailRegexTestResult = emailRegex.test(lowercasedInput);
-
-    setIsEmailValid(emailRegexTestResult);
-
-    if (!emailRegexTestResult) {
-      setEmailError("Please enter a valid email address.");
-    } else {
-      setEmailError("");
-    }
+    const lowercasedInput = input.toLowerCase().trim();
+    setEmail(lowercasedInput);
   };
 
   const handlePasswordChage = (input: string) => {
+    setError("");
     setPassword(input);
-    setPasswordError("");
-
-    const minLength = 8;
-    const hasLowerCase = /[a-z]/.test(input);
-    const hasUpperCase = /[A-Z]/.test(input);
-    const hasDigit = /\d/.test(input);
-
-    if (input.length < minLength) {
-      setIsPasswordValid(false);
-      return setPasswordError("Password must be at least 8 characters long.");
-    } else if (!hasLowerCase) {
-      setIsPasswordValid(false);
-      return setPasswordError(
-        "Password must contain at least one lowercase letter."
-      );
-    } else if (!hasUpperCase) {
-      setIsPasswordValid(false);
-      return setPasswordError(
-        "Password must contain at least one uppercase letter."
-      );
-    } else if (!hasDigit) {
-      setIsPasswordValid(false);
-      return setPasswordError("Password must contain at least one digit.");
-    } else {
-      setIsPasswordValid(true);
-      return setPasswordError("");
-    }
   };
 
   const handleContinueButton = async () => {
-    if (!isEmailValid || !isPasswordValid || loading) return;
     if (!buttonActiveStatus) return;
+    if (
+      email.length === 0 ||
+      password.length === 0 ||
+      loading ||
+      error.length > 0
+    )
+      return;
 
     setLoading(true);
 
+    setAuthStatus("dontMess");
+
     try {
-      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+      const user = (await auth().signInWithEmailAndPassword(email, password))
+        .user;
 
-      const response = await fetch(
-        apiRoutes.user.authentication.signup.sendVerificationCode,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            appchecktoken,
-          },
-          body: JSON.stringify({
-            email: email,
-            password: password,
-          }),
-        }
-      );
+      const idTokenResult = await user.getIdTokenResult(true);
 
-      if (!response.ok) {
-        const message = await response.text();
+      const isValidAuthObject = idTokenResult.claims.isValidAuthObject;
 
-        console.error(
-          "Response from sendVerificationCode is not okay: ",
-          message
-        );
+      if (!isValidAuthObject) {
+        console.log("User didn't complete sign-up operation or a new user.");
+        console.log("We are switching additionalInfo page now.");
+        setLoading(false);
 
-        if (message === "Email is already taken.") {
-          setIsEmailValid(false);
-        }
-
-        setEmailError(message);
-
-        return setLoading(false);
+        return router.push("/auth/additionalInfo");
       }
 
-      setScreenParameters([
-        { queryId: "email", value: email },
-        { queryId: "password", value: password },
-      ]);
+      console.log("User signed in successfully");
+      console.log("We are switching home page or initial provider now.");
 
       setLoading(false);
 
-      return router.push("/auth/verifyEmail");
+      // We are setting this manually due to dontMess state...
+      setAuthStatus("authenticated");
+
+      return router.replace("/(modals)/initialProvider");
+
+      // Good to go...
     } catch (error) {
-      console.error("Error on sign-up: ", error);
+      console.error("Error on login with email and password: ", error);
+      setAuthStatus("unauthenticated");
+
+      setError("Invalid Email or Password");
+
       return setLoading(false);
     }
   };
@@ -253,8 +195,12 @@ const emailPasswordSignUp = () => {
     }).start();
   };
 
-  const handleSignInButton = () => {
-    router.replace("/auth/emailPasswordSignIn");
+  const handleDontHaveAccount = () => {
+    router.replace("/auth/emailPasswordSignUp");
+  };
+
+  const handleForgotPassword = () => {
+    router.replace("/auth/forgotPassword");
   };
 
   return (
@@ -303,7 +249,7 @@ const emailPasswordSignUp = () => {
               fontSize: 32,
             }}
           >
-            Create Account
+            Welcome Back
           </Text>
         </View>
 
@@ -332,18 +278,12 @@ const emailPasswordSignUp = () => {
               >
                 <View id="input" style={{ paddingRight: 40 }}>
                   <TextInput
-                    style={[
-                      {
-                        width: "100%",
-                        height: 45,
-                        color: "white",
-                        padding: 10,
-                      },
-                      {
-                        borderColor:
-                          isEmailValid || email.length === 0 ? "white" : "red",
-                      },
-                    ]}
+                    style={{
+                      width: "100%",
+                      height: 45,
+                      color: "white",
+                      padding: 10,
+                    }}
                     placeholder="Email"
                     placeholderTextColor="#808080"
                     autoCapitalize="none"
@@ -351,22 +291,6 @@ const emailPasswordSignUp = () => {
                     value={email}
                     onChangeText={handleEmailChange}
                   />
-                </View>
-
-                <View
-                  id="indicator"
-                  style={{
-                    position: "absolute",
-                    right: 10,
-                  }}
-                >
-                  {email.length === 0 ? (
-                    <></>
-                  ) : isEmailValid ? (
-                    <Ionicons name="checkmark-circle" size={24} color="green" />
-                  ) : (
-                    <Entypo name="circle-with-cross" size={24} color="red" />
-                  )}
                 </View>
               </View>
             </View>
@@ -383,18 +307,12 @@ const emailPasswordSignUp = () => {
               >
                 <View id="input" style={{ paddingRight: 40 }}>
                   <TextInput
-                    style={[
-                      {
-                        width: "100%",
-                        height: 45,
-                        color: "white",
-                        padding: 10,
-                      },
-                      {
-                        borderColor:
-                          isEmailValid || email.length === 0 ? "white" : "red",
-                      },
-                    ]}
+                    style={{
+                      width: "100%",
+                      height: 45,
+                      color: "white",
+                      padding: 10,
+                    }}
                     placeholder="Password"
                     placeholderTextColor="#808080"
                     autoCapitalize="none"
@@ -403,22 +321,6 @@ const emailPasswordSignUp = () => {
                     secureTextEntry
                     onChangeText={handlePasswordChage}
                   />
-                </View>
-
-                <View
-                  id="indicator"
-                  style={{
-                    position: "absolute",
-                    right: 10,
-                  }}
-                >
-                  {password.length === 0 ? (
-                    <></>
-                  ) : isPasswordValid ? (
-                    <Ionicons name="checkmark-circle" size={24} color="green" />
-                  ) : (
-                    <Entypo name="circle-with-cross" size={24} color="red" />
-                  )}
                 </View>
               </View>
             </View>
@@ -484,16 +386,28 @@ const emailPasswordSignUp = () => {
             position: "absolute",
             bottom: bottom + 10,
             padding: 10,
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 20,
           }}
         >
-          <Pressable onPress={handleSignInButton}>
+          <Pressable onPress={handleForgotPassword}>
+            <Text
+              style={{
+                textDecorationLine: "underline",
+              }}
+            >
+              Forgot Password? Reset It
+            </Text>
+          </Pressable>
+          <Pressable onPress={handleDontHaveAccount}>
             <Text
               style={{
                 textDecorationLine: "underline",
               }}
               bold
             >
-              Already have account? Sign In!
+              Don't have an account? Sign Up!
             </Text>
           </Pressable>
         </View>
@@ -502,4 +416,4 @@ const emailPasswordSignUp = () => {
   );
 };
 
-export default emailPasswordSignUp;
+export default emailPasswordSignIn;
