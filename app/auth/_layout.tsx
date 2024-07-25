@@ -11,18 +11,6 @@ const _layout = () => {
         }}
       />
       <Stack.Screen
-        name="login"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="signup"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
         name="welcome"
         options={{
           headerTitle: "Welcome",
