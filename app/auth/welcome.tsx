@@ -80,7 +80,7 @@ const welcome = () => {
 
       return router.replace("/(modals)/initialProvider");
     } catch (error) {
-      Sentry.captureMessage(
+      Sentry.captureException(
         `Error on apple sign in (welcome screen): \n ${error}`
       );
       setAuthStatus("unauthenticated");
@@ -126,7 +126,7 @@ const welcome = () => {
 
       return router.replace("/(modals)/initialProvider");
     } catch (error) {
-      Sentry.captureMessage(
+      Sentry.captureException(
         `Error on google sign in (welcome screen): \n ${error}`
       );
       setAuthStatus("unauthenticated");
