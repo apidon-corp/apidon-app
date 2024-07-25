@@ -22,9 +22,7 @@ const apiRoutes = {
         checkThereIsLinkedAccount: `${userApisBaseUrl}/user-Authentication-login-checkThereIsLinkedAccount`,
       },
       signup: {
-        checkReferralCode: `${userApisBaseUrl}/user-Authentication-signup-checkReferralCode`,
         sendVerificationCode: `${userApisBaseUrl}/user-Authentication-signup-sendVerificationCode`,
-        signup: `${userApisBaseUrl}/user-Authentication-signup-signup`,
         verifyEmail: `${userApisBaseUrl}/user-Authentication-signup-verifyEmail`,
         completeSignUp: `${userApisBaseUrl}/user-Authentication-signup-completeSignUp`,
       },
@@ -37,14 +35,6 @@ const apiRoutes = {
       follow: `${userApisBaseUrl}/user-Social-follow`,
       getFollowStatus: `${userApisBaseUrl}/user-Social-getFollowStatus`,
     },
-  },
-  frenlet: {
-    createFrenlet: `${userApisBaseUrl}/frenlet-createFrenlet`,
-    createTag: `${userApisBaseUrl}/frenlet-createTag`,
-    deleteFrenlet: `${userApisBaseUrl}/frenlet-deleteFrenlet`,
-    deleteReplet: `${userApisBaseUrl}/frenlet-deleteReplet`,
-    getFrenOptions: `${userApisBaseUrl}/frenlet-getFrenOptions`,
-    sendReply: `${userApisBaseUrl}/frenlet-sendReply`,
   },
   nft: {
     uploadNFT: `${userApisBaseUrl}/nft-uploadNFT`,
