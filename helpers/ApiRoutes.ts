@@ -25,6 +25,7 @@ const apiRoutes = {
         checkReferralCode: `${userApisBaseUrl}/user-Authentication-signup-checkReferralCode`,
         sendVerificationCode: `${userApisBaseUrl}/user-Authentication-signup-sendVerificationCode`,
         signup: `${userApisBaseUrl}/user-Authentication-signup-signup`,
+        verifyEmail: `${userApisBaseUrl}/user-Authentication-signup-verifyEmail`,
         completeSignUp: `${userApisBaseUrl}/user-Authentication-signup-completeSignUp`,
       },
     },

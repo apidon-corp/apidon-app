@@ -18,7 +18,7 @@ type Props = {
 };
 
 const UserContent = ({ username }: Props) => {
-  const authStatus = useAuth();
+  const {authStatus} = useAuth();
 
   const screenParameters = useAtomValue(screenParametersAtom);
   const collectedNFTPostDocPath = screenParameters.find(

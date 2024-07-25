@@ -38,7 +38,7 @@ const NftBottomSheetContent = ({
   postSenderData,
   closeNFTBottomSheet,
 }: Props) => {
-  const authStatus = useAuth();
+  const {authStatus} = useAuth();
 
   const [nftDocData, setNftDocData] = useState<NftDocDataInServer | null>(null);
   const [nftStatus, setNftStatus] = useState<NftStatus>(null);

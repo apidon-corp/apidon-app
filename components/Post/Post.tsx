@@ -34,7 +34,7 @@ type Props = {
 };
 
 const Post = React.memo(({ postDocPath }: Props) => {
-  const authStatus = useAuth();
+  const { authStatus } = useAuth();
 
   const [loading, setLoading] = useState(false);
 
@@ -498,15 +498,12 @@ const Post = React.memo(({ postDocPath }: Props) => {
               <View
                 style={{
                   width: "10%",
-                  alignItems: "flex-end",
+                  padding: 5,
                   overflow: "hidden",
                 }}
               >
                 <Pressable
                   onPress={handleFollowButton}
-                  style={{
-                    padding: 5,
-                  }}
                   disabled={followLoading}
                 >
                   {followLoading ? (

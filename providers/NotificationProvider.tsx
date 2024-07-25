@@ -19,13 +19,15 @@ import { useAuth } from "./AuthProvider";
 const NotificationContext = createContext<NotificationDocData | null>(null);
 
 const NotificationProvider = ({ children }: PropsWithChildren) => {
-  const authStatus = useAuth();
+  const {authStatus} = useAuth();
 
   const [notificationDocData, setNotificationDocData] =
     useState<NotificationDocData | null>(null);
 
   // Notification Data Fetching
   useEffect(() => {
+    if (authStatus !== "authenticated") return setNotificationDocData(null);
+
     const displayName = auth().currentUser?.displayName;
     if (!displayName) return setNotificationDocData(null);
 

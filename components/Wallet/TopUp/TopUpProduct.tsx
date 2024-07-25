@@ -11,6 +11,7 @@ import React, { useState } from "react";
 import { ItemSKU } from "@/types/IAP";
 
 import Purchases, { PurchasesStoreProduct } from "react-native-purchases";
+import { useAuth } from "@/providers/AuthProvider";
 
 type Props = {
   id: ItemSKU;
@@ -18,6 +19,8 @@ type Props = {
 };
 
 const TopUpProduct = ({ id, product }: Props) => {
+  const { authStatus } = useAuth();
+
   const { width } = Dimensions.get("screen");
 
   const [loading, setLoading] = useState(false);
@@ -48,6 +51,7 @@ const TopUpProduct = ({ id, product }: Props) => {
 
     try {
       await Purchases.purchaseStoreProduct(product);
+      setLoading(false);
     } catch (error: any) {
       setLoading(false);
 
@@ -57,6 +61,11 @@ const TopUpProduct = ({ id, product }: Props) => {
       console.error("Error purchasing product: \n", id, "\n", error);
     }
   };
+
+  if (authStatus !== "authenticated") {
+    console.error("User is not authenticated to see topUpProduct");
+    return <></>;
+  }
 
   return (
     <Pressable id="root" onPress={handlePressProduct} disabled={loading}>

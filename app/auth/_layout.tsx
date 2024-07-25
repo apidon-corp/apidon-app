@@ -1,9 +1,7 @@
 import { Stack } from "expo-router";
 import React from "react";
 
-type Props = {};
-
-const _layout = (props: Props) => {
+const _layout = () => {
   return (
     <Stack>
       <Stack.Screen
@@ -13,15 +11,44 @@ const _layout = (props: Props) => {
         }}
       />
       <Stack.Screen
-        name="login"
+        name="welcome"
         options={{
+          headerTitle: "Welcome",
           headerShown: false,
         }}
       />
       <Stack.Screen
-        name="signup"
+        name="emailPasswordSignUp"
         options={{
-          headerShown: false,
+          headerTitle: "",
+          headerBackTitle: "Welcome",
+        }}
+      />
+      <Stack.Screen
+        name="verifyEmail"
+        options={{
+          headerTitle: "",
+          headerBackTitle: "Create Account",
+        }}
+      />
+      <Stack.Screen
+        name="additionalInfo"
+        options={{
+          headerTitle: "",
+        }}
+      />
+      <Stack.Screen
+        name="emailPasswordSignIn"
+        options={{
+          headerBackTitle: "Welcome",
+          headerTitle: "",
+        }}
+      />
+      <Stack.Screen
+        name="forgotPassword"
+        options={{
+          headerTitle: "",
+          headerBackTitle: "Sign In",
         }}
       />
     </Stack>
