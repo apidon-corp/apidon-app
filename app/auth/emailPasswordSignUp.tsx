@@ -262,6 +262,7 @@ const emailPasswordSignUp = () => {
       contentContainerStyle={{
         flex: 1,
       }}
+      keyboardShouldPersistTaps="handled"
     >
       <Animated.View
         ref={containerRef}

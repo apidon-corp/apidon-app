@@ -175,6 +175,7 @@ const emailPasswordSignIn = () => {
       contentContainerStyle={{
         flex: 1,
       }}
+      keyboardShouldPersistTaps="handled"
     >
       <Animated.View
         ref={containerRef}
@@ -283,7 +284,7 @@ const emailPasswordSignIn = () => {
                 onPress={handleDeleteAccount}
               >
                 {loading ? (
-                  <ActivityIndicator color="black" />
+                  <ActivityIndicator color="white" />
                 ) : (
                   <Text
                     style={{

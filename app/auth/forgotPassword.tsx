@@ -131,6 +131,7 @@ const forgotPassword = () => {
       contentContainerStyle={{
         flex: 1,
       }}
+      keyboardShouldPersistTaps="handled"
     >
       <View
         style={{

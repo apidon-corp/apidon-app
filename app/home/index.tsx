@@ -13,6 +13,7 @@ import {
 
 import auth from "@react-native-firebase/auth";
 import appCheck from "@react-native-firebase/app-check";
+import PostSkeleton from "@/components/Post/PostSkeleon";
 
 const index = () => {
   const [loading, setLoading] = useState(false);
@@ -83,8 +84,6 @@ const index = () => {
       if (createdPostDocPath)
         postDocPathArrayFetched.unshift(createdPostDocPath);
 
-      setLoading(false);
-
       // We are removing first "/" from post doc path because mr react native firebase firestore doesn't like it.
       const unSlicedAtFirstPostDocPathArrayFetched =
         postDocPathArrayFetched.map((p) => p.slice(1));
@@ -92,6 +91,7 @@ const index = () => {
       const onlyFourPosts = unSlicedAtFirstPostDocPathArrayFetched.slice(0, 4);
 
       setRecommendedPostsDocPathArray(unSlicedAtFirstPostDocPathArrayFetched);
+      setLoading(false);
       return setServedPosts(onlyFourPosts);
     } catch (error) {
       console.error("Error while fetching getPersonalizedMainFeed: ", error);
@@ -131,7 +131,13 @@ const index = () => {
       <SafeAreaView
         style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
       >
-        <ActivityIndicator size="large" color="white" />
+        <FlatList
+          data={[1, 2]}
+          renderItem={({ item }) => <PostSkeleton key={item} />}
+          contentContainerStyle={{
+            gap: 20,
+          }}
+        />
       </SafeAreaView>
     );
 

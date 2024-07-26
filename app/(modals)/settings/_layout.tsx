@@ -20,6 +20,7 @@ const _layout = () => {
         name="passwordDeleteAccount"
         options={{
           headerTitle: "",
+          
         }}
       />
     </Stack>

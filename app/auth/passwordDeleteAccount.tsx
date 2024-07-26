@@ -13,7 +13,6 @@ import {
 } from "react-native";
 
 import auth from "@react-native-firebase/auth";
-import { useAuth } from "@/providers/AuthProvider";
 import { router } from "expo-router";
 
 const emailPasswordSignIn = () => {
@@ -147,7 +146,7 @@ const emailPasswordSignIn = () => {
       await currentUserAuthObject.delete();
       console.log("User deleted successfully");
 
-      router.replace("/(auth)/welcome");
+      router.replace("/auth/welcome");
 
       return setLoading(false);
 
@@ -180,6 +179,7 @@ const emailPasswordSignIn = () => {
       contentContainerStyle={{
         flex: 1,
       }}
+      keyboardShouldPersistTaps="handled"
     >
       <Animated.View
         ref={containerRef}
@@ -288,7 +288,7 @@ const emailPasswordSignIn = () => {
                 onPress={handleDeleteAccount}
               >
                 {loading ? (
-                  <ActivityIndicator color="black" />
+                  <ActivityIndicator color="white" />
                 ) : (
                   <Text
                     style={{

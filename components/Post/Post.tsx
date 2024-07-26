@@ -447,14 +447,14 @@ const Post = React.memo(({ postDocPath }: Props) => {
                     color: apidonPink,
                     textAlign: "center",
                   }}
-                  fontSize={12}
+                  fontSize={11}
                 >
                   NFT
                 </Text>
-                <Text fontSize={12}>by</Text>
+                <Text fontSize={11}>by</Text>
                 <Text
                   bold
-                  fontSize={12}
+                  fontSize={11}
                   numberOfLines={1}
                   style={{
                     overflow: "hidden",
@@ -498,7 +498,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
               <View
                 style={{
                   width: "10%",
-                  padding: 5,
                   overflow: "hidden",
                 }}
               >

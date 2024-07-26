@@ -11,6 +11,7 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 
 import * as Sentry from "@sentry/react-native";
+import { handleGetActiveProviderStatus } from "@/helpers/Provider";
 
 const welcome = () => {
   const { setAuthStatus } = useAuth();
@@ -73,12 +74,18 @@ const welcome = () => {
         return router.push("/auth/additionalInfo");
       }
 
-      setLoading(false);
-
       // We are setting this manually due to dontMess state...
       setAuthStatus("authenticated");
 
-      return router.replace("/(modals)/initialProvider");
+      const providerStatus = await handleGetActiveProviderStatus();
+      if (!providerStatus) {
+        router.replace("/(modals)/initialProvider");
+        return setLoading(false);
+      }
+
+      router.replace("/home");
+
+      return setLoading(false);
     } catch (error) {
       Sentry.captureException(
         `Error on apple sign in (welcome screen): \n ${error}`
@@ -115,23 +122,29 @@ const welcome = () => {
       const isValidAuthObject = idTokenResult.claims.isValidAuthObject;
 
       if (!isValidAuthObject) {
-        setLoading(false);
-        return router.push("/auth/additionalInfo");
+        router.push("/auth/additionalInfo");
+        return setLoading(false);
       }
-
-      setLoading(false);
 
       // We are setting this manually due to dontMess state...
       setAuthStatus("authenticated");
 
-      return router.replace("/(modals)/initialProvider");
+      const providerStatus = await handleGetActiveProviderStatus();
+      if (!providerStatus) {
+        router.replace("/(modals)/initialProvider");
+        return setLoading(false);
+      }
+
+      router.replace("/home");
+
+      return setLoading(false);
     } catch (error) {
       Sentry.captureException(
         `Error on google sign in (welcome screen): \n ${error}`
       );
       setAuthStatus("unauthenticated");
-      setLoading(false);
-      return console.log("Error on Google Sign In: ", error);
+      console.error("Error on Google Sign In: ", error);
+      return setLoading(false);
     }
   }
 

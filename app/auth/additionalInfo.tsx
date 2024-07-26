@@ -450,6 +450,7 @@ const additionalInfo = () => {
       contentContainerStyle={{
         flex: 1,
       }}
+      keyboardShouldPersistTaps="handled"
     >
       <Animated.View
         ref={containerRef}

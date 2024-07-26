@@ -2,7 +2,6 @@ import { useNotification } from "@/providers/NotificationProvider";
 import {
   AntDesign,
   Entypo,
-  Feather,
   Ionicons,
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
@@ -10,12 +9,11 @@ import { Tabs, router } from "expo-router";
 import React from "react";
 import { Pressable, StatusBar, View } from "react-native";
 
-import { Text } from "@/components/Text/Text";
-
 import auth from "@react-native-firebase/auth";
 
 const _layout = () => {
   const notificationData = useNotification();
+  
 
   const areThereUnReadNotifications = () => {
     if (!notificationData) return false;
@@ -40,22 +38,12 @@ const _layout = () => {
           options={{
             tabBarIcon: () => <Entypo name="home" size={25} color="white" />,
             tabBarLabel: () => <></>,
-            headerTitle: () => (
-              <Text bold style={{ color: "white", fontSize: 18 }}>
-                APIDON
-              </Text>
-            ),
             headerBackground: () => (
-              <View style={{ flex: 1, backgroundColor: "black" }} />
+              <View style={{ flex: 1, backgroundColor: "black", height: 50 }} />
             ),
-            headerLeft: () => (
-              <MaterialCommunityIcons
-                name="robot-happy-outline"
-                size={24}
-                color="white"
-                style={{ marginHorizontal: 10 }}
-              />
-            ),
+
+            headerTitle: "Apidon",
+
             headerRight: () => (
               <Pressable
                 onPress={() => {

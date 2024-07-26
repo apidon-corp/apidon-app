@@ -12,6 +12,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { handleGetActiveProviderStatus } from "@/helpers/Provider";
 
 type AuthContextType = {
   authStatus: AuthStatus;
@@ -36,6 +37,8 @@ export default function AuthProvider({ children }: PropsWithChildren) {
       console.log("We are on dontMess status.");
       return;
     }
+
+    resetNavigationHistory();
 
     if (!user) {
       setAuthStatus("unauthenticated");
@@ -79,10 +82,14 @@ export default function AuthProvider({ children }: PropsWithChildren) {
       return router.replace("/auth/welcome");
     }
 
-    setAuthStatus("authenticated");
+    const providerStatus = await handleGetActiveProviderStatus();
 
-    resetNavigationHistory();
-    return router.replace("/(modals)/initialProvider");
+    if (!providerStatus) {
+      setAuthStatus("authenticated");
+      return router.replace("/(modals)/initialProvider");
+    }
+    setAuthStatus("authenticated");
+    return router.replace("/home");
   };
 
   useEffect(() => {

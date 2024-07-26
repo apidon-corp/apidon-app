@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "@/providers/AuthProvider";
 import auth from "@react-native-firebase/auth";
+import { handleGetActiveProviderStatus } from "@/helpers/Provider";
 
 const emailPasswordSignIn = () => {
   const { setAuthStatus } = useAuth();
@@ -153,19 +154,22 @@ const emailPasswordSignIn = () => {
       if (!isValidAuthObject) {
         console.log("User didn't complete sign-up operation or a new user.");
         console.log("We are switching additionalInfo page now.");
-        setLoading(false);
-
-        return router.push("/auth/additionalInfo");
+        router.push("/auth/additionalInfo");
+        return setLoading(false);
       }
-
-      setLoading(false);
 
       // We are setting this manually due to dontMess state...
       setAuthStatus("authenticated");
 
-      return router.replace("/(modals)/initialProvider");
+      const providerStatus = await handleGetActiveProviderStatus();
+      if (!providerStatus) {
+        router.replace("/(modals)/initialProvider");
+        return setLoading(false);
+      }
 
-      // Good to go...
+      router.replace("/home");
+
+      return setLoading(false);
     } catch (error) {
       console.error("Error on login with email and password: ", error);
       setAuthStatus("unauthenticated");
@@ -205,6 +209,7 @@ const emailPasswordSignIn = () => {
       contentContainerStyle={{
         flex: 1,
       }}
+      keyboardShouldPersistTaps="handled"
     >
       <Animated.View
         ref={containerRef}

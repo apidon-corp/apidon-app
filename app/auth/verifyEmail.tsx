@@ -121,8 +121,6 @@ const verifyEmail = () => {
         return setLoading(false);
       }
 
-      setLoading(false);
-
       await auth().signInWithEmailAndPassword(email, password);
 
       const currentUser = auth().currentUser;
@@ -164,6 +162,7 @@ const verifyEmail = () => {
       contentContainerStyle={{
         flex: 1,
       }}
+      keyboardShouldPersistTaps="handled"
     >
       <View
         style={{
