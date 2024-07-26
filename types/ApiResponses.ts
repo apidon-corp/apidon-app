@@ -1,5 +1,3 @@
-import { FrenletServerData } from "./Frenlet";
-
 export type CheckThereIsLinkedAccountApiResponseBody = {
   email: string;
   username: string;

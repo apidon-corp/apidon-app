@@ -1,12 +1,18 @@
-const userApisBaseUrl = process.env.EXPO_PUBLIC_USER_APIS_BASE_URL;
-const userApisPreviewBaseUrl =
-  process.env.EXPO_PUBLIC_USER_APIS_PREVIEW_BASE_URL;
+type Environment = "development" | "preview" | "production";
+
+const environment =
+  (process.env.EXPO_PUBLIC_ENVIRONMENT_KEY as Environment) || "development";
+
+let userApisBaseUrl = "";
+
+if (environment === "development")
+  userApisBaseUrl = process.env.EXPO_PUBLIC_USER_APIS_BASE_URL || "";
+
+if (environment === "preview")
+  userApisBaseUrl = process.env.EXPO_PUBLIC_USER_APIS_PREVIEW_BASE_URL || "";
 
 if (!userApisBaseUrl)
   console.error("User APIs Base URL is undefined. (from .env file)");
-
-if (!userApisPreviewBaseUrl)
-  console.error("User APIs Preview Base URL is undefined. (from .env file)");
 
 const apiRoutes = {
   feed: {
