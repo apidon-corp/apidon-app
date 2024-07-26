@@ -13,6 +13,8 @@ import {
 } from "react-native";
 
 import auth from "@react-native-firebase/auth";
+import { useAuth } from "@/providers/AuthProvider";
+import { router } from "expo-router";
 
 const emailPasswordSignIn = () => {
   const [password, setPassword] = useState("");
@@ -144,6 +146,9 @@ const emailPasswordSignIn = () => {
 
       await currentUserAuthObject.delete();
       console.log("User deleted successfully");
+
+      router.replace("/(auth)/welcome");
+
       return setLoading(false);
 
       // We will be automatically sent to the welcome screen.

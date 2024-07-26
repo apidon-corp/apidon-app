@@ -433,10 +433,13 @@ const additionalInfo = () => {
 
       await currentUserAuthObject.delete();
 
-      console.log("User deleted successfully");
+      if (router.canGoBack()) {
+        router.back();
+      }
 
       return setDeleteAccountLoading(false);
     } catch (error) {
+      setAuthStatus("dontMess");
       console.error("Error on deleting account: ", error);
       setDeleteAccountLoading(false);
     }
@@ -674,13 +677,19 @@ const additionalInfo = () => {
             onPress={handleDeleteAccountButton}
             disabled={loading || deleteAccountLoading}
             style={{
+              width: 100,
               padding: 10,
               borderRadius: 10,
               borderWidth: 1,
               borderColor: "gray",
+              justifyContent: "center",
             }}
           >
-            <Text fontSize={10}>Delete Account</Text>
+            {deleteAccountLoading ? (
+              <ActivityIndicator color="gray" size={10} />
+            ) : (
+              <Text fontSize={10}>Delete Account</Text>
+            )}
           </Pressable>
         </View>
       </Animated.View>
