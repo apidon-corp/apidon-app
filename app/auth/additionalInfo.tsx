@@ -684,6 +684,7 @@ const additionalInfo = () => {
               borderWidth: 1,
               borderColor: "gray",
               justifyContent: "center",
+              alignItems: "center",
             }}
           >
             {deleteAccountLoading ? (
