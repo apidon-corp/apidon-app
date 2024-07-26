@@ -1,5 +1,5 @@
 const userApisBaseUrl =
-  process.env.EXPO_PUBLIC_USER_APIS_PREVIEW_BASE_URL || "";
+  process.env.EXPO_PUBLIC_USER_APIS_BASE_URL || "";
 
 if (!userApisBaseUrl)
   console.error("User APIs Base URL is undefined. (from .env file)");
