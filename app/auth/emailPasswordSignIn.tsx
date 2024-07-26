@@ -162,7 +162,7 @@ const emailPasswordSignIn = () => {
       setAuthStatus("authenticated");
 
       const providerStatus = await handleGetActiveProviderStatus();
-      if (!providerStatus) {
+      if (!providerStatus || !providerStatus.isThereActiveProvider) {
         router.replace("/(modals)/initialProvider");
         return setLoading(false);
       }

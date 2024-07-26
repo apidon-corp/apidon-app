@@ -24,6 +24,7 @@ import apiRoutes from "@/helpers/ApiRoutes";
 import appCheck from "@react-native-firebase/app-check";
 import auth from "@react-native-firebase/auth";
 import { router } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const listNFT = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
@@ -46,6 +47,8 @@ const listNFT = () => {
   const containerRef = useRef<null | View>(null);
 
   const [loading, setLoading] = useState(false);
+
+  const { bottom } = useSafeAreaInsets();
 
   useEffect(() => {
     getInitialData();
@@ -299,7 +302,7 @@ const listNFT = () => {
         <View style={{ width: "100%" }}>
           <Image
             source={postData.image}
-            style={{ width: "100%", aspectRatio: 1 }}
+            style={{ width: "85%", aspectRatio: 1 }}
           />
         </View>
         <View

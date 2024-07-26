@@ -84,7 +84,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
 
     const providerStatus = await handleGetActiveProviderStatus();
 
-    if (!providerStatus) {
+    if (!providerStatus || !providerStatus.isThereActiveProvider) {
       setAuthStatus("authenticated");
       return router.replace("/(modals)/initialProvider");
     }

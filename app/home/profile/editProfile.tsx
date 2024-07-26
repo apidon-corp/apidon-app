@@ -333,7 +333,7 @@ const editProfile = () => {
             }}
           >
             <Image
-              source={imageEdited || image}
+              source={imageEdited || image || require("@/assets/images/user.jpg")}
               style={{
                 width: 200,
                 aspectRatio: 1,
