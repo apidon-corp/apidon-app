@@ -38,6 +38,13 @@ const _layout = () => {
         }}
       />
       <Stack.Screen
+        name="passwordDeleteAccount"
+        options={{
+          headerTitle: "",
+          headerBackTitle: "Set Up Account",
+        }}
+      />
+      <Stack.Screen
         name="emailPasswordSignIn"
         options={{
           headerBackTitle: "Welcome",

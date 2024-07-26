@@ -16,6 +16,12 @@ const _layout = () => {
           title: "Provider",
         }}
       />
+      <Stack.Screen
+        name="passwordDeleteAccount"
+        options={{
+          headerTitle: "",
+        }}
+      />
     </Stack>
   );
 };

@@ -1,3 +1,4 @@
+import DeleteAccount from "@/components/Settings/DeleteAccount";
 import { Text } from "@/components/Text/Text";
 import SignOut from "@/components/User/SignOut";
 import { router } from "expo-router";
@@ -20,7 +21,7 @@ const settings = () => {
           borderColor: "gray",
           borderRadius: 10,
           width: "100%",
-          gap: 5
+          gap: 5,
         }}
         onPress={() => {
           router.push("/(modals)/settings/provider");
@@ -36,6 +37,7 @@ const settings = () => {
         </Text>
       </Pressable>
       <SignOut />
+      <DeleteAccount />
     </View>
   );
 };

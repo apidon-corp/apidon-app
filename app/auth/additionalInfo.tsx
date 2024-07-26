@@ -21,6 +21,7 @@ import { router } from "expo-router";
 import { ScrollView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/providers/AuthProvider";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 const additionalInfo = () => {
   const { setAuthStatus } = useAuth();
@@ -53,7 +54,6 @@ const additionalInfo = () => {
 
   const timeout = useRef<NodeJS.Timeout | null>(null);
 
-  const [isProviderApple, setIsProviderApple] = useState(false);
   const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
 
   // Error Handling
@@ -98,19 +98,6 @@ const additionalInfo = () => {
       changeButtonOpacity(0.5);
     }
   }, [buttonActiveStatus]);
-
-  // Check proivder if apple
-  useEffect(() => {
-    const currentUser = auth().currentUser;
-    if (!currentUser) return setIsProviderApple(false);
-
-    const providerData = currentUser.providerData;
-    const providerId = providerData[0].providerId;
-
-    const isApple = providerId === "apple.com";
-
-    setIsProviderApple(isApple);
-  }, []);
 
   // Keyboard-Layout Change
   useEffect(() => {
@@ -370,7 +357,11 @@ const additionalInfo = () => {
           text: "Cancel",
           style: "cancel",
         },
-        { text: "Delete", onPress: () => handleDeleteAccount() },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => handleDeleteAccount(),
+        },
       ]
     );
   };
@@ -381,22 +372,70 @@ const additionalInfo = () => {
     setDeleteAccountLoading(true);
 
     try {
-      const { authorizationCode } = await appleAuth.performRequest({
-        requestedOperation: appleAuth.Operation.REFRESH,
-      });
-
-      if (!authorizationCode) {
-        console.error(
-          "Apple Revocation failed - no authorizationCode returned"
-        );
+      const currentUserAuthObject = auth().currentUser;
+      if (!currentUserAuthObject) {
+        console.error("No current user found to delete");
         return setDeleteAccountLoading(false);
       }
 
-      await auth().revokeToken(authorizationCode);
+      const providerData = currentUserAuthObject.providerData;
+      const providerId = providerData[0].providerId;
 
-      setDeleteAccountLoading(false);
+      const isApple = providerId === "apple.com";
+      const isGoogle = providerId === "google.com";
+      const isPassword = providerId === "password";
 
-      return router.back();
+      if (isApple) {
+        const { authorizationCode, identityToken, nonce } =
+          await appleAuth.performRequest({
+            requestedOperation: appleAuth.Operation.REFRESH,
+          });
+
+        if (!authorizationCode) {
+          console.error("No authorization code found to revoke apple user.");
+          return setDeleteAccountLoading(false);
+        }
+
+        const appleCredential = auth.AppleAuthProvider.credential(
+          identityToken,
+          nonce
+        );
+
+        await currentUserAuthObject.reauthenticateWithCredential(
+          appleCredential
+        );
+
+        await auth().revokeToken(authorizationCode);
+      }
+
+      if (isGoogle) {
+        GoogleSignin.configure({
+          webClientId: "",
+        });
+
+        await GoogleSignin.hasPlayServices({
+          showPlayServicesUpdateDialog: true,
+        });
+
+        const { idToken } = await GoogleSignin.signIn();
+
+        const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+
+        await currentUserAuthObject.reauthenticateWithCredential(
+          googleCredential
+        );
+      }
+
+      if (isPassword) {
+        setDeleteAccountLoading(false);
+        return router.push("/auth/passwordDeleteAccount");
+      }
+
+      await currentUserAuthObject.delete();
+
+      console.log("User deleted successfully");
+
+      return setDeleteAccountLoading(false);
     } catch (error) {
       console.error("Error on deleting account: ", error);
       setDeleteAccountLoading(false);
@@ -621,31 +660,29 @@ const additionalInfo = () => {
           </Animated.View>
         </View>
 
-        {isProviderApple && (
-          <View
+        <View
+          style={{
+            position: "absolute",
+            bottom: bottom,
+            width: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+          }}
+        >
+          <Pressable
+            onPress={handleDeleteAccountButton}
+            disabled={loading || deleteAccountLoading}
             style={{
-              position: "absolute",
-              bottom: bottom,
-              width: "100%",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: 20,
+              padding: 10,
+              borderRadius: 10,
+              borderWidth: 1,
+              borderColor: "gray",
             }}
           >
-            <Pressable
-              onPress={handleDeleteAccountButton}
-              disabled={loading || deleteAccountLoading}
-              style={{
-                padding: 10,
-                borderRadius: 10,
-                borderWidth: 1,
-                borderColor: "gray",
-              }}
-            >
-              <Text fontSize={10}>Delete Account</Text>
-            </Pressable>
-          </View>
-        )}
+            <Text fontSize={10}>Delete Account</Text>
+          </Pressable>
+        </View>
       </Animated.View>
     </ScrollView>
   );

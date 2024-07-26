@@ -1,6 +1,6 @@
 import { ActivityIndicator, Alert, Pressable } from "react-native";
 import React, { useState } from "react";
-import auth from "@react-native-firebase/auth"
+import auth from "@react-native-firebase/auth";
 import { Text } from "@/components/Text/Text";
 
 const SignOut = () => {
@@ -29,7 +29,7 @@ const SignOut = () => {
       style={{
         padding: 15,
         borderWidth: 1,
-        borderColor: "red",
+        borderColor: "gray",
         borderRadius: 10,
         width: "100%",
         gap: 5,
@@ -41,7 +41,7 @@ const SignOut = () => {
         <ActivityIndicator color="red" />
       ) : (
         <>
-          <Text bold style={{ fontSize: 14, color: "red" }}>
+          <Text bold style={{ fontSize: 14, color: "white" }}>
             Sign Out
           </Text>
           <Text style={{ fontSize: 12, color: "gray" }} bold>
