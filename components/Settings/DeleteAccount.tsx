@@ -3,7 +3,8 @@ import React, { useState } from "react";
 import auth from "@react-native-firebase/auth";
 import { Text } from "@/components/Text/Text";
 
-import appleAuth from "@invertase/react-native-apple-authentication";
+import * as AppleAuthentication from "expo-apple-authentication";
+
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { router } from "expo-router";
 
@@ -33,9 +34,9 @@ const DeleteAccount = () => {
       const isPassword = providerId === "password";
 
       if (isApple) {
-        const { authorizationCode, identityToken, nonce } =
-          await appleAuth.performRequest({
-            requestedOperation: appleAuth.Operation.REFRESH,
+        const { authorizationCode, identityToken } =
+          await AppleAuthentication.refreshAsync({
+            user: currentUserAuthObject.uid,
           });
 
         if (!authorizationCode) {
@@ -43,10 +44,8 @@ const DeleteAccount = () => {
           return setLoading(false);
         }
 
-        const appleCredential = auth.AppleAuthProvider.credential(
-          identityToken,
-          nonce
-        );
+        const appleCredential =
+          auth.AppleAuthProvider.credential(identityToken);
 
         await currentUserAuthObject.reauthenticateWithCredential(
           appleCredential

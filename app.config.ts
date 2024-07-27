@@ -4,17 +4,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Apidon-Dev",
   slug: "apidon-app-dev",
-  version: "1.0.4",
+  version: "1.0.5",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: "apidon",
-  userInterfaceStyle: "automatic",
+  userInterfaceStyle: "dark",
   splash: {
     image: "./assets/images/splash.png",
     resizeMode: "contain",
     backgroundColor: "#000000",
   },
   ios: {
+    usesAppleSignIn: true,
     supportsTablet: false,
     bundleIdentifier: "com.abovestars.dev.apidon",
     googleServicesFile:
@@ -54,6 +55,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     "@react-native-firebase/app",
     ["@react-native-google-signin/google-signin"],
+    ["expo-apple-authentication"],
     [
       "expo-build-properties",
       {

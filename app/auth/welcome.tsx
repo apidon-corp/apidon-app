@@ -1,6 +1,7 @@
 import { Text } from "@/components/Text/Text";
 import { AntDesign } from "@expo/vector-icons";
-import appleAuth from "@invertase/react-native-apple-authentication";
+import * as AppleAuthentication from "expo-apple-authentication";
+
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Pressable, SafeAreaView, View } from "react-native";
 
@@ -46,9 +47,11 @@ const welcome = () => {
 
       setAuthStatus("dontMess");
 
-      const appleAuthRequestResponse = await appleAuth.performRequest({
-        requestedOperation: appleAuth.Operation.LOGIN,
-        requestedScopes: [appleAuth.Scope.FULL_NAME, appleAuth.Scope.EMAIL],
+      const appleAuthRequestResponse = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
       });
 
       if (!appleAuthRequestResponse.identityToken) {
@@ -56,12 +59,9 @@ const welcome = () => {
         return console.error("No identity token found in the response");
       }
 
-      const { identityToken, nonce } = appleAuthRequestResponse;
+      const { identityToken } = appleAuthRequestResponse;
 
-      const appleCredential = auth.AppleAuthProvider.credential(
-        identityToken,
-        nonce
-      );
+      const appleCredential = auth.AppleAuthProvider.credential(identityToken);
 
       const user = (await auth().signInWithCredential(appleCredential)).user;
 

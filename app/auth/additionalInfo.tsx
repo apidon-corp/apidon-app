@@ -13,7 +13,7 @@ import {
 } from "react-native";
 
 import { Entypo, Ionicons } from "@expo/vector-icons";
-import appleAuth from "@invertase/react-native-apple-authentication";
+import * as AppleAuthentication from "expo-apple-authentication";
 import appCheck from "@react-native-firebase/app-check";
 import auth from "@react-native-firebase/auth";
 import { Image } from "expo-image";
@@ -386,9 +386,9 @@ const additionalInfo = () => {
       const isPassword = providerId === "password";
 
       if (isApple) {
-        const { authorizationCode, identityToken, nonce } =
-          await appleAuth.performRequest({
-            requestedOperation: appleAuth.Operation.REFRESH,
+        const { authorizationCode, identityToken } =
+          await AppleAuthentication.refreshAsync({
+            user: currentUserAuthObject.uid,
           });
 
         if (!authorizationCode) {
@@ -396,10 +396,8 @@ const additionalInfo = () => {
           return setDeleteAccountLoading(false);
         }
 
-        const appleCredential = auth.AppleAuthProvider.credential(
-          identityToken,
-          nonce
-        );
+        const appleCredential =
+          auth.AppleAuthProvider.credential(identityToken);
 
         await currentUserAuthObject.reauthenticateWithCredential(
           appleCredential
