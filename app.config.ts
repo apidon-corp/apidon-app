@@ -15,6 +15,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     backgroundColor: "#000000",
   },
   ios: {
+    config: {
+      usesNonExemptEncryption: false,
+    },
     usesAppleSignIn: true,
     supportsTablet: false,
     bundleIdentifier: "com.abovestars.dev.apidon",

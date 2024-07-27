@@ -7,7 +7,11 @@ import { Animated, Pressable, SafeAreaView, View } from "react-native";
 
 import { useAuth } from "@/providers/AuthProvider";
 import auth from "@react-native-firebase/auth";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import {
+  GoogleSignin,
+  isErrorWithCode,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 
@@ -86,7 +90,12 @@ const welcome = () => {
       router.replace("/home");
 
       return setLoading(false);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.code === "ERR_REQUEST_CANCELED") {
+        setAuthStatus("unauthenticated");
+        return setLoading(false);
+      }
+
       Sentry.captureException(
         `Error on apple sign in (welcome screen): \n ${error}`
       );
@@ -138,7 +147,15 @@ const welcome = () => {
       router.replace("/home");
 
       return setLoading(false);
-    } catch (error) {
+    } catch (error: any) {
+      if (
+        isErrorWithCode(error) &&
+        error.code === statusCodes.SIGN_IN_CANCELLED
+      ) {
+        setAuthStatus("unauthenticated");
+        return setLoading(false);
+      }
+
       Sentry.captureException(
         `Error on google sign in (welcome screen): \n ${error}`
       );
