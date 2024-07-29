@@ -15,8 +15,6 @@ const useAppCheck = () => {
   const initializeAppCheck = async (
     retryCountRef: React.MutableRefObject<number>
   ) => {
-    console.log(retryCountRef.current);
-
     try {
       const provider = appCheck().newReactNativeFirebaseAppCheckProvider();
 
@@ -31,8 +29,6 @@ const useAppCheck = () => {
           debugToken: debugToken,
         },
       });
-
-      console.log("Initializing app check");
 
       await appCheck().initializeAppCheck({
         provider: provider,

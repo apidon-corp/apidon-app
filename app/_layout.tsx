@@ -150,7 +150,7 @@ function RootLayout() {
     }
   }, [ref]);
 
-  const appCheckLoaded = true; //useAppCheck();
+  const appCheckLoaded = useAppCheck();
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {

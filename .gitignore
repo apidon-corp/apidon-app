@@ -47,4 +47,4 @@ ios
 eas.json
 
 # Google Information
-Development-LocalPreview-GoogleService-Info.plist
+*.plist
