@@ -3,7 +3,7 @@ import { ExpoConfig, ConfigContext } from "expo/config";
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: process.env.APP_NAME || "NO-NAME",
-  slug: process.env.APP_SLUG || "NO-SLUG",
+  slug: "apidon-app-dev",
   version: process.env.APP_VERSION || "0.0.0",
   orientation: "portrait",
   icon: process.env.APP_ICON,
