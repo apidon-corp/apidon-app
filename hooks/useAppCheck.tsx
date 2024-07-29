@@ -1,65 +1,79 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import appCheck from "@react-native-firebase/app-check";
 import * as Device from "expo-device";
 import * as Sentry from "@sentry/react-native";
+import { Alert } from "react-native";
 
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 5;
 const RETRY_DELAY = 3000; // 3 seconds
 
 const useAppCheck = () => {
   const [appCheckLoaded, setAppCheckLoaded] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
+
+  const retryCountRef = useRef(0);
+
+  const initializeAppCheck = async (
+    retryCountRef: React.MutableRefObject<number>
+  ) => {
+    console.log(retryCountRef.current);
+
+    try {
+      const provider = appCheck().newReactNativeFirebaseAppCheckProvider();
+
+      const debugToken = process.env.EXPO_PUBLIC_DEBUG_TOKEN || "";
+      if (!debugToken) {
+        console.error("Debug token is not defined from environment variables.");
+      }
+
+      provider.configure({
+        apple: {
+          provider: Device.isDevice ? "deviceCheck" : "debug",
+          debugToken: debugToken,
+        },
+      });
+
+      console.log("Initializing app check");
+
+      await appCheck().initializeAppCheck({
+        provider: provider,
+        isTokenAutoRefreshEnabled: true,
+      });
+
+      const { token } = await appCheck().getToken();
+
+      if (token.length > 0) {
+        setAppCheckLoaded(true);
+      } else {
+        throw new Error("Token length is 0");
+      }
+    } catch (error) {
+      if (retryCountRef.current < MAX_RETRIES) {
+        retryCountRef.current++;
+        setTimeout(() => {
+          initializeAppCheck(retryCountRef);
+        }, RETRY_DELAY);
+      } else {
+        Alert.alert(
+          "Connection Error",
+          "Failed to connect securely to Apidon. Please try again later."
+        );
+        Sentry.captureException(
+          `Error on connecting and creating app check token: \n ${error}`
+        );
+        console.error(
+          "Error on connecting and creating app check token: ",
+          error
+        );
+        setAppCheckLoaded(false);
+      }
+    }
+  };
 
   useEffect(() => {
-    const initializeAppCheck = async () => {
-      try {
-        const provider = appCheck().newReactNativeFirebaseAppCheckProvider();
-
-        const debugToken = process.env.EXPO_PUBLIC_DEBUG_TOKEN || "";
-        if (!debugToken) {
-          console.error(
-            "Debug token is not defined from environment variables."
-          );
-        }
-
-        provider.configure({
-          apple: {
-            provider: Device.isDevice ? "deviceCheck" : "debug",
-            debugToken: debugToken,
-          },
-        });
-
-        await appCheck().initializeAppCheck({
-          provider: provider,
-          isTokenAutoRefreshEnabled: true,
-        });
-
-        const { token } = await appCheck().getToken();
-
-        if (token.length > 0) {
-          setAppCheckLoaded(true);
-        } else {
-          throw new Error("Token length is 0");
-        }
-      } catch (error) {
-        if (retryCount < MAX_RETRIES) {
-          setRetryCount((prev) => prev + 1);
-          setTimeout(initializeAppCheck, RETRY_DELAY);
-        } else {
-          Sentry.captureException(
-            `Error on connecting and creating app check token: \n ${error}`
-          );
-          console.error(
-            "Error on connecting and creating app check token: ",
-            error
-          );
-          setAppCheckLoaded(false);
-        }
-      }
-    };
-
-    initializeAppCheck();
-  }, [retryCount]);
+    if (!appCheckLoaded) {
+      initializeAppCheck(retryCountRef);
+    }
+  }, [appCheckLoaded, retryCountRef]);
 
   return appCheckLoaded;
 };

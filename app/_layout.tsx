@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 
 import AuthProvider from "@/providers/AuthProvider";
-import { StatusBar } from "react-native";
+import { Dimensions, StatusBar, View } from "react-native";
 
 import NotificationProvider from "@/providers/NotificationProvider";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
@@ -25,6 +25,7 @@ export {
 import useAppCheck from "@/hooks/useAppCheck";
 import * as Sentry from "@sentry/react-native";
 import { isRunningInExpoGo } from "expo";
+import { Image } from "expo-image";
 
 const routingInstrumentation = new Sentry.ReactNavigationInstrumentation();
 
@@ -111,6 +112,30 @@ function RootLayoutNav() {
   );
 }
 
+function PlaceholderForWaiting() {
+  const { width: screenWidth } = Dimensions.get("screen");
+  const width = screenWidth / 4.16;
+
+  return (
+    <View
+      style={{
+        width: "100%",
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <Image
+        source={require("@/assets/images/logo.png")}
+        style={{
+          width: width,
+          height: width,
+        }}
+      />
+    </View>
+  );
+}
+
 function RootLayout() {
   const [loaded, error] = useFonts({
     "Poppins-Regular": require("../assets/fonts/Poppins-Regular.ttf"),
@@ -125,7 +150,7 @@ function RootLayout() {
     }
   }, [ref]);
 
-  const appCheckLoaded = useAppCheck();
+  const appCheckLoaded = true; //useAppCheck();
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -139,10 +164,10 @@ function RootLayout() {
   }, [loaded]);
 
   if (!loaded) {
-    return null;
+    return <PlaceholderForWaiting />;
   }
   if (!appCheckLoaded) {
-    return null;
+    return <PlaceholderForWaiting />;
   }
 
   return <RootLayoutNav />;

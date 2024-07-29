@@ -43,7 +43,8 @@ ios
 *.ipa
 
 # Comment here when locally building
-
-googleServiceFiles
-.env*.local
+.env.local
 eas.json
+
+# Google Information
+Development-LocalPreview-GoogleService-Info.plist

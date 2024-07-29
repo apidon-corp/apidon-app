@@ -2,12 +2,12 @@ import { ExpoConfig, ConfigContext } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: process.env.APP_NAME || "NO-NAME",
+  name: process.env.APP_NAME || "ApidonDevelopment",
   slug: "apidon-app-dev",
-  version: process.env.APP_VERSION || "0.0.0",
+  version: process.env.APP_VERSION || "1.0.6",
   orientation: "portrait",
-  icon: process.env.APP_ICON,
-  scheme: process.env.APP_SCHEME,
+  icon: process.env.APP_ICON || "./assets/images/iconDev.png",
+  scheme: process.env.APP_SCHEME || "apidon-development",
   userInterfaceStyle: "dark",
   splash: {
     image: "./assets/images/splash.png",
@@ -21,7 +21,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     usesAppleSignIn: true,
     supportsTablet: false,
     bundleIdentifier: "com.abovestars.dev.apidon",
-    googleServicesFile: process.env.GOOGLE_SERVICES_FILE_APPLE,
+    googleServicesFile:
+      process.env.GOOGLE_SERVICES_FILE_APPLE ||
+      "./Development-LocalPreview-GoogleService-Info.plist",
   },
   plugins: [
     "expo-router",
