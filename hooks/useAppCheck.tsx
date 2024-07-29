@@ -15,10 +15,17 @@ const useAppCheck = () => {
       try {
         const provider = appCheck().newReactNativeFirebaseAppCheckProvider();
 
+        const debugToken = process.env.EXPO_PUBLIC_DEBUG_TOKEN || "";
+        if (!debugToken) {
+          console.error(
+            "Debug token is not defined from environment variables."
+          );
+        }
+
         provider.configure({
           apple: {
             provider: Device.isDevice ? "deviceCheck" : "debug",
-            debugToken: process.env.EXPO_PUBLIC_DEBUG_TOKEN,
+            debugToken: debugToken,
           },
         });
 

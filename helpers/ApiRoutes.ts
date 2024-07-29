@@ -1,70 +1,65 @@
-type Environment = "development" | "preview" | "production";
+import * as Sentry from "@sentry/react-native";
 
-const environment =
-  (process.env.EXPO_PUBLIC_ENVIRONMENT_KEY as Environment) || "development";
+let apiEndpoint = process.env.EXPO_PUBLIC_API_ENDPOINT || "";
 
-let userApisBaseUrl = "";
-
-if (environment === "development")
-  userApisBaseUrl = process.env.EXPO_PUBLIC_USER_APIS_BASE_URL || "";
-
-if (environment === "preview")
-  userApisBaseUrl = process.env.EXPO_PUBLIC_USER_APIS_PREVIEW_BASE_URL || "";
-
-if (!userApisBaseUrl)
+if (!apiEndpoint) {
   console.error("User APIs Base URL is undefined. (from .env file)");
+  Sentry.captureException(
+    "API endpoint to cloud functions is not defined in environment variables. (We are at API Routes file.)"
+  );
+}
 
 const apiRoutes = {
   feed: {
-    getPersonalizedFeed: `${userApisBaseUrl}/feed-getPersonalizedFeed`,
+    getPersonalizedFeed: `${apiEndpoint}/feed-getPersonalizedFeed`,
   },
   user: {
     personal: {
-      fullnameUpdate: `${userApisBaseUrl}/user-Personal-fullnameUpdate`,
-      updateProfileImage: `${userApisBaseUrl}/user-Personal-updateProfileImage`,
+      fullnameUpdate: `${apiEndpoint}/user-Personal-fullnameUpdate`,
+      updateProfileImage: `${apiEndpoint}/user-Personal-updateProfileImage`,
     },
     authentication: {
       login: {
-        checkThereIsLinkedAccount: `${userApisBaseUrl}/user-Authentication-login-checkThereIsLinkedAccount`,
+        checkThereIsLinkedAccount: `${apiEndpoint}/user-Authentication-login-checkThereIsLinkedAccount`,
       },
       signup: {
-        sendVerificationCode: `${userApisBaseUrl}/user-Authentication-signup-sendVerificationCode`,
-        verifyEmail: `${userApisBaseUrl}/user-Authentication-signup-verifyEmail`,
-        completeSignUp: `${userApisBaseUrl}/user-Authentication-signup-completeSignUp`,
+        sendVerificationCode: `${apiEndpoint}/user-Authentication-signup-sendVerificationCode`,
+        verifyEmail: `${apiEndpoint}/user-Authentication-signup-verifyEmail`,
+        completeSignUp: `${apiEndpoint}/user-Authentication-signup-completeSignUp`,
       },
     },
     notification: {
-      updateLastOpenedTime: `${userApisBaseUrl}/user-Notification-updateLastOpenedTime`,
-      updateNotificationToken: `${userApisBaseUrl}/user-Notification-updateNotificationToken`,
+      updateLastOpenedTime: `${apiEndpoint}/user-Notification-updateLastOpenedTime`,
+      updateNotificationToken: `${apiEndpoint}/user-Notification-updateNotificationToken`,
     },
     social: {
-      follow: `${userApisBaseUrl}/user-Social-follow`,
-      getFollowStatus: `${userApisBaseUrl}/user-Social-getFollowStatus`,
+      follow: `${apiEndpoint}/user-Social-follow`,
+      getFollowStatus: `${apiEndpoint}/user-Social-getFollowStatus`,
     },
   },
   nft: {
-    uploadNFT: `${userApisBaseUrl}/nft-uploadNFT`,
-    listNFT: `${userApisBaseUrl}/nft-listNFT`,
-    buyNFT: `${userApisBaseUrl}/nft-buyNFT`,
+    uploadNFT: `${apiEndpoint}/nft-uploadNFT`,
+    listNFT: `${apiEndpoint}/nft-listNFT`,
+    buyNFT: `${apiEndpoint}/nft-buyNFT`,
   },
   post: {
     comment: {
-      postComment: `${userApisBaseUrl}/post-postComment`,
-      postCommentDelete: `${userApisBaseUrl}/post-postCommentDelete`,
+      postComment: `${apiEndpoint}/post-postComment`,
+      postCommentDelete: `${apiEndpoint}/post-postCommentDelete`,
     },
-    postDelete: `${userApisBaseUrl}/post-postDelete`,
+    postDelete: `${apiEndpoint}/post-postDelete`,
     rate: {
-      postRate: `${userApisBaseUrl}/post-postRate`,
+      postRate: `${apiEndpoint}/post-postRate`,
     },
-    postUpload: `${userApisBaseUrl}/post-postUpload`,
+    postUpload: `${apiEndpoint}/post-postUpload`,
   },
   provider: {
-    getProviderInformation: `${userApisBaseUrl}/provider-getProviderInformation`,
-    rateProvider: `${userApisBaseUrl}/provider-rateProvider`,
-    selectProvider: `${userApisBaseUrl}/provider-selectProvider`,
+    getProviderInformation: `${apiEndpoint}/provider-getProviderInformation`,
+    rateProvider: `${apiEndpoint}/provider-rateProvider`,
+    selectProvider: `${apiEndpoint}/provider-selectProvider`,
   },
   payment: {
-    createPayment: `${userApisBaseUrl}/payment-createPayment`,
+    createPayment: `${apiEndpoint}/payment-createPayment`,
   },
 };
 

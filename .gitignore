@@ -44,6 +44,6 @@ ios
 
 # Comment here when locally building
 
-GoogleService-Info.plist
+googleServiceFiles
 .env*.local
 eas.json
