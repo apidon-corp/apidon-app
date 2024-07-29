@@ -46,3 +46,4 @@ ios
 
 GoogleService-Info.plist
 .env*.local
+eas.json
