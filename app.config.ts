@@ -25,19 +25,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       process.env.APIDON_USER_GOOGL_SERVICE_INFO_PLIST ||
       "./GoogleService-info.plist",
   },
-  android: {
-    adaptiveIcon: {
-      foregroundImage: "./assets/images/adaptive-icon.png",
-      backgroundColor: "#000000",
-    },
-    permissions: ["android.permission.RECORD_AUDIO"],
-    package: "com.abovestars.dev.apidon",
-  },
-  web: {
-    bundler: "metro",
-    output: "static",
-    favicon: "./assets/images/logo.png",
-  },
   plugins: [
     "expo-router",
     [
