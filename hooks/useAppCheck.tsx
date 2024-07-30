@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from "react";
 import appCheck from "@react-native-firebase/app-check";
 import * as Device from "expo-device";
+import { useEffect, useRef, useState } from "react";
 
 import { Alert } from "react-native";
+
+import crashlytics from "@react-native-firebase/crashlytics";
 
 const MAX_RETRIES = 5;
 const RETRY_DELAY = 3000; // 3 seconds
@@ -56,6 +58,11 @@ const useAppCheck = () => {
         console.error(
           "Error on connecting and creating app check token: ",
           error
+        );
+        crashlytics().recordError(
+          new Error(
+            "Error on connecting and creating app check token: " + error
+          )
         );
         setAppCheckLoaded(false);
       }
