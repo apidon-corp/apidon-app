@@ -182,7 +182,7 @@ const buyNFT = () => {
         { queryId: "collectedNFTPostDocPath", value: postDocPath },
       ]);
       router.dismiss();
-      return router.push(`/home/profile/${currentUserAuthObject.displayName}?`);
+      return router.push(`/home/profile/${currentUserAuthObject.displayName}`);
     } catch (error) {
       console.error("Error on buying NFT ", error);
       return setLoading(false);
