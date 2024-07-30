@@ -20,6 +20,7 @@ import apiRoutes from "@/helpers/ApiRoutes";
 import { useSetAtom } from "jotai";
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { router } from "expo-router";
+import crashlytics from "@react-native-firebase/crashlytics";
 
 const emailPasswordSignUp = () => {
   const [isEmailValid, setIsEmailValid] = useState(false);
@@ -233,6 +234,11 @@ const emailPasswordSignUp = () => {
       return router.push("/auth/verifyEmail");
     } catch (error) {
       console.error("Error on sign-up: ", error);
+      crashlytics().recordError(
+        new Error(
+          `Error on email-password sign up: (Screen: emailPassworsSignUp) (continue button: User tried to get verification code): \n: ${error}`
+        )
+      );
       return setLoading(false);
     }
   };

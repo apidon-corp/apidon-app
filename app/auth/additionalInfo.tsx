@@ -22,6 +22,7 @@ import { ScrollView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/providers/AuthProvider";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import crashlytics from "@react-native-firebase/crashlytics";
 
 const additionalInfo = () => {
   const { setAuthStatus } = useAuth();
@@ -336,6 +337,11 @@ const additionalInfo = () => {
 
       // Good to go...
     } catch (error) {
+      crashlytics().recordError(
+        new Error(
+          `Error on completing additional information. (screen: Additional Info- Continue Button): \n: ${error}`
+        )
+      );
       console.error(
         "Error on fetching to route API from apidon-user side: ",
         error
@@ -437,6 +443,9 @@ const additionalInfo = () => {
 
       return setDeleteAccountLoading(false);
     } catch (error) {
+      crashlytics().recordError(
+        new Error(`Error on deleting account: \n: ${error}`)
+      );
       setAuthStatus("dontMess");
       console.error("Error on deleting account: ", error);
       setDeleteAccountLoading(false);

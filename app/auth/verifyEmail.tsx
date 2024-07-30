@@ -16,6 +16,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import crashlytics from "@react-native-firebase/crashlytics";
 
 const verifyEmail = () => {
   const { setAuthStatus } = useAuth();
@@ -151,6 +152,11 @@ const verifyEmail = () => {
 
       return setLoading(false);
     } catch (error) {
+      crashlytics().recordError(
+        new Error(
+          `Error during email verifying. (Screen: Verify Email): ${error} `
+        )
+      );
       console.error("Error during verifyEmail or sign-in ", error);
       setError("Server Error");
       setLoading(false);

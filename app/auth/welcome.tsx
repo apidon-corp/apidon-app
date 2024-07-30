@@ -17,6 +17,8 @@ import { router } from "expo-router";
 
 import { handleGetActiveProviderStatus } from "@/helpers/Provider";
 
+import crashlytics from "@react-native-firebase/crashlytics";
+
 const welcome = () => {
   const { setAuthStatus } = useAuth();
 
@@ -97,6 +99,9 @@ const welcome = () => {
 
       setAuthStatus("unauthenticated");
       setLoading(false);
+      crashlytics().recordError(
+        new Error(`Error on Apple Sign In at welcome screen: \n: ${error}`)
+      );
       return console.log("Error on Apple Sign In: ", error);
     }
   }
@@ -154,6 +159,9 @@ const welcome = () => {
 
       setAuthStatus("unauthenticated");
       console.error("Error on Google Sign In: ", error);
+      crashlytics().recordError(
+        new Error(`Error on Google Sign In at welcome screen: \n: ${error}`)
+      );
       return setLoading(false);
     }
   }

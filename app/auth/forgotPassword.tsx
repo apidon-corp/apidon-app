@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import crashlytics from "@react-native-firebase/crashlytics";
 
 const forgotPassword = () => {
   const [isEmailValid, setIsEmailValid] = useState(false);
@@ -113,6 +114,9 @@ const forgotPassword = () => {
 
       // Good to go...
     } catch (error) {
+      crashlytics().recordError(
+        new Error("Error on sending password reset email: " + error)
+      );
       console.error("Error on sending password reset email: ", error);
       return setError("Invalid Email Address");
     }
