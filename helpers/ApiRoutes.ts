@@ -1,12 +1,7 @@
-import * as Sentry from "@sentry/react-native";
-
 let apiEndpoint = process.env.EXPO_PUBLIC_API_ENDPOINT || "";
 
 if (!apiEndpoint) {
   console.error("User APIs Base URL is undefined. (from .env file)");
-  Sentry.captureException(
-    "API endpoint to cloud functions is not defined in environment variables. (We are at API Routes file.)"
-  );
 }
 
 const apiRoutes = {

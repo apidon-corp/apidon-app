@@ -15,7 +15,6 @@ import {
 import { Image } from "expo-image";
 import { router } from "expo-router";
 
-import * as Sentry from "@sentry/react-native";
 import { handleGetActiveProviderStatus } from "@/helpers/Provider";
 
 const welcome = () => {
@@ -96,9 +95,6 @@ const welcome = () => {
         return setLoading(false);
       }
 
-      Sentry.captureException(
-        `Error on apple sign in (welcome screen): \n ${error}`
-      );
       setAuthStatus("unauthenticated");
       setLoading(false);
       return console.log("Error on Apple Sign In: ", error);
@@ -156,9 +152,6 @@ const welcome = () => {
         return setLoading(false);
       }
 
-      Sentry.captureException(
-        `Error on google sign in (welcome screen): \n ${error}`
-      );
       setAuthStatus("unauthenticated");
       console.error("Error on Google Sign In: ", error);
       return setLoading(false);

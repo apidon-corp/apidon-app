@@ -1,7 +1,13 @@
 import UserContent from "@/components/User/UserContent";
 import { Stack, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { ActivityIndicator, SafeAreaView, ScrollView } from "react-native";
+import {
+  ActivityIndicator,
+  Button,
+  SafeAreaView,
+  ScrollView,
+} from "react-native";
+import crashlytics from "@react-native-firebase/crashlytics";
 
 const profile = () => {
   const { username } = useLocalSearchParams<{ username: string }>();
@@ -13,6 +19,12 @@ const profile = () => {
           flex: 1,
         }}
       >
+        <Button
+          title="Crash"
+          onPress={() => {
+            crashlytics().crash();
+          }}
+        />
         {!username ? (
           <ActivityIndicator color="white" size="large" />
         ) : (

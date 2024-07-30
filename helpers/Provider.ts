@@ -4,7 +4,7 @@ import apiRoutes from "./ApiRoutes";
 
 import appCheck from "@react-native-firebase/app-check";
 
-import { captureException } from "@sentry/react-native";
+
 
 export const handleGetActiveProviderStatus = async () => {
   const currentUserAuthObject = auth().currentUser;
@@ -35,7 +35,6 @@ export const handleGetActiveProviderStatus = async () => {
     return result;
   } catch (error) {
     console.error("Error on getting provider information: ", error);
-    captureException(`Error on getting provider information: \n${error}`);
     return false;
   }
 };

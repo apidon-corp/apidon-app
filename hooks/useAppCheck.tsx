@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import appCheck from "@react-native-firebase/app-check";
 import * as Device from "expo-device";
-import * as Sentry from "@sentry/react-native";
+
 import { Alert } from "react-native";
 
 const MAX_RETRIES = 5;
@@ -52,9 +52,6 @@ const useAppCheck = () => {
         Alert.alert(
           "Connection Error",
           "Failed to connect securely to Apidon. Please try again later."
-        );
-        Sentry.captureException(
-          `Error on connecting and creating app check token: \n ${error}`
         );
         console.error(
           "Error on connecting and creating app check token: ",
