@@ -84,9 +84,12 @@ const index = () => {
       if (createdPostDocPath)
         postDocPathArrayFetched.unshift(createdPostDocPath);
 
-      // We are removing first "/" from post doc path because mr react native firebase firestore doesn't like it.
+      // We are removing first "/" from post doc path because react native firebase firestore doesn't like it.
       const unSlicedAtFirstPostDocPathArrayFetched =
-        postDocPathArrayFetched.map((p) => p.slice(1));
+        postDocPathArrayFetched.map((p) => {
+          if (p[0] === "/") return p.slice(1);
+          return p;
+        });
 
       const onlyFourPosts = unSlicedAtFirstPostDocPathArrayFetched.slice(0, 4);
 
