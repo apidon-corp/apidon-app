@@ -48,11 +48,6 @@ const apiRoutes = {
     },
     postUpload: `${apiEndpoint}/post-postUpload`,
   },
-  provider: {
-    getProviderInformation: `${apiEndpoint}/provider-getProviderInformation`,
-    rateProvider: `${apiEndpoint}/provider-rateProvider`,
-    selectProvider: `${apiEndpoint}/provider-selectProvider`,
-  },
   payment: {
     createPayment: `${apiEndpoint}/payment-createPayment`,
   },

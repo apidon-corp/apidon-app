@@ -19,7 +19,7 @@ const index = () => {
   const changeButtonOpacity = (toValue: number) => {
     Animated.timing(animatedOpacityValue, {
       toValue: toValue,
-      duration: 3 * 1000,
+      duration: 1 * 1000,
       useNativeDriver: true,
     }).start();
   };
