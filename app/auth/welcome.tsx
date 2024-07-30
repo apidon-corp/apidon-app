@@ -15,8 +15,6 @@ import {
 import { Image } from "expo-image";
 import { router } from "expo-router";
 
-import { handleGetActiveProviderStatus } from "@/helpers/Provider";
-
 import crashlytics from "@react-native-firebase/crashlytics";
 
 const welcome = () => {
@@ -82,12 +80,6 @@ const welcome = () => {
       // We are setting this manually due to dontMess state...
       setAuthStatus("authenticated");
 
-      const providerStatus = await handleGetActiveProviderStatus();
-      if (!providerStatus || !providerStatus.isThereActiveProvider) {
-        router.replace("/(modals)/initialProvider");
-        return setLoading(false);
-      }
-
       router.replace("/home");
 
       return setLoading(false);
@@ -138,12 +130,6 @@ const welcome = () => {
 
       // We are setting this manually due to dontMess state...
       setAuthStatus("authenticated");
-
-      const providerStatus = await handleGetActiveProviderStatus();
-      if (!providerStatus || !providerStatus.isThereActiveProvider) {
-        router.replace("/(modals)/initialProvider");
-        return setLoading(false);
-      }
 
       router.replace("/home");
 

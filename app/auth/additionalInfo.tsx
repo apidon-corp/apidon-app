@@ -333,7 +333,7 @@ const additionalInfo = () => {
 
       setAuthStatus("authenticated");
 
-      return router.replace("/initialProvider");
+      return router.replace("/home");
 
       // Good to go...
     } catch (error) {

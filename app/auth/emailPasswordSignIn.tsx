@@ -17,7 +17,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "@/providers/AuthProvider";
 import auth from "@react-native-firebase/auth";
-import { handleGetActiveProviderStatus } from "@/helpers/Provider";
 
 const emailPasswordSignIn = () => {
   const { setAuthStatus } = useAuth();
@@ -160,12 +159,6 @@ const emailPasswordSignIn = () => {
 
       // We are setting this manually due to dontMess state...
       setAuthStatus("authenticated");
-
-      const providerStatus = await handleGetActiveProviderStatus();
-      if (!providerStatus || !providerStatus.isThereActiveProvider) {
-        router.replace("/(modals)/initialProvider");
-        return setLoading(false);
-      }
 
       router.replace("/home");
 

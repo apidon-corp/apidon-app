@@ -12,7 +12,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { handleGetActiveProviderStatus } from "@/helpers/Provider";
 
 type AuthContextType = {
   authStatus: AuthStatus;
@@ -82,12 +81,6 @@ export default function AuthProvider({ children }: PropsWithChildren) {
       return router.replace("/auth/welcome");
     }
 
-    const providerStatus = await handleGetActiveProviderStatus();
-
-    if (!providerStatus || !providerStatus.isThereActiveProvider) {
-      setAuthStatus("authenticated");
-      return router.replace("/(modals)/initialProvider");
-    }
     setAuthStatus("authenticated");
     return router.replace("/home");
   };
