@@ -40,6 +40,8 @@ const UserCard = ({ username, destinationIn }: Props) => {
     const displayName = auth().currentUser?.displayName;
     if (!displayName) return;
 
+    if (displayName === username) return setDoesFollow(true);
+
     const unsubscribe = firestore()
       .doc(`users/${username}/followers/${displayName}`)
       .onSnapshot(
@@ -81,10 +83,10 @@ const UserCard = ({ username, destinationIn }: Props) => {
   const handleFollowButton = async () => {
     if (followLoading) return;
 
-    setFollowLoading(true);
-
     const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("No user found!");
+
+    setFollowLoading(true);
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
@@ -112,7 +114,7 @@ const UserCard = ({ username, destinationIn }: Props) => {
       }
 
       setDoesFollow(true);
-      return setFollowLoading(true);
+      return setFollowLoading(false);
     } catch (error) {
       console.error("Error on fetching follow API: : ", error);
       return setFollowLoading(false);
