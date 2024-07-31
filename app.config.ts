@@ -3,7 +3,7 @@ import { ExpoConfig, ConfigContext } from "expo/config";
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: process.env.APP_NAME || "ApidonDevelopment",
-  slug: "apidon-app-dev",
+  slug: process.env.SLUG || "apidon-app-dev",
   version: process.env.APP_VERSION || "1.0.6",
   orientation: "portrait",
   icon: process.env.APP_ICON || "./assets/images/iconDev.png",
@@ -20,7 +20,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     usesAppleSignIn: true,
     supportsTablet: false,
-    bundleIdentifier: "com.abovestars.dev.apidon",
+    bundleIdentifier:
+      process.env.IOS_BUNDLE_INDENTIFER || "com.abovestars.dev.apidon",
     googleServicesFile:
       process.env.GOOGLE_SERVICES_FILE_APPLE ||
       "./Development-LocalPreview-GoogleService-Info.plist",
