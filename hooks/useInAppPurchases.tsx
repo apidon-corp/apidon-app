@@ -3,7 +3,9 @@ import auth from "@react-native-firebase/auth";
 import { useEffect, useState } from "react";
 import Purchases, { PurchasesStoreProduct } from "react-native-purchases";
 
-const appStoreProductIds = [
+const envTypeForIAP = process.env.EXPO_PUBLIC_ENVIRONMENT_TYPE_FOR_IAP || "";
+
+let appStoreProductIds = [
   "1_dollar_in_app_credit",
   "5_dollar_in_app_credit",
   "10_dollar_in_app_credit",
@@ -14,6 +16,12 @@ const appStoreProductIds = [
   "500_dollar_in_app_credit",
   "1000_dollar_in_app_credit",
 ];
+
+if (envTypeForIAP === "test") {
+  let testEnvironmentAppStoreProcuductIds = appStoreProductIds;
+  testEnvironmentAppStoreProcuductIds.map((productId) => `${productId}_test`);
+  appStoreProductIds = testEnvironmentAppStoreProcuductIds;
+}
 
 export const useInAppPurchases = () => {
   const { authStatus } = useAuth();

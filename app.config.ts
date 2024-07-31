@@ -3,7 +3,7 @@ import { ExpoConfig, ConfigContext } from "expo/config";
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: process.env.APP_NAME || "ApidonDevelopment",
-  slug: process.env.SLUG || "apidon-app-dev",
+  slug: process.env.APP_SLUG || "apidon-app-dev",
   version: process.env.APP_VERSION || "1.0.6",
   orientation: "portrait",
   icon: process.env.APP_ICON || "./assets/images/iconDev.png",
@@ -66,7 +66,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       origin: false,
     },
     eas: {
-      projectId: "0d348ab7-ab83-4fbc-8f26-98b5b600919b",
+      projectId: "fb6da820-d5c1-4658-9bce-7e125525e0cc",
     },
   },
   owner: "abovestars",
