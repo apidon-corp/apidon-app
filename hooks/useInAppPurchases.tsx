@@ -3,6 +3,8 @@ import auth from "@react-native-firebase/auth";
 import { useEffect, useState } from "react";
 import Purchases, { PurchasesStoreProduct } from "react-native-purchases";
 
+import crashlytics from "@react-native-firebase/crashlytics";
+
 const envTypeForIAP = process.env.EXPO_PUBLIC_ENVIRONMENT_TYPE_FOR_IAP || "";
 
 let appStoreProductIds = [
@@ -44,21 +46,32 @@ export const useInAppPurchases = () => {
   }
 
   async function getProducts() {
-    const productsFetched = await Purchases.getProducts(appStoreProductIds);
+    try {
+      const productsFetched = await Purchases.getProducts(appStoreProductIds);
+      const sortedProducts = productsFetched.sort((a, b) => a.price - b.price);
 
-    const sortedProducts = productsFetched.sort((a, b) => a.price - b.price);
+      if (!sortedProducts.length) throw new Error("No products found");
 
-    setProducts(sortedProducts);
+      return setProducts(sortedProducts);
+    } catch (error) {
+      console.error("Error on fetching products:", error);
+      crashlytics().recordError(
+        new Error(
+          `Error on fetching top up products: ${error} \n ProductIds On App: ${products} \n Apple API Key: ${appleAPIKey} \n Display Name: ${currentUserDisplayName}`
+        )
+      );
+      return setProducts([]);
+    }
   }
 
   useEffect(() => {
-    if (currentUserDisplayName && appleAPIKey)
+    if (currentUserDisplayName && appleAPIKey) {
       Purchases.configure({
         apiKey: appleAPIKey,
         appUserID: currentUserDisplayName,
       });
-
-    getProducts();
+      getProducts();
+    }
   }, [currentUserDisplayName, appleAPIKey]);
 
   return {
