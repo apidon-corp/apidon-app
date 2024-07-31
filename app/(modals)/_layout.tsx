@@ -29,21 +29,14 @@ const _layout = () => {
           }}
         />
         <Stack.Screen
-          name="createNFT"
+          name="createCollectible"
           options={{
             presentation: "modal",
-            title: "Create NFT",
+            title: "Create Collectible",
           }}
         />
         <Stack.Screen
-          name="listNFT"
-          options={{
-            presentation: "modal",
-            title: "List NFT",
-          }}
-        />
-        <Stack.Screen
-          name="buyNFT"
+          name="buyCollectible"
           options={{
             presentation: "modal",
             title: "Collect",

@@ -1,8 +1,26 @@
-export type NFTTradeDocData = {
-  createdNFTs: CreatedNFTsArrayObject[];
-  boughtNFTs: BoughtNFTsArrayObject[];
-  soldNFTs: SoldNFTsArrayObject[];
-  stripeCustomerId?: string;
+export type CollectibleTradeDocData = {
+  createdCollectibles: CreatedCollectiblesArrayObject[];
+  boughtCollectibles: BoughtCollectiblesArrayObject[];
+  soldCollectibles: SoldCollectiblesArrayObject[];
+};
+
+export type BoughtCollectiblesArrayObject = {
+  postDocPath: string;
+  collectibleDocPath: string;
+  ts: number;
+};
+
+export type SoldCollectiblesArrayObject = {
+  postDocPath: string;
+  collectibleDocPath: string;
+  ts: number;
+  username: string;
+};
+
+export type CreatedCollectiblesArrayObject = {
+  postDocPath: string;
+  collectibleDocPath: string;
+  ts: number;
 };
 
 export type PaymentIntentDocData = {
@@ -87,26 +105,4 @@ export type PaymentIntentDocDataUpdateable = {
    * The username of the user making the payment, represented as a string.
    */
   username?: string;
-};
-
-export type BoughtNFTsArrayObject = {
-  postDocPath: string;
-  nftDocPath: string;
-  ts: number;
-};
-
-export type SoldNFTsArrayObject = {
-  postDocPath: string;
-  nftDocPath: string;
-  ts: number;
-  /**
-   * Username of buyer.
-   */
-  username: string;
-};
-
-export type CreatedNFTsArrayObject = {
-  postDocPath: string;
-  nftDocPath: string;
-  ts: number;
 };

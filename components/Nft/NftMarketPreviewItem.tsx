@@ -9,20 +9,20 @@ import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import Text from "../Text/Text";
-import { NftDocDataInServer } from "@/types/Nft";
+import { CollectibleDocData } from "@/types/Collectible";
 
 type Props = {
   postDocPath: string;
-  nftDocData: NftDocDataInServer;
+  collectibleDocData: CollectibleDocData;
 };
 
-const NftMarketPreviewItem = ({ postDocPath, nftDocData }: Props) => {
+const NftMarketPreviewItem = ({ postDocPath, collectibleDocData }: Props) => {
   const [postDocData, setPostDocData] = useState<PostServerData | null>(null);
   const [postSenderData, setPostSenderData] = useState<UserInServer | null>(
     null
   );
 
-  const {authStatus} = useAuth();
+  const { authStatus } = useAuth();
 
   // Dynamic Data Fetching / Post Object
   useEffect(() => {
@@ -91,7 +91,7 @@ const NftMarketPreviewItem = ({ postDocPath, nftDocData }: Props) => {
     );
   }
 
-  if (!nftDocData.listStatus.isListed) {
+  if (!collectibleDocData) {
     return null;
   }
 
@@ -137,7 +137,7 @@ const NftMarketPreviewItem = ({ postDocPath, nftDocData }: Props) => {
             }}
             bold
           >
-            {nftDocData.listStatus.price.price}
+            {collectibleDocData.price.price}
           </Text>
         </View>
       </View>
@@ -167,7 +167,7 @@ const NftMarketPreviewItem = ({ postDocPath, nftDocData }: Props) => {
             }}
             bold
           >
-            {nftDocData.listStatus.stock.remainingStock}
+            {collectibleDocData.stock.remainingStock}
           </Text>
         </View>
       </View>

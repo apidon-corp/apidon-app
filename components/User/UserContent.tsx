@@ -1,7 +1,11 @@
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
 import { useAuth } from "@/providers/AuthProvider";
-import { NFTTradeDocData } from "@/types/Trade";
+import {
+  BoughtCollectiblesArrayObject,
+  CollectibleTradeDocData,
+  CreatedCollectiblesArrayObject,
+} from "@/types/Trade";
 import { UserInServer } from "@/types/User";
 import firestore from "@react-native-firebase/firestore";
 import React, { useEffect, useState } from "react";
@@ -18,7 +22,7 @@ type Props = {
 };
 
 const UserContent = ({ username }: Props) => {
-  const {authStatus} = useAuth();
+  const { authStatus } = useAuth();
 
   const screenParameters = useAtomValue(screenParametersAtom);
   const collectedNFTPostDocPath = screenParameters.find(
@@ -26,12 +30,12 @@ const UserContent = ({ username }: Props) => {
   )?.value as string;
 
   const [postDocPathArray, setPostDocPathArray] = useState<string[]>([]);
-  const [nftData, setNftData] = useState<{
-    createdNFTs: { nftDocPath: string; postDocPath: string; ts: number }[];
-    boughtNFTs: { nftDocPath: string; postDocPath: string; ts: number }[];
+  const [collectibleData, setCollectibleData] = useState<{
+    createdCollectibles: CreatedCollectiblesArrayObject[];
+    boughtCollectibles: BoughtCollectiblesArrayObject[];
   }>({
-    createdNFTs: [],
-    boughtNFTs: [],
+    createdCollectibles: [],
+    boughtCollectibles: [],
   });
 
   const [userData, setUserData] = useState<UserInServer | null>(null);
@@ -75,72 +79,62 @@ const UserContent = ({ username }: Props) => {
     if (!username) return;
 
     const unsubscribe = firestore()
-      .doc(`users/${username}/nftTrade/nftTrade`)
+      .doc(`users/${username}/collectible/trade`)
       .onSnapshot(
         (snapshot) => {
           if (!snapshot.exists) {
-            console.error("NFT Trade doc doesn't exist.");
-            return setNftData({
-              createdNFTs: [],
-              boughtNFTs: [],
+            console.error("Collectible Trade doc doesn't exist.");
+            return setCollectibleData({
+              createdCollectibles: [],
+              boughtCollectibles: [],
             });
           }
 
-          const nftTradeData = snapshot.data() as NFTTradeDocData;
-          if (!nftTradeData) {
-            console.error("NFT Trade doc doesn't exist.");
-            return setNftData({
-              createdNFTs: [],
-              boughtNFTs: [],
+          const collectibleTradeData =
+            snapshot.data() as CollectibleTradeDocData;
+          if (!collectibleTradeData) {
+            console.error("Collectible Trade doc doesn't exist.");
+            return setCollectibleData({
+              createdCollectibles: [],
+              boughtCollectibles: [],
             });
           }
 
-          const boughtNFTs = nftTradeData.boughtNFTs;
+          const boughtCollectibles = collectibleTradeData.boughtCollectibles;
 
-          boughtNFTs.sort((a, b) => b.ts - a.ts);
-
-          if (!boughtNFTs) {
-            console.error("BoughtNFTs is undefined on nftTrade doc");
-            return setNftData({
-              createdNFTs: [],
-              boughtNFTs: [],
+          if (!boughtCollectibles) {
+            console.error("BoughtNFTs is undefined on collectible trade doc");
+            return setCollectibleData({
+              createdCollectibles: [],
+              boughtCollectibles: [],
             });
           }
 
-          const createdNFTs = nftTradeData.createdNFTs;
+          boughtCollectibles.sort((a, b) => b.ts - a.ts);
 
-          createdNFTs.sort((a, b) => b.ts - a.ts);
-
-          if (!createdNFTs) {
-            console.error("CreatedNFTs is undefined on nftTrade doc");
-            return setNftData({
-              createdNFTs: [],
-              boughtNFTs: [],
+          const createdCollectibles = collectibleTradeData.createdCollectibles;
+          if (!createdCollectibles) {
+            console.error(
+              "createdCollectibles is undefined on collectible trade doc"
+            );
+            return setCollectibleData({
+              createdCollectibles: [],
+              boughtCollectibles: [],
             });
           }
 
-          return setNftData({
-            createdNFTs: createdNFTs.map((c) => {
-              return {
-                nftDocPath: c.nftDocPath,
-                postDocPath: c.postDocPath,
-                ts: c.ts,
-              };
-            }),
-            boughtNFTs: boughtNFTs.map((b) => {
-              return {
-                nftDocPath: b.nftDocPath,
-                postDocPath: b.postDocPath,
-                ts: b.ts,
-              };
-            }),
+          createdCollectibles.sort((a, b) => b.ts - a.ts);
+
+          return setCollectibleData({
+            createdCollectibles: createdCollectibles,
+            boughtCollectibles: boughtCollectibles,
           });
         },
         (error) => {
           console.error("Error on getting realtime nftTrade data: ", error);
-          return setNftData({
-            createdNFTs: [],
-            boughtNFTs: [],
+          return setCollectibleData({
+            createdCollectibles: [],
+            boughtCollectibles: [],
           });
         }
       );
@@ -250,8 +244,8 @@ const UserContent = ({ username }: Props) => {
       {toggleValue === "nfts" && (
         <>
           <NftContent
-            createdNFTs={nftData.createdNFTs}
-            boughtNFTs={nftData.boughtNFTs}
+            createdCollectibles={collectibleData.createdCollectibles}
+            boughtCollectibles={collectibleData.boughtCollectibles}
           />
         </>
       )}

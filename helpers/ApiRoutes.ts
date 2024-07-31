@@ -32,6 +32,10 @@ const apiRoutes = {
       getFollowStatus: `${apiEndpoint}/user-Social-getFollowStatus`,
     },
   },
+  collectible: {
+    createCollectible: `${apiEndpoint}/collectible-createCollectible`,
+    buyCollectible: `${apiEndpoint}/collectible-buyCollectible`,
+  },
   nft: {
     uploadNFT: `${apiEndpoint}/nft-uploadNFT`,
     listNFT: `${apiEndpoint}/nft-listNFT`,

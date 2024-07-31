@@ -243,7 +243,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
     setScreenParameters([{ queryId: "postDocPath", value: postDocPath }]);
 
-    router.push("/(modals)/createNFT");
+    router.push("/(modals)/createCollectible");
   };
 
   const handleFollowButton = async () => {
@@ -420,7 +420,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
             }}
           />
 
-          {postDocData.nftStatus.convertedToNft && (
+          {postDocData.collectibleStatus.isCollectible && (
             <View
               id="nft-tag"
               style={{
@@ -621,7 +621,9 @@ const Post = React.memo(({ postDocPath }: Props) => {
                     color: "gray",
                   }}
                 >
-                  {postDocData.commentCount ? postDocData.commentCount : 0}{" "}
+                  {postDocData.comments.length
+                    ? postDocData.comments.length
+                    : 0}{" "}
                   comments
                 </Text>
               </View>
@@ -637,22 +639,23 @@ const Post = React.memo(({ postDocPath }: Props) => {
             gap: 10,
           }}
         >
-          {postDocData.image && !postDocData.nftStatus.convertedToNft && (
-            <Pressable
-              onPress={handleCreateNFTButton}
-              style={{
-                padding: 10,
-                borderRadius: 10,
-                backgroundColor: apidonPink,
-                width: "100%",
-                alignItems: "center",
-              }}
-            >
-              <Text bold style={{ fontSize: 16 }}>
-                Create NFT
-              </Text>
-            </Pressable>
-          )}
+          {postDocData.image &&
+            !postDocData.collectibleStatus.isCollectible && (
+              <Pressable
+                onPress={handleCreateNFTButton}
+                style={{
+                  padding: 10,
+                  borderRadius: 10,
+                  backgroundColor: apidonPink,
+                  width: "100%",
+                  alignItems: "center",
+                }}
+              >
+                <Text bold style={{ fontSize: 16 }}>
+                  Make Collectible
+                </Text>
+              </Pressable>
+            )}
 
           <Pressable
             style={{

@@ -2,15 +2,19 @@ import { FlatList, Pressable, View } from "react-native";
 import { Text } from "@/components/Text/Text";
 import React, { useState } from "react";
 import NftOnUserPreviewItem from "../Nft/NftOnUserPreviewItem";
+import {
+  BoughtCollectiblesArrayObject,
+  CreatedCollectiblesArrayObject,
+} from "@/types/Trade";
 
 type Props = {
-  createdNFTs: { postDocPath: string; nftDocPath: string; ts: number }[];
-  boughtNFTs: { postDocPath: string; nftDocPath: string; ts: number }[];
+  createdCollectibles: CreatedCollectiblesArrayObject[];
+  boughtCollectibles: BoughtCollectiblesArrayObject[];
 };
 
 type Option = "all" | "collected" | "created";
 
-const NftContent = ({ createdNFTs, boughtNFTs }: Props) => {
+const NftContent = ({ createdCollectibles, boughtCollectibles }: Props) => {
   const [option, setOption] = useState<Option>("all");
 
   const handleChangeOption = (option: Option) => {
@@ -88,10 +92,12 @@ const NftContent = ({ createdNFTs, boughtNFTs }: Props) => {
           keyExtractor={(item) => item.postDocPath}
           numColumns={1}
           scrollEnabled={false}
-          data={[...createdNFTs, ...boughtNFTs].sort((a, b) => b.ts - a.ts)}
+          data={[...createdCollectibles, ...boughtCollectibles].sort(
+            (a, b) => b.ts - a.ts
+          )}
           renderItem={({ item }) => (
             <NftOnUserPreviewItem
-              nftDocPath={item.nftDocPath}
+              collectibleDocPath={item.collectibleDocPath}
               postDocPath={item.postDocPath}
               key={item.postDocPath}
             />
@@ -106,10 +112,10 @@ const NftContent = ({ createdNFTs, boughtNFTs }: Props) => {
           keyExtractor={(item) => item.postDocPath}
           numColumns={1}
           scrollEnabled={false}
-          data={[...boughtNFTs]}
+          data={[...boughtCollectibles]}
           renderItem={({ item }) => (
             <NftOnUserPreviewItem
-              nftDocPath={item.nftDocPath}
+              collectibleDocPath={item.collectibleDocPath}
               postDocPath={item.postDocPath}
               key={item.postDocPath}
             />
@@ -124,10 +130,10 @@ const NftContent = ({ createdNFTs, boughtNFTs }: Props) => {
           keyExtractor={(item) => item.postDocPath}
           numColumns={1}
           scrollEnabled={false}
-          data={[...createdNFTs]}
+          data={[...createdCollectibles]}
           renderItem={({ item }) => (
             <NftOnUserPreviewItem
-              nftDocPath={item.nftDocPath}
+              collectibleDocPath={item.collectibleDocPath}
               postDocPath={item.postDocPath}
               key={item.postDocPath}
             />

@@ -1,6 +1,5 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { Text } from "@/components/Text/Text";
-import { NftDocDataInServer } from "@/types/Nft";
 import { PostServerData } from "@/types/Post";
 import { useAtomValue } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
@@ -24,7 +23,6 @@ import apiRoutes from "@/helpers/ApiRoutes";
 import appCheck from "@react-native-firebase/app-check";
 import auth from "@react-native-firebase/auth";
 import { router } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const listNFT = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
@@ -34,7 +32,6 @@ const listNFT = () => {
   )?.value;
 
   const [postData, setPostData] = useState<PostServerData | null>(null);
-  const [nftData, setNftData] = useState<NftDocDataInServer | null>(null);
 
   const [priceInput, setPriceInput] = useState("");
   const [price, setPrice] = useState(0);
@@ -47,8 +44,6 @@ const listNFT = () => {
   const containerRef = useRef<null | View>(null);
 
   const [loading, setLoading] = useState(false);
-
-  const { bottom } = useSafeAreaInsets();
 
   useEffect(() => {
     getInitialData();
@@ -111,20 +106,12 @@ const listNFT = () => {
     const postDataFetched = await getPostData(postDocPath);
     if (!postDataFetched) return setPostData(null);
 
+    if (postDataFetched.collectibleStatus.isCollectible) {
+      console.error("Post is already a collectible.");
+      return setPostData(null);
+    }
+
     setPostData(postDataFetched);
-
-    if (
-      !postDataFetched.nftStatus.convertedToNft ||
-      !postDataFetched.nftStatus.nftDocPath
-    )
-      return console.error("Post not converted to NFT yet.");
-
-    const nftDocDataFetched = await getNftData(
-      postDataFetched.nftStatus.nftDocPath
-    );
-    if (!nftDocDataFetched) return setNftData(null);
-
-    setNftData(nftDocDataFetched);
   };
 
   const getPostData = async (postDocPath: string) => {
@@ -140,22 +127,6 @@ const listNFT = () => {
       return postDataFetched;
     } catch (error) {
       console.error("Error on getting inital data of post ", error);
-      return false;
-    }
-  };
-
-  const getNftData = async (nftDocPath: string) => {
-    try {
-      const nftDocSnapshot = await firestore().doc(nftDocPath).get();
-      if (!nftDocSnapshot.exists) {
-        console.error("NFT's realtime data can not be fecthed.");
-        return false;
-      }
-
-      const nftDataFetched = nftDocSnapshot.data() as NftDocDataInServer;
-      return nftDataFetched;
-    } catch (error) {
-      console.error("Error on getting inital data of NFT ", error);
       return false;
     }
   };
@@ -238,7 +209,7 @@ const listNFT = () => {
       const idToken = await currentUserAuthObject.getIdToken();
       const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
-      const response = await fetch(apiRoutes.nft.listNFT, {
+      const response = await fetch(apiRoutes.collectible.createCollectible, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -254,7 +225,7 @@ const listNFT = () => {
 
       if (!response.ok) {
         console.error(
-          "Response from listNFT api is not okay: \n",
+          "Response from createCollectible api is not okay: \n",
           await response.text()
         );
         return setLoading(false);
@@ -264,7 +235,7 @@ const listNFT = () => {
 
       return setLoading(false);
     } catch (error) {
-      console.error("Error on listing NFT: ", error);
+      console.error("Error on creating collectible: ", error);
       return setLoading(false);
     }
   };
@@ -277,7 +248,7 @@ const listNFT = () => {
     );
   }
 
-  if (!postData || !nftData) {
+  if (!postData) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator color="white" />

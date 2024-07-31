@@ -1,60 +1,47 @@
 import NftMarketPreviewItem from "@/components/Nft/NftMarketPreviewItem";
 import { useAuth } from "@/providers/AuthProvider";
-import { NftDocDataInServer } from "@/types/Nft";
+import { CollectibleDocData } from "@/types/Collectible";
 import firestore from "@react-native-firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { FlatList, SafeAreaView } from "react-native";
 
 const index = () => {
-  const {authStatus} = useAuth();
+  const { authStatus } = useAuth();
 
-  const [listedNftDocDatas, setListedNftDocDatas] = useState<
-    NftDocDataInServer[]
+  const [collectibleDocDatas, setCollectibleDocDatas] = useState<
+    CollectibleDocData[]
   >([]);
 
   useEffect(() => {
     if (authStatus !== "authenticated") return;
 
-    setListedNftDocDatas([]);
+    setCollectibleDocDatas([]);
 
     const unsubscribe = firestore()
-      .collection("nfts")
-      .orderBy("mintTime", "desc")
+      .collection("collectibles")
+      .orderBy("timestamp", "desc")
       .onSnapshot(
         (snapshot) => {
           snapshot.docChanges().forEach((change) => {
-            const nftDocData = change.doc.data() as NftDocDataInServer;
+            const collectibleDocData = change.doc.data() as CollectibleDocData;
 
             if (change.type === "added") {
-              if (nftDocData.listStatus.isListed) {
-                setListedNftDocDatas((prev) => [nftDocData, ...prev]);
-              }
+              setCollectibleDocDatas((prev) => [collectibleDocData, ...prev]);
             } else if (change.type === "modified") {
-              if (nftDocData.listStatus.isListed) {
-                setListedNftDocDatas((prev) => {
-                  const updatedNftDocDatas = prev.map((n) => {
-                    return n.tokenId === nftDocData.tokenId ? nftDocData : n;
-                  });
-
-                  if (
-                    !updatedNftDocDatas.some(
-                      (n) => n.tokenId === nftDocData.tokenId
-                    )
-                  )
-                    return [nftDocData, ...prev];
-
-                  return updatedNftDocDatas;
-                });
-              }
+              setCollectibleDocDatas((prev) =>
+                prev.map((item) =>
+                  item.id === collectibleDocData.id ? collectibleDocData : item
+                )
+              );
             }
           });
         },
         (error) => {
           console.error(
-            "Error on getting realtime nft collection data: ",
+            "Error on getting realtime collectibe collection data: ",
             error
           );
-          return setListedNftDocDatas([]);
+          return setCollectibleDocDatas([]);
         }
       );
 
@@ -73,15 +60,15 @@ const index = () => {
       <FlatList
         style={{ width: "100%" }}
         numColumns={2}
-        data={listedNftDocDatas}
+        data={collectibleDocDatas}
         renderItem={({ item }) => (
           <NftMarketPreviewItem
             postDocPath={item.postDocPath}
-            nftDocData={item}
-            key={item.tokenId}
+            collectibleDocData={item}
+            key={item.id}
           />
         )}
-        keyExtractor={(item) => item.tokenId.toString()}
+        keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>

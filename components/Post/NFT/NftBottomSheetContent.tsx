@@ -1,17 +1,17 @@
+import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
+import { useAuth } from "@/providers/AuthProvider";
+import { CollectibleDocData } from "@/types/Collectible";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
-import { Image } from "expo-image";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, View } from "react-native";
-import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
-import { useAuth } from "@/providers/AuthProvider";
-import { NftDocDataInServer } from "@/types/Nft";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Pressable, View } from "react-native";
 
 type Props = {
   postData: PostServerData;
@@ -19,117 +19,81 @@ type Props = {
   closeNFTBottomSheet: () => void;
 };
 
-type NftStatus =
-  | "not-converted-to-nft"
+type CollectibleStatus =
+  | "not-collectible"
   | {
-      isListed: true;
       fromCurrentUser: boolean;
-      price: number;
-      currency: string;
-      stock: number;
-      totalStock: number;
       alreadyBought: boolean;
-    }
-  | { isListed: false; fromCurrentUser: boolean }
-  | null;
+    };
 
 const NftBottomSheetContent = ({
   postData,
   postSenderData,
   closeNFTBottomSheet,
 }: Props) => {
-  const {authStatus} = useAuth();
+  const { authStatus } = useAuth();
 
-  const [nftDocData, setNftDocData] = useState<NftDocDataInServer | null>(null);
-  const [nftStatus, setNftStatus] = useState<NftStatus>(null);
+  const [collectibleDocData, setCollectibleDocData] =
+    useState<CollectibleDocData | null>(null);
+  const [collectibleStatus, setCollectibleStatus] =
+    useState<CollectibleStatus | null>(null);
 
   const setScreenParameters = useSetAtom(screenParametersAtom);
 
   useEffect(() => {
     if (authStatus !== "authenticated") return;
-    if (!postData.nftStatus.convertedToNft) return;
-    if (!postData.nftStatus.nftDocPath) return;
+    if (!postData.collectibleStatus.isCollectible) return;
 
     const unsubscribe = firestore()
-      .doc(postData.nftStatus.nftDocPath)
+      .doc(postData.collectibleStatus.collectibleDocPath)
       .onSnapshot(
         (snapshot) => {
           if (!snapshot.exists) {
             console.error(
-              "NFT doc does not exist: ",
-              postData.nftStatus.nftDocPath
+              "Colectible doc does not exist: ",
+              postData.collectibleStatus
             );
-            return setNftDocData(null);
+            return setCollectibleDocData(null);
           }
 
-          const nftDocDataFetched = snapshot.data() as NftDocDataInServer;
+          const collectibleDocDataFetched =
+            snapshot.data() as CollectibleDocData;
 
-          return setNftDocData(nftDocDataFetched);
+          return setCollectibleDocData(collectibleDocDataFetched);
         },
         (error) => {
           console.error(
-            "Error on getting realtime nft data at: \n",
-            postData.nftStatus.nftDocPath,
+            "Error on getting realtime collectible data at: \n",
+            postData.collectibleStatus,
             "\n",
             error
           );
-          return setNftDocData(null);
+          return setCollectibleDocData(null);
         }
       );
     () => unsubscribe();
   }, [authStatus]);
 
   useEffect(() => {
-    if (!nftDocData) return setNftStatus(null);
+    if (!collectibleDocData) return setCollectibleStatus(null);
 
     const currentUserDisplayName = auth().currentUser?.displayName;
-    if (!currentUserDisplayName) return setNftStatus(null);
+    if (!currentUserDisplayName) return setCollectibleStatus(null);
 
-    if (nftDocData) {
-      if (nftDocData.listStatus.isListed) {
-        let alreadyBoughtStatus = true;
+    if (collectibleDocData) {
+      let alreadyBoughtStatus = true;
 
-        if (nftDocData.listStatus.buyers) {
-          const buyersUsername = nftDocData.listStatus.buyers.map(
-            (b) => b.username
-          );
-          alreadyBoughtStatus = buyersUsername.includes(currentUserDisplayName);
-        } else {
-          alreadyBoughtStatus = false;
-        }
+      const buyersUsername = collectibleDocData.buyers.map((b) => b.username);
+      alreadyBoughtStatus = buyersUsername.includes(currentUserDisplayName);
 
-        const { price, stock } = nftDocData.listStatus;
-
-        setNftStatus({
-          isListed: true,
-          alreadyBought: alreadyBoughtStatus,
-          currency: price.currency,
-          fromCurrentUser: postData.senderUsername === currentUserDisplayName,
-          price: price.price,
-          stock: stock.remainingStock,
-          totalStock: stock.initialStock,
-        });
-      } else {
-        setNftStatus({
-          isListed: false,
-          fromCurrentUser: postData.senderUsername === currentUserDisplayName,
-        });
-      }
+      setCollectibleStatus({
+        alreadyBought: alreadyBoughtStatus,
+        fromCurrentUser: postData.senderUsername === currentUserDisplayName,
+      });
     } else {
-      setNftStatus("not-converted-to-nft");
+      setCollectibleStatus("not-collectible");
     }
-  }, [nftDocData]);
-
-  const handleSetPriceButton = () => {
-    setScreenParameters([
-      {
-        queryId: "postDocPath",
-        value: `users/${postSenderData.username}/posts/${postData.id}`,
-      },
-    ]);
-
-    return router.push("/(modals)/listNFT");
-  };
+  }, [collectibleDocData]);
 
   const handleCollectButton = () => {
     closeNFTBottomSheet();
@@ -141,7 +105,7 @@ const NftBottomSheetContent = ({
       },
     ]);
 
-    router.push("/(modals)/buyNFT");
+    router.push("/(modals)/buyCollectible");
   };
 
   const handleSeeCollectors = () => {
@@ -155,7 +119,7 @@ const NftBottomSheetContent = ({
     router.push("/(modals)/collectors");
   };
 
-  if (!nftStatus) {
+  if (!collectibleStatus || !collectibleDocData) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator color="white" />
@@ -163,8 +127,8 @@ const NftBottomSheetContent = ({
     );
   }
 
-  if (nftStatus === "not-converted-to-nft") {
-    return <Text>Not converted to NFT</Text>;
+  if (collectibleStatus === "not-collectible") {
+    return <Text>Not collectible.</Text>;
   }
 
   return (
@@ -239,125 +203,77 @@ const NftBottomSheetContent = ({
         </View>
       </View>
 
-      {nftStatus.isListed && (
+      <View
+        id="price-stock"
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          gap: 10,
+        }}
+      >
         <View
-          id="price-stock"
+          id="price"
           style={{
+            flex: 0.5,
             flexDirection: "row",
+            backgroundColor: "#323232",
+            padding: 20,
+            gap: 5,
+            borderRadius: 10,
             justifyContent: "space-between",
-            gap: 10,
           }}
         >
-          <View
-            id="price"
+          <Text
+            bold
             style={{
-              flex: 0.5,
-              flexDirection: "row",
-              backgroundColor: "#323232",
-              padding: 20,
-              gap: 5,
-              borderRadius: 10,
-              justifyContent: "space-between",
+              fontSize: 18,
             }}
           >
-            <Text
-              bold
-              style={{
-                fontSize: 18,
-              }}
-            >
-              Price
-            </Text>
-            <Text
-              bold
-              style={{
-                fontSize: 18,
-                color: apidonPink,
-              }}
-            >
-              ${nftStatus.price}
-            </Text>
-          </View>
-          <View
-            id="stock"
+            Price
+          </Text>
+          <Text
+            bold
             style={{
-              flex: 0.5,
-              flexDirection: "row",
-              backgroundColor: "#323232",
-              padding: 20,
-              gap: 5,
-              borderRadius: 10,
-              justifyContent: "space-between",
+              fontSize: 18,
+              color: apidonPink,
             }}
           >
-            <Text
-              bold
-              style={{
-                fontSize: 18,
-              }}
-            >
-              Stock
-            </Text>
-            <Text
-              bold
-              style={{
-                fontSize: 18,
-                color: apidonPink,
-              }}
-            >
-              {nftStatus.stock} Left
-            </Text>
-          </View>
+            ${collectibleDocData.price.price}
+          </Text>
         </View>
-      )}
-
-      {!nftStatus.isListed && nftStatus.fromCurrentUser && (
-        <Pressable
-          onPress={handleSetPriceButton}
+        <View
+          id="stock"
           style={{
-            backgroundColor: apidonPink,
+            flex: 0.5,
+            flexDirection: "row",
+            backgroundColor: "#323232",
             padding: 20,
+            gap: 5,
             borderRadius: 10,
-            alignItems: "center",
-            justifyContent: "center",
+            justifyContent: "space-between",
           }}
         >
           <Text
             bold
             style={{
-              color: "white",
               fontSize: 18,
             }}
           >
-            Set Price
+            Stock
           </Text>
-        </Pressable>
-      )}
-
-      {!nftStatus.isListed && !nftStatus.fromCurrentUser && (
-        <Pressable
-          style={{
-            opacity: 0.5,
-            backgroundColor: apidonPink,
-            padding: 20,
-            borderRadius: 10,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
           <Text
             bold
             style={{
-              color: "white",
               fontSize: 18,
+              color: apidonPink,
             }}
           >
-            Not Listed
+            {collectibleDocData.stock.remainingStock} Left
           </Text>
-        </Pressable>
-      )}
+        </View>
+      </View>
 
-      {nftStatus.isListed && nftStatus.fromCurrentUser && (
+      {collectibleStatus.fromCurrentUser && (
         <Pressable
           onPress={handleSeeCollectors}
           style={{
@@ -380,9 +296,8 @@ const NftBottomSheetContent = ({
         </Pressable>
       )}
 
-      {nftStatus.isListed &&
-        !nftStatus.fromCurrentUser &&
-        nftStatus.alreadyBought && (
+      {!collectibleStatus.fromCurrentUser &&
+        collectibleStatus.alreadyBought && (
           <Pressable
             style={{
               backgroundColor: apidonPink,
@@ -405,10 +320,9 @@ const NftBottomSheetContent = ({
           </Pressable>
         )}
 
-      {nftStatus.isListed &&
-        !nftStatus.fromCurrentUser &&
-        !nftStatus.alreadyBought &&
-        nftStatus.stock > 0 && (
+      {!collectibleStatus.fromCurrentUser &&
+        !collectibleStatus.alreadyBought &&
+        collectibleDocData.stock.remainingStock > 0 && (
           <Pressable
             onPress={handleCollectButton}
             style={{
@@ -431,10 +345,9 @@ const NftBottomSheetContent = ({
           </Pressable>
         )}
 
-      {nftStatus.isListed &&
-        !nftStatus.fromCurrentUser &&
-        !nftStatus.alreadyBought &&
-        nftStatus.stock <= 0 && (
+      {!collectibleStatus.fromCurrentUser &&
+        !collectibleStatus.alreadyBought &&
+        collectibleDocData.stock.remainingStock <= 0 && (
           <Pressable
             style={{
               opacity: 0.5,

@@ -11,7 +11,6 @@ import React, { useEffect, useState } from "react";
 
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { apidonPink } from "@/constants/Colors";
-import { NftDocDataInServer } from "@/types/Nft";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -25,6 +24,7 @@ import auth from "@react-native-firebase/auth";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { useBalance } from "@/hooks/useBalance";
 
+import { CollectibleDocData } from "@/types/Collectible";
 import { router } from "expo-router";
 
 const buyNFT = () => {
@@ -33,7 +33,8 @@ const buyNFT = () => {
     ?.value as string;
 
   const [postData, setPostData] = useState<PostServerData | null>(null);
-  const [nftData, setNftData] = useState<NftDocDataInServer | null>(null);
+  const [collectibleData, setCollectibleData] =
+    useState<CollectibleDocData | null>(null);
   const [creatorData, setCreatorData] = useState<UserInServer | null>(null);
 
   const [loading, setLoading] = useState(false);
@@ -52,17 +53,14 @@ const buyNFT = () => {
 
     setPostData(postDataFetched);
 
-    if (
-      !postDataFetched.nftStatus.convertedToNft ||
-      !postDataFetched.nftStatus.nftDocPath
-    )
-      return console.error("Post not converted to NFT yet.");
+    if (!postDataFetched.collectibleStatus.isCollectible)
+      return console.error("Post not converted to collectible yet.");
 
-    const nftDocDataFetched = await getNftData(
-      postDataFetched.nftStatus.nftDocPath
+    const collectibleDocDataFetched = await getCollectibleDocData(
+      postDataFetched.collectibleStatus.collectibleDocPath
     );
-    if (!nftDocDataFetched) return setNftData(null);
-    setNftData(nftDocDataFetched);
+    if (!collectibleDocDataFetched) return setCollectibleData(null);
+    setCollectibleData(collectibleDocDataFetched);
 
     const creatorDataFetched = await getCreatorData(
       postDataFetched.senderUsername
@@ -88,18 +86,21 @@ const buyNFT = () => {
     }
   };
 
-  const getNftData = async (nftDocPath: string) => {
+  const getCollectibleDocData = async (collectibleDocPath: string) => {
     try {
-      const nftDocSnapshot = await firestore().doc(nftDocPath).get();
-      if (!nftDocSnapshot.exists) {
-        console.error("NFT's realtime data can not be fecthed.");
+      const collectibleDocSnapshot = await firestore()
+        .doc(collectibleDocPath)
+        .get();
+      if (!collectibleDocSnapshot.exists) {
+        console.error("Collectible's data can not be fecthed.");
         return false;
       }
 
-      const nftDataFetched = nftDocSnapshot.data() as NftDocDataInServer;
+      const nftDataFetched =
+        collectibleDocSnapshot.data() as CollectibleDocData;
       return nftDataFetched;
     } catch (error) {
-      console.error("Error on getting inital data of NFT ", error);
+      console.error("Error on getting inital data of collectible ", error);
       return false;
     }
   };
@@ -124,12 +125,11 @@ const buyNFT = () => {
   };
 
   const handleBuyButton = () => {
-    if (!nftData) return;
-    if (!nftData.listStatus.isListed) return;
+    if (!collectibleData) return;
 
     Alert.alert(
       "Buy NFT",
-      `Are you sure you want to buy this NFT for $${nftData.listStatus.price.price}?`,
+      `Are you sure you want to buy this NFT for $${collectibleData.price.price}?`,
       [
         {
           text: "Cancel",
@@ -156,7 +156,7 @@ const buyNFT = () => {
       const idToken = await currentUserAuthObject.getIdToken();
       const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
-      const response = await fetch(apiRoutes.nft.buyNFT, {
+      const response = await fetch(apiRoutes.collectible.buyCollectible, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -170,7 +170,7 @@ const buyNFT = () => {
 
       if (!response.ok) {
         console.error(
-          "Resonse from buyNFT API is not okay: ",
+          "Resonse from buy collectible API is not okay: ",
           await response.text()
         );
         return setLoading(false);
@@ -201,18 +201,10 @@ const buyNFT = () => {
     );
   }
 
-  if (!postData || !nftData || !creatorData) {
+  if (!postData || !collectibleData || !creatorData) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator color="white" />
-      </View>
-    );
-  }
-
-  if (!nftData.listStatus.isListed) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>This NFT is not listed yet.</Text>
       </View>
     );
   }
@@ -222,7 +214,7 @@ const buyNFT = () => {
       ? "error"
       : balance === "getting-balance"
       ? "loading"
-      : balance >= nftData.listStatus.price.price
+      : balance >= collectibleData.price.price
       ? "enough"
       : "not-enough";
 
@@ -268,7 +260,7 @@ const buyNFT = () => {
             color: "#808080",
           }}
         >
-          ${nftData.listStatus.price.price}
+          ${collectibleData.price.price}
         </Text>
       </View>
       <View
@@ -363,7 +355,7 @@ const buyNFT = () => {
                 fontSize: 18,
               }}
             >
-              Buy for ${nftData.listStatus.price.price}
+              Buy for ${collectibleData.price.price}
             </Text>
           )}
         </Pressable>

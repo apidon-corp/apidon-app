@@ -1,6 +1,5 @@
 import { apidonPink } from "@/constants/Colors";
 import { useAuth } from "@/providers/AuthProvider";
-import { NftDocDataInServer } from "@/types/Nft";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
 import { Entypo, Foundation } from "@expo/vector-icons";
@@ -10,21 +9,23 @@ import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import Text from "../Text/Text";
+import { CollectibleDocData } from "@/types/Collectible";
 
 type Props = {
   postDocPath: string;
-  nftDocPath: string;
+  collectibleDocPath: string;
 };
 
-const NftOnUserPreviewItem = ({ postDocPath, nftDocPath }: Props) => {
+const NftOnUserPreviewItem = ({ postDocPath, collectibleDocPath }: Props) => {
   const [postDocData, setPostDocData] = useState<PostServerData | null>(null);
   const [postSenderData, setPostSenderData] = useState<UserInServer | null>(
     null
   );
 
-  const [nftDocData, setNftDocData] = useState<NftDocDataInServer | null>(null);
+  const [collectibleDocData, setCollectibleDocData] =
+    useState<CollectibleDocData | null>(null);
 
-  const {authStatus} = useAuth();
+  const { authStatus } = useAuth();
 
   // Dynamic Data Fetching / Post Object
   useEffect(() => {
@@ -58,26 +59,32 @@ const NftOnUserPreviewItem = ({ postDocPath, nftDocPath }: Props) => {
     if (authStatus !== "authenticated") return;
 
     const unsubscribe = firestore()
-      .doc(nftDocPath)
+      .doc(collectibleDocPath)
       .onSnapshot(
         (snapshot) => {
           if (!snapshot.exists) {
-            setNftDocData(null);
-            return console.log("Nft's realtime data can not be fecthed.");
+            setCollectibleDocData(null);
+            return console.log(
+              "Collectible's realtime data can not be fecthed."
+            );
           }
-          const nftDocData = snapshot.data() as NftDocDataInServer;
-          setNftDocData(nftDocData);
+          const collectibleDocDataFetched =
+            snapshot.data() as CollectibleDocData;
+          setCollectibleDocData(collectibleDocDataFetched);
 
           return;
         },
         (error) => {
-          setNftDocData(null);
-          return console.error("Error on getting realtime data: ", error);
+          setCollectibleDocData(null);
+          return console.error(
+            "Error on getting realtime data of collectible: ",
+            error
+          );
         }
       );
 
     return () => unsubscribe();
-  }, [nftDocPath, authStatus]);
+  }, [collectibleDocPath, authStatus]);
 
   const handleGetPostSenderInformation = async (senderUsername: string) => {
     try {
@@ -102,7 +109,7 @@ const NftOnUserPreviewItem = ({ postDocPath, nftDocPath }: Props) => {
     );
   };
 
-  if (!postDocData || !postSenderData || !nftDocData) {
+  if (!postDocData || !postSenderData || !collectibleDocData) {
     return (
       <View style={{ flex: 1, backgroundColor: "black", padding: 15 }}>
         <View
@@ -135,72 +142,68 @@ const NftOnUserPreviewItem = ({ postDocPath, nftDocPath }: Props) => {
         />
       </View>
 
-      {nftDocData.listStatus.isListed && (
-        <>
-          <View
+      <View
+        style={{
+          position: "absolute",
+          top: 20,
+          right: 20,
+          padding: 5,
+          opacity: 0.85,
+        }}
+      >
+        <View
+          style={{
+            paddingHorizontal: 10,
+            flexDirection: "row",
+            backgroundColor: "white",
+            borderRadius: 10,
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <Foundation name="dollar" size={20} color="black" />
+          <Text
             style={{
-              position: "absolute",
-              top: 20,
-              right: 20,
-              padding: 5,
-              opacity: 0.85,
+              color: "#036704",
+              fontSize: 13,
             }}
+            bold
           >
-            <View
-              style={{
-                paddingHorizontal: 10,
-                flexDirection: "row",
-                backgroundColor: "white",
-                borderRadius: 10,
-                alignItems: "center",
-                gap: 1,
-              }}
-            >
-              <Foundation name="dollar" size={20} color="black" />
-              <Text
-                style={{
-                  color: "#036704",
-                  fontSize: 13,
-                }}
-                bold
-              >
-                {nftDocData.listStatus.price.price}
-              </Text>
-            </View>
-          </View>
+            {collectibleDocData.price.price}
+          </Text>
+        </View>
+      </View>
 
-          <View
+      <View
+        style={{
+          position: "absolute",
+          bottom: 20,
+          right: 20,
+          padding: 5,
+          opacity: 1,
+        }}
+      >
+        <View
+          style={{
+            paddingHorizontal: 5,
+            flexDirection: "row",
+            backgroundColor: "white",
+            borderRadius: 10,
+            alignItems: "center",
+          }}
+        >
+          <Entypo name="cross" size={20} color={apidonPink} />
+          <Text
             style={{
-              position: "absolute",
-              bottom: 20,
-              right: 20,
-              padding: 5,
-              opacity: 1,
+              color: apidonPink,
+              fontSize: 16,
             }}
+            bold
           >
-            <View
-              style={{
-                paddingHorizontal: 5,
-                flexDirection: "row",
-                backgroundColor: "white",
-                borderRadius: 10,
-                alignItems: "center",
-              }}
-            >
-              <Entypo name="cross" size={20} color={apidonPink} />
-              <Text
-                style={{
-                  color: apidonPink,
-                  fontSize: 16,
-                }}
-                bold
-              >
-                {nftDocData.listStatus.stock.remainingStock}
-              </Text>
-            </View>
-          </View>
-        </>
-      )}
+            {collectibleDocData.stock.remainingStock}
+          </Text>
+        </View>
+      </View>
 
       <View style={{ position: "absolute", bottom: 20, left: 20, padding: 5 }}>
         <View

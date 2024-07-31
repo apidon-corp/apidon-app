@@ -1,14 +1,14 @@
-import { ActivityIndicator, SafeAreaView, View } from "react-native";
-import { Text } from "@/components/Text/Text";
-import React, { useEffect, useState } from "react";
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
-import { useAtomValue } from "jotai";
-import { NftDocDataInServer } from "@/types/Nft";
+import { Text } from "@/components/Text/Text";
 import { PostServerData } from "@/types/Post";
+import { useAtomValue } from "jotai";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, SafeAreaView, View } from "react-native";
 
+import UserCard from "@/components/User/UserCard";
+import { CollectibleDocData } from "@/types/Collectible";
 import firestore from "@react-native-firebase/firestore";
 import { FlatList } from "react-native-gesture-handler";
-import UserCard from "@/components/User/UserCard";
 
 const collectors = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
@@ -18,7 +18,8 @@ const collectors = () => {
   )?.value;
 
   const [postData, setPostData] = useState<PostServerData | null>(null);
-  const [nftData, setNftData] = useState<NftDocDataInServer | null>(null);
+  const [collectibleData, setCollectibleData] =
+    useState<CollectibleDocData | null>(null);
 
   useEffect(() => {
     getInitialData();
@@ -32,17 +33,14 @@ const collectors = () => {
 
     setPostData(postDataFetched);
 
-    if (
-      !postDataFetched.nftStatus.convertedToNft ||
-      !postDataFetched.nftStatus.nftDocPath
-    )
-      return console.error("Post not converted to NFT yet.");
+    if (!postDataFetched.collectibleStatus.isCollectible)
+      return console.error("Post not converted to collectible yet.");
 
-    const nftDocDataFetched = await getNftData(
-      postDataFetched.nftStatus.nftDocPath
+    const collectibleDocDataFetched = await getCollectibleData(
+      postDataFetched.collectibleStatus.collectibleDocPath
     );
-    if (!nftDocDataFetched) return setNftData(null);
-    setNftData(nftDocDataFetched);
+    if (!collectibleDocDataFetched) return setCollectibleData(null);
+    setCollectibleData(collectibleDocDataFetched);
   };
 
   const getPostData = async (postDocPath: string) => {
@@ -62,18 +60,21 @@ const collectors = () => {
     }
   };
 
-  const getNftData = async (nftDocPath: string) => {
+  const getCollectibleData = async (collectibleDocPath: string) => {
     try {
-      const nftDocSnapshot = await firestore().doc(nftDocPath).get();
-      if (!nftDocSnapshot.exists) {
+      const collectibleDocSnapshot = await firestore()
+        .doc(collectibleDocPath)
+        .get();
+      if (!collectibleDocSnapshot.exists) {
         console.error("NFT's realtime data can not be fecthed.");
         return false;
       }
 
-      const nftDataFetched = nftDocSnapshot.data() as NftDocDataInServer;
-      return nftDataFetched;
+      const collectibleDataFetched =
+        collectibleDocSnapshot.data() as CollectibleDocData;
+      return collectibleDataFetched;
     } catch (error) {
-      console.error("Error on getting inital data of NFT ", error);
+      console.error("Error on getting inital data of collectible ", error);
       return false;
     }
   };
@@ -86,7 +87,7 @@ const collectors = () => {
     );
   }
 
-  if (!postData || !nftData) {
+  if (!postData || !collectibleData) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator color="white" />
@@ -94,18 +95,10 @@ const collectors = () => {
     );
   }
 
-  if (!nftData.listStatus.isListed) {
+  if (collectibleData.buyers.length === 0) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>This NFT is not listed yet.</Text>
-      </View>
-    );
-  }
-
-  if (!nftData.listStatus.buyers || nftData.listStatus.buyers.length === 0) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>No one collected this NFT yet.</Text>
+        <Text>No one collected this Collectible yet.</Text>
       </View>
     );
   }
@@ -120,7 +113,7 @@ const collectors = () => {
         contentContainerStyle={{
           gap: 5,
         }}
-        data={nftData.listStatus.buyers}
+        data={collectibleData.buyers}
         renderItem={({ item }) => (
           <UserCard username={item.username} key={item.username} />
         )}

@@ -4,15 +4,17 @@ export type PostServerData = {
   description: string;
   image: string;
 
-  rates:  RateData[];
-
-  commentCount: number;
+  rates: RateData[];
   comments: CommentServerData[];
 
-  nftStatus: {
-    convertedToNft: boolean;
-    nftDocPath?: string;
-  };
+  collectibleStatus:
+    | {
+        isCollectible: false;
+      }
+    | {
+        isCollectible: true;
+        collectibleDocPath: string;
+      };
 
   creationTime: number;
   id: string;
