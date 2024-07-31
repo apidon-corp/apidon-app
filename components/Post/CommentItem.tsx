@@ -8,10 +8,9 @@ import { formatDistanceToNow } from "date-fns";
 import { Image } from "expo-image";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, View } from "react-native";
-
 import auth from "@react-native-firebase/auth";
-
 import appCheck from "@react-native-firebase/app-check";
+import { router, usePathname } from "expo-router";
 
 type Props = {
   commentServerData: CommentServerData;
@@ -22,6 +21,8 @@ const CommentItem = ({
   commentServerData: { message, sender, ts },
   postDocPath,
 }: Props) => {
+  const pathname = usePathname();
+
   const [userData, setUserData] = useState<UserInServer | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -125,6 +126,16 @@ const CommentItem = ({
     }
   };
 
+  const handlePressUser = () => {
+    const subScreens = pathname.split("/");
+
+    subScreens[subScreens.length - 1] = "profile/" + sender;
+
+    const finalDestination = subScreens.join("/");
+
+    router.push(finalDestination);
+  };
+
   if (loading || !userData)
     return (
       <View
@@ -148,7 +159,8 @@ const CommentItem = ({
         justifyContent: "space-between",
       }}
     >
-      <View
+      <Pressable
+        onPress={handlePressUser}
         style={{
           flexDirection: "row",
           gap: 10,
@@ -190,7 +202,7 @@ const CommentItem = ({
 
           <Text>{message}</Text>
         </View>
-      </View>
+      </Pressable>
 
       {doesOwnComment && (
         <Pressable

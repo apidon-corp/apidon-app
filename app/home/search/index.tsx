@@ -73,7 +73,9 @@ const search = () => {
         showsVerticalScrollIndicator={false}
         keyExtractor={(item) => item}
         data={queryResult}
-        renderItem={({ item }) => <UserCard username={item} key={item} />}
+        renderItem={({ item }) => (
+          <UserCard username={item} destinationIn key={item} />
+        )}
       />
     </View>
   );

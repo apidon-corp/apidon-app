@@ -1,13 +1,20 @@
 import { Stack } from "expo-router";
 
 import React from "react";
-import { StatusBar } from "react-native";
+import { StatusBar, View } from "react-native";
 
 const _layout = () => {
   return (
     <>
       <StatusBar barStyle="light-content" />
       <Stack>
+        <Stack.Screen
+          name="profile"
+          options={{
+            presentation: "card",
+            headerTitle: "",
+          }}
+        />
         <Stack.Screen
           name="rates"
           options={{

@@ -66,7 +66,7 @@ const collectors = () => {
         .doc(collectibleDocPath)
         .get();
       if (!collectibleDocSnapshot.exists) {
-        console.error("NFT's realtime data can not be fecthed.");
+        console.error("Collectible's realtime data can not be fecthed.");
         return false;
       }
 

@@ -13,7 +13,6 @@ import auth from "@react-native-firebase/auth";
 
 const _layout = () => {
   const notificationData = useNotification();
-  
 
   const areThereUnReadNotifications = () => {
     if (!notificationData) return false;
@@ -71,8 +70,7 @@ const _layout = () => {
               <AntDesign name="search1" size={25} color="white" />
             ),
             tabBarLabel: () => <></>,
-            headerShown: true,
-            title: "Search",
+            headerShown: false,
           }}
         />
         <Tabs.Screen
@@ -110,11 +108,11 @@ const _layout = () => {
               </View>
             ),
             tabBarLabel: () => <></>,
-            title: "Notifications",
+            headerShown: false,
           }}
         />
         <Tabs.Screen
-          name="nftMarket"
+          name="collectibles"
           options={{
             tabBarIcon: () => (
               <MaterialCommunityIcons name="shopping" size={25} color="white" />

@@ -33,7 +33,7 @@ const apiRoutes = {
     },
   },
   collectible: {
-    createCollectible: `${apiEndpoint}/collectible-createCollectible`,
+    createCollectible: `${apiEndpoint}/collectible-createCollectible`, // http://192.168.1.3:5001/apidon-dev/us-central1/collecitble-createCollectible
     buyCollectible: `${apiEndpoint}/collectible-buyCollectible`,
   },
   nft: {

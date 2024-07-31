@@ -1,7 +1,7 @@
 import Post from "@/components/Post/Post";
 import { useLocalSearchParams } from "expo-router";
 import React from "react";
-import { SafeAreaView } from "react-native";
+import { FlatList, SafeAreaView } from "react-native";
 
 const post = () => {
   const { sender, id } = useLocalSearchParams<{
@@ -14,15 +14,10 @@ const post = () => {
   const postDocPath = `users/${sender}/posts/${id}`;
 
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Post postDocPath={postDocPath} />
-    </SafeAreaView>
+    <FlatList
+      data={[postDocPath]}
+      renderItem={({ item }) => <Post postDocPath={item} />}
+    />
   );
 };
 

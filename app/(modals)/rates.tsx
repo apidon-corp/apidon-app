@@ -80,7 +80,10 @@ const Likes = () => {
       <FlatList
         data={rateData}
         renderItem={({ item }) => (
-          <UserCard username={item.sender} key={item.sender} />
+          <UserCard
+            username={item.sender}
+            key={item.sender}
+          />
         )}
       />
     </SafeAreaView>

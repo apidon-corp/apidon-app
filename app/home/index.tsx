@@ -4,16 +4,15 @@ import apiRoutes from "@/helpers/ApiRoutes";
 import { useAtomValue } from "jotai";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   NativeScrollEvent,
   SafeAreaView,
   ScrollView,
 } from "react-native";
 
-import auth from "@react-native-firebase/auth";
-import appCheck from "@react-native-firebase/app-check";
 import PostSkeleton from "@/components/Post/PostSkeleon";
+import appCheck from "@react-native-firebase/app-check";
+import auth from "@react-native-firebase/auth";
 
 const index = () => {
   const [loading, setLoading] = useState(false);
@@ -138,6 +137,7 @@ const index = () => {
           data={[1, 2]}
           renderItem={({ item }) => <PostSkeleton key={item} />}
           contentContainerStyle={{
+            width: "100%",
             gap: 20,
           }}
         />

@@ -6,7 +6,7 @@ import auth from "@react-native-firebase/auth";
 import { UserInServer } from "@/types/User";
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { Stack, router } from "expo-router";
+import { Stack, router, usePathname } from "expo-router";
 import { useSetAtom } from "jotai";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
@@ -16,7 +16,7 @@ type Props = {
 };
 
 const Header = ({ userData }: Props) => {
-  const setScreenParams = useSetAtom(screenParametersAtom);
+  const pathname = usePathname();
 
   const [userOwnsPage, setUserOwnsPage] = useState(false);
 
@@ -27,15 +27,18 @@ const Header = ({ userData }: Props) => {
   const handleEditProfileButton = () => {
     if (!userData) return;
 
-    setScreenParams([
-      { queryId: "image", value: userData.profilePhoto },
-      {
-        queryId: "fullname",
-        value: userData.fullname,
-      },
-    ]);
+    const subScreens = pathname.split("/");
 
-    router.push("/home/profile/editProfile");
+    subScreens[subScreens.length - 1] =
+      "editProfile" +
+      "?" +
+      `fullname=${userData.fullname}` +
+      "&" +
+      `image=${userData.profilePhoto}`;
+
+    const finalDestination = subScreens.join("/");
+
+    router.push(finalDestination);
   };
 
   const checkUserOwnsPage = () => {
@@ -46,6 +49,28 @@ const Header = ({ userData }: Props) => {
     if (!displayName) return setUserOwnsPage(false);
 
     return setUserOwnsPage(displayName === userData.username);
+  };
+
+  function handlePressFollowers() {
+    const subScreens = pathname.split("/");
+
+    subScreens[subScreens.length - 1] =
+      "followers" + "?" + `username=${userData.username}`;
+
+    const finalDestination = subScreens.join("/");
+
+    router.push(finalDestination);
+  }
+
+  const handlePressFollowing = () => {
+    const subScreens = pathname.split("/");
+
+    subScreens[subScreens.length - 1] =
+      "following" + "?" + `username=${userData.username}`;
+
+    const finalDestination = subScreens.join("/");
+
+    router.push(finalDestination);
   };
 
   if (!userData) return <ActivityIndicator size="large" color="white" />;
@@ -145,15 +170,7 @@ const Header = ({ userData }: Props) => {
             }}
           >
             <Pressable
-              onPress={() => {
-                setScreenParams([
-                  {
-                    queryId: "username",
-                    value: userData.username,
-                  },
-                ]);
-                router.push("/home/profile/followers");
-              }}
+              onPress={handlePressFollowers}
               style={{
                 gap: 4,
               }}
@@ -190,15 +207,7 @@ const Header = ({ userData }: Props) => {
               style={{
                 gap: 4,
               }}
-              onPress={() => {
-                setScreenParams([
-                  {
-                    queryId: "username",
-                    value: userData.username,
-                  },
-                ]);
-                router.push("/home/profile/following");
-              }}
+              onPress={handlePressFollowing}
             >
               <Text
                 style={{

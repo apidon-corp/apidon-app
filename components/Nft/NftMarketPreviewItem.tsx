@@ -70,7 +70,7 @@ const NftMarketPreviewItem = ({ postDocPath, collectibleDocData }: Props) => {
   const handlePressPreview = () => {
     if (!postDocData || !postSenderData) return;
     return router.push(
-      `/home/nftMarket/post?sender=${postDocData.senderUsername}&id=${postDocData.id}`
+      `/home/collectibles/post?sender=${postDocData.senderUsername}&id=${postDocData.id}`
     );
   };
 

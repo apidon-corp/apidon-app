@@ -109,6 +109,7 @@ const NftBottomSheetContent = ({
   };
 
   const handleSeeCollectors = () => {
+    closeNFTBottomSheet();
     setScreenParameters([
       {
         queryId: "postDocPath",

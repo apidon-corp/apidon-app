@@ -56,7 +56,13 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
   };
 
   const handleClickSenderInformation = () => {
-    router.push(`/home/profile/${notificationData.source}`);
+    const subScreens = pathname.split("/");
+
+    subScreens.push(`profile/${notificationData.source}`);
+
+    const finalDestination = subScreens.join("/");
+
+    router.push(finalDestination);
   };
 
   const handleClickPreviewButton = () => {

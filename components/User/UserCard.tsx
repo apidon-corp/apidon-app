@@ -6,7 +6,7 @@ import { UserInServer } from "@/types/User";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
@@ -14,15 +14,18 @@ import appCheck from "@react-native-firebase/app-check";
 
 type Props = {
   username: string;
+  destinationIn?: boolean;
 };
 
-const UserCard = ({ username }: Props) => {
+const UserCard = ({ username, destinationIn }: Props) => {
   const [userData, setUserData] = useState<UserInServer>();
   const [loading, setLoading] = useState(false);
 
   const [doesFollow, setDoesFollow] = useState(true);
 
   const [followLoading, setFollowLoading] = useState(false);
+
+  const pathname = usePathname();
 
   useEffect(() => {
     handleGetUserData();
@@ -129,6 +132,27 @@ const UserCard = ({ username }: Props) => {
     }
   };
 
+  const handlePressUser = async () => {
+    const subScreens = pathname.split("/");
+
+    const currentScreen = subScreens[subScreens.length - 1];
+
+    if (currentScreen === "followers" || currentScreen === "following") {
+      subScreens[subScreens.length - 1] = username;
+      const finalDestination = subScreens.join("/");
+      return router.push(finalDestination);
+    }
+
+    if (!destinationIn)
+      subScreens[subScreens.length - 1] = "profile/" + username;
+
+    if (destinationIn) subScreens.push(`profile/${username}`);
+
+    const finalDestination = subScreens.join("/");
+
+    router.push(finalDestination);
+  };
+
   if (loading || !userData)
     return (
       <View
@@ -163,9 +187,7 @@ const UserCard = ({ username }: Props) => {
             gap: 10,
             alignItems: "center",
           }}
-          onPress={() => {
-            router.push(`/home/profile/${username}`);
-          }}
+          onPress={handlePressUser}
         >
           <Image
             source={

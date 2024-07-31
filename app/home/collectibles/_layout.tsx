@@ -1,6 +1,5 @@
-import auth from "@/app/auth";
-import { AntDesign, FontAwesome5 } from "@expo/vector-icons";
-import { router, Stack } from "expo-router";
+import { FontAwesome5 } from "@expo/vector-icons";
+import { Stack, router } from "expo-router";
 import React from "react";
 import { Pressable } from "react-native";
 
@@ -14,7 +13,7 @@ const _layout = () => {
           headerRight: () => (
             <Pressable
               onPress={() => {
-                router.push("/home/nftMarket/wallet");
+                router.push("/home/collectibles/wallet");
               }}
             >
               <FontAwesome5 name="wallet" size={24} color="white" />
@@ -35,6 +34,13 @@ const _layout = () => {
           title: "Wallet",
           headerTitle: "Wallet",
           headerBackTitle: "Market",
+        }}
+      />
+      <Stack.Screen
+        name="profile"
+        options={{
+          presentation: "card",
+          headerTitle: "",
         }}
       />
     </Stack>
