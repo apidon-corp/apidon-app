@@ -179,15 +179,6 @@ const NftBottomSheetContent = ({
               {postSenderData.fullname}
             </Text>
           </View>
-          <Text
-            bold
-            style={{
-              fontSize: 14,
-              color: apidonPink,
-            }}
-          >
-            {postSenderData.nftCount} NFTs
-          </Text>
         </View>
         <View>
           <Image
