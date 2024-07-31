@@ -1,7 +1,7 @@
 import Post from "@/components/Post/Post";
 import { useLocalSearchParams } from "expo-router";
 import React from "react";
-import { FlatList, SafeAreaView } from "react-native";
+import { FlatList } from "react-native";
 
 const post = () => {
   const { sender, id } = useLocalSearchParams<{

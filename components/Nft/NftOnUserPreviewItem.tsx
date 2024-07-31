@@ -5,7 +5,7 @@ import { UserInServer } from "@/types/User";
 import { Entypo, Foundation } from "@expo/vector-icons";
 import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import Text from "../Text/Text";
@@ -17,6 +17,8 @@ type Props = {
 };
 
 const NftOnUserPreviewItem = ({ postDocPath, collectibleDocPath }: Props) => {
+  const pathname = usePathname();
+
   const [postDocData, setPostDocData] = useState<PostServerData | null>(null);
   const [postSenderData, setPostSenderData] = useState<UserInServer | null>(
     null
@@ -104,9 +106,19 @@ const NftOnUserPreviewItem = ({ postDocPath, collectibleDocPath }: Props) => {
 
   const handlePressPreview = () => {
     if (!postDocData || !postSenderData) return;
-    return router.push(
-      `/home/profile/post?sender=${postDocData.senderUsername}&id=${postDocData.id}`
-    );
+
+    const subScreens = pathname.split("/");
+
+    subScreens[
+      subScreens.length - 1
+    ] = `post?sender=${postDocData.senderUsername}&id=${postDocData.id}`;
+
+    const finalDestination = subScreens.join("/");
+
+    router.push(finalDestination);
+
+    console.log(pathname);
+    return;
   };
 
   if (!postDocData || !postSenderData || !collectibleDocData) {

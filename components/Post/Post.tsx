@@ -27,6 +27,7 @@ import Stars from "./Rating/Stars";
 import auth from "@react-native-firebase/auth";
 
 import appCheck from "@react-native-firebase/app-check";
+import NFTTag from "./NFT/NFTTag";
 import NftBottomSheetContent from "./NFT/NftBottomSheetContent";
 
 type Props = {
@@ -290,24 +291,13 @@ const Post = React.memo(({ postDocPath }: Props) => {
     }
   };
 
-  const handleNFTButton = () => {
-    nftOptionsModalRef.current?.present();
-  };
-
   function closeNFTBottomSheet() {
     nftOptionsModalRef.current?.close();
   }
 
   function handlePressUser() {
     if (!postSenderData) return;
-
-    const subScreens = pathname.split("/");
-
-    subScreens[subScreens.length - 1] = "profile/" + postSenderData.username;
-
-    const finalDestination = subScreens.join("/");
-
-    router.push(finalDestination);
+    return router.replace(`home/profile/${postSenderData.username}`);
   }
 
   if (loading)
@@ -433,50 +423,12 @@ const Post = React.memo(({ postDocPath }: Props) => {
           />
 
           {postDocData.collectibleStatus.isCollectible && (
-            <View
-              id="nft-tag"
-              style={{
-                width: "30%",
-                overflow: "hidden",
-              }}
-            >
-              <Pressable
-                onPress={handleNFTButton}
-                style={{
-                  width: "100%",
-                  borderWidth: 1,
-                  borderColor: apidonPink,
-                  borderRadius: 6,
-                  flexDirection: "row",
-                  padding: 4,
-                  gap: 2,
-                  justifyContent: "center",
-                }}
-              >
-                <Text
-                  bold
-                  style={{
-                    color: apidonPink,
-                    textAlign: "center",
-                  }}
-                  fontSize={11}
-                >
-                  NFT
-                </Text>
-                <Text fontSize={11}>by</Text>
-                <Text
-                  bold
-                  fontSize={11}
-                  numberOfLines={1}
-                  style={{
-                    overflow: "hidden",
-                  }}
-                >
-                  {postSenderData.username}
-                </Text>
-              </Pressable>
-            </View>
+            <NFTTag
+              nftOptionsModalRef={nftOptionsModalRef}
+              username={postDocData.senderUsername}
+            />
           )}
+
           {(doesOwnPost || !doesFollow) && (
             <View
               style={{

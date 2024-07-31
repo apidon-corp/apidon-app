@@ -50,7 +50,7 @@ const _layout = () => {
                     auth().currentUser?.displayName;
                   if (!currentUserDisplayName) return;
 
-                  router.push(`home/profile/${currentUserDisplayName}`);
+                  router.replace(`home/profile/${currentUserDisplayName}`);
                 }}
               >
                 <AntDesign

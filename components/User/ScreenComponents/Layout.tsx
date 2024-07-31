@@ -53,8 +53,11 @@ const _layout = () => {
       <Stack.Screen
         name="post"
         options={{
+          headerBackground: () => (
+            <View style={{ flex: 1, backgroundColor: "black" }} />
+          ),
           headerShown: true,
-          title: "Collectible",
+          title: "Post",
         }}
       />
     </Stack>
