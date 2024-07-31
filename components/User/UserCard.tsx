@@ -1,7 +1,6 @@
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
 import apiRoutes from "@/helpers/ApiRoutes";
-import { FollowStatusAPIResponseBody } from "@/types/ApiResponses";
 import { UserInServer } from "@/types/User";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
@@ -10,6 +9,7 @@ import { router, usePathname } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
+import { useAuth } from "@/providers/AuthProvider";
 import appCheck from "@react-native-firebase/app-check";
 
 type Props = {
@@ -18,6 +18,8 @@ type Props = {
 };
 
 const UserCard = ({ username, destinationIn }: Props) => {
+  const { authStatus } = useAuth();
+
   const [userData, setUserData] = useState<UserInServer>();
   const [loading, setLoading] = useState(false);
 
@@ -29,8 +31,32 @@ const UserCard = ({ username, destinationIn }: Props) => {
 
   useEffect(() => {
     handleGetUserData();
-    handleGetFollowStatus();
   }, [username]);
+
+  // Dynamic Data Fetching / Follow Status
+  useEffect(() => {
+    if (authStatus !== "authenticated") return;
+
+    const displayName = auth().currentUser?.displayName;
+    if (!displayName) return;
+
+    const unsubscribe = firestore()
+      .doc(`users/${username}/followers/${displayName}`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            setDoesFollow(false);
+          } else {
+            setDoesFollow(true);
+          }
+        },
+        (error) => {
+          console.error("Error on getting realtime data: ", error);
+        }
+      );
+
+    return () => unsubscribe();
+  }, [authStatus, username]);
 
   const handleGetUserData = async () => {
     if (loading) return;
@@ -49,45 +75,6 @@ const UserCard = ({ username, destinationIn }: Props) => {
     } catch (error) {
       console.error("Error on getting initial data: ", error);
       return setLoading(false);
-    }
-  };
-
-  const handleGetFollowStatus = async () => {
-    const currentUserAuthObject = auth().currentUser;
-    if (!currentUserAuthObject) return console.error("No user found!");
-
-    const displayName = currentUserAuthObject.displayName;
-    if (username === displayName) return setDoesFollow(true);
-
-    try {
-      const idToken = await currentUserAuthObject.getIdToken();
-
-      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
-
-      const response = await fetch(apiRoutes.user.social.getFollowStatus, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: `Bearer ${idToken}`,
-          appchecktoken: appchecktoken,
-        },
-        body: JSON.stringify({
-          suspectUsername: username,
-        }),
-      });
-
-      if (!response.ok) {
-        return console.error(
-          "Response from followStatus is not okay: ",
-          await response.json()
-        );
-      }
-
-      const result = (await response.json()) as FollowStatusAPIResponseBody;
-
-      return setDoesFollow(result.doesRequesterFollowsSuspect);
-    } catch (error) {
-      return console.error("Error on fetching followStatus API: : ", error);
     }
   };
 

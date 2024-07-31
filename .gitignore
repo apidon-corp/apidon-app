@@ -37,9 +37,9 @@ yarn-error.*
 ios
 *.ipa
 
-# Comment here when locally building
+# Private
 .env.local
 eas.json
 
-# Google Information
+# Google Information -Comment here when locally building
 *.plist
