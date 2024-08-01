@@ -24,12 +24,18 @@ import createBlobFromURI from "@/utils/createBlobFromURI";
 import auth from "@react-native-firebase/auth";
 
 import appCheck from "@react-native-firebase/app-check";
+import { useAtomValue } from "jotai";
+import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 
 const editProfile = () => {
-  const { fullname, image } = useLocalSearchParams() as {
+  const { fullname } = useLocalSearchParams() as {
     fullname: string;
-    image: string;
   };
+
+  const image =
+    (useAtomValue(screenParametersAtom).find(
+      (parameter) => parameter.queryId === "editProfileImage"
+    )?.value as string) || "";
 
   const [error, setError] = useState("");
 

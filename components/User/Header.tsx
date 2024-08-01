@@ -2,9 +2,9 @@ import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import FollowButton from "@/components/Follow/FollowButton";
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
-import auth from "@react-native-firebase/auth";
 import { UserInServer } from "@/types/User";
 import { Feather } from "@expo/vector-icons";
+import auth from "@react-native-firebase/auth";
 import { Image } from "expo-image";
 import { Stack, router, usePathname } from "expo-router";
 import { useSetAtom } from "jotai";
@@ -20,6 +20,8 @@ const Header = ({ userData }: Props) => {
 
   const [userOwnsPage, setUserOwnsPage] = useState(false);
 
+  const setScreenParameters = useSetAtom(screenParametersAtom);
+
   useEffect(() => {
     if (userData.username) checkUserOwnsPage();
   }, [auth().currentUser, userData.username]);
@@ -30,13 +32,13 @@ const Header = ({ userData }: Props) => {
     const subScreens = pathname.split("/");
 
     subScreens[subScreens.length - 1] =
-      "editProfile" +
-      "?" +
-      `fullname=${userData.fullname}` +
-      "&" +
-      `image=${userData.profilePhoto}`;
+      "editProfile" + "?" + `fullname=${userData.fullname}`;
 
     const finalDestination = subScreens.join("/");
+
+    setScreenParameters((prev) => [
+      { queryId: "editProfileImage", value: userData.profilePhoto }, ...prev
+    ]);
 
     router.push(finalDestination);
   };
