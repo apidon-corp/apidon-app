@@ -361,9 +361,9 @@ const Post = React.memo(({ postDocPath }: Props) => {
                   require("@/assets/images/user.jpg")
                 }
                 style={{
-                  width: 50,
-                  height: 50,
-                  borderRadius: 25,
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
                 }}
                 transition={500}
               />
@@ -383,11 +383,12 @@ const Post = React.memo(({ postDocPath }: Props) => {
                   <Text
                     bold
                     style={{
-                      fontSize: 12,
+                      fontSize: 11,
                     }}
                   >
-                    {postSenderData.username}
+                    {postSenderData.fullname}
                   </Text>
+
                   <View
                     style={{
                       flexDirection: "row",
@@ -397,13 +398,13 @@ const Post = React.memo(({ postDocPath }: Props) => {
                   >
                     <Text
                       style={{
-                        fontSize: 12,
+                        fontSize: 11,
                       }}
                     >
-                      {postSenderData.fullname}
+                      @{postSenderData.username}
                     </Text>
                     <Entypo name="dot-single" size={15} color="gray" />
-                    <Text style={{ fontSize: 12, color: "gray" }}>
+                    <Text style={{ fontSize: 10, color: "gray" }}>
                       {formatDistanceToNowStrict(
                         new Date(postDocData.creationTime)
                       )}

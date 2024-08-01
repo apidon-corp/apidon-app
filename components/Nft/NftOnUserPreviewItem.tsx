@@ -173,7 +173,7 @@ const NftOnUserPreviewItem = ({ postDocPath, collectibleDocPath }: Props) => {
             gap: 1,
           }}
         >
-          <Foundation name="dollar" size={20} color="black" />
+          <Foundation name="dollar" size={20} color="#036704" />
           <Text
             style={{
               color: "#036704",
@@ -204,15 +204,15 @@ const NftOnUserPreviewItem = ({ postDocPath, collectibleDocPath }: Props) => {
             alignItems: "center",
           }}
         >
-          <Entypo name="cross" size={20} color={apidonPink} />
           <Text
             style={{
-              color: apidonPink,
-              fontSize: 16,
+              color: "purple",
+              fontSize: 12,
             }}
             bold
           >
-            {collectibleDocData.stock.remainingStock}
+            {collectibleDocData.stock.remainingStock} out of{" "}
+            {collectibleDocData.stock.initialStock}
           </Text>
         </View>
       </View>

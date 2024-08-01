@@ -2,7 +2,7 @@ import { apidonPink } from "@/constants/Colors";
 import { useAuth } from "@/providers/AuthProvider";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
-import { Entypo, FontAwesome5 } from "@expo/vector-icons";
+import { Entypo, FontAwesome5, Foundation } from "@expo/vector-icons";
 import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -126,10 +126,10 @@ const NftMarketPreviewItem = ({ postDocPath, collectibleDocData }: Props) => {
             backgroundColor: "white",
             borderRadius: 10,
             alignItems: "center",
-            gap: 4,
+            gap: 1,
           }}
         >
-          <FontAwesome5 name="lira-sign" size={13} color="#036704" />
+          <Foundation name="dollar" size={20} color="#036704" />
           <Text
             style={{
               color: "#036704",
@@ -159,15 +159,15 @@ const NftMarketPreviewItem = ({ postDocPath, collectibleDocData }: Props) => {
             alignItems: "center",
           }}
         >
-          <Entypo name="cross" size={20} color={apidonPink} />
           <Text
             style={{
-              color: apidonPink,
-              fontSize: 16,
+              color: "purple",
+              fontSize: 12,
             }}
             bold
           >
-            {collectibleDocData.stock.remainingStock}
+            {collectibleDocData.stock.remainingStock} out of{" "}
+            {collectibleDocData.stock.initialStock}
           </Text>
         </View>
       </View>
