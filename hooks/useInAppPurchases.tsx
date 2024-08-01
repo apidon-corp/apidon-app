@@ -57,7 +57,7 @@ export const useInAppPurchases = () => {
       console.error("Error on fetching products:", error);
       crashlytics().recordError(
         new Error(
-          `Error on fetching top up products: ${error} \n ProductIds On App: ${appStoreProductIds} \n Apple API Key: ${appleAPIKey} \n Display Name: ${currentUserDisplayName}`
+          `Error on fetching top up products: ${error} Env Type for iap: ${envTypeForIAP} \n ProductIds On App: ${appStoreProductIds} \n Apple API Key: ${appleAPIKey} \n Display Name: ${currentUserDisplayName}`
         )
       );
       return setProducts([]);
