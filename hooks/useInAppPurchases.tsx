@@ -20,8 +20,9 @@ let appStoreProductIds = [
 ];
 
 if (envTypeForIAP === "test") {
-  let testEnvironmentAppStoreProcuductIds = appStoreProductIds;
-  testEnvironmentAppStoreProcuductIds.map((productId) => `${productId}_test`);
+  let testEnvironmentAppStoreProcuductIds = appStoreProductIds.map(
+    (productId) => `${productId}_test`
+  );
   appStoreProductIds = testEnvironmentAppStoreProcuductIds;
 }
 
