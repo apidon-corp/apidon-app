@@ -30,7 +30,6 @@ const profile = () => {
           <>
             <Stack.Screen
               options={{
-
                 headerBackground: () =>
                   ownsPage ? (
                     <View style={{ flex: 1, backgroundColor: "black" }} />
@@ -44,7 +43,7 @@ const profile = () => {
               keyboardShouldPersistTaps={"handled"}
               showsVerticalScrollIndicator={false}
             >
-              <UserContent username={username} />
+              <UserContent username={username} key={username} />
             </ScrollView>
           </>
         )}

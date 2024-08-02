@@ -37,7 +37,8 @@ const Header = ({ userData }: Props) => {
     const finalDestination = subScreens.join("/");
 
     setScreenParameters((prev) => [
-      { queryId: "editProfileImage", value: userData.profilePhoto }, ...prev
+      { queryId: "editProfileImage", value: userData.profilePhoto },
+      ...prev,
     ]);
 
     router.push(finalDestination);
@@ -128,7 +129,7 @@ const Header = ({ userData }: Props) => {
             textAlign: "center",
           }}
         >
-          Istanbul, Turkey
+          @{userData.username}
         </Text>
         <View
           style={{
@@ -150,10 +151,11 @@ const Header = ({ userData }: Props) => {
               style={{
                 fontSize: 15,
                 textAlign: "center",
+                color: "gray",
               }}
               bold
             >
-              {userData.nftCount}
+              5
             </Text>
             <Text
               style={{
@@ -162,7 +164,7 @@ const Header = ({ userData }: Props) => {
                 textAlign: "center",
               }}
             >
-              NFT
+              Score
             </Text>
           </View>
 
