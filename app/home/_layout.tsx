@@ -10,9 +10,13 @@ import React from "react";
 import { Pressable, StatusBar, View } from "react-native";
 
 import auth from "@react-native-firebase/auth";
+import { useSetAtom } from "jotai";
+import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
 
 const _layout = () => {
   const notificationData = useNotification();
+
+  const setHomeScreenParameters = useSetAtom(homeScreeenParametersAtom);
 
   const areThereUnReadNotifications = () => {
     if (!notificationData) return false;
@@ -28,6 +32,11 @@ const _layout = () => {
     return unReadFlag;
   };
 
+  const handleHomeButtonPress = () => {
+    router.replace("/home");
+    setHomeScreenParameters({ isHomeButtonPressed: true });
+  };
+
   return (
     <>
       <StatusBar barStyle="light-content" />
@@ -35,7 +44,11 @@ const _layout = () => {
         <Tabs.Screen
           name="index"
           options={{
-            tabBarIcon: () => <Entypo name="home" size={25} color="white" />,
+            tabBarIcon: () => (
+              <Pressable onPress={handleHomeButtonPress}>
+                <Entypo name="home" size={25} color="white" />
+              </Pressable>
+            ),
             tabBarLabel: () => <></>,
             headerBackground: () => (
               <View style={{ flex: 1, backgroundColor: "black", height: 50 }} />

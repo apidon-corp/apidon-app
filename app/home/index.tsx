@@ -1,8 +1,8 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import Post from "@/components/Post/Post";
 import apiRoutes from "@/helpers/ApiRoutes";
-import { useAtomValue } from "jotai";
-import React, { useEffect, useState } from "react";
+import { useAtom, useAtomValue } from "jotai";
+import React, { useEffect, useRef, useState } from "react";
 import {
   AppState,
   FlatList,
@@ -15,6 +15,7 @@ import {
 import PostSkeleton from "@/components/Post/PostSkeleon";
 import appCheck from "@react-native-firebase/app-check";
 import auth from "@react-native-firebase/auth";
+import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
 
 const index = () => {
   const [loading, setLoading] = useState(false);
@@ -30,6 +31,12 @@ const index = () => {
   )?.value as string | undefined;
 
   const [refreshLoading, setRefreshLoading] = useState(false);
+  const [homeScreenParametersValue, setHomeScreenParameters] = useAtom(
+    homeScreeenParametersAtom
+  );
+
+  const scrollViewRef = useRef<ScrollView>(null);
+  const isHandlingHomeButtonPress = useRef<boolean>(false);
 
   useEffect(() => {
     if (!createdPostDocPath) return;
@@ -55,6 +62,18 @@ const index = () => {
       subscription.remove();
     };
   }, []);
+
+  useEffect(() => {
+    if (!homeScreenParametersValue.isHomeButtonPressed) return;
+    if (refreshLoading) return;
+    if (isHandlingHomeButtonPress.current) return;
+
+    handleHomeButtonPress();
+  }, [
+    homeScreenParametersValue.isHomeButtonPressed,
+    refreshLoading,
+    isHandlingHomeButtonPress,
+  ]);
 
   /**
    * Fetches paths of recommended posts from server.
@@ -200,6 +219,21 @@ const index = () => {
     }
   };
 
+  const handleHomeButtonPress = async () => {
+    if (!homeScreenParametersValue.isHomeButtonPressed) return;
+    if (refreshLoading) return;
+    if (!scrollViewRef.current) return;
+    if (isHandlingHomeButtonPress.current) return;
+
+    isHandlingHomeButtonPress.current = true;
+
+    scrollViewRef.current.scrollTo({ y: 0, animated: true });
+
+    await handleRefresh();
+    setHomeScreenParameters({ isHomeButtonPressed: false });
+    isHandlingHomeButtonPress.current = false;
+  };
+
   if (loading)
     return (
       <SafeAreaView
@@ -218,6 +252,7 @@ const index = () => {
 
   return (
     <ScrollView
+      ref={scrollViewRef}
       onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
       scrollEventThrottle={500}
       showsVerticalScrollIndicator={false}
