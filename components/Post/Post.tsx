@@ -93,9 +93,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
           const postDocData = snapshot.data() as PostServerData;
           setPostDocData(postDocData);
 
-          if (!postSenderData)
-            handleGetPostSenderInformation(postDocData.senderUsername);
-
           setDoesOwnPost(
             postDocData.senderUsername === auth().currentUser?.displayName
           );
@@ -116,7 +113,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
     return () => unsubscribe();
   }, [postDocPath, authStatus, postDeleted]);
 
-  // Dynamic Data Fetching / Current User
+  // Dynamic Data Fetching / Follow Status
   useEffect(() => {
     if (authStatus !== "authenticated") return;
 
@@ -143,21 +140,37 @@ const Post = React.memo(({ postDocPath }: Props) => {
     return () => unsubscribe();
   }, [authStatus, postDocData?.senderUsername]);
 
-  const handleGetPostSenderInformation = async (senderUsername: string) => {
-    try {
-      const userDocSnapshot = await firestore()
-        .doc(`users/${senderUsername}`)
-        .get();
-      if (!userDocSnapshot.exists) return setPostSenderData(null);
+  // Dynamic Data Fetching - Post Sender Data
+  useEffect(() => {
+    if (authStatus !== "authenticated") return;
 
-      const userDocData = userDocSnapshot.data() as UserInServer;
+    const displayName = auth().currentUser?.displayName;
 
-      return setPostSenderData(userDocData);
-    } catch (error) {
-      console.error("Error on getting initial data: ", error);
-      return setPostSenderData(null);
-    }
-  };
+    if (!displayName) return;
+    if (!postDocData) return;
+
+    const unsubscribe = firestore()
+      .doc(`users/${postDocData.senderUsername}`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.log("Post sender's realtime data can not be fecthed.");
+            return;
+          }
+
+          const userData = snapshot.data() as UserInServer;
+          setPostSenderData(userData);
+        },
+        (error) => {
+          console.error(
+            "Error on getting realtime data of post sender: ",
+            error
+          );
+        }
+      );
+
+    return () => unsubscribe();
+  }, [authStatus, postDocData]);
 
   const handleOpenRatesModal = () => {
     setScreenParameters([{ queryId: "postDocPath", value: postDocPath }]);
