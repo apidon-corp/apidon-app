@@ -517,7 +517,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
               }}
             >
               <Stars score={overallRating} />
-              <View style={{ flexDirection: "row" }}>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Text bold>{overallRating.toFixed(2)}</Text>
                 <Text> average</Text>
               </View>
@@ -566,6 +566,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
                 style={{
                   flexDirection: "row",
                   gap: 6,
+                  alignItems: "center",
                 }}
               >
                 <Text bold>{postSenderData.username}</Text>
