@@ -544,6 +544,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
             <View
               style={{
+                opacity: 0.5,
                 width: "33%",
                 justifyContent: "center",
                 alignItems: "flex-end",
