@@ -9,6 +9,13 @@ const _layout = () => {
         name="profile"
         options={{ headerTitle: "", presentation: "card" }}
       />
+      <Stack.Screen
+        name="post"
+        options={{
+          presentation: "card",
+          headerTitle: "Post",
+        }}
+      />
     </Stack>
   );
 };

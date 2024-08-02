@@ -8,6 +8,7 @@ import { Image } from "expo-image";
 import { router, usePathname } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
+import crashlytics from "@react-native-firebase/crashlytics";
 
 type Props = {
   notificationData: NotificationData;
@@ -55,6 +56,50 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
     }
   };
 
+  const createRouteForPost = (postDocPath?: string) => {
+    if (!postDocPath) {
+      crashlytics().recordError(
+        new Error("Post doc path is not provided for notification item.")
+      );
+      console.error("Post doc path is not provided for notification item.");
+      return false;
+    }
+
+    const elements = postDocPath.split("/");
+
+    const usersIndex = elements.findIndex((element) => element === "users");
+
+    if (usersIndex === -1) {
+      crashlytics().recordError(
+        new Error("Users index not found on notification item post doc path.")
+      );
+      console.error(
+        "Users index not found on notification item post doc path."
+      );
+      return false;
+    }
+
+    const postSenderIndex = usersIndex + 1;
+    const postIdIndex = usersIndex + 3;
+
+    const postSender = elements[postSenderIndex];
+    const postId = elements[postIdIndex];
+
+    if (!postSender || !postId) {
+      crashlytics().recordError(
+        new Error(
+          "Post sender or post id not found on notification item post doc path."
+        )
+      );
+      console.error(
+        "Post sender or post id not found on notification item post doc path."
+      );
+      return false;
+    }
+
+    return `/home/notifications/post?sender=${postSender}&id=${postId}`;
+  };
+
   const handleClickSenderInformation = () => {
     const subScreens = pathname.split("/");
 
@@ -68,48 +113,20 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
   const handleClickPreviewButton = () => {
     if (notificationData.type === "comment") {
       const postDocPath = notificationData.params.commentedPostDocPath;
-      if (!postDocPath) return;
 
-      const elements = postDocPath.split("/");
+      const routerPath = createRouteForPost(postDocPath);
+      if (!routerPath) return;
 
-      const postSender = elements[2];
-      const postId = elements[4];
-
-      return router.push(`/home/post?sender=${postSender}&id=${postId}`);
+      return router.push(routerPath);
     }
 
-    if (notificationData.type === "frenletCreate") {
-      const frenletDocPath = notificationData.params.createdFrenletDocPath;
-      if (!frenletDocPath) return;
-      const elements = frenletDocPath.split("/");
-
-      const receiver = elements[2];
-      const id = elements[6];
-
-      router.push(`/home/frenlet?receiver=${receiver}&id=${id}`);
-      return;
-    }
-    if (notificationData.type === "frenletReply") {
-      const frenletDocPath = notificationData.params.repliedFrenletDocPath;
-      if (!frenletDocPath) return;
-      const elements = frenletDocPath.split("/");
-
-      const receiver = elements[2];
-      const id = elements[6];
-
-      router.push(`/home/frenlet?receiver=${receiver}&id=${id}`);
-      return;
-    }
     if (notificationData.type === "ratePost") {
       const postDocPath = notificationData.params.ratedPostDocPath;
-      if (!postDocPath) return;
-      const elements = postDocPath.split("/");
 
-      const postSender = elements[2];
-      const postId = elements[4];
+      const routerPath = createRouteForPost(postDocPath);
+      if (!routerPath) return;
 
-      router.push(`/home/post?sender=${postSender}&id=${postId}`);
-      return;
+      return router.push(routerPath);
     }
   };
 
