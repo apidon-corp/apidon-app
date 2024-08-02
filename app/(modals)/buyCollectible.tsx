@@ -225,10 +225,11 @@ const buyNFT = () => {
         padding: 10,
         gap: 10,
       }}
+      showsVerticalScrollIndicator={false}
     >
       <View
         style={{
-          width: "75%",
+          width: "100%",
         }}
       >
         <Image
@@ -241,34 +242,11 @@ const buyNFT = () => {
         />
       </View>
       <View
-        id="price"
-        style={{
-          width: "100%",
-          borderWidth: 1,
-          borderColor: "#808080",
-          borderRadius: 10,
-          padding: 10,
-          gap: 5,
-        }}
-      >
-        <Text fontSize={18} bold>
-          Price
-        </Text>
-        <Text
-          bold
-          style={{
-            color: "#808080",
-          }}
-        >
-          ${collectibleData.price.price}
-        </Text>
-      </View>
-      <View
         id="creator-information"
         style={{
           width: "100%",
           flexDirection: "row",
-          borderWidth: 1,
+          borderWidth: 2,
           borderColor: "#808080",
           borderRadius: 10,
           padding: 10,
@@ -311,7 +289,9 @@ const buyNFT = () => {
         </View>
         <View>
           <Image
-            source={creatorData.profilePhoto}
+            source={
+              creatorData.profilePhoto || require("@/assets/images/user.jpg")
+            }
             style={{ width: 80, aspectRatio: 1, borderRadius: 40 }}
           />
         </View>
@@ -332,6 +312,7 @@ const buyNFT = () => {
           </Text>
         )}
       </View>
+
       <View id="buy-button" style={{ width: "100%" }}>
         <Pressable
           disabled={loading || balanceStatus !== "enough"}
