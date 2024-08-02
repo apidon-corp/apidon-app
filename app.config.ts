@@ -49,6 +49,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ["@react-native-firebase/crashlytics"],
     ["./helpers/customPlugins/DisableAdIdForAnalytics.js"],
     ["expo-apple-authentication"],
+    ["@react-native-firebase/perf"],
     [
       "expo-build-properties",
       {
