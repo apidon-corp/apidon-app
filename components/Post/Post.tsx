@@ -621,7 +621,9 @@ const Post = React.memo(({ postDocPath }: Props) => {
             )}
 
           <Pressable
+            disabled={postDocData.collectibleStatus.isCollectible}
             style={{
+              opacity: postDocData.collectibleStatus.isCollectible ? 0.5 : 1,
               padding: 10,
               borderRadius: 10,
               backgroundColor: "red",

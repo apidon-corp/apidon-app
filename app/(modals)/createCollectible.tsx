@@ -182,22 +182,22 @@ const listNFT = () => {
     if (!stock || !price) return;
 
     Alert.alert(
-      "List NFT",
-      `Are you sure you want to list this NFT for ${price} USD and ${stock} stock?`,
+      "Create Collectible",
+      `\nOnce listed, this collectible post cannot be deleted.\n\nAre you sure you want to create collectible for ${price} USD with a stock of ${stock}?`,
       [
         {
           text: "Cancel",
           style: "cancel",
         },
         {
-          text: "List",
-          onPress: handleList,
+          text: "Create",
+          onPress: handleCreate,
         },
       ]
     );
   };
 
-  const handleList = async () => {
+  const handleCreate = async () => {
     const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("No user");
 
@@ -345,7 +345,7 @@ const listNFT = () => {
             keyboardType="number-pad"
           />
         </View>
-        <View id="list">
+        <View id="create">
           <Pressable
             disabled={loading}
             onPress={handleListButton}
@@ -367,7 +367,7 @@ const listNFT = () => {
                   fontSize: 18,
                 }}
               >
-                List
+                Create
               </Text>
             )}
           </Pressable>
