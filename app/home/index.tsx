@@ -4,8 +4,10 @@ import apiRoutes from "@/helpers/ApiRoutes";
 import { useAtomValue } from "jotai";
 import React, { useEffect, useState } from "react";
 import {
+  AppState,
   FlatList,
   NativeScrollEvent,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
 } from "react-native";
@@ -27,6 +29,8 @@ const index = () => {
     (q) => q.queryId === "createdPostDocPath"
   )?.value as string | undefined;
 
+  const [refreshLoading, setRefreshLoading] = useState(false);
+
   useEffect(() => {
     if (!createdPostDocPath) return;
 
@@ -37,14 +41,26 @@ const index = () => {
   }, [createdPostDocPath]);
 
   useEffect(() => {
-    handleGetPostRecommendations();
+    handleGetInitialPostRecommendations();
+  }, []);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active") {
+        handleRefresh();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   /**
    * Fetches paths of recommended posts from server.
    * @returns
    */
-  const handleGetPostRecommendations = async () => {
+  const handleGetInitialPostRecommendations = async () => {
     const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return false;
 
@@ -128,6 +144,62 @@ const index = () => {
     });
   };
 
+  const handleRefresh = async () => {
+    const currentUserAuthObject = auth().currentUser;
+    if (!currentUserAuthObject) return false;
+
+    setRefreshLoading(true);
+
+    try {
+      const idToken = await currentUserAuthObject.getIdToken();
+
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
+      const response = await fetch(apiRoutes.feed.getPersonalizedFeed, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${idToken}`,
+          appchecktoken,
+        },
+      });
+
+      if (!response.ok) {
+        const message = await response.text();
+        console.error(
+          "Response from getPersonalizedMainFeed API is not okay: ",
+          message
+        );
+        setRefreshLoading(false);
+        return setRecommendedPostsDocPathArray([]);
+      }
+
+      const result = await response.json();
+
+      const postDocPathArrayFetched = result.postDocPathArray as string[];
+
+      // We are removing first "/" from post doc path because react native firebase firestore doesn't like it.
+      const unSlicedAtFirstPostDocPathArrayFetched =
+        postDocPathArrayFetched.map((p) => {
+          if (p[0] === "/") return p.slice(1);
+          return p;
+        });
+      setRecommendedPostsDocPathArray(unSlicedAtFirstPostDocPathArrayFetched);
+
+      const onlyFourPosts = unSlicedAtFirstPostDocPathArrayFetched.slice(0, 4);
+      setServedPosts(onlyFourPosts);
+
+      return setRefreshLoading(false);
+    } catch (error) {
+      console.error("Error while fetching getPersonalizedMainFeed: ", error);
+
+      setRecommendedPostsDocPathArray([]);
+      setServedPosts([]);
+
+      return setRefreshLoading(false);
+    }
+  };
+
   if (loading)
     return (
       <SafeAreaView
@@ -149,6 +221,9 @@ const index = () => {
       onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
       scrollEventThrottle={500}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshLoading} onRefresh={handleRefresh} />
+      }
     >
       <FlatList
         style={{
