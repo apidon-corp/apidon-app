@@ -44,7 +44,6 @@
     "expo-splash-screen": "~0.27.5",
     "expo-status-bar": "~1.12.1",
     "expo-system-ui": "~3.0.7",
-    "expo-updates": "~0.25.21",
     "expo-web-browser": "~13.0.3",
     "jotai": "^2.9.1",
     "promise": "^8.3.0",

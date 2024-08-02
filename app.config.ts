@@ -68,14 +68,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       origin: false,
     },
     eas: {
-      projectId: "fb6da820-d5c1-4658-9bce-7e125525e0cc",
+      projectId: process.env.EAS_PROJECT_ID || "",
     },
   },
   owner: "abovestars",
   runtimeVersion: {
     policy: "appVersion",
-  },
-  updates: {
-    url: "https://u.expo.dev/0d348ab7-ab83-4fbc-8f26-98b5b600919b",
   },
 });
