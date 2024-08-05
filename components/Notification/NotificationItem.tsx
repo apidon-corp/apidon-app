@@ -128,6 +128,15 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
 
       return router.push(routerPath);
     }
+
+    if (notificationData.type === "collectibleBought") {
+      const postDocPath = notificationData.params.collectiblePostDocPath;
+
+      const routerPath = createRouteForPost(postDocPath);
+      if (!routerPath) return;
+
+      return router.push(routerPath);
+    }
   };
 
   if (!senderData)
@@ -150,12 +159,10 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
       ? `commented to your post: "${notificationData.params.comment}"`
       : notificationData.type === "follow"
       ? "started to follow you"
-      : notificationData.type === "frenletCreate"
-      ? `created frenlet on you: "${notificationData.params.message}"`
-      : notificationData.type === "frenletReply"
-      ? `replied your frenlet: "${notificationData.params.message}"`
       : notificationData.type === "ratePost"
       ? `rated your post with ${notificationData.params.rate} stars`
+      : notificationData.type === "collectibleBought"
+      ? `bought a collectible from you!`
       : "made unknown action";
 
   return (
@@ -226,8 +233,7 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
       >
         {(notificationData.type === "ratePost" ||
           notificationData.type === "comment" ||
-          notificationData.type === "frenletCreate" ||
-          notificationData.type === "frenletReply") && (
+          notificationData.type === "collectibleBought") && (
           <Feather name="image" size={24} color="white" />
         )}
 
