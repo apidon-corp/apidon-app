@@ -78,12 +78,13 @@ const Likes = () => {
       }}
     >
       <FlatList
+        contentContainerStyle={{
+          gap: 5,
+          paddingHorizontal: 10,
+        }}
         data={rateData}
         renderItem={({ item }) => (
-          <UserCard
-            username={item.sender}
-            key={item.sender}
-          />
+          <UserCard username={item.sender} key={item.sender} />
         )}
       />
     </SafeAreaView>

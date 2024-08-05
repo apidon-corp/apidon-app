@@ -112,6 +112,7 @@ const collectors = () => {
       <FlatList
         contentContainerStyle={{
           gap: 5,
+          paddingHorizontal: 10,
         }}
         data={collectibleData.buyers}
         renderItem={({ item }) => (

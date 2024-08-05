@@ -259,7 +259,9 @@ const comments = () => {
       <FlatList
         data={commentData}
         contentContainerStyle={{
-          padding: 10,
+          gap: 5,
+          paddingHorizontal: 10,
+          paddingVertical: 5,
         }}
         renderItem={({ item }) => (
           <CommentItem
