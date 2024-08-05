@@ -154,31 +154,42 @@ const CommentItem = ({
     <View
       style={{
         flexDirection: "row",
-        padding: 5,
         alignItems: "center",
         justifyContent: "space-between",
+        width: "100%",
+        padding: 10,
       }}
     >
       <Pressable
         onPress={handlePressUser}
         style={{
+          width: "90%",
           flexDirection: "row",
           gap: 10,
-          alignItems: "center",
         }}
       >
-        <Image
-          source={userData.profilePhoto || require("@/assets/images/user.jpg")}
+        <View
           style={{
-            width: 50,
-            height: 50,
-            borderRadius: 25,
+            width: "15%",
           }}
-          transition={500}
-        />
+        >
+          <Image
+            source={
+              userData.profilePhoto || require("@/assets/images/user.jpg")
+            }
+            style={{
+              width: "85%",
+              aspectRatio: 1,
+              borderRadius: 25,
+            }}
+            transition={500}
+          />
+        </View>
+
         <View
           style={{
             gap: 4,
+            width: "85%",
           }}
         >
           <View
@@ -204,10 +215,18 @@ const CommentItem = ({
         </View>
       </Pressable>
 
+      <View
+        style={{
+          width: "2%",
+        }}
+      />
+
       {doesOwnComment && (
         <Pressable
           onPress={handleDeleteButton}
           style={{
+            width: "8%",
+            justifyContent: "center",
             alignItems: "center",
           }}
         >
