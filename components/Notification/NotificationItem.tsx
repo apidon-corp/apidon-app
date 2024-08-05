@@ -2,13 +2,13 @@ import { Text } from "@/components/Text/Text";
 import { NotificationData } from "@/types/Notification";
 import { UserInServer } from "@/types/User";
 import { Entypo, Feather } from "@expo/vector-icons";
+import crashlytics from "@react-native-firebase/crashlytics";
 import firestore from "@react-native-firebase/firestore";
 import { formatDistanceToNow } from "date-fns";
 import { Image } from "expo-image";
 import { router, usePathname } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
-import crashlytics from "@react-native-firebase/crashlytics";
 
 type Props = {
   notificationData: NotificationData;
@@ -137,6 +137,10 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
 
       return router.push(routerPath);
     }
+
+    if (notificationData.type === "follow") {
+      handleClickSenderInformation();
+    }
   };
 
   if (!senderData)
@@ -158,77 +162,82 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
     notificationData.type === "comment"
       ? `commented to your post: "${notificationData.params.comment}"`
       : notificationData.type === "follow"
-      ? "started to follow you"
+      ? "started to follow you."
       : notificationData.type === "ratePost"
-      ? `rated your post with ${notificationData.params.rate} stars`
+      ? `rated your post with ${notificationData.params.rate} ⭐️.`
       : notificationData.type === "collectibleBought"
-      ? `bought a collectible from you!`
+      ? `bought a collectible from you.`
       : "made unknown action";
 
   return (
-    <View
+    <Pressable
+      onPress={handleClickPreviewButton}
       style={{
         width: "100%",
         backgroundColor: "rgb(27,27,27)",
         borderRadius: 10,
-        padding: 10,
         flexDirection: "row",
         alignItems: "center",
+        padding: 10,
       }}
     >
       <View
         style={{
           width: "90%",
           flexDirection: "row",
-          gap: 10,
-          alignItems: "center",
-          flexWrap: "wrap",
         }}
       >
-        <Pressable onPress={handleClickSenderInformation}>
+        <Pressable
+          style={{
+            width: "20%",
+          }}
+          onPress={handleClickSenderInformation}
+        >
           <Image
             source={
               senderData.profilePhoto || require("@/assets/images/user.jpg")
             }
             style={{
-              width: 50,
-              height: 50,
+              width: "85%",
+              aspectRatio: 1,
               borderRadius: 25,
             }}
             transition={500}
-            placeholder={{ blurhash: "" }}
           />
         </Pressable>
 
         <View
           style={{
-            maxWidth: "100%",
-            display: "flex",
-            flexDirection: "row",
-            gap: 5,
-            flexWrap: "wrap",
+            width: "80%",
+            flexDirection: "column",
+            gap: 2,
+            justifyContent: "center",
           }}
         >
-          <Text bold>{senderData.fullname}</Text>
-          <Text>{message}</Text>
-        </View>
+          <Pressable onPress={handleClickSenderInformation}>
+            <Text fontSize={12} bold>
+              {senderData.fullname}
+            </Text>
+          </Pressable>
 
-        <Text
-          style={{
-            fontSize: 12,
-            color: "gray",
-          }}
-        >
-          {formatDistanceToNow(new Date(notificationData.timestamp))}
-        </Text>
+          <Text fontSize={12}>{message}</Text>
+          <Text
+            style={{
+              fontSize: 10,
+              color: "gray",
+            }}
+          >
+            {formatDistanceToNow(new Date(notificationData.timestamp))}
+          </Text>
+        </View>
       </View>
 
-      <Pressable
-        onPress={handleClickPreviewButton}
+      <View
         style={{
           flexDirection: "row",
           width: "10%",
           justifyContent: "center",
+          alignItems: "center",
         }}
       >
         {(notificationData.type === "ratePost" ||
@@ -240,8 +249,8 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
         {lastOpenedTimeLocal < notificationData.timestamp && (
           <Entypo name="dot-single" size={24} color="red" />
         )}
-      </Pressable>
-    </View>
+      </View>
+    </Pressable>
   );
 };
 
