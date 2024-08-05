@@ -4,7 +4,6 @@ import apiRoutes from "@/helpers/ApiRoutes";
 import { useAtom, useAtomValue } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  AppState,
   FlatList,
   NativeScrollEvent,
   RefreshControl,
@@ -12,10 +11,10 @@ import {
   ScrollView,
 } from "react-native";
 
+import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
 import PostSkeleton from "@/components/Post/PostSkeleon";
 import appCheck from "@react-native-firebase/app-check";
 import auth from "@react-native-firebase/auth";
-import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
 
 const index = () => {
   const [loading, setLoading] = useState(false);
@@ -49,18 +48,6 @@ const index = () => {
 
   useEffect(() => {
     handleGetInitialPostRecommendations();
-  }, []);
-
-  useEffect(() => {
-    const subscription = AppState.addEventListener("change", (nextAppState) => {
-      if (nextAppState === "active") {
-        handleRefresh();
-      }
-    });
-
-    return () => {
-      subscription.remove();
-    };
   }, []);
 
   useEffect(() => {

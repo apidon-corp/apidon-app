@@ -2,10 +2,11 @@ import { useNotification } from "@/providers/NotificationProvider";
 import {
   AntDesign,
   Entypo,
+  FontAwesome,
   Ionicons,
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
-import { Tabs, router } from "expo-router";
+import { Tabs, router, usePathname } from "expo-router";
 import React from "react";
 import { Pressable, StatusBar, View } from "react-native";
 
@@ -15,6 +16,8 @@ import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
 
 const _layout = () => {
   const notificationData = useNotification();
+
+  const pathname = usePathname();
 
   const setHomeScreenParameters = useSetAtom(homeScreeenParametersAtom);
 
@@ -34,7 +37,8 @@ const _layout = () => {
 
   const handleHomeButtonPress = () => {
     router.replace("/home");
-    setHomeScreenParameters({ isHomeButtonPressed: true });
+    if (pathname === "/home")
+      setHomeScreenParameters({ isHomeButtonPressed: true });
   };
 
   return (
@@ -44,11 +48,19 @@ const _layout = () => {
         <Tabs.Screen
           name="index"
           options={{
-            tabBarIcon: () => (
-              <Pressable onPress={handleHomeButtonPress}>
+            tabBarButton: () => (
+              <Pressable
+                onPress={handleHomeButtonPress}
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
                 <Entypo name="home" size={25} color="white" />
               </Pressable>
             ),
+
             tabBarLabel: () => <></>,
             headerBackground: () => (
               <View style={{ flex: 1, backgroundColor: "black", height: 50 }} />
@@ -66,7 +78,7 @@ const _layout = () => {
                   router.replace(`home/profile/${currentUserDisplayName}`);
                 }}
               >
-                <AntDesign
+                <FontAwesome
                   name="user"
                   size={24}
                   color="white"
