@@ -11,6 +11,12 @@ const _layout = () => {
         }}
       />
       <Stack.Screen
+        name="notificationSettings"
+        options={{
+          headerTitle: "",
+        }}
+      />
+      <Stack.Screen
         name="passwordDeleteAccount"
         options={{
           headerTitle: "",

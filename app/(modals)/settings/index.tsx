@@ -1,4 +1,5 @@
 import DeleteAccount from "@/components/Settings/DeleteAccount";
+import NotificationSettings from "@/components/Settings/NotificationSettings";
 import SignOut from "@/components/User/SignOut";
 import React from "react";
 import { View } from "react-native";
@@ -13,6 +14,7 @@ const settings = () => {
       }}
     >
       <SignOut />
+      <NotificationSettings />
       <DeleteAccount />
     </View>
   );

@@ -26,18 +26,35 @@ async function registerForPushNotifications() {
     return false;
   }
 
-  const currentNotificationStatus = await Notifications.getPermissionsAsync();
-  if (currentNotificationStatus.granted) {
-    console.log("Already granted permission for push notifications.");
+  try {
+    const currentNotificationStatus = await Notifications.getPermissionsAsync();
+    if (currentNotificationStatus.granted) {
+      console.log("Already granted permission for push notifications.");
+      return false;
+    }
+  } catch (error) {
+    console.error("Error while getting notification permissions: ", error);
     return false;
   }
 
-  const newNotificationStatus = await Notifications.requestPermissionsAsync();
-  if (!newNotificationStatus.granted) {
-    console.log("Failed to grant permission for push notifications.");
+  try {
+    const newNotificationStatus = await Notifications.requestPermissionsAsync();
+    if (!newNotificationStatus.granted) {
+      console.log("Failed to grant permission for push notifications.");
+      return false;
+    }
+  } catch (error) {
+    console.error("Error while requesting notification permissions: ", error);
     return false;
   }
 
+  const createdNotificationToken = await createExpoPushToken();
+  if (!createdNotificationToken) return false;
+
+  return createdNotificationToken;
+}
+
+export async function createExpoPushToken() {
   const projectId =
     Constants?.expoConfig?.extra?.eas?.projectId ??
     Constants?.easConfig?.projectId;
@@ -60,7 +77,7 @@ async function registerForPushNotifications() {
   }
 }
 
-async function updateNotificationTokenOnFirebase(token: string) {
+export async function updateNotificationTokenOnFirebase(token: string) {
   const currentUserAuthObject = auth().currentUser;
   if (!currentUserAuthObject) return false;
 
@@ -102,9 +119,9 @@ async function updateNotificationTokenOnFirebase(token: string) {
 
 export async function makeDeviceReadyToGetNotifications() {
   const notificationToken = await registerForPushNotifications();
-  if (!notificationToken) return;
+  if (!notificationToken) return false;
 
-  await updateNotificationTokenOnFirebase(notificationToken);
+  return await updateNotificationTokenOnFirebase(notificationToken);
 }
 
 export function adjustNotificationSettings(muted?: boolean) {

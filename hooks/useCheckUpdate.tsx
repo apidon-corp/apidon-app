@@ -20,7 +20,6 @@ const useCheckUpdate = () => {
     retryCountRef: React.MutableRefObject<number>
   ) => {
     setVersionStatus("loading");
-    console.log("Checking for updates: ", retryCountRef.current);
 
     const currentVersion = Constants.expoConfig?.version;
 
