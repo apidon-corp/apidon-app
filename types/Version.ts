@@ -1,0 +1,3 @@
+type VersionDocData = {
+  latestVersion: string;
+};

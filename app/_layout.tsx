@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 
 import AuthProvider from "@/providers/AuthProvider";
-import { Dimensions, StatusBar, View } from "react-native";
+import { Alert, Dimensions, StatusBar, View } from "react-native";
 
 import NotificationProvider from "@/providers/NotificationProvider";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
@@ -22,6 +22,7 @@ export {
 
 import useAppCheck from "@/hooks/useAppCheck";
 import { Image } from "expo-image";
+import useCheckUpdate from "@/hooks/useCheckUpdate";
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
@@ -126,6 +127,8 @@ function RootLayout() {
 
   const appCheckLoaded = useAppCheck();
 
+  const { versionStatus } = useCheckUpdate();
+
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
@@ -137,10 +140,36 @@ function RootLayout() {
     }
   }, [loaded]);
 
-  if (!loaded) {
+  if (!loaded || !appCheckLoaded || versionStatus === "loading") {
     return <PlaceholderForWaiting />;
   }
-  if (!appCheckLoaded) {
+
+  if (versionStatus === "error") {
+    Alert.alert(
+      "Error on checking updates",
+      "Please try again later",
+      [
+        {
+          text: "OK",
+          onPress: () => {},
+        },
+      ],
+      { cancelable: false }
+    );
+    return <PlaceholderForWaiting />;
+  }
+  if (versionStatus === "updateNeeded") {
+    Alert.alert(
+      "New update available",
+      "Please update the app to continue using it.",
+      [
+        {
+          text: "OK",
+          onPress: () => {},
+        },
+      ],
+      { cancelable: false }
+    );
     return <PlaceholderForWaiting />;
   }
 
