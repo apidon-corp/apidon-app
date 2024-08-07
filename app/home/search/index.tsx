@@ -1,8 +1,10 @@
 import UserCard from "@/components/User/UserCard";
 import { UserInServer } from "@/types/User";
 import firestore from "@react-native-firebase/firestore";
+import { Stack } from "expo-router";
 import React, { useState } from "react";
-import { FlatList, TextInput, View } from "react-native";
+import { FlatList } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 
 const search = () => {
   const [queryResult, setQueryResult] = useState<string[]>([]);
@@ -53,31 +55,33 @@ const search = () => {
   };
 
   return (
-    <View style={{ flex: 1, padding: 10, gap: 20 }}>
-      <View>
-        <TextInput
-          onChangeText={handleInputChange}
-          style={{
-            borderWidth: 1,
-            borderColor: "gray",
-            borderRadius: 10,
-            padding: 10,
-            color: "white",
-          }}
-          placeholder="Search users"
-          placeholderTextColor="gray"
-        />
-      </View>
-
-      <FlatList
-        showsVerticalScrollIndicator={false}
-        keyExtractor={(item) => item}
-        data={queryResult}
-        renderItem={({ item }) => (
-          <UserCard username={item} destinationIn key={item} />
-        )}
+    <>
+      <Stack.Screen
+        options={{
+          headerLargeTitle: true,
+          headerSearchBarOptions: {
+            placeholder: "Search",
+            inputType: "text",
+            onChangeText: (event) => handleInputChange(event.nativeEvent.text),
+          },
+        }}
       />
-    </View>
+
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+        }}
+      >
+        <FlatList
+          scrollEnabled={false}
+          showsVerticalScrollIndicator={false}
+          keyExtractor={(item) => item}
+          data={queryResult}
+          renderItem={({ item }) => <UserCard username={item} />}
+        />
+      </ScrollView>
+    </>
   );
 };
 

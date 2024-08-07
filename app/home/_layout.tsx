@@ -37,7 +37,7 @@ const _layout = () => {
 
   const handleHomeButtonPress = () => {
     router.replace("/home");
-    if (pathname === "/home")
+    if (pathname === "/home/feed")
       setHomeScreenParameters({ isHomeButtonPressed: true });
   };
 
@@ -48,6 +48,14 @@ const _layout = () => {
         <Tabs.Screen
           name="index"
           options={{
+            href: null,
+            headerShown: false,
+          }}
+        />
+        <Tabs.Screen
+          name="feed"
+          options={{
+            headerShown: false,
             tabBarButton: () => (
               <Pressable
                 onPress={handleHomeButtonPress}
@@ -60,32 +68,7 @@ const _layout = () => {
                 <Entypo name="home" size={25} color="white" />
               </Pressable>
             ),
-
             tabBarLabel: () => <></>,
-            headerBackground: () => (
-              <View style={{ flex: 1, backgroundColor: "black", height: 50 }} />
-            ),
-
-            headerTitle: "Apidon",
-
-            headerRight: () => (
-              <Pressable
-                onPress={() => {
-                  const currentUserDisplayName =
-                    auth().currentUser?.displayName;
-                  if (!currentUserDisplayName) return;
-
-                  router.replace(`home/profile/${currentUserDisplayName}`);
-                }}
-              >
-                <FontAwesome
-                  name="user"
-                  size={24}
-                  color="white"
-                  style={{ marginHorizontal: 10 }}
-                />
-              </Pressable>
-            ),
           }}
         />
         <Tabs.Screen
@@ -144,22 +127,6 @@ const _layout = () => {
             ),
             tabBarLabel: () => <></>,
             headerShown: false,
-          }}
-        />
-        <Tabs.Screen
-          name="profile"
-          options={{
-            headerShown: false,
-            title: "Private",
-            href: null,
-          }}
-        />
-        <Tabs.Screen
-          name="post"
-          options={{
-            headerShown: true,
-            title: "Post",
-            href: null,
           }}
         />
       </Tabs>

@@ -1,29 +1,66 @@
-import { View, Text } from "react-native";
-import React from "react";
 import { Stack } from "expo-router";
+import React from "react";
+import { Text } from "react-native";
 
-type Props = {};
-
-const _layout = (props: Props) => {
+const _layout = () => {
   return (
-    <Stack>
+    <Stack
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: "black",
+        },
+      }}
+    >
       <Stack.Screen
         name="index"
         options={{
-          headerBackground: () => (
-            <View style={{ width: "100%", backgroundColor: "black" }} />
-          ),
           title: "Search",
         }}
       />
       <Stack.Screen
-        name="profile"
+        name="profilePage"
         options={{
-          headerBackground: () => (
-            <View style={{ width: "100%", backgroundColor: "black" }} />
-          ),
+          headerShown: true,
           headerTitle: "",
+          headerBackTitle: "Back",
+        }}
+      />
+      <Stack.Screen
+        name="editProfile"
+        options={{
+          headerShown: true,
+          title: "Edit Profile",
           presentation: "card",
+          headerBackTitleVisible: false,
+        }}
+      />
+      <Stack.Screen
+        name="followers"
+        options={{
+          headerShown: true,
+          title: "Followers",
+          presentation: "card",
+          headerTitle: () => (
+            <Text style={{ color: "white", fontSize: 18 }}>Followers</Text>
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="following"
+        options={{
+          headerShown: true,
+          title: "Following",
+          presentation: "card",
+          headerTitle: () => (
+            <Text style={{ color: "white", fontSize: 18 }}>Following</Text>
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="post"
+        options={{
+          title: "Collectible",
+          headerBackTitle: "Back",
         }}
       />
     </Stack>

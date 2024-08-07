@@ -101,13 +101,8 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
   };
 
   const handleClickSenderInformation = () => {
-    const subScreens = pathname.split("/");
-
-    subScreens.push(`profile/${notificationData.source}`);
-
-    const finalDestination = subScreens.join("/");
-
-    router.push(finalDestination);
+    const route = `/home/notifications/profilePage?username=${notificationData.source}`;
+    return router.push(route);
   };
 
   const handleClickPreviewButton = () => {
@@ -200,7 +195,7 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
             style={{
               width: "85%",
               aspectRatio: 1,
-              borderRadius: 25,
+              borderRadius: 100,
             }}
             transition={500}
           />

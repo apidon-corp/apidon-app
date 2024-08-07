@@ -1,20 +1,67 @@
 import { Stack } from "expo-router";
 
 import React from "react";
-import { StatusBar, View } from "react-native";
+import { StatusBar } from "react-native";
+
+import { Text } from "@/components/Text/Text";
 
 const _layout = () => {
   return (
     <>
       <StatusBar barStyle="light-content" />
-      <Stack>
+      <Stack
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: "black",
+          },
+        }}
+      >
         <Stack.Screen
-          name="profile"
+          name="profilePage"
           options={{
-            presentation: "card",
+            headerShown: true,
             headerTitle: "",
           }}
         />
+        <Stack.Screen
+          name="editProfile"
+          options={{
+            headerShown: true,
+            title: "Edit Profile",
+            presentation: "card",
+            headerBackTitleVisible: false,
+          }}
+        />
+        <Stack.Screen
+          name="followers"
+          options={{
+            headerShown: true,
+            title: "Followers",
+            presentation: "card",
+            headerTitle: () => (
+              <Text style={{ color: "white", fontSize: 18 }}>Followers</Text>
+            ),
+          }}
+        />
+        <Stack.Screen
+          name="following"
+          options={{
+            headerShown: true,
+            title: "Following",
+            presentation: "card",
+            headerTitle: () => (
+              <Text style={{ color: "white", fontSize: 18 }}>Following</Text>
+            ),
+          }}
+        />
+        <Stack.Screen
+          name="post"
+          options={{
+            headerShown: true,
+            title: "Post",
+          }}
+        />
+
         <Stack.Screen
           name="rates"
           options={{

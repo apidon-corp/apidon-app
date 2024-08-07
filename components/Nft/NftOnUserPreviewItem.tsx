@@ -1,15 +1,15 @@
 import { apidonPink } from "@/constants/Colors";
 import { useAuth } from "@/providers/AuthProvider";
+import { CollectibleDocData } from "@/types/Collectible";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
-import { Entypo, Foundation } from "@expo/vector-icons";
+import { Foundation } from "@expo/vector-icons";
 import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
 import { router, usePathname } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import Text from "../Text/Text";
-import { CollectibleDocData } from "@/types/Collectible";
 
 type Props = {
   postDocPath: string;
@@ -107,18 +107,18 @@ const NftOnUserPreviewItem = ({ postDocPath, collectibleDocPath }: Props) => {
   const handlePressPreview = () => {
     if (!postDocData || !postSenderData) return;
 
+    const destination = `post?sender=${postDocData.senderUsername}&id=${postDocData.id}`;
+
     const subScreens = pathname.split("/");
 
-    subScreens[
-      subScreens.length - 1
-    ] = `post?sender=${postDocData.senderUsername}&id=${postDocData.id}`;
+    if (subScreens[2] === "feed") {
+      const route = `/home/feed/${destination}`;
+      return router.navigate(route);
+    }
 
-    const finalDestination = subScreens.join("/");
-
-    router.push(finalDestination);
-
-    console.log(pathname);
-    return;
+    subScreens[subScreens.length - 1] = destination;
+    const route = subScreens.join("/");
+    return router.push(route);
   };
 
   if (!postDocData || !postSenderData || !collectibleDocData) {

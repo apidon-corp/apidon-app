@@ -129,7 +129,7 @@ const CommentItem = ({
   const handlePressUser = () => {
     const subScreens = pathname.split("/");
 
-    subScreens[subScreens.length - 1] = "profile/" + sender;
+    subScreens[subScreens.length - 1] = `profilePage?username=${sender}`;
 
     const finalDestination = subScreens.join("/");
 

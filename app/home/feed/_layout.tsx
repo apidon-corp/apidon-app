@@ -1,41 +1,38 @@
-import { FontAwesome5 } from "@expo/vector-icons";
+import { FontAwesome } from "@expo/vector-icons";
 import { Stack, router } from "expo-router";
 import React from "react";
-import { Pressable } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { Text } from "@/components/Text/Text";
 
+import auth from "@react-native-firebase/auth";
+
 const _layout = () => {
+  const handleUserIconButtonPress = () => {
+    const currentUserDisplayName = auth().currentUser?.displayName;
+    if (!currentUserDisplayName) return;
+
+    router.push(`/home/feed/profilePage?username=${currentUserDisplayName}`);
+  };
+
   return (
     <Stack
       screenOptions={{
         headerStyle: {
-          backgroundColor: "black",
+          backgroundColor: "rgba(0,0,0,0.5)",
         },
       }}
     >
       <Stack.Screen
         name="index"
         options={{
-          title: "Apidon Collectibles",
+          headerTitle: "Apidon",
+
           headerRight: () => (
-            <Pressable
-              onPress={() => {
-                router.push("/home/collectibles/wallet");
-              }}
-            >
-              <FontAwesome5 name="wallet" size={24} color="white" />
+            <Pressable onPress={handleUserIconButtonPress}>
+              <FontAwesome name="user" size={25} color="white" />
             </Pressable>
           ),
-        }}
-      />
-
-      <Stack.Screen
-        name="wallet"
-        options={{
-          title: "Wallet",
-          headerTitle: "Wallet",
-          headerBackTitle: "Market",
         }}
       />
 
@@ -44,6 +41,7 @@ const _layout = () => {
         options={{
           headerShown: true,
           headerTitle: "",
+          headerBackTitle: "Back",
         }}
       />
       <Stack.Screen
@@ -81,7 +79,7 @@ const _layout = () => {
         name="post"
         options={{
           title: "Collectible",
-          headerBackTitle: "Market",
+          headerBackTitle: "Back",
         }}
       />
     </Stack>

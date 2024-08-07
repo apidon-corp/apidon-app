@@ -8,6 +8,8 @@ import apiRoutes from "@/helpers/ApiRoutes";
 
 import appCheck from "@react-native-firebase/app-check";
 
+import crashlytics from "@react-native-firebase/crashlytics";
+
 async function registerForPushNotifications() {
   // Android specific adjusting for channel.
   if (Platform.OS === "android") {
@@ -50,6 +52,9 @@ export async function createExpoPushToken() {
 
   if (!projectId) {
     console.log("Failed to get project id.");
+    crashlytics().recordError(
+      new Error("Failed to get project id while getting push token.")
+    );
     return false;
   }
 
@@ -61,6 +66,7 @@ export async function createExpoPushToken() {
     const token = tokenGetResult.data;
     return token;
   } catch (error) {
+    crashlytics().recordError(new Error(`Error while getting push token: ${error}`));
     console.error("Error while getting push token: ", error);
     return false;
   }
@@ -101,6 +107,9 @@ export async function updateNotificationTokenOnFirebase(token: string) {
 
     return true;
   } catch (error) {
+    crashlytics().recordError(
+      new Error(`Error while updating notification token: ${error}`)
+    );
     console.error("Error while updating notification token: ", error);
     return false;
   }

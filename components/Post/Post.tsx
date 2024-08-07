@@ -10,7 +10,7 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import firestore from "@react-native-firebase/firestore";
 import { formatDistanceToNowStrict } from "date-fns";
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import { useSetAtom } from "jotai";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -73,6 +73,8 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
     return totalRates / rateCount;
   }, [postDocData?.rates]);
+
+  const pathname = usePathname();
 
   // Dynamic Data Fetching / Post Object
   useEffect(() => {
@@ -308,7 +310,30 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
   function handlePressUser() {
     if (!postSenderData) return;
-    return router.replace(`home/profile/${postSenderData.username}`);
+
+    // /home/feed
+    const path = pathname;
+
+    const subScreens = path.split("/");
+    const currentScreen = subScreens[subScreens.length - 1];
+
+    if (currentScreen === "post") {
+      subScreens[
+        subScreens.length - 1
+      ] = `profilePage?username=${postSenderData.username}`;
+
+      const route = subScreens.join("/");
+      return router.push(route);
+    }
+
+    if (currentScreen === "feed") {
+      subScreens.push(`profilePage?username=${postSenderData.username}`);
+
+      const route = subScreens.join("/");
+      return router.push(route);
+    }
+
+    return console.log("Hmm");
   }
 
   if (loading)

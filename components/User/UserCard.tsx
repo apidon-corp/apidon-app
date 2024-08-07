@@ -14,10 +14,9 @@ import appCheck from "@react-native-firebase/app-check";
 
 type Props = {
   username: string;
-  destinationIn?: boolean;
 };
 
-const UserCard = ({ username, destinationIn }: Props) => {
+const UserCard = ({ username }: Props) => {
   const { authStatus } = useAuth();
 
   const [userData, setUserData] = useState<UserInServer>();
@@ -126,20 +125,24 @@ const UserCard = ({ username, destinationIn }: Props) => {
 
     const currentScreen = subScreens[subScreens.length - 1];
 
-    if (currentScreen === "followers" || currentScreen === "following") {
-      subScreens[subScreens.length - 1] = username;
+    if (
+      currentScreen === "followers" ||
+      currentScreen === "following" ||
+      currentScreen === "collectors" ||
+      currentScreen === "rates"
+    ) {
+      subScreens[subScreens.length - 1] = `profilePage?username=${username}`;
       const finalDestination = subScreens.join("/");
       return router.push(finalDestination);
     }
 
-    if (!destinationIn)
-      subScreens[subScreens.length - 1] = "profile/" + username;
+    if (currentScreen === "search") {
+      subScreens.push(`profilePage?username=${username}`);
+      const finalDestination = subScreens.join("/");
+      return router.push(finalDestination);
+    }
 
-    if (destinationIn) subScreens.push(`profile/${username}`);
-
-    const finalDestination = subScreens.join("/");
-
-    router.push(finalDestination);
+    console.error("Hmm");
   };
 
   if (loading || !userData)

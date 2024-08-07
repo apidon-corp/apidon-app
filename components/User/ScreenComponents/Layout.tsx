@@ -9,7 +9,7 @@ const _layout = () => {
       <Stack.Screen
         name="[username]"
         options={{
-          headerShown: true,
+          headerShown: false,
           headerTitle: "",
         }}
       />

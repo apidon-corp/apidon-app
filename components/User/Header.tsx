@@ -6,7 +6,7 @@ import { UserInServer } from "@/types/User";
 import { Feather } from "@expo/vector-icons";
 import auth from "@react-native-firebase/auth";
 import { Image } from "expo-image";
-import { Stack, router, usePathname } from "expo-router";
+import { router, usePathname } from "expo-router";
 import { useSetAtom } from "jotai";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
@@ -76,86 +76,117 @@ const Header = ({ userData }: Props) => {
     router.push(finalDestination);
   };
 
+  const handlePressSettingsIcon = () => {
+    router.push("/(modals)/settings");
+  };
+
   if (!userData) return <ActivityIndicator size="large" color="white" />;
 
   return (
-    <>
+    <View
+      id="header"
+      style={{
+        padding: 10,
+        alignItems: "center",
+        gap: 5,
+      }}
+    >
       {userOwnsPage && (
-        <Stack.Screen
-          options={{
-            headerRight: () => (
-              <Pressable
-                onPress={() => {
-                  router.push("/(modals)/settings");
-                }}
-              >
-                <Feather name="settings" size={23} color="white" />
-              </Pressable>
-            ),
-          }}
-        />
+        <View style={{ width: "100%", alignItems: "flex-end" }}>
+          <Pressable
+            onPress={() => {
+              router.push("/(modals)/settings");
+            }}
+          >
+            <Feather name="settings" size={23} color="white" />
+          </Pressable>
+        </View>
       )}
 
-      <View
-        id="header"
+      <Image
+        source={userData.profilePhoto || require("@/assets/images/user.jpg")}
         style={{
-          padding: 10,
-          alignItems: "center",
-          gap: 5,
+          height: 150,
+          width: 150,
+          borderRadius: 75,
+        }}
+        transition={500}
+      />
+      <Text
+        bold
+        style={{
+          fontSize: 25,
+          textAlign: "center",
         }}
       >
-        <Image
-          source={userData.profilePhoto || require("@/assets/images/user.jpg")}
-          style={{
-            height: 150,
-            width: 150,
-            borderRadius: 75,
-          }}
-          transition={500}
-        />
-        <Text
-          bold
-          style={{
-            fontSize: 25,
-            textAlign: "center",
-          }}
-        >
-          {userData.fullname}
-        </Text>
-        <Text
-          style={{
-            color: "white",
-            fontSize: 14,
-            textAlign: "center",
-          }}
-        >
-          @{userData.username}
-        </Text>
+        {userData.fullname}
+      </Text>
+      <Text
+        style={{
+          color: "white",
+          fontSize: 14,
+          textAlign: "center",
+        }}
+      >
+        @{userData.username}
+      </Text>
+      <View
+        style={{
+          flexDirection: "row",
+          gap: 20,
+          justifyContent: "center",
+          alignItems: "center",
+          width: "100%",
+          marginTop: 10,
+        }}
+      >
         <View
           style={{
-            flexDirection: "row",
-            gap: 20,
-            justifyContent: "center",
-            alignItems: "center",
-            width: "100%",
-            marginTop: 10,
+            gap: 4,
+            width: "20%",
           }}
         >
-          <View
+          <Text
+            style={{
+              fontSize: 15,
+              textAlign: "center",
+              color: "gray",
+            }}
+            bold
+          >
+            5
+          </Text>
+          <Text
+            style={{
+              color: "white",
+              fontSize: 15,
+              textAlign: "center",
+            }}
+          >
+            Score
+          </Text>
+        </View>
+
+        <View
+          style={{
+            width: "20%",
+          }}
+        >
+          <Pressable
+            onPress={handlePressFollowers}
             style={{
               gap: 4,
-              width: "20%",
             }}
           >
             <Text
               style={{
+                color: "white",
                 fontSize: 15,
                 textAlign: "center",
-                color: "gray",
               }}
               bold
             >
-              5
+              {userData.followerCount}
             </Text>
             <Text
               style={{
@@ -164,103 +195,71 @@ const Header = ({ userData }: Props) => {
                 textAlign: "center",
               }}
             >
-              Score
+              Followers
             </Text>
-          </View>
+          </Pressable>
+        </View>
 
-          <View
-            style={{
-              width: "20%",
-            }}
-          >
-            <Pressable
-              onPress={handlePressFollowers}
-              style={{
-                gap: 4,
-              }}
-            >
-              <Text
-                style={{
-                  color: "white",
-                  fontSize: 15,
-                  textAlign: "center",
-                }}
-                bold
-              >
-                {userData.followerCount}
-              </Text>
-              <Text
-                style={{
-                  color: "white",
-                  fontSize: 15,
-                  textAlign: "center",
-                }}
-              >
-                Followers
-              </Text>
-            </Pressable>
-          </View>
-
-          <View
+        <View
+          style={{
+            gap: 4,
+            width: "20%",
+          }}
+        >
+          <Pressable
             style={{
               gap: 4,
-              width: "20%",
             }}
-          >
-            <Pressable
-              style={{
-                gap: 4,
-              }}
-              onPress={handlePressFollowing}
-            >
-              <Text
-                style={{
-                  color: "white",
-                  fontSize: 15,
-                  textAlign: "center",
-                }}
-                bold
-              >
-                {userData.followingCount}
-              </Text>
-              <Text
-                style={{
-                  fontSize: 15,
-                  textAlign: "center",
-                }}
-              >
-                Following
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-        {userOwnsPage ? (
-          <Pressable
-            onPress={handleEditProfileButton}
-            style={{
-              borderColor: apidonPink,
-              borderWidth: 1,
-              borderRadius: 10,
-              paddingHorizontal: 15,
-              paddingVertical: 5,
-              marginTop: 10,
-            }}
+            onPress={handlePressFollowing}
           >
             <Text
               style={{
-                fontSize: 14,
+                color: "white",
+                fontSize: 15,
                 textAlign: "center",
               }}
               bold
             >
-              Edit Profile
+              {userData.followingCount}
+            </Text>
+            <Text
+              style={{
+                fontSize: 15,
+                textAlign: "center",
+              }}
+            >
+              Following
             </Text>
           </Pressable>
-        ) : (
-          <FollowButton username={userData.username} />
-        )}
+        </View>
       </View>
-    </>
+
+      {userOwnsPage ? (
+        <Pressable
+          onPress={handleEditProfileButton}
+          style={{
+            borderColor: apidonPink,
+            borderWidth: 1,
+            borderRadius: 10,
+            paddingHorizontal: 15,
+            paddingVertical: 5,
+            marginTop: 10,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 14,
+              textAlign: "center",
+            }}
+            bold
+          >
+            Edit Profile
+          </Text>
+        </Pressable>
+      ) : (
+        <FollowButton username={userData.username} />
+      )}
+    </View>
   );
 };
 
