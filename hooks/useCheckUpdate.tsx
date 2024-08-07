@@ -70,8 +70,18 @@ const useCheckUpdate = () => {
 
       if (currentVersion === latestVersion) {
         return setVersionStatus("hasLatestVersion");
-      } else {
+      } else if (currentVersion < latestVersion) {
         return setVersionStatus("updateNeeded");
+      } else {
+        console.error(
+          "Current version (on device) is greater than the latest version (from database)."
+        );
+        crashlytics().recordError(
+          new Error(
+            "Current version (on device) is greater than the latest version (from database) on checking for new udates."
+          )
+        );
+        return setVersionStatus("error");
       }
     } catch (error) {
       if (retryCountRef.current < MAX_RETRIES) {
