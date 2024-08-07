@@ -29,6 +29,7 @@ import auth from "@react-native-firebase/auth";
 import appCheck from "@react-native-firebase/app-check";
 import NFTTag from "./NFT/NFTTag";
 import NftBottomSheetContent from "./NFT/NftBottomSheetContent";
+import PostImage from "./PostImage";
 
 type Props = {
   postDocPath: string;
@@ -517,16 +518,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
           )}
         </View>
 
-        {postDocData.image && (
-          <Image
-            source={postDocData.image}
-            style={{
-              width: "100%",
-              aspectRatio: 1,
-            }}
-            transition={500}
-          />
-        )}
+        {postDocData.image && <PostImage source={postDocData.image} />}
 
         <View
           id="footer"
