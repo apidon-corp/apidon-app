@@ -40,7 +40,7 @@ ios
 # Private
 .env.local
 eas.json
-app.config.ts
 
-# Google Information -Comment here when locally building
+# Comment below when locally building
 *.plist
+app.config.ts
