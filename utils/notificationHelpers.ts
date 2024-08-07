@@ -21,17 +21,11 @@ async function registerForPushNotifications() {
 
   const isRealDevice = Device.isDevice;
 
-  if (!isRealDevice) {
-    console.log("Only real devices can subscribe to push notifications.");
-    return false;
-  }
+  if (!isRealDevice) return false;
 
   try {
     const currentNotificationStatus = await Notifications.getPermissionsAsync();
-    if (currentNotificationStatus.granted) {
-      console.log("Already granted permission for push notifications.");
-      return false;
-    }
+    if (currentNotificationStatus.granted) return false;
   } catch (error) {
     console.error("Error while getting notification permissions: ", error);
     return false;
@@ -39,10 +33,7 @@ async function registerForPushNotifications() {
 
   try {
     const newNotificationStatus = await Notifications.requestPermissionsAsync();
-    if (!newNotificationStatus.granted) {
-      console.log("Failed to grant permission for push notifications.");
-      return false;
-    }
+    if (!newNotificationStatus.granted) return false;
   } catch (error) {
     console.error("Error while requesting notification permissions: ", error);
     return false;
@@ -55,9 +46,7 @@ async function registerForPushNotifications() {
 }
 
 export async function createExpoPushToken() {
-  const projectId =
-    Constants?.expoConfig?.extra?.eas?.projectId ??
-    Constants?.easConfig?.projectId;
+  const projectId = Constants.expoConfig?.extra?.eas.projectId || "";
 
   if (!projectId) {
     console.log("Failed to get project id.");

@@ -2,6 +2,7 @@ import { ActivityIndicator, Alert, Pressable } from "react-native";
 import React, { useState } from "react";
 import auth from "@react-native-firebase/auth";
 import { Text } from "@/components/Text/Text";
+import { updateNotificationTokenOnFirebase } from "@/utils/notificationHelpers";
 
 const SignOut = () => {
   const [loading, setLoading] = useState(false);
@@ -10,6 +11,18 @@ const SignOut = () => {
     if (loading) return;
 
     setLoading(true);
+    const updateTokenOnFirebaseResult = await updateNotificationTokenOnFirebase(
+      ""
+    );
+
+    if (!updateTokenOnFirebaseResult) {
+      Alert.alert(
+        "Error",
+        "An error occurred while signing out. Please try again later."
+      );
+      return setLoading(false);
+    }
+
     await auth().signOut();
     setLoading(false);
   };

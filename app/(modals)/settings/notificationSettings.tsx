@@ -1,4 +1,11 @@
-import { ActivityIndicator, Alert, Pressable, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  AppState,
+  AppStateStatus,
+  Pressable,
+  View,
+} from "react-native";
 
 import { Text } from "@/components/Text/Text";
 import { NotificationSettingsDocData } from "@/types/Notification";
@@ -9,22 +16,40 @@ import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 
-import { Platform } from "react-native";
-import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
+import * as Notifications from "expo-notifications";
+import { Platform } from "react-native";
 
 import {
   createExpoPushToken,
   updateNotificationTokenOnFirebase,
 } from "@/utils/notificationHelpers";
 
-import Linking from "expo-linking";
+import * as Linking from "expo-linking";
 
 const notificationSettings = () => {
   const { authStatus } = useAuth();
 
   const [notificationSettingsData, setNotificationSettingsData] =
     useState<null | NotificationSettingsDocData>(null);
+
+  const [notificationStatus, setNotificationStatus] = useState<
+    "loading" | "not-allowed" | "not-set" | "set"
+  >("loading");
+
+  const [loading, setLoading] = useState(false);
+
+  const [appState, setAppState] = useState<AppStateStatus>("unknown");
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      setAppState(nextAppState);
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (authStatus !== "authenticated") {
@@ -66,7 +91,35 @@ const notificationSettings = () => {
     return () => unsubscribe();
   }, [authStatus]);
 
+  // Checking Initial Status
+  useEffect(() => {
+    checkInitialStatus();
+  }, [notificationSettingsData, appState]);
+
+  const checkInitialStatus = async () => {
+    setNotificationStatus("loading");
+    try {
+      const currentNotificationStatus =
+        await Notifications.getPermissionsAsync();
+
+      const grantStatus = currentNotificationStatus.granted;
+
+      if (!grantStatus) return setNotificationStatus("not-allowed");
+      if (!notificationSettingsData) return setNotificationStatus("not-set");
+
+      const tokenStatus = notificationSettingsData.notificationToken.length > 0;
+
+      if (tokenStatus) return setNotificationStatus("set");
+      if (!tokenStatus) return setNotificationStatus("not-set");
+    } catch (error) {
+      console.error("Error while getting notification permissions: ", error);
+      return setNotificationStatus("not-set");
+    }
+  };
+
   const handleSetNotificationsButton = async () => {
+    if (loading) return;
+
     // Android specific adjusting for channel.
     if (Platform.OS === "android") {
       await Notifications.setNotificationChannelAsync("default", {
@@ -86,111 +139,56 @@ const notificationSettings = () => {
 
     const currentNotificationStatus = await Notifications.getPermissionsAsync();
 
-    if (
-      currentNotificationStatus.granted &&
-      currentNotificationStatus.canAskAgain
-    ) {
-      console.log(
-        "Already granted permission for push notifications but there is no token on firebase..."
-      );
-      console.log(
-        "So we will try to create a new token and update the firebase doc..."
-      );
+    if (currentNotificationStatus.canAskAgain) {
+      setLoading(true);
+
+      const newNotificationStatus =
+        await Notifications.requestPermissionsAsync();
+
+      if (!newNotificationStatus.granted) {
+        console.log("Failed to grant permission for push notifications.");
+        setLoading(false);
+        return false;
+      }
       const createdNotificationToken = await createExpoPushToken();
       if (!createdNotificationToken) {
-        console.error("Failed to create a new token.");
+        setLoading(false);
         return false;
       }
 
-      const updateFirebaseResult = await updateNotificationTokenOnFirebase(
-        createdNotificationToken
-      );
-      if (!updateFirebaseResult) {
-        console.error("Failed to update notification token on firebase.");
+      const updateTokenOnFirebaseResult =
+        await updateNotificationTokenOnFirebase(createdNotificationToken);
+      if (!updateTokenOnFirebaseResult) {
+        setLoading(false);
         return false;
       }
+
+      setLoading(false);
 
       return true;
     }
 
-    if (
-      !currentNotificationStatus.granted &&
-      currentNotificationStatus.canAskAgain
-    ) {
-      console.log(
-        "Permission for push notifications has not been granted yet."
+    if (!currentNotificationStatus.canAskAgain) {
+      Alert.alert(
+        "Notification Permission Denied",
+        "To receive notifications, please enable notification permissions in your device settings.",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Open Settings",
+            onPress: () =>
+              Linking.openSettings().catch((err) =>
+                console.error("Error opening settings: ", err)
+              ),
+          },
+        ]
       );
-      console.log("We will try to get the permission now...");
 
-      try {
-        const newNotificationStatus =
-          await Notifications.requestPermissionsAsync();
-        if (!newNotificationStatus.granted) {
-          console.log("Failed to grant permission for push notifications.");
-          return false;
-        }
-
-        const createdNotificationToken = await createExpoPushToken();
-        if (!createdNotificationToken) {
-          console.error("Failed to create a new token.");
-          return false;
-        }
-
-        const updateFirebaseResult = await updateNotificationTokenOnFirebase(
-          createdNotificationToken
-        );
-        if (!updateFirebaseResult) {
-          console.error("Failed to update notification token on firebase.");
-          return false;
-        }
-
-        return true;
-      } catch (error) {
-        console.error(
-          "Error while requesting notification permissions: ",
-          error
-        );
-        return false;
-      }
+      return true;
     }
-
-    if (
-      !currentNotificationStatus.granted &&
-      !currentNotificationStatus.canAskAgain
-    ) {
-      console.log(
-        "Permission for push notifications has not been granted and cannot be asked again."
-      );
-      try {
-        await Linking.openSettings();
-        return true;
-      } catch (error) {
-        console.error("Failed to open settings: ", error);
-        return false;
-      }
-    }
-
-    if (
-      currentNotificationStatus.granted &&
-      !currentNotificationStatus.canAskAgain
-    ) {
-      console.log(
-        "Permission for push notifications has been granted but cannot be asked again."
-      );
-      try {
-        await Linking.openSettings();
-        return true;
-      } catch (error) {
-        console.error("Failed to open settings: ", error);
-        return false;
-      }
-    }
-
-    console.error("Unexpected error occurred.");
-    return false;
   };
 
-  if (!notificationSettingsData) {
+  if (notificationStatus === "loading") {
     return (
       <View
         style={{
@@ -204,9 +202,6 @@ const notificationSettings = () => {
       </View>
     );
   }
-
-  const notificationStatus: "set" | "not-set" =
-    notificationSettingsData.notificationToken.length > 0 ? "set" : "not-set";
 
   return (
     <View
@@ -228,10 +223,11 @@ const notificationSettings = () => {
         >
           <FontAwesome name="bell-o" size={64} color="white" />
           <Text style={{ textAlign: "center" }}>
-            Notifications are already set.
+            Notifications are enabled.
           </Text>
         </View>
       )}
+
       {notificationStatus === "not-set" && (
         <View
           style={{
@@ -246,6 +242,43 @@ const notificationSettings = () => {
             Looks like your notifications are not set properly.
           </Text>
           <Pressable
+            disabled={loading}
+            onPress={handleSetNotificationsButton}
+            style={{
+              backgroundColor: "white",
+              padding: 10,
+              borderRadius: 10,
+              justifyContent: "center",
+              alignItems: "center",
+              minWidth: 120,
+            }}
+          >
+            {loading ? (
+              <ActivityIndicator color="black" size={12} />
+            ) : (
+              <Text fontSize={12} style={{ color: "black" }}>
+                Set Notifications
+              </Text>
+            )}
+          </Pressable>
+        </View>
+      )}
+
+      {notificationStatus === "not-allowed" && (
+        <View
+          style={{
+            width: "100%",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 20,
+          }}
+        >
+          <FontAwesome5 name="bell-slash" size={64} color="red" />
+          <Text style={{ textAlign: "center" }}>
+            Notifications are not allowed on this device.
+          </Text>
+          <Pressable
+            disabled={loading}
             onPress={handleSetNotificationsButton}
             style={{
               backgroundColor: "white",
@@ -253,9 +286,13 @@ const notificationSettings = () => {
               borderRadius: 10,
             }}
           >
-            <Text fontSize={12} style={{ color: "black" }}>
-              Click here to set notifications
-            </Text>
+            {loading ? (
+              <ActivityIndicator color="black" />
+            ) : (
+              <Text fontSize={12} style={{ color: "black" }}>
+                Allow Notifications
+              </Text>
+            )}
           </Pressable>
         </View>
       )}

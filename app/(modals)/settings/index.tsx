@@ -9,12 +9,22 @@ const settings = () => {
     <View
       style={{
         flex: 1,
+        width: "100%",
+        alignItems: "center",
         padding: 10,
         gap: 10,
       }}
     >
-      <SignOut />
       <NotificationSettings />
+      <SignOut />
+      <View
+        style={{
+          height: 1,
+          backgroundColor: "gray",
+          width: "85%",
+          marginVertical: 20,
+        }}
+      />
       <DeleteAccount />
     </View>
   );

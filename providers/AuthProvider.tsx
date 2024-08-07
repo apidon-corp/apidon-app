@@ -82,7 +82,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
     }
 
     setAuthStatus("authenticated");
-    return router.replace("/(modals)/settings/notificationSettings");
+    return router.replace("/home");
   };
 
   useEffect(() => {
