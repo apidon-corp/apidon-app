@@ -15,7 +15,10 @@ const _layout = () => {
     >
       <Stack.Screen
         name="index"
-        options={{ headerTitle: "Notifications", headerLargeTitle: true }}
+        options={{
+          headerTitle: "Notifications",
+          headerLargeTitle: true,
+        }}
       />
       <Stack.Screen
         name="profilePage"

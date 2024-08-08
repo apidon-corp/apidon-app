@@ -3,7 +3,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { CollectibleDocData } from "@/types/Collectible";
 import firestore from "@react-native-firebase/firestore";
 import React, { useEffect, useState } from "react";
-import { FlatList, SafeAreaView } from "react-native";
+import { FlatList, SafeAreaView, ScrollView } from "react-native";
 
 const index = () => {
   const { authStatus } = useAuth();
@@ -49,15 +49,9 @@ const index = () => {
   }, [authStatus]);
 
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        borderWidth: 1,
-      }}
-    >
+    <ScrollView contentInsetAdjustmentBehavior="automatic">
       <FlatList
+        scrollEnabled={false}
         style={{ width: "100%" }}
         numColumns={2}
         data={collectibleDocDatas}
@@ -71,7 +65,7 @@ const index = () => {
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
       />
-    </SafeAreaView>
+    </ScrollView>
   );
 };
 
