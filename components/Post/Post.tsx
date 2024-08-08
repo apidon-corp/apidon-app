@@ -77,6 +77,8 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
   const pathname = usePathname();
 
+  const [isImageZooming, setIsImageZooming] = useState(false);
+
   // Dynamic Data Fetching / Post Object
   useEffect(() => {
     if (authStatus !== "authenticated") return;
@@ -357,16 +359,14 @@ const Post = React.memo(({ postDocPath }: Props) => {
     <>
       <Animated.View
         id="post-root"
-        style={[
-          {
-            flex: 1,
-            transform: [
-              {
-                scale: animatedScaleValue,
-              },
-            ],
-          },
-        ]}
+        style={{
+          position: "relative",
+          transform: [
+            {
+              scale: animatedScaleValue,
+            },
+          ],
+        }}
       >
         <View
           id="header"
@@ -376,6 +376,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
             alignItems: "center",
             padding: 10,
             justifyContent: "space-between",
+            backgroundColor: "black",
           }}
         >
           <View
@@ -548,17 +549,19 @@ const Post = React.memo(({ postDocPath }: Props) => {
             >
               <Stars score={overallRating} />
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Text bold>{overallRating.toFixed(2)}</Text>
-                <Text> average</Text>
+                <Text bold>{postDocData.rates.length}</Text>
+                <Text> </Text>
+                <Text>Rate{postDocData.rates.length !== 1 && "s"}</Text>
               </View>
             </Pressable>
 
             <View
+              id="rate-start"
               style={{
+                position: "relative",
                 width: "33%",
                 justifyContent: "center",
                 alignItems: "center",
-                position: "relative",
               }}
             >
               <RateStar
@@ -569,7 +572,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
                 }
                 postDocPath={postDocPath}
               />
-              <Pressable />
             </View>
 
             <View

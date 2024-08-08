@@ -40,7 +40,7 @@ const PostImage = ({ source }: Props) => {
 
   const imageAnimatedStyles = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
-    zIndex: 1,
+    zIndex: scale.value === 1 ? 0 : 1,
   }));
 
   return (
@@ -52,7 +52,7 @@ const PostImage = ({ source }: Props) => {
             width: "100%",
             aspectRatio: 1,
           }}
-          transition={500}
+          transition={50}
         />
       </Animated.View>
     </GestureDetector>

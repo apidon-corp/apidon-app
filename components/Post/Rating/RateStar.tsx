@@ -1,4 +1,4 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Dimensions, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -35,6 +35,8 @@ const RateStar = ({ previousValue, postDocPath }: Props) => {
   const [loading, setLoading] = useState(false);
 
   const { width: screenWidth } = Dimensions.get("screen");
+
+  const [showArrow, setShowArrow] = useState(false);
 
   const adjustedScreenWidth = screenWidth * 0.5 * 0.5;
   const verticalPadding = -20;
@@ -130,6 +132,7 @@ const RateStar = ({ previousValue, postDocPath }: Props) => {
   const scale = useSharedValue(1);
 
   const animatedPanStyle = useAnimatedStyle(() => ({
+    zIndex: 1,
     transform: [
       { translateX: translationX.value },
       { translateY: translationY.value },
@@ -162,33 +165,40 @@ const RateStar = ({ previousValue, postDocPath }: Props) => {
     .minDistance(1)
     .onBegin(() => {
       scale.value = withTiming(1.5, {
-        duration: 250,
+        duration: 100,
       });
+      setShowArrow(true);
     })
     .onStart(() => {
       prevTranslationX.value = 0;
       prevTranslationY.value = 0;
-      runOnJS(setIsRatingPanelVisible)(true);
+      setIsRatingPanelVisible(true);
+      setShowArrow(false);
     })
     .onUpdate((event) => {
       translationX.value = prevTranslationX.value + event.translationX;
       translationY.value = prevTranslationY.value + event.translationY;
 
-      runOnJS(rateValueUpdate)(
+      rateValueUpdate(
         prevTranslationX.value + event.translationX,
         prevTranslationY.value + event.translationY
       );
+
+      setShowArrow(false);
     })
     .onEnd(() => {
       translationX.value = 0;
       translationY.value = 0;
-      runOnJS(setIsRatingPanelVisible)(false);
+      setIsRatingPanelVisible(false);
+      setShowArrow(false);
     })
     .onFinalize(() => {
       scale.value = withTiming(1, {
         duration: 250,
       });
-    });
+      setShowArrow(false);
+    })
+    .runOnJS(true);
 
   return (
     <>
@@ -199,7 +209,7 @@ const RateStar = ({ previousValue, postDocPath }: Props) => {
             justifyContent: "center",
           }}
         >
-          <ActivityIndicator color={apidonPink} size="large" />
+          <ActivityIndicator color="gray" />
         </View>
       ) : (
         <GestureDetector gesture={pan}>
@@ -211,13 +221,31 @@ const RateStar = ({ previousValue, postDocPath }: Props) => {
 
       <View
         style={{
-          display: isRatingPanelVisible ? "flex" : "none",
+          display: showArrow ? undefined : "none",
+
+          position: "absolute",
+          bottom: 85,
+
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <FontAwesome name="long-arrow-up" size={144} color="white" />
+      </View>
+
+      <View
+        style={{
+          display: isRatingPanelVisible ? undefined : "none",
+
           position: "absolute",
           bottom: 75,
-          height: 425,
+
           width: Dimensions.get("screen").width,
+          aspectRatio: 1,
+
           alignItems: "center",
           justifyContent: "flex-end",
+
           backgroundColor: "rgba(0,0,0,0.9)",
         }}
       >
