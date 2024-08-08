@@ -3,14 +3,12 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Dimensions, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
 import CurvedStars from "./CurvedStars";
 
-import { apidonPink } from "@/constants/Colors";
 import apiRoutes from "@/helpers/ApiRoutes";
 
 import auth from "@react-native-firebase/auth";
