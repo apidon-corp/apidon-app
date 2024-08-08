@@ -222,10 +222,17 @@ const RateStar = ({ previousValue, postDocPath }: Props) => {
           display: showArrow ? undefined : "none",
 
           position: "absolute",
-          bottom: 85,
+          bottom: 75,
+
+          width: Dimensions.get("screen").width,
+          aspectRatio: 1,
 
           alignItems: "center",
-          justifyContent: "center",
+          justifyContent: "flex-end",
+
+          paddingBottom: 10,
+
+          backgroundColor: "rgba(0,0,0,0.9)",
         }}
       >
         <FontAwesome name="long-arrow-up" size={144} color="white" />
