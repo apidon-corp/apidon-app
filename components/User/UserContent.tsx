@@ -224,7 +224,7 @@ const UserContent = ({ username }: Props) => {
             fontSize: 14,
           }}
         >
-          NFTs
+          Colls
         </Text>
       </View>
 

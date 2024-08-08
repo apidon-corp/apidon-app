@@ -93,11 +93,7 @@ const Header = ({ userData }: Props) => {
     >
       {userOwnsPage && (
         <View style={{ width: "100%", alignItems: "flex-end" }}>
-          <Pressable
-            onPress={() => {
-              router.push("/(modals)/settings");
-            }}
-          >
+          <Pressable onPress={handlePressSettingsIcon}>
             <Feather name="settings" size={23} color="white" />
           </Pressable>
         </View>

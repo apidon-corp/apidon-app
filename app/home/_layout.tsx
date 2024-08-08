@@ -2,7 +2,6 @@ import { useNotification } from "@/providers/NotificationProvider";
 import {
   AntDesign,
   Entypo,
-  FontAwesome,
   Ionicons,
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
@@ -10,9 +9,8 @@ import { Tabs, router, usePathname } from "expo-router";
 import React from "react";
 import { Pressable, StatusBar, View } from "react-native";
 
-import auth from "@react-native-firebase/auth";
-import { useSetAtom } from "jotai";
 import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
+import { useSetAtom } from "jotai";
 
 const _layout = () => {
   const notificationData = useNotification();
@@ -36,9 +34,9 @@ const _layout = () => {
   };
 
   const handleHomeButtonPress = () => {
-    router.replace("/home");
     if (pathname === "/home/feed")
       setHomeScreenParameters({ isHomeButtonPressed: true });
+    else router.replace("/home/feed");
   };
 
   return (
@@ -84,11 +82,15 @@ const _layout = () => {
         <Tabs.Screen
           name="postCreate"
           options={{
+            headerStyle: {
+              backgroundColor: "black",
+            },
+            headerShadowVisible: false,
             tabBarIcon: () => (
               <Entypo name="circle-with-plus" size={25} color="white" />
             ),
             tabBarLabel: () => <></>,
-            title: "Create Post",
+            title: "Create",
           }}
         />
         <Tabs.Screen

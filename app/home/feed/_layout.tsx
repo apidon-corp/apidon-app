@@ -19,17 +19,25 @@ const _layout = () => {
     <Stack
       screenOptions={{
         headerStyle: {
-          backgroundColor: "rgba(0,0,0,0.5)",
+          backgroundColor: "black",
         },
+        headerShadowVisible: false,
       }}
     >
       <Stack.Screen
         name="index"
         options={{
           headerTitle: "Apidon",
-
           headerRight: () => (
-            <Pressable onPress={handleUserIconButtonPress}>
+            <Pressable
+              onPress={handleUserIconButtonPress}
+              style={{
+                width: 35,
+                height: 25,
+                justifyContent: "center",
+                alignItems: "flex-end",
+              }}
+            >
               <FontAwesome name="user" size={25} color="white" />
             </Pressable>
           ),

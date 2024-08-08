@@ -190,7 +190,6 @@ const UserCard = ({ username }: Props) => {
               height: 50,
               borderRadius: 25,
             }}
-            transition={500}
           />
           <View>
             <Text

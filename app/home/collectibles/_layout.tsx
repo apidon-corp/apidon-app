@@ -6,27 +6,37 @@ import { Pressable } from "react-native";
 import { Text } from "@/components/Text/Text";
 
 const _layout = () => {
+  const handlePressWalletIcon = () => {
+    router.push("/home/collectibles/wallet");
+  };
+
   return (
     <Stack
       screenOptions={{
         headerStyle: {
           backgroundColor: "black",
         },
+        headerShadowVisible: false,
       }}
     >
       <Stack.Screen
         name="index"
         options={{
-          title: "Apidon Collectibles",
+          title: "Collectibles",
           headerRight: () => (
             <Pressable
-              onPress={() => {
-                router.push("/home/collectibles/wallet");
+              onPress={handlePressWalletIcon}
+              style={{
+                width: 45,
+                height: 25,
+                justifyContent: "center",
+                alignItems: "flex-end",
               }}
             >
-              <FontAwesome5 name="wallet" size={24} color="white" />
+              <FontAwesome5 name="wallet" size={25} color="white" />
             </Pressable>
           ),
+          headerLargeTitle: true,
         }}
       />
 

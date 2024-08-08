@@ -3,7 +3,14 @@ import React from "react";
 
 const _layout = () => {
   return (
-    <Stack initialRouteName="index">
+    <Stack
+      initialRouteName="index"
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: "black",
+        },
+      }}
+    >
       <Stack.Screen
         name="index"
         options={{

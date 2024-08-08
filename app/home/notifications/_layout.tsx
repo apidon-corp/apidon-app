@@ -10,9 +10,13 @@ const _layout = () => {
         headerStyle: {
           backgroundColor: "black",
         },
+        headerShadowVisible: false,
       }}
     >
-      <Stack.Screen name="index" options={{ headerTitle: "Notifications" }} />
+      <Stack.Screen
+        name="index"
+        options={{ headerTitle: "Notifications", headerLargeTitle: true }}
+      />
       <Stack.Screen
         name="profilePage"
         options={{
@@ -55,7 +59,7 @@ const _layout = () => {
       <Stack.Screen
         name="post"
         options={{
-          title: "Collectible",
+          title: "Post",
           headerBackTitle: "Back",
         }}
       />

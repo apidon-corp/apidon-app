@@ -130,7 +130,6 @@ const RateStar = ({ previousValue, postDocPath }: Props) => {
   const scale = useSharedValue(1);
 
   const animatedPanStyle = useAnimatedStyle(() => ({
-    zIndex: 5,
     transform: [
       { translateX: translationX.value },
       { translateY: translationY.value },

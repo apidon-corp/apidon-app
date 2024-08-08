@@ -14,6 +14,7 @@ const _layout = () => {
           headerStyle: {
             backgroundColor: "black",
           },
+          headerShadowVisible: false,
         }}
       >
         <Stack.Screen
