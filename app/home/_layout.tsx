@@ -80,17 +80,13 @@ const _layout = () => {
           }}
         />
         <Tabs.Screen
-          name="postCreate"
+          name="create"
           options={{
-            headerStyle: {
-              backgroundColor: "black",
-            },
-            headerShadowVisible: false,
+            headerShown: false,
             tabBarIcon: () => (
               <Entypo name="circle-with-plus" size={25} color="white" />
             ),
             tabBarLabel: () => <></>,
-            title: "Create",
           }}
         />
         <Tabs.Screen

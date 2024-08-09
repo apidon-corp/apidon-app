@@ -39,6 +39,7 @@ const index = () => {
 
   useEffect(() => {
     if (!createdPostDocPath) return;
+    if (servedPosts.includes(createdPostDocPath)) return;
 
     setServedPosts((prev) => {
       if (prev.includes(createdPostDocPath)) return prev;
