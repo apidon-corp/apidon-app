@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   Animated,
   Dimensions,
   Keyboard,
@@ -280,13 +281,17 @@ const details = () => {
               borderRadius: 10,
             }}
           >
-            <Text
-              style={{
-                color: "black",
-              }}
-            >
-              Share
-            </Text>
+            {loading ? (
+              <ActivityIndicator color="black" size={14} />
+            ) : (
+              <Text
+                style={{
+                  color: "black",
+                }}
+              >
+                Share
+              </Text>
+            )}
           </Pressable>
         </Animated.View>
       </Animated.View>

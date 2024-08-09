@@ -42,7 +42,14 @@ const _layout = () => {
   return (
     <>
       <StatusBar barStyle="light-content" />
-      <Tabs>
+      <Tabs
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: "rgba(255,255,255,0.05)",
+          },
+          headerShadowVisible: false,
+        }}
+      >
         <Tabs.Screen
           name="index"
           options={{
@@ -82,7 +89,7 @@ const _layout = () => {
         <Tabs.Screen
           name="create"
           options={{
-            headerShown: false,
+            headerTitle: "Create Post",
             tabBarIcon: () => (
               <Entypo name="circle-with-plus" size={25} color="white" />
             ),
