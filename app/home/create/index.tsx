@@ -15,7 +15,7 @@ import { Image } from "expo-image";
 import * as Progress from "react-native-progress";
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { useSetAtom } from "jotai";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 
 const index = () => {
   const [pickedImageURI, setPickedImageURI] = useState("");
@@ -30,6 +30,8 @@ const index = () => {
   const nextButtonOpacityValue = useRef(new Animated.Value(0.5)).current;
 
   const setScreenParameters = useSetAtom(screenParametersAtom);
+
+  const pathname = usePathname();
 
   // Handle Opacities
   useEffect(() => {
@@ -49,6 +51,16 @@ const index = () => {
       500
     );
   }, [uploadedImageLocation, pickedImageURI]);
+
+  useEffect(() => {
+    if (pathname === "/home/create" || pathname === "/home/create/details")
+      return;
+
+    setPickedImageURI("");
+    setIsImageUploading(false);
+    setImageUploadPercentage(0);
+    setUploadedImageLocation("");
+  }, [pathname]);
 
   const uploadImage = async (imageURI: string) => {
     const displayName = auth().currentUser?.displayName;

@@ -19,7 +19,7 @@ import appCheck from "@react-native-firebase/app-check";
 import crashlytics from "@react-native-firebase/crashlytics";
 
 import apiRoutes from "@/helpers/ApiRoutes";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 
 const CHARACTER_LIMIT = 125;
 
@@ -124,7 +124,7 @@ const details = () => {
           appchecktoken,
         },
         body: JSON.stringify({
-          description: description,
+          description: description.trim(),
           tempImageLocation: uploadedImageLocation,
         }),
       });
@@ -145,6 +145,8 @@ const details = () => {
           value: `users/${currentUserAuthObject.displayName}/posts/${result.newPostDocId}`,
         },
       ]);
+
+      if (router.canGoBack()) router.back();
 
       router.push("/home/feed");
 
