@@ -1,13 +1,45 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { Stack, router } from "expo-router";
-import React from "react";
-import { Pressable, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Pressable } from "react-native";
 
 import { Text } from "@/components/Text/Text";
 
 import auth from "@react-native-firebase/auth";
+import { useAuth } from "@/providers/AuthProvider";
+import firestore from "@react-native-firebase/firestore";
+import { UserInServer } from "@/types/User";
+import { Image } from "expo-image";
 
 const _layout = () => {
+  const { authStatus } = useAuth();
+
+  const [profilePhoto, setProfilePhoto] = useState("");
+
+  // Dynamic Data Fetching / Follow Status
+  useEffect(() => {
+    if (authStatus !== "authenticated") return;
+
+    const displayName = auth().currentUser?.displayName;
+    if (!displayName) return;
+
+    const unsubscribe = firestore()
+      .doc(`users/${displayName}`)
+      .onSnapshot(
+        (snapshot) => {
+          if (snapshot.exists) {
+            const userData = snapshot.data() as UserInServer;
+            setProfilePhoto(userData.profilePhoto);
+          }
+        },
+        (error) => {
+          console.error("Error on getting realtime user data: ", error);
+        }
+      );
+
+    return () => unsubscribe();
+  }, [authStatus]);
+
   const handleUserIconButtonPress = () => {
     const currentUserDisplayName = auth().currentUser?.displayName;
     if (!currentUserDisplayName) return;
@@ -38,7 +70,18 @@ const _layout = () => {
                 alignItems: "flex-end",
               }}
             >
-              <FontAwesome name="user" size={25} color="white" />
+              {profilePhoto ? (
+                <Image
+                  source={profilePhoto}
+                  style={{
+                    height: "100%",
+                    aspectRatio: 1,
+                    borderRadius: 25,
+                  }}
+                />
+              ) : (
+                <FontAwesome name="user" size={25} color="white" />
+              )}
             </Pressable>
           ),
         }}
