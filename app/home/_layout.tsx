@@ -45,7 +45,7 @@ const _layout = () => {
       <Tabs
         screenOptions={{
           headerStyle: {
-            backgroundColor: "rgba(255,255,255,0.05)",
+            backgroundColor: "rgba(255,255,255,0.04)",
           },
           headerShadowVisible: false,
         }}
