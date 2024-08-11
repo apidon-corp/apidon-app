@@ -27,6 +27,7 @@
     "@react-native-firebase/storage": "^20.3.0",
     "@react-native-google-signin/google-signin": "^12.2.1",
     "@react-navigation/native": "^6.0.2",
+    "@stripe/stripe-identity-react-native": "^0.2.13",
     "date-fns": "^3.6.0",
     "expo": "~51.0.23",
     "expo-apple-authentication": "~6.4.2",
