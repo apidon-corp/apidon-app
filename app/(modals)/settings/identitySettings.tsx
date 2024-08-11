@@ -1,21 +1,24 @@
-import {
-  View,
-  ScrollView,
-  Pressable,
-  Image,
-  ActivityIndicator,
-} from "react-native";
-import React from "react";
-import { AntDesign } from "@expo/vector-icons";
 import Text from "@/components/Text/Text";
+import { FontAwesome } from "@expo/vector-icons";
 import {
   IdentityVerificationSheetOptions,
   useStripeIdentity,
 } from "@stripe/stripe-identity-react-native";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  ScrollView,
+  View,
+} from "react-native";
 
-import auth from "@react-native-firebase/auth";
-import appCheck from "@react-native-firebase/app-check";
 import apiRoutes from "@/helpers/ApiRoutes";
+import { useAuth } from "@/providers/AuthProvider";
+import { UserIdentityDoc } from "@/types/Identity";
+import appCheck from "@react-native-firebase/app-check";
+import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
 
 const identity = () => {
   const getIdentityVerificationSheetOptions = async () => {
@@ -69,13 +72,133 @@ const identity = () => {
     }
   };
 
-  const { status, present, loading } = useStripeIdentity(
+  const { present, loading } = useStripeIdentity(
     getIdentityVerificationSheetOptions
   );
 
   const handlePress = React.useCallback(() => {
     present();
   }, [present]);
+
+  const { authStatus } = useAuth();
+
+  const [identityDocData, setIdentityDocData] = useState<
+    UserIdentityDoc | "not-created" | null
+  >(null);
+
+  useEffect(() => {
+    if (authStatus !== "authenticated") return;
+
+    const currentUserDisplayname = auth().currentUser?.displayName || "";
+    if (!currentUserDisplayname) return;
+
+    const unsubscribe = firestore()
+      .doc(`users/${currentUserDisplayname}/personal/identity`)
+      .onSnapshot(
+        (doc) => {
+          if (doc.exists) {
+            const data = doc.data() as UserIdentityDoc;
+            setIdentityDocData(data);
+          } else {
+            setIdentityDocData("not-created");
+          }
+        },
+        (error) => {
+          console.error("Error fetching identity data:", error);
+          setIdentityDocData(null);
+        }
+      );
+
+    () => unsubscribe();
+  }, [authStatus]);
+
+  if (!identityDocData) {
+    return (
+      <ScrollView
+        contentContainerStyle={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ActivityIndicator size={50} color="white" />
+      </ScrollView>
+    );
+  }
+
+  if (loading) {
+    return (
+      <ScrollView
+        contentContainerStyle={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 15,
+        }}
+      >
+        <ActivityIndicator size={50} color="white" />
+        <Text>Waiting for results.</Text>
+      </ScrollView>
+    );
+  }
+
+  if (identityDocData === "not-created") {
+    return (
+      <ScrollView
+        contentContainerStyle={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 15,
+        }}
+      >
+        <View
+          id="not-created-view"
+          style={{
+            width: "100%",
+            gap: 20,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <FontAwesome name="address-card-o" size={100} color="white" />
+          <Text
+            style={{
+              textAlign: "center",
+            }}
+            fontSize={24}
+            bold
+          >
+            Verify Your Identity
+          </Text>
+          <Text
+            style={{
+              textAlign: "center",
+            }}
+            fontSize={12}
+          >
+            Please verify your identity to start purchasing or withdrawing.
+          </Text>
+          <Pressable
+            onPress={handlePress}
+            style={{
+              backgroundColor: "white",
+              padding: 10,
+              borderRadius: 10,
+            }}
+          >
+            <Text
+              style={{
+                color: "black",
+              }}
+            >
+              Start Verification
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    );
+  }
 
   return (
     <ScrollView
@@ -84,62 +207,102 @@ const identity = () => {
         justifyContent: "center",
         alignItems: "center",
         padding: 15,
-        gap: 15,
       }}
     >
-      <View
-        id="card-image"
-        style={{
-          width: "100%",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <AntDesign name="idcard" size={100} color="white" />
-      </View>
-      <View id="description">
-        <Text
-          fontSize={10}
+      {identityDocData.status === "processing" && (
+        <View
+          id="processing-view"
           style={{
-            textAlign: "center",
-          }}
-        >
-          To ensure the safety and security of our community, we require a quick
-          identity verification. This step helps us protect your account and
-          maintain a trusted environment for all users. The process is simple
-          and secure—just follow the on-screen instructions, and you'll be ready
-          to enjoy the full features of our app in no time.
-        </Text>
-      </View>
-      <View id="verify-button">
-        <Pressable
-          disabled={loading}
-          onPress={handlePress}
-          style={{
-            backgroundColor: "white",
-            padding: 10,
-            borderRadius: 10,
             width: "100%",
-            justifyContent: "center",
+            gap: 20,
             alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          {loading ? (
-            <ActivityIndicator color="black" size={14} />
-          ) : (
+          <FontAwesome name="address-card-o" size={100} color="white" />
+          <Text fontSize={24} bold>
+            Processing
+          </Text>
+          <Text
+            fontSize={12}
+            style={{
+              textAlign: "center",
+            }}
+          >
+            We're processing your request. This may take a few moments,
+          </Text>
+        </View>
+      )}
+
+      {identityDocData.status === "requires_input" && (
+        <View
+          id="requiresInput-view"
+          style={{
+            width: "100%",
+            gap: 20,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <FontAwesome name="address-card-o" size={100} color="white" />
+          <Text fontSize={24} bold>
+            Verification Failed
+          </Text>
+          <Text
+            fontSize={12}
+            style={{
+              textAlign: "center",
+              color: "red",
+            }}
+          >
+            We couldn't verify your identity this time. Please double-check your
+            information and try again.
+          </Text>
+          <Pressable
+            onPress={handlePress}
+            style={{
+              backgroundColor: "white",
+              padding: 10,
+              borderRadius: 10,
+            }}
+          >
             <Text
               style={{
                 color: "black",
               }}
             >
-              Verify
+              Try Again
             </Text>
-          )}
-        </Pressable>
-      </View>
-      <View id="status">
-        <Text>{status}</Text>
-      </View>
+          </Pressable>
+        </View>
+      )}
+
+      {identityDocData.status === "verified" && (
+        <View
+          id="verified"
+          style={{
+            width: "100%",
+            gap: 20,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <FontAwesome name="address-card-o" size={100} color="white" />
+          <Text fontSize={24} bold>
+            Identity Verified
+          </Text>
+          <Text
+            fontSize={12}
+            style={{
+              color: "green",
+              textAlign: "center",
+            }}
+          >
+            Your identity has been verified, and you now have full access to all
+            the features of our app.
+          </Text>
+        </View>
+      )}
     </ScrollView>
   );
 };
