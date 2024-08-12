@@ -1,8 +1,8 @@
 import IdentityPanel from "@/components/Identity/IdentityPanel";
 import React from "react";
 
-const identitySettings = () => {
+const identity = () => {
   return <IdentityPanel />;
 };
 
-export default identitySettings;
+export default identity;

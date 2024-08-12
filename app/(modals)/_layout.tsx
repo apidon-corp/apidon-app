@@ -110,6 +110,12 @@ const _layout = () => {
             title: "Wallet",
           }}
         />
+        <Stack.Screen
+          name="identity"
+          options={{
+            title: "Identity",
+          }}
+        />
       </Stack>
     </>
   );
