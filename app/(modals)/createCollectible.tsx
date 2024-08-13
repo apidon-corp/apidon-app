@@ -257,7 +257,11 @@ const listNFT = () => {
   }
 
   return (
-    <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps={"handled"}>
+    <ScrollView
+      style={{ flex: 1 }}
+      keyboardShouldPersistTaps={"handled"}
+      showsVerticalScrollIndicator={false}
+    >
       <Animated.View
         ref={containerRef}
         style={{

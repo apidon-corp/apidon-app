@@ -35,10 +35,9 @@ const _layout = () => {
 
   const handleHomeButtonPress = () => {
     if (pathname === "/home/feed")
-      setHomeScreenParameters({ isHomeButtonPressed: true });
+      return setHomeScreenParameters({ isHomeButtonPressed: true });
 
-    
-    else router.replace("/home/feed");
+    router.navigate("/home/feed");
   };
 
   return (

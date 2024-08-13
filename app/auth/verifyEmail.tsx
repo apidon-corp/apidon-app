@@ -165,6 +165,7 @@ const verifyEmail = () => {
 
   return (
     <ScrollView
+      showsVerticalScrollIndicator={false}
       contentContainerStyle={{
         flex: 1,
       }}

@@ -120,6 +120,7 @@ const IdentityPanel = () => {
           justifyContent: "center",
           alignItems: "center",
         }}
+        showsVerticalScrollIndicator={false}
       >
         <ActivityIndicator size={50} color="white" />
       </ScrollView>
@@ -135,6 +136,7 @@ const IdentityPanel = () => {
           alignItems: "center",
           gap: 15,
         }}
+        showsVerticalScrollIndicator={false}
       >
         <ActivityIndicator size={50} color="white" />
         <Text>Waiting for results.</Text>
@@ -151,6 +153,7 @@ const IdentityPanel = () => {
           alignItems: "center",
           padding: 15,
         }}
+        showsVerticalScrollIndicator={false}
       >
         <View
           id="not-created-view"
@@ -208,6 +211,7 @@ const IdentityPanel = () => {
         alignItems: "center",
         padding: 15,
       }}
+      showsVerticalScrollIndicator={false}
     >
       {identityDocData.status === "processing" && (
         <View

@@ -72,6 +72,7 @@ const search = () => {
         contentContainerStyle={{
           paddingHorizontal: 20,
         }}
+        showsVerticalScrollIndicator={false}
       >
         <FlatList
           scrollEnabled={false}

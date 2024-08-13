@@ -182,6 +182,7 @@ const details = () => {
           justifyContent: "center",
           alignItems: "center",
         }}
+        showsVerticalScrollIndicator={false}
       >
         <Text>Please try uploading image again on previous screen.</Text>
       </ScrollView>
@@ -193,6 +194,7 @@ const details = () => {
       contentContainerStyle={{
         padding: 15,
       }}
+      showsVerticalScrollIndicator={false}
     >
       <Animated.View
         ref={containerRef}

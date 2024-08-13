@@ -49,7 +49,10 @@ const index = () => {
   }, [authStatus]);
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic">
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      contentInsetAdjustmentBehavior="automatic"
+    >
       <FlatList
         scrollEnabled={false}
         style={{ width: "100%" }}

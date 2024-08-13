@@ -181,6 +181,7 @@ const index = () => {
         padding: 15,
         gap: 15,
       }}
+      showsVerticalScrollIndicator={false}
     >
       <View
         id="upload-image-area"

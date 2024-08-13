@@ -176,6 +176,7 @@ const emailPasswordSignIn = () => {
         flex: 1,
       }}
       keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
     >
       <Animated.View
         ref={containerRef}
