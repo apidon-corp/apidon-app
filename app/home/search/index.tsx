@@ -2,12 +2,14 @@ import Text from "@/components/Text/Text";
 import UserCard from "@/components/User/UserCard";
 import { UserInServer } from "@/types/User";
 import firestore from "@react-native-firebase/firestore";
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
 const search = () => {
+  const pathname = usePathname();
+
   const [queryResult, setQueryResult] = useState<string[]>([]);
 
   const [popularPeople, setPopularPeople] = useState<string[]>([]);
@@ -77,8 +79,8 @@ const search = () => {
   };
 
   useEffect(() => {
-    handleGetPopularPeople();
-  }, []);
+    if (pathname === "/home/search") handleGetPopularPeople();
+  }, [pathname]);
 
   return (
     <>

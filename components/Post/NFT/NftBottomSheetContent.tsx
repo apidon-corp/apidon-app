@@ -5,6 +5,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { CollectibleDocData } from "@/types/Collectible";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
+import { FontAwesome } from "@expo/vector-icons";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
@@ -109,7 +110,6 @@ const NftBottomSheetContent = ({
   };
 
   const handleSeeCollectors = () => {
-    closeNFTBottomSheet();
     setScreenParameters([
       {
         queryId: "postDocPath",
@@ -290,76 +290,146 @@ const NftBottomSheetContent = ({
 
       {!collectibleStatus.fromCurrentUser &&
         collectibleStatus.alreadyBought && (
-          <Pressable
+          <View
             style={{
-              backgroundColor: apidonPink,
-              opacity: 0.5,
-              padding: 20,
-              borderRadius: 10,
-              alignItems: "center",
-              justifyContent: "center",
+              width: "100%",
+              flexDirection: "row",
+              justifyContent: "space-between",
             }}
           >
-            <Text
-              bold
+            <View
+              id="collected-button"
               style={{
-                color: "white",
-                fontSize: 18,
+                width: "78%",
+                backgroundColor: apidonPink,
+                opacity: 0.5,
+                padding: 20,
+                borderRadius: 10,
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              Collected
-            </Text>
-          </Pressable>
+              <Text
+                bold
+                style={{
+                  color: "white",
+                  fontSize: 18,
+                }}
+              >
+                Collected
+              </Text>
+            </View>
+            <Pressable
+              onPress={handleSeeCollectors}
+              id="collectors"
+              style={{
+                width: "20%",
+                backgroundColor: "#323232",
+                padding: 20,
+                borderRadius: 10,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <FontAwesome name="users" size={24} color="white" />
+            </Pressable>
+          </View>
         )}
 
       {!collectibleStatus.fromCurrentUser &&
         !collectibleStatus.alreadyBought &&
         collectibleDocData.stock.remainingStock > 0 && (
-          <Pressable
-            onPress={handleCollectButton}
+          <View
             style={{
-              backgroundColor: apidonPink,
-              padding: 20,
-              borderRadius: 10,
-              alignItems: "center",
-              justifyContent: "center",
+              width: "100%",
+              flexDirection: "row",
+              justifyContent: "space-between",
             }}
           >
-            <Text
-              bold
+            <Pressable
+              onPress={handleCollectButton}
               style={{
-                color: "white",
-                fontSize: 18,
+                width: "78%",
+                backgroundColor: apidonPink,
+                padding: 20,
+                borderRadius: 10,
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              Collect
-            </Text>
-          </Pressable>
+              <Text
+                bold
+                style={{
+                  color: "white",
+                  fontSize: 18,
+                }}
+              >
+                Collect
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={handleSeeCollectors}
+              id="collectors"
+              style={{
+                width: "20%",
+                backgroundColor: "#323232",
+                padding: 20,
+                borderRadius: 10,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <FontAwesome name="users" size={24} color="white" />
+            </Pressable>
+          </View>
         )}
 
       {!collectibleStatus.fromCurrentUser &&
         !collectibleStatus.alreadyBought &&
         collectibleDocData.stock.remainingStock <= 0 && (
-          <Pressable
+          <View
             style={{
-              opacity: 0.5,
-              backgroundColor: apidonPink,
-              padding: 20,
-              borderRadius: 10,
-              alignItems: "center",
-              justifyContent: "center",
+              width: "100%",
+              flexDirection: "row",
+              justifyContent: "space-between",
             }}
           >
-            <Text
-              bold
+            <View
               style={{
-                color: "white",
-                fontSize: 18,
+                width: "78%",
+                opacity: 0.5,
+                backgroundColor: apidonPink,
+                padding: 20,
+                borderRadius: 10,
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              Out of Stock
-            </Text>
-          </Pressable>
+              <Text
+                bold
+                style={{
+                  color: "white",
+                  fontSize: 18,
+                }}
+              >
+                Out of Stock
+              </Text>
+            </View>
+            <Pressable
+              onPress={handleSeeCollectors}
+              id="collectors"
+              style={{
+                width: "20%",
+                backgroundColor: "#323232",
+                padding: 20,
+                borderRadius: 10,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <FontAwesome name="users" size={24} color="white" />
+            </Pressable>
+          </View>
         )}
     </View>
   );

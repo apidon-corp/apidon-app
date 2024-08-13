@@ -232,7 +232,7 @@ const RateStar = ({ previousValue, postDocPath }: Props) => {
 
           paddingBottom: 10,
 
-          backgroundColor: "rgba(0,0,0,0.9)",
+          backgroundColor: "rgba(0,0,0,0.75)",
         }}
       >
         <FontAwesome name="long-arrow-up" size={144} color="white" />
@@ -251,7 +251,7 @@ const RateStar = ({ previousValue, postDocPath }: Props) => {
           alignItems: "center",
           justifyContent: "flex-end",
 
-          backgroundColor: "rgba(0,0,0,0.9)",
+          backgroundColor: "rgba(0,0,0,0.85)",
         }}
       >
         <CurvedStars
