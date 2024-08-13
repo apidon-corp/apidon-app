@@ -32,7 +32,7 @@ const _layout = () => {
       <Stack.Screen
         name="identitySettings"
         options={{
-          headerTitle: "Verification",
+          headerTitle: "Identity",
         }}
       />
     </Stack>

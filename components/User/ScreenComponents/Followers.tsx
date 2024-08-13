@@ -7,6 +7,7 @@ import { FollowerDocData } from "@/types/User";
 import firestore from "@react-native-firebase/firestore";
 import { useAtomValue } from "jotai";
 import { useLocalSearchParams } from "expo-router";
+import Text from "@/components/Text/Text";
 
 type FollowerData = {
   follower: string;
@@ -65,6 +66,20 @@ const followers = () => {
         <ActivityIndicator color="white" size="large" />
       </SafeAreaView>
     );
+
+  if (followerDatas.length === 0) {
+    return (
+      <SafeAreaView
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Text>No followers yet.</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView

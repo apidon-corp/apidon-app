@@ -1,10 +1,11 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
+import Text from "@/components/Text/Text";
 import UserCard from "@/components/User/UserCard";
 import { PostServerData, RateData } from "@/types/Post";
 import firestore from "@react-native-firebase/firestore";
 import { useAtomValue } from "jotai";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, SafeAreaView, Text } from "react-native";
+import { ActivityIndicator, FlatList, SafeAreaView } from "react-native";
 
 const Likes = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
@@ -70,6 +71,20 @@ const Likes = () => {
         <ActivityIndicator color="white" size="large" />
       </SafeAreaView>
     );
+
+  if (rateData.length === 0) {
+    return (
+      <SafeAreaView
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Text>No rates yet.</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView

@@ -24,7 +24,8 @@ const IdentitySettings = () => {
         Identity Settings
       </Text>
       <Text style={{ fontSize: 12, color: "gray" }} bold>
-        Verify yourself.
+        Verify your identity to access all features, enhance account security,
+        and comply with platform regulations.
       </Text>
     </Pressable>
   );

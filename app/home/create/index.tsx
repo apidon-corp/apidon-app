@@ -179,7 +179,7 @@ const index = () => {
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={{
         padding: 15,
-        gap: 15,
+        gap: 10,
       }}
       showsVerticalScrollIndicator={false}
     >

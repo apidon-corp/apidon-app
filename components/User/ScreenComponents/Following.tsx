@@ -7,6 +7,7 @@ import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 
 import firestore from "@react-native-firebase/firestore";
 import { useLocalSearchParams } from "expo-router";
+import Text from "@/components/Text/Text";
 
 type FollowingData = {
   following: string;
@@ -65,6 +66,19 @@ const following = () => {
         <ActivityIndicator color="white" size="large" />
       </SafeAreaView>
     );
+  if (followingsData.length === 0) {
+    return (
+      <SafeAreaView
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Text>No followings yet.</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView

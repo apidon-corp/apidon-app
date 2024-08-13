@@ -249,6 +249,20 @@ const comments = () => {
     );
   }
 
+  if (commentData.length === 0) {
+    return (
+      <SafeAreaView
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Text>No comments yet.</Text>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <View
       style={{
