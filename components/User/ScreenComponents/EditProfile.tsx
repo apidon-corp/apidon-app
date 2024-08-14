@@ -306,6 +306,7 @@ const editProfile = () => {
       }}
     >
       <ScrollView
+       showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           flex: 1,
         }}

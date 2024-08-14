@@ -1,13 +1,18 @@
+import Text from "@/components/Text/Text";
 import UserCard from "@/components/User/UserCard";
 import { UserInServer } from "@/types/User";
 import firestore from "@react-native-firebase/firestore";
-import { Stack } from "expo-router";
-import React, { useState } from "react";
-import { FlatList } from "react-native";
+import { Stack, usePathname } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, FlatList, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
 const search = () => {
+  const pathname = usePathname();
+
   const [queryResult, setQueryResult] = useState<string[]>([]);
+
+  const [popularPeople, setPopularPeople] = useState<string[]>([]);
 
   const handleGetQueryResult = async (input: string) => {
     try {
@@ -17,13 +22,13 @@ const search = () => {
       const newInput = firstLetterUpperCase + input.slice(1);
 
       const [usernameQueryResult, fullnameQueryResult] = await Promise.all([
-        await firestore()
+        firestore()
           .collection("users")
           .where("username", ">=", input.toLowerCase())
           .where("username", "<", input.toLowerCase() + "\uf8ff")
           .limit(5)
           .get(),
-        await firestore()
+        firestore()
           .collection("users")
           .where("fullname", ">=", newInput)
           .where("fullname", "<", newInput + "\uf8ff")
@@ -54,6 +59,29 @@ const search = () => {
     handleGetQueryResult(input);
   };
 
+  const handleGetPopularPeople = async () => {
+    try {
+      const popularPeopleQuery = await firestore()
+        .collection("users")
+        .orderBy("followerCount", "desc")
+        .limit(5)
+        .get();
+
+      const popularPeopleFetched: string[] = [];
+      for (const popularPerson of popularPeopleQuery.docs) {
+        popularPeopleFetched.push(popularPerson.id);
+      }
+      setPopularPeople(popularPeopleFetched);
+    } catch (error) {
+      console.error("Error getting popular people:", error);
+      setPopularPeople([]);
+    }
+  };
+
+  useEffect(() => {
+    if (pathname === "/home/search") handleGetPopularPeople();
+  }, [pathname]);
+
   return (
     <>
       <Stack.Screen
@@ -63,6 +91,7 @@ const search = () => {
             placeholder: "Search",
             inputType: "text",
             onChangeText: (event) => handleInputChange(event.nativeEvent.text),
+            hideWhenScrolling: false,
           },
         }}
       />
@@ -72,14 +101,47 @@ const search = () => {
         contentContainerStyle={{
           paddingHorizontal: 20,
         }}
+        showsVerticalScrollIndicator={false}
       >
-        <FlatList
-          scrollEnabled={false}
-          showsVerticalScrollIndicator={false}
-          keyExtractor={(item) => item}
-          data={queryResult}
-          renderItem={({ item }) => <UserCard username={item} />}
-        />
+        {queryResult.length > 0 && (
+          <FlatList
+            scrollEnabled={false}
+            showsVerticalScrollIndicator={false}
+            keyExtractor={(item) => item}
+            data={queryResult}
+            renderItem={({ item }) => <UserCard username={item} />}
+          />
+        )}
+
+        {queryResult.length === 0 && (
+          <View
+            id="popular-area"
+            style={{
+              marginTop: 20,
+              width: "100%",
+            }}
+          >
+            <Text
+              bold
+              fontSize={16}
+              style={{
+                color: "gray",
+              }}
+            >
+              Suggested People
+            </Text>
+            {popularPeople.length === 0 && <ActivityIndicator />}
+            {popularPeople.length !== 0 && (
+              <FlatList
+                scrollEnabled={false}
+                showsVerticalScrollIndicator={false}
+                keyExtractor={(item) => item}
+                data={popularPeople}
+                renderItem={({ item }) => <UserCard username={item} />}
+              />
+            )}
+          </View>
+        )}
       </ScrollView>
     </>
   );

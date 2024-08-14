@@ -55,6 +55,9 @@ const apiRoutes = {
   payment: {
     createPayment: `${apiEndpoint}/payment-createPayment`,
   },
+  identity: {
+    createVerificationSession: `${apiEndpoint}/identity-createVerificationSession`,
+  },
 };
 
 export default apiRoutes;

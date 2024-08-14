@@ -35,14 +35,22 @@ const _layout = () => {
 
   const handleHomeButtonPress = () => {
     if (pathname === "/home/feed")
-      setHomeScreenParameters({ isHomeButtonPressed: true });
-    else router.replace("/home/feed");
+      return setHomeScreenParameters({ isHomeButtonPressed: true });
+
+    router.navigate("/home/feed");
   };
 
   return (
     <>
       <StatusBar barStyle="light-content" />
-      <Tabs>
+      <Tabs
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: "rgba(255,255,255,0.04)",
+          },
+          headerShadowVisible: false,
+        }}
+      >
         <Tabs.Screen
           name="index"
           options={{
@@ -80,17 +88,13 @@ const _layout = () => {
           }}
         />
         <Tabs.Screen
-          name="postCreate"
+          name="create"
           options={{
-            headerStyle: {
-              backgroundColor: "black",
-            },
-            headerShadowVisible: false,
+            headerTitle: "Create Post",
             tabBarIcon: () => (
               <Entypo name="circle-with-plus" size={25} color="white" />
             ),
             tabBarLabel: () => <></>,
-            title: "Create",
           }}
         />
         <Tabs.Screen

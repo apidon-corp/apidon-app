@@ -98,7 +98,7 @@ const collectors = () => {
   if (collectibleData.buyers.length === 0) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>No one collected this Collectible yet.</Text>
+        <Text>No one collected this collectible yet.</Text>
       </View>
     );
   }

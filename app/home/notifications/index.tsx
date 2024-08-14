@@ -3,7 +3,7 @@ import apiRoutes from "@/helpers/ApiRoutes";
 import { useNotification } from "@/providers/NotificationProvider";
 import { usePathname } from "expo-router";
 import React, { useEffect } from "react";
-import { FlatList, SafeAreaView } from "react-native";
+import { FlatList, ScrollView } from "react-native";
 
 import auth from "@react-native-firebase/auth";
 
@@ -54,8 +54,9 @@ const notifications = () => {
   if (!notificationDocData) return <></>;
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic">
       <FlatList
+        scrollEnabled={false}
         contentContainerStyle={{
           paddingVertical: 10,
           paddingHorizontal: 10,
@@ -72,7 +73,7 @@ const notifications = () => {
         keyExtractor={(item) => `${item.source}-${item.type}-${item.timestamp}`}
         showsVerticalScrollIndicator={false}
       />
-    </SafeAreaView>
+    </ScrollView>
   );
 };
 

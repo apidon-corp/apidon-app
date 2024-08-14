@@ -58,30 +58,22 @@ const useCheckUpdate = () => {
         return setVersionStatus("error");
       }
 
-      latestVersion = versionDocData.latestVersion || "";
+      const availableVersions = versionDocData.availableVersions;
 
-      if (!latestVersion) {
-        console.error("Latest version is not defined");
+      if (!availableVersions) {
+        console.error("availableVersions is not defined");
         crashlytics().recordError(
-          new Error("Latest version is not defined on checking for new udates.")
+          new Error(
+            "availableVersions is not defined on checking for new updates."
+          )
         );
         return setVersionStatus("error");
       }
 
-      if (currentVersion === latestVersion) {
+      if (availableVersions.includes(currentVersion)) {
         return setVersionStatus("hasLatestVersion");
-      } else if (currentVersion < latestVersion) {
-        return setVersionStatus("updateNeeded");
       } else {
-        console.error(
-          "Current version (on device) is greater than the latest version (from database)."
-        );
-        crashlytics().recordError(
-          new Error(
-            "Current version (on device) is greater than the latest version (from database) on checking for new udates."
-          )
-        );
-        return setVersionStatus("error");
+        return setVersionStatus("updateNeeded");
       }
     } catch (error) {
       if (retryCountRef.current < MAX_RETRIES) {

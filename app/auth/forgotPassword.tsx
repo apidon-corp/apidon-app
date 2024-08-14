@@ -132,6 +132,7 @@ const forgotPassword = () => {
 
   return (
     <ScrollView
+      showsVerticalScrollIndicator={false}
       contentContainerStyle={{
         flex: 1,
       }}

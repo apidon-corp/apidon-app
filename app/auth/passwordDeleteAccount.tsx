@@ -176,6 +176,7 @@ const emailPasswordSignIn = () => {
 
   return (
     <ScrollView
+    showsVerticalScrollIndicator={false}
       contentContainerStyle={{
         flex: 1,
       }}

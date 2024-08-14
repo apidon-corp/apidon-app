@@ -106,7 +106,7 @@ const Header = ({ userData }: Props) => {
           width: 150,
           borderRadius: 75,
         }}
-        transition={500}
+        transition={100}
       />
       <Text
         bold

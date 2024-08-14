@@ -1,4 +1,5 @@
 import DeleteAccount from "@/components/Settings/DeleteAccount";
+import IdentitySettings from "@/components/Settings/IdentitySettings";
 import NotificationSettings from "@/components/Settings/NotificationSettings";
 import SignOut from "@/components/User/SignOut";
 import React from "react";
@@ -16,6 +17,7 @@ const settings = () => {
       }}
     >
       <NotificationSettings />
+      <IdentitySettings />
       <SignOut />
       <View
         style={{

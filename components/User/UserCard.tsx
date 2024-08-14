@@ -166,64 +166,63 @@ const UserCard = ({ username }: Props) => {
         alignItems: "center",
         flexDirection: "row",
         height: 75,
+        width: "100%",
       }}
     >
-      <View
+      <Pressable
         style={{
+          overflow: "hidden",
+          width: "75%",
+          flexDirection: "row",
+          gap: 10,
           alignItems: "center",
         }}
+        onPress={handlePressUser}
       >
-        <Pressable
+        <Image
+          source={userData.profilePhoto || require("@/assets/images/user.jpg")}
           style={{
-            flexDirection: "row",
-            gap: 10,
-            alignItems: "center",
+            width: 50,
+            height: 50,
+            borderRadius: 25,
           }}
-          onPress={handlePressUser}
-        >
-          <Image
-            source={
-              userData.profilePhoto || require("@/assets/images/user.jpg")
-            }
+        />
+        <View>
+          <Text
             style={{
-              width: 50,
-              height: 50,
-              borderRadius: 25,
+              fontSize: 13,
             }}
-          />
-          <View>
-            <Text
-              style={{
-                fontSize: 14,
-              }}
-              bold
-            >
-              {userData.username}
-            </Text>
-            <Text
-              style={{
-                fontSize: 14,
-              }}
-            >
-              {userData.fullname}
-            </Text>
-          </View>
-        </Pressable>
-      </View>
+            bold
+          >
+            {userData.fullname}
+          </Text>
+          <Text
+            style={{
+              fontSize: 12,
+              color: "gray",
+            }}
+          >
+            @{userData.username}
+          </Text>
+        </View>
+      </Pressable>
 
       {!doesFollow && (
         <View
           style={{
-            alignItems: "center",
+            width: "25%",
+            height: 50,
+            alignItems: "flex-end",
             justifyContent: "center",
           }}
         >
           <Pressable
             style={{
-              backgroundColor: apidonPink,
+              width: "75%",
+              height: "55%",
+              backgroundColor: "rgba(255,255,255,0.2)",
               alignItems: "center",
               justifyContent: "center",
-              padding: 10,
               borderRadius: 10,
             }}
             onPress={handleFollowButton}
@@ -233,8 +232,9 @@ const UserCard = ({ username }: Props) => {
               <ActivityIndicator color="white" />
             ) : (
               <Text
+                bold
                 style={{
-                  fontSize: 14,
+                  fontSize: 12,
                 }}
               >
                 Follow

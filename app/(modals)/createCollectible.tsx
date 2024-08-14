@@ -45,6 +45,8 @@ const listNFT = () => {
 
   const [loading, setLoading] = useState(false);
 
+  const createButtonOpacityValue = useRef(new Animated.Value(0.5)).current;
+
   useEffect(() => {
     getInitialData();
   }, [postDocPath]);
@@ -100,6 +102,26 @@ const listNFT = () => {
     };
   }, [containerRef]);
 
+  useEffect(() => {
+    handleChangeOpactiy(
+      createButtonOpacityValue,
+      price && stock && !loading ? 1 : 0.5,
+      250
+    );
+  }, [price, stock, loading]);
+
+  const handleChangeOpactiy = (
+    animatedObject: Animated.Value,
+    toValue: number,
+    duration: number
+  ) => {
+    Animated.timing(animatedObject, {
+      toValue,
+      duration,
+      useNativeDriver: true,
+    }).start();
+  };
+
   const getInitialData = async () => {
     if (!postDocPath) return;
 
@@ -132,65 +154,63 @@ const listNFT = () => {
   };
 
   const handlePriceChange = (input: string) => {
-    if (input.includes(",")) {
-      input = input.replace(",", ".");
+    if (input === "") {
+      setPriceInput("");
+      return setPrice(0);
     }
 
-    if (input.includes(".")) {
-      const dotIndex = input.indexOf(".");
-
-      const maxLength = dotIndex + 1 + 2;
-
-      input = input.slice(0, maxLength);
+    if (input.length > 4) {
+      return;
     }
 
-    let dotCount = 0;
-    for (const char of input) {
-      if (char === ".") dotCount++;
+    const intVersion = parseInt(input);
+
+    if (isNaN(intVersion)) {
+      return;
     }
 
-    if (dotCount > 1) {
-      input = input.replace(".", "");
-    }
+    const validInput = intVersion.toString();
 
-    setPriceInput(input);
-
-    if (input.length > 0 && input !== ".") {
-      const floatPrice = parseFloat(input);
-      if (isNaN(floatPrice)) {
-        return setPrice(0);
-      }
-      setPrice(floatPrice);
-    } else {
-      setPrice(0);
-    }
+    setPriceInput(validInput);
+    setPrice(intVersion);
   };
 
   const handleStockChange = (input: string) => {
-    setStockInput(input);
+    if (input.length === 0) {
+      setStockInput("");
+      return setStock(0);
+    }
 
-    if (input.length === 0) return setStock(0);
+    if (input.length > 2) {
+      return;
+    }
 
     const numberVersion = parseInt(input);
+    if (isNaN(numberVersion)) {
+      return;
+    }
 
-    if (isNaN(numberVersion)) return setStock(0);
+    const validInput = numberVersion.toString();
 
+    setStockInput(validInput);
     setStock(numberVersion);
   };
 
-  const handleListButton = () => {
-    if (!stock || !price) return;
+  const handleCreateButton = () => {
+    if (!stock || !price || loading) return;
+
+    Keyboard.dismiss();
 
     Alert.alert(
-      "Create Collectible",
-      `\nOnce listed, this collectible post cannot be deleted.\n\nAre you sure you want to create collectible for ${price} USD with a stock of ${stock}?`,
+      "Confirm Creation",
+      `\nYou are about to create a collectible post priced at ${price} USD with a stock of ${stock}.\n\nPlease note that once listed, this collectible cannot be deleted, and you won't be able to change the stock or price.\n\nAre you sure you want to proceed?`,
       [
         {
           text: "Cancel",
           style: "cancel",
         },
         {
-          text: "Create",
+          text: "Confirm",
           onPress: handleCreate,
         },
       ]
@@ -200,6 +220,8 @@ const listNFT = () => {
   const handleCreate = async () => {
     const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("No user");
+
+    if (!price || !stock) return;
 
     if (loading) return;
 
@@ -257,7 +279,10 @@ const listNFT = () => {
   }
 
   return (
-    <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps={"handled"}>
+    <ScrollView
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
       <Animated.View
         ref={containerRef}
         style={{
@@ -270,16 +295,27 @@ const listNFT = () => {
           ],
         }}
       >
-        <View style={{ width: "100%" }}>
+        <View
+          id="image-area"
+          style={{
+            width: "100%",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <Image
             source={postData.image}
-            style={{ width: "85%", aspectRatio: 1 }}
+            style={{ width: "65%", aspectRatio: 1, borderRadius: 20 }}
           />
         </View>
+
         <View
-          id="price"
+          id="price-area"
           style={{
-            gap: 10,
+            backgroundColor: "rgba(255,255,255,0.1)",
+            borderRadius: 20,
+            padding: 15,
+            gap: 5,
           }}
         >
           <Text
@@ -290,38 +326,120 @@ const listNFT = () => {
           >
             Price
           </Text>
-          <TextInput
-            value={priceInput}
-            onChangeText={handlePriceChange}
-            placeholder="₺53"
-            placeholderTextColor="#808080"
+          <View
+            id="input-description"
             style={{
-              color: "white",
-              padding: 10,
-              borderWidth: 1,
-              borderColor: priceInput ? "#808080" : "red",
-              borderRadius: 10,
+              gap: 2,
+              width: "100%",
+              flexDirection: "row",
+              justifyContent: "space-between",
             }}
-            keyboardType="decimal-pad"
-          />
-          <View id="price-detail" style={{ gap: 5 }}>
+          >
             <View
-              style={{ flexDirection: "row", gap: 4, alignItems: "center" }}
+              id="input"
+              style={{
+                flexDirection: "row",
+                width: "35%",
+                overflow: "hidden",
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "rgba(255,255,255,0.05)",
+                padding: 15,
+                borderRadius: 20,
+              }}
             >
-              <Text>Apple Fee:</Text>
-              <Text bold>${(price * 0.33).toFixed(2)}</Text>
+              <View
+                style={{
+                  width: "20%",
+                }}
+              >
+                <Text
+                  fontSize={20}
+                  style={{
+                    color: priceInput ? "white" : "#808080",
+                  }}
+                  bold
+                >
+                  $
+                </Text>
+              </View>
+              <TextInput
+                autoFocus
+                value={priceInput}
+                onChangeText={handlePriceChange}
+                placeholder="53"
+                placeholderTextColor="#808080"
+                style={{
+                  fontWeight: "bold",
+                  fontSize: 20,
+                  width: "80%",
+                  color: "white",
+                }}
+                keyboardType="number-pad"
+              />
             </View>
-            <View style={{ flexDirection: "row", gap: 4 }}>
-              <Text>Apidon Fee:</Text>
-              <Text bold>${(price * 0.1).toFixed(2)}</Text>
-            </View>
-            <View style={{ flexDirection: "row", gap: 4 }}>
-              <Text>Your Revenue:</Text>
-              <Text bold>${(price * 0.57).toFixed(2)}</Text>
+
+            <View
+              id="price-detail"
+              style={{
+                width: "50%",
+                justifyContent: "center",
+                alignItems: "flex-end",
+                overflow: "hidden",
+              }}
+            >
+              <View
+                id="apple-fee"
+                style={{
+                  opacity: 0.5,
+                  flexDirection: "row",
+                  gap: 4,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text fontSize={13}>Apple Fee:</Text>
+                <Text bold>${(price * 0.3).toFixed(2)}</Text>
+              </View>
+              <View
+                id="apidon-fee"
+                style={{
+                  opacity: 0.5,
+                  flexDirection: "row",
+                  gap: 4,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text fontSize={13}>Apidon Fee:</Text>
+                <Text bold>${(price * 0.1).toFixed(2)}</Text>
+              </View>
+              <View
+                id="revenue"
+                style={{
+                  flexDirection: "row",
+                  gap: 4,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text fontSize={13}>Your Revenue:</Text>
+                <Text bold>${(price * 0.6).toFixed(2)}</Text>
+              </View>
             </View>
           </View>
         </View>
-        <View id="stock" style={{ gap: 5 }}>
+
+        <View
+          id="stock"
+          style={{
+            width: "100%",
+            backgroundColor: "rgba(255,255,255,0.1)",
+            borderRadius: 20,
+            padding: 15,
+            gap: 5,
+          }}
+        >
           <Text
             style={{
               fontSize: 20,
@@ -333,25 +451,35 @@ const listNFT = () => {
           <TextInput
             value={stockInput === "" ? "" : stock.toString()}
             onChangeText={handleStockChange}
-            placeholder="10"
+            placeholder="34"
             placeholderTextColor="#808080"
             style={{
+              width: "100%",
               color: "white",
+              backgroundColor: "rgba(255,255,255,0.05)",
               padding: 10,
-              borderWidth: 1,
-              borderColor: stock ? "#808080" : "red",
               borderRadius: 10,
             }}
             keyboardType="number-pad"
           />
         </View>
-        <View id="create">
+
+        <Animated.View
+          id="create"
+          style={{
+            width: "100%",
+            justifyContent: "center",
+            alignItems: "center",
+            opacity: createButtonOpacityValue,
+          }}
+        >
           <Pressable
-            disabled={loading}
-            onPress={handleListButton}
+            disabled={loading || !price || !stock}
+            onPress={handleCreateButton}
             style={{
+              width: "25%",
+              height: 35,
               backgroundColor: apidonPink,
-              padding: 10,
               borderRadius: 10,
               alignItems: "center",
               justifyContent: "center",
@@ -364,14 +492,14 @@ const listNFT = () => {
                 bold
                 style={{
                   color: "white",
-                  fontSize: 18,
+                  fontSize: 16,
                 }}
               >
                 Create
               </Text>
             )}
           </Pressable>
-        </View>
+        </Animated.View>
       </Animated.View>
     </ScrollView>
   );

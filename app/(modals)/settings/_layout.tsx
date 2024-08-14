@@ -29,6 +29,12 @@ const _layout = () => {
           headerTitle: "",
         }}
       />
+      <Stack.Screen
+        name="identitySettings"
+        options={{
+          headerTitle: "Identity",
+        }}
+      />
     </Stack>
   );
 };

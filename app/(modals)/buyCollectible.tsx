@@ -2,18 +2,18 @@ import { Text } from "@/components/Text/Text";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Pressable,
   ScrollView,
   View,
 } from "react-native";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { apidonPink } from "@/constants/Colors";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
-import { MaterialIcons } from "@expo/vector-icons";
 import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
 import { useAtom } from "jotai";
@@ -24,7 +24,9 @@ import auth from "@react-native-firebase/auth";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { useBalance } from "@/hooks/useBalance";
 
+import { useAuth } from "@/providers/AuthProvider";
 import { CollectibleDocData } from "@/types/Collectible";
+import { UserIdentityDoc } from "@/types/Identity";
 import { router } from "expo-router";
 
 const buyNFT = () => {
@@ -41,9 +43,89 @@ const buyNFT = () => {
 
   const { balance } = useBalance();
 
+  const [balanceStatus, setBalanceStatus] = useState<
+    "loading" | "error" | "enough" | "not-enough"
+  >("loading");
+
+  const { authStatus } = useAuth();
+
+  const [isIdentityVerified, setIsIdentityVerified] = useState(false);
+
+  const buyButtonOpacityValue = useRef(new Animated.Value(0.5)).current;
+
+  // Getting collectible data.
   useEffect(() => {
     getInitialData();
   }, [postDocPath]);
+
+  // Checking identity verification status - realtime.
+  useEffect(() => {
+    if (authStatus !== "authenticated") return;
+
+    const currentUserDisplayname = auth().currentUser?.displayName || "";
+    if (!currentUserDisplayname) return;
+
+    const unsubscribe = firestore()
+      .doc(`users/${currentUserDisplayname}/personal/identity`)
+      .onSnapshot(
+        (doc) => {
+          if (doc.exists) {
+            const data = doc.data() as UserIdentityDoc;
+
+            if (data.status === "verified") {
+              setIsIdentityVerified(true);
+            } else {
+              setIsIdentityVerified(false);
+            }
+          } else {
+            setIsIdentityVerified(false);
+          }
+        },
+        (error) => {
+          console.error("Error fetching identity data:", error);
+          setIsIdentityVerified(false);
+        }
+      );
+
+    () => unsubscribe();
+  }, [authStatus]);
+
+  // Balance Status Setting
+  useEffect(() => {
+    if (!collectibleData) return;
+
+    const balanceStatusResult =
+      balance === "error"
+        ? "error"
+        : balance === "getting-balance"
+        ? "loading"
+        : balance >= collectibleData.price.price
+        ? "enough"
+        : "not-enough";
+
+    setBalanceStatus(balanceStatusResult);
+  }, [collectibleData, balance]);
+
+  // Managing opacity of buy button
+  useEffect(() => {
+    handleChangeOpactiy(
+      buyButtonOpacityValue,
+      isIdentityVerified && balanceStatus === "enough" && !loading ? 1 : 0.5,
+      500
+    );
+  }, [isIdentityVerified, balanceStatus, loading]);
+
+  const handleChangeOpactiy = (
+    animatedObject: Animated.Value,
+    toValue: number,
+    duration: number
+  ) => {
+    Animated.timing(animatedObject, {
+      toValue,
+      duration,
+      useNativeDriver: true,
+    }).start();
+  };
 
   const getInitialData = async () => {
     if (!postDocPath) return;
@@ -128,8 +210,8 @@ const buyNFT = () => {
     if (!collectibleData) return;
 
     Alert.alert(
-      "Buy NFT",
-      `Are you sure you want to buy this NFT for $${collectibleData.price.price}?`,
+      "Buy Collectible",
+      `Are you sure you want to buy this collectible for $${collectibleData.price.price}?`,
       [
         {
           text: "Cancel",
@@ -146,7 +228,11 @@ const buyNFT = () => {
   const handleBuy = async () => {
     const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("No user");
+
     if (!postDocPath) return;
+
+    if (balanceStatus !== "enough") return;
+    if (!isIdentityVerified) return;
 
     if (loading) return;
 
@@ -189,8 +275,18 @@ const buyNFT = () => {
     }
   };
 
-  const handleTopUpButton = () => {
+  const handlePressBalanceArea = () => {
     router.push("/(modals)/wallet");
+  };
+
+  const handleVerifyIdentityButton = () => {
+    router.push("/(modals)/identity");
+  };
+
+  const handlePressCreatorInformation = () => {
+    if (!creatorData) return;
+
+    router.push(`/(modals)/profilePage?username=${creatorData.username}`);
   };
 
   if (!postDocPath) {
@@ -209,115 +305,187 @@ const buyNFT = () => {
     );
   }
 
-  let balanceStatus: "loading" | "error" | "enough" | "not-enough" =
-    balance === "error"
-      ? "error"
-      : balance === "getting-balance"
-      ? "loading"
-      : balance >= collectibleData.price.price
-      ? "enough"
-      : "not-enough";
-
   return (
     <ScrollView
       style={{ flex: 1 }}
       contentContainerStyle={{
-        padding: 10,
-        gap: 10,
+        padding: 15,
+        gap: 15,
       }}
       showsVerticalScrollIndicator={false}
     >
       <View
+        id="image-area"
         style={{
           width: "100%",
+          justifyContent: "center",
+          alignItems: "center",
         }}
       >
         <Image
           source={postData.image}
           style={{
-            width: "100%",
+            width: "80%",
             aspectRatio: 1,
-            borderRadius: 10,
+            borderRadius: 15,
           }}
         />
       </View>
-      <View
-        id="creator-information"
+
+      <Pressable
+        onPress={handlePressCreatorInformation}
+        id="creator-area"
         style={{
           width: "100%",
+          backgroundColor: "rgba(255,255,255,0.05)",
+          padding: 15,
+          borderRadius: 20,
           flexDirection: "row",
-          borderWidth: 2,
-          borderColor: "#808080",
-          borderRadius: 10,
-          padding: 10,
-          justifyContent: "space-between",
-          alignItems: "center",
         }}
       >
         <View
-          id="text-based-information"
+          id="creator-username-fullname"
           style={{
+            width: "80%",
             gap: 5,
           }}
         >
           <Text fontSize={18} bold>
             Creator
           </Text>
-          <View style={{ flexDirection: "row", gap: 5 }}>
-            <View>
-              <Text
-                bold
-                style={{
-                  color: "#808080",
-                }}
-              >
-                {creatorData.fullname}
-              </Text>
-              <Text
-                fontSize={12}
-                style={{
-                  color: "#808080",
-                }}
-              >
-                {creatorData.username}
-              </Text>
-            </View>
-            <View id="verified-badge">
-              <MaterialIcons name="verified" size={18} color={apidonPink} />
-            </View>
+
+          <View id="username-fullname">
+            <Text
+              style={{
+                color: "white",
+              }}
+            >
+              {creatorData.fullname}
+            </Text>
+            <Text
+              fontSize={12}
+              style={{
+                color: "#808080",
+              }}
+            >
+              @{creatorData.username}
+            </Text>
           </View>
         </View>
-        <View>
+        <View
+          style={{
+            width: "20%",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <Image
             source={
               creatorData.profilePhoto || require("@/assets/images/user.jpg")
             }
-            style={{ width: 80, aspectRatio: 1, borderRadius: 40 }}
+            style={{
+              width: "100%",
+              aspectRatio: 1,
+              borderRadius: 100,
+            }}
           />
         </View>
-      </View>
+      </Pressable>
 
-      <View id="balance">
-        <Text bold>Your balance</Text>
-        {balanceStatus === "loading" || balanceStatus === "error" ? (
-          <ActivityIndicator />
-        ) : (
+      <Pressable
+        onPress={handlePressBalanceArea}
+        id="balance"
+        style={{
+          width: "100%",
+          flexDirection: "row",
+          padding: 15,
+          backgroundColor: "rgba(255,255,255,0.05)",
+          borderRadius: 20,
+          alignItems: "center",
+        }}
+      >
+        <View
+          style={{
+            width: "80%",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 5,
+          }}
+        >
+          <Text bold>Your balance: </Text>
+          {balanceStatus === "loading" || balanceStatus === "error" ? (
+            <ActivityIndicator />
+          ) : (
+            <Text
+              bold
+              style={{
+                color: "#808080",
+              }}
+            >
+              ${balance}
+            </Text>
+          )}
+        </View>
+        <View
+          id="top-up-area"
+          style={{
+            display: balanceStatus === "not-enough" ? undefined : "none",
+            width: "20%",
+            alignItems: "center",
+            justifyContent: "flex-end",
+          }}
+        >
+          <Text
+            bold
+            style={{ color: "green", textDecorationLine: "underline" }}
+          >
+            Top Up
+          </Text>
+        </View>
+      </Pressable>
+
+      {!isIdentityVerified && (
+        <Pressable
+          onPress={handleVerifyIdentityButton}
+          style={{
+            width: "100%",
+            padding: 15,
+            backgroundColor: "rgba(255,255,255,0.05)",
+            borderRadius: 20,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <Text
             bold
             style={{
-              color: "#808080",
+              textAlign: "center",
+              textDecorationLine: "underline",
+              color: "yellow",
+              opacity: 0.75,
             }}
           >
-            ${balance}
+            Verify yourself to collect this item.
           </Text>
-        )}
-      </View>
+        </Pressable>
+      )}
 
-      <View id="buy-button" style={{ width: "100%" }}>
+      <Animated.View
+        id="buy-button"
+        style={{
+          width: "100%",
+          justifyContent: "center",
+          alignItems: "center",
+          opacity: buyButtonOpacityValue,
+        }}
+      >
         <Pressable
-          disabled={loading || balanceStatus !== "enough"}
+          disabled={
+            balanceStatus !== "enough" || !isIdentityVerified || loading
+          }
           onPress={handleBuyButton}
           style={{
+            width: "50%",
             opacity: loading ? 1 : balanceStatus !== "enough" ? 0.5 : 1,
             backgroundColor: apidonPink,
             padding: 10,
@@ -333,36 +501,14 @@ const buyNFT = () => {
               bold
               style={{
                 color: "white",
-                fontSize: 18,
+                fontSize: 15,
               }}
             >
               Buy for ${collectibleData.price.price}
             </Text>
           )}
         </Pressable>
-      </View>
-      {balanceStatus === "not-enough" && !loading && (
-        <Pressable
-          onPress={handleTopUpButton}
-          id="top-up"
-          style={{
-            width: "100%",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text
-            bold
-            style={{
-              color: "red",
-              fontSize: 14,
-              textDecorationLine: "underline",
-            }}
-          >
-            Not enough balance? Top Up!
-          </Text>
-        </Pressable>
-      )}
+      </Animated.View>
     </ScrollView>
   );
 };
