@@ -147,8 +147,9 @@ function RootLayout() {
     const handleInitialURL = async () => {
       const initialUrl = await Linking.getInitialURL();
 
-      let timeStampedURL = "";
-      if (initialUrl) timeStampedURL = initialUrl + "/" + Date.now().toString();
+      if (!initialUrl) return;
+
+      const timeStampedURL = initialUrl + "/" + Date.now().toString();
 
       setLinking({
         isInitial: true,
@@ -159,11 +160,15 @@ function RootLayout() {
     handleInitialURL();
 
     // Listen for incoming URLs when the app is already open
-    const subscription = Linking.addEventListener("url", (event) => {
+    const subscription = Linking.addListener("url", (event) => {
       const url = event.url;
 
-      let timeStampedURL = "";
-      if (url) timeStampedURL = url + "/" + Date.now().toString();
+      if (!url) return;
+      const timeStampedURL = url + "/" + Date.now().toString();
+
+      // To prevent "auto" redirecting....
+      // Not a good solution.
+      if (router.canGoBack()) router.back();
 
       setLinking({
         isInitial: false,

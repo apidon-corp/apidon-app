@@ -105,6 +105,7 @@ export default function AuthProvider({ children, linking }: Props) {
   useEffect(() => {
     if (linking.isInitial) return;
     if (!linking.url) return;
+    if (authStatus !== "authenticated") return;
 
     handleLinking(linking.url);
   }, [linking.url, linking.isInitial, authStatus]);
