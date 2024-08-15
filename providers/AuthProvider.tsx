@@ -126,7 +126,7 @@ export default function AuthProvider({ children, linking }: Props) {
     if (content === "post") {
       const postIdentifier = subParts[4];
 
-      const postIdentifierContents = postIdentifier.split("/");
+      const postIdentifierContents = postIdentifier.split("-");
 
       const postSender = postIdentifierContents[0];
       const postId = postIdentifierContents[1];
@@ -157,7 +157,7 @@ export default function AuthProvider({ children, linking }: Props) {
     if (content === "post") {
       const postIdentifier = subParts[4];
 
-      const postIdentifierContents = postIdentifier.split("/");
+      const postIdentifierContents = postIdentifier.split("-");
 
       const postSender = postIdentifierContents[0];
       const postId = postIdentifierContents[1];

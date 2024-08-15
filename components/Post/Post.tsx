@@ -31,6 +31,8 @@ import NFTTag from "./NFT/NFTTag";
 import NftBottomSheetContent from "./NFT/NftBottomSheetContent";
 import PostImage from "./PostImage";
 
+import * as Sharing from "expo-sharing";
+
 type Props = {
   postDocPath: string;
 };
@@ -76,8 +78,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
   }, [postDocData?.rates]);
 
   const pathname = usePathname();
-
-  const [isImageZooming, setIsImageZooming] = useState(false);
 
   // Dynamic Data Fetching / Post Object
   useEffect(() => {
@@ -339,6 +339,35 @@ const Post = React.memo(({ postDocPath }: Props) => {
     return console.log("Hmm");
   }
 
+  const handleShareButton = async () => {
+    if (!postDocData) return;
+
+    try {
+      const isSharingAvailable = await Sharing.isAvailableAsync();
+      if (!isSharingAvailable) return;
+
+      const baseURL = process.env.EXPO_PUBLIC_APP_LINK_BASE_URL || "";
+      if (!baseURL) return;
+
+      const url =
+        baseURL +
+        "/" +
+        "post" +
+        "/" +
+        postDocData.senderUsername +
+        "-" +
+        postDocData.id;
+
+      await Sharing.shareAsync(url, {
+        dialogTitle: `Share this post with your friends!`,
+        mimeType: "text/plain",
+        UTI: "public.plain-text",
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   if (loading)
     return (
       <View
@@ -574,9 +603,10 @@ const Post = React.memo(({ postDocPath }: Props) => {
               />
             </View>
 
-            <View
+            <Pressable
+              onPress={handleShareButton}
               style={{
-                opacity: 0.5,
+                opacity: 1,
                 width: "33%",
                 justifyContent: "center",
                 alignItems: "flex-end",
@@ -584,7 +614,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
               }}
             >
               <Feather name="share-2" size={24} color="white" />
-            </View>
+            </Pressable>
           </View>
 
           <Pressable onPress={handleOpenCommentsModal} style={{ height: 50 }}>
