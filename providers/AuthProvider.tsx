@@ -5,13 +5,21 @@ import { router } from "expo-router";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
 import {
-  PropsWithChildren,
+  ReactNode,
   createContext,
   useContext,
   useEffect,
   useRef,
   useState,
 } from "react";
+
+type Props = {
+  children: ReactNode;
+  linking: {
+    isInitial: boolean;
+    url: string;
+  };
+};
 
 type AuthContextType = {
   authStatus: AuthStatus;
@@ -23,7 +31,7 @@ const AuthContext = createContext<AuthContextType>({
   setAuthStatus: () => {},
 });
 
-export default function AuthProvider({ children }: PropsWithChildren) {
+export default function AuthProvider({ children, linking }: Props) {
   const [authStatus, setAuthStatus] = useState<AuthStatus>("loading");
 
   const authStatusRef = useRef<AuthStatus>("loading");
@@ -32,10 +40,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
     user: FirebaseAuthTypes.User | null,
     authStatusRef: React.MutableRefObject<AuthStatus>
   ) => {
-    if (authStatusRef.current === "dontMess") {
-      console.log("We are on dontMess status.");
-      return;
-    }
+    if (authStatusRef.current === "dontMess") return;
 
     resetNavigationHistory();
 
@@ -82,7 +87,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
     }
 
     setAuthStatus("authenticated");
-    return router.replace("/home");
+    return handleInitialLinking(linking.url);
   };
 
   useEffect(() => {
@@ -96,6 +101,41 @@ export default function AuthProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     authStatusRef.current = authStatus;
   }, [authStatus]);
+
+  useEffect(() => {
+    if (linking.isInitial) return;
+    if (!linking.url) return;
+
+    handleLinking(linking.url);
+  }, [linking.url, linking.isInitial, authStatus]);
+
+  const handleInitialLinking = (linking: string) => {
+    const subParts = linking.split("/");
+
+    const content = subParts[3];
+
+    if (content === "profile") {
+      const username = subParts[4];
+      router.replace("/home");
+      router.replace("/home/feed");
+      return router.navigate(`/home/feed/profilePage?username=${username}`);
+    }
+
+    router.replace("/home");
+  };
+
+  const handleLinking = (linking: string) => {
+    const subParts = linking.split("/");
+
+    const content = subParts[3];
+
+    if (content === "profile") {
+      const username = subParts[4];
+      return router.navigate(`/home/feed/profilePage?username=${username}`);
+    }
+
+    router.replace("/home");
+  };
 
   return (
     <AuthContext.Provider
