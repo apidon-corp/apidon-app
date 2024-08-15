@@ -116,13 +116,15 @@ export default function AuthProvider({ children, linking }: Props) {
 
     if (content === "profile") {
       const username = subParts[4];
-      router.replace("/home");
-      router.replace("/home/feed");
-      return router.navigate(`/home/feed/profilePage?username=${username}`);
+      if (username) {
+        router.replace("/home");
+        router.replace("/home/feed");
+        return router.navigate(`/home/feed/profilePage?username=${username}`);
+      }
     }
 
     if (content === "post") {
-      const postIdentifier = subParts[4]; // abovestars-123456
+      const postIdentifier = subParts[4];
 
       const postIdentifierContents = postIdentifier.split("/");
 
@@ -148,11 +150,12 @@ export default function AuthProvider({ children, linking }: Props) {
 
     if (content === "profile") {
       const username = subParts[4];
-      return router.navigate(`/home/feed/profilePage?username=${username}`);
+      if (username)
+        return router.navigate(`/home/feed/profilePage?username=${username}`);
     }
 
     if (content === "post") {
-      const postIdentifier = subParts[4]; // abovestars-123456
+      const postIdentifier = subParts[4];
 
       const postIdentifierContents = postIdentifier.split("/");
 

@@ -1,30 +1,30 @@
+import Text from "@/components/Text/Text";
 import UserContent from "@/components/User/UserContent";
 import { useLocalSearchParams } from "expo-router";
 import React from "react";
-import { ActivityIndicator, SafeAreaView, ScrollView } from "react-native";
+import { SafeAreaView, View } from "react-native";
 
 const profile = () => {
   const { username } = useLocalSearchParams<{ username: string }>();
 
-  return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-      }}
-    >
-      {!username ? (
-        <ActivityIndicator color="white" size="large" />
-      ) : (
-        <ScrollView
-          style={{ flex: 1 }}
-          keyboardShouldPersistTaps={"handled"}
-          showsVerticalScrollIndicator={false}
+  if (!username) {
+    return (
+      <SafeAreaView style={{ flex: 1 }}>
+        <View
+          style={{
+            width: "100%",
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
         >
-          <UserContent username={username} key={username} />
-        </ScrollView>
-      )}
-    </SafeAreaView>
-  );
+          <Text>Username not found</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return <UserContent username={username} key={username} />;
 };
 
 export default profile;
