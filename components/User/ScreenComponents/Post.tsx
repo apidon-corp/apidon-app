@@ -28,6 +28,7 @@ const post = () => {
 
   return (
     <FlatList
+      showsVerticalScrollIndicator={false}
       data={[postDocPath]}
       renderItem={({ item }) => <Post postDocPath={item} />}
       keyExtractor={(item) => item}
