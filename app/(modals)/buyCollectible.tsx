@@ -178,9 +178,9 @@ const buyNFT = () => {
         return false;
       }
 
-      const nftDataFetched =
+      const collectibleDataFetched =
         collectibleDocSnapshot.data() as CollectibleDocData;
-      return nftDataFetched;
+      return collectibleDataFetched;
     } catch (error) {
       console.error("Error on getting inital data of collectible ", error);
       return false;
@@ -234,6 +234,9 @@ const buyNFT = () => {
     if (balanceStatus !== "enough") return;
     if (!isIdentityVerified) return;
 
+    const username = currentUserAuthObject.displayName;
+    if (!username) return;
+
     if (loading) return;
 
     setLoading(true);
@@ -267,10 +270,11 @@ const buyNFT = () => {
       setScreenParameters([
         { queryId: "collectedNFTPostDocPath", value: postDocPath },
       ]);
+
       router.dismiss();
-      return router.push(`/home/profile/${currentUserAuthObject.displayName}`);
+      return router.push(`/home/feed/profilePage?username=${username}`);
     } catch (error) {
-      console.error("Error on buying NFT ", error);
+      console.error("Error on buying collectible ", error);
       return setLoading(false);
     }
   };
