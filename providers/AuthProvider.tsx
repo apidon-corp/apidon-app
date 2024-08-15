@@ -121,6 +121,23 @@ export default function AuthProvider({ children, linking }: Props) {
       return router.navigate(`/home/feed/profilePage?username=${username}`);
     }
 
+    if (content === "post") {
+      const postIdentifier = subParts[4]; // abovestars-123456
+
+      const postIdentifierContents = postIdentifier.split("/");
+
+      const postSender = postIdentifierContents[0];
+      const postId = postIdentifierContents[1];
+
+      if (postSender && postId) {
+        router.replace("/home");
+        router.replace("/home/feed");
+        return router.navigate(
+          `/home/feed/post?sender=${postSender}id=${postId}`
+        );
+      }
+    }
+
     router.replace("/home");
   };
 
@@ -132,6 +149,20 @@ export default function AuthProvider({ children, linking }: Props) {
     if (content === "profile") {
       const username = subParts[4];
       return router.navigate(`/home/feed/profilePage?username=${username}`);
+    }
+
+    if (content === "post") {
+      const postIdentifier = subParts[4]; // abovestars-123456
+
+      const postIdentifierContents = postIdentifier.split("/");
+
+      const postSender = postIdentifierContents[0];
+      const postId = postIdentifierContents[1];
+
+      if (postSender && postId)
+        return router.navigate(
+          `/home/feed/post?sender=${postSender}id=${postId}`
+        );
     }
 
     router.replace("/home");
