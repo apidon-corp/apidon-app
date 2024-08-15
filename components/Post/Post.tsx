@@ -10,7 +10,7 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import firestore from "@react-native-firebase/firestore";
 import { formatDistanceToNowStrict } from "date-fns";
 import { Image } from "expo-image";
-import { router, usePathname } from "expo-router";
+import { Stack, router, usePathname } from "expo-router";
 import { useSetAtom } from "jotai";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -43,6 +43,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
   const [loading, setLoading] = useState(false);
 
   const [postDocData, setPostDocData] = useState<PostServerData | null>(null);
+  const [postNotFound, setPostNotFound] = useState(false);
   const [postSenderData, setPostSenderData] = useState<UserInServer | null>(
     null
   );
@@ -92,7 +93,8 @@ const Post = React.memo(({ postDocPath }: Props) => {
       .onSnapshot(
         (snapshot) => {
           if (!snapshot.exists) {
-            console.log("Post's realtime data can not be fecthed.");
+            console.log("Post is not found.");
+            setPostNotFound(true);
             return setLoading(false);
           }
           const postDocData = snapshot.data() as PostServerData;
@@ -143,7 +145,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
       );
 
     return () => unsubscribe();
-  }, [authStatus, postDocData?.senderUsername]);
+  }, [authStatus, postDocData]);
 
   // Dynamic Data Fetching - Post Sender Data
   useEffect(() => {
@@ -368,6 +370,18 @@ const Post = React.memo(({ postDocPath }: Props) => {
     }
   };
 
+  function ScreenTitle({ isCollectible }: { isCollectible: boolean }) {
+    if (isCollectible) return <></>;
+
+    return (
+      <Stack.Screen
+        options={{
+          title: "Post",
+        }}
+      />
+    );
+  }
+
   if (loading)
     return (
       <View
@@ -378,14 +392,32 @@ const Post = React.memo(({ postDocPath }: Props) => {
           justifyContent: "center",
         }}
       >
-        <ActivityIndicator size="large" color="white" />
+        <ActivityIndicator color="white" />
       </View>
     );
+
+  if (postNotFound) {
+    return (
+      <View
+        style={{
+          width: "100%",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Text>Post not found.</Text>
+      </View>
+    );
+  }
 
   if (!postDocData || !postSenderData || postDeleted) return <></>;
 
   return (
     <>
+      <ScreenTitle
+        isCollectible={postDocData.collectibleStatus.isCollectible}
+      />
+
       <Animated.View
         id="post-root"
         style={{

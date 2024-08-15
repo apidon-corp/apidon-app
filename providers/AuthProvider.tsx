@@ -135,7 +135,7 @@ export default function AuthProvider({ children, linking }: Props) {
         router.replace("/home");
         router.replace("/home/feed");
         return router.navigate(
-          `/home/feed/post?sender=${postSender}id=${postId}`
+          `/home/feed/post?sender=${postSender}&id=${postId}`
         );
       }
     }
@@ -164,7 +164,7 @@ export default function AuthProvider({ children, linking }: Props) {
 
       if (postSender && postId)
         return router.navigate(
-          `/home/feed/post?sender=${postSender}id=${postId}`
+          `/home/feed/post?sender=${postSender}&id=${postId}`
         );
     }
 
