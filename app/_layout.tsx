@@ -5,7 +5,7 @@ import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect, useState } from "react";
+import { SetStateAction, useEffect, useState } from "react";
 import "react-native-reanimated";
 
 import AuthProvider from "@/providers/AuthProvider";
@@ -37,11 +37,15 @@ type Props = {
     isInitial: boolean;
     url: string;
   };
+  setLinking: React.Dispatch<SetStateAction<{
+    isInitial: boolean;
+    url: string;
+}>>
 };
 
-function RootLayoutNav({ linking }: Props) {
+function RootLayoutNav({ linking, setLinking }: Props) {
   return (
-    <AuthProvider linking={linking}>
+    <AuthProvider linking={linking} setLinking={setLinking}>
       <NotificationProvider>
         <StatusBar barStyle="light-content" />
         <ThemeProvider value={DarkTheme}>
@@ -226,7 +230,7 @@ function RootLayout() {
     return <PlaceholderForWaiting />;
   }
 
-  return <RootLayoutNav linking={linking} />;
+  return <RootLayoutNav linking={linking} setLinking={setLinking} />;
 }
 
 export default RootLayout;

@@ -6,6 +6,7 @@ import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
 import {
   ReactNode,
+  SetStateAction,
   createContext,
   useContext,
   useEffect,
@@ -19,6 +20,12 @@ type Props = {
     isInitial: boolean;
     url: string;
   };
+  setLinking: React.Dispatch<
+    SetStateAction<{
+      isInitial: boolean;
+      url: string;
+    }>
+  >;
 };
 
 type AuthContextType = {
@@ -31,7 +38,7 @@ const AuthContext = createContext<AuthContextType>({
   setAuthStatus: () => {},
 });
 
-export default function AuthProvider({ children, linking }: Props) {
+export default function AuthProvider({ children, linking, setLinking }: Props) {
   const [authStatus, setAuthStatus] = useState<AuthStatus>("loading");
 
   const authStatusRef = useRef<AuthStatus>("loading");
@@ -87,7 +94,8 @@ export default function AuthProvider({ children, linking }: Props) {
     }
 
     setAuthStatus("authenticated");
-    return handleInitialLinking(linking.url);
+
+    if (!linking.url) return router.replace("/home");
   };
 
   useEffect(() => {
@@ -103,73 +111,83 @@ export default function AuthProvider({ children, linking }: Props) {
   }, [authStatus]);
 
   useEffect(() => {
-    if (linking.isInitial) return;
-    if (!linking.url) return;
     if (authStatus !== "authenticated") return;
+    if (!linking.url) return;
 
-    handleLinking(linking.url);
+    handleLinking(linking.url, linking.isInitial);
   }, [linking.url, linking.isInitial, authStatus]);
 
-  const handleInitialLinking = (linking: string) => {
-    const subParts = linking.split("/");
+  function delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
 
-    const content = subParts[3];
+  const handleLinking = async (linking: string, isInitial: boolean) => {
+    if (!linking) return;
+    setLinking({ isInitial: false, url: "" });
 
-    if (content === "profile") {
-      const username = subParts[4];
-      if (username) {
-        router.replace("/home");
-        router.replace("/home/feed");
-        return router.navigate(`/home/feed/profilePage?username=${username}`);
+    if (isInitial) {
+      const subParts = linking.split("/");
+
+      const content = subParts[3];
+
+      if (content === "profile") {
+        const username = subParts[4];
+        if (username) {
+          router.replace("/home");
+
+          await delay(1);
+
+          return router.navigate(`/home/feed/profilePage?username=${username}`);
+        }
       }
-    }
 
-    if (content === "post") {
-      const postIdentifier = subParts[4];
+      if (content === "post") {
+        const postIdentifier = subParts[4];
 
-      const postIdentifierContents = postIdentifier.split("-");
+        const postIdentifierContents = postIdentifier.split("-");
 
-      const postSender = postIdentifierContents[0];
-      const postId = postIdentifierContents[1];
+        const postSender = postIdentifierContents[0];
+        const postId = postIdentifierContents[1];
 
-      if (postSender && postId) {
-        router.replace("/home");
-        router.replace("/home/feed");
-        return router.navigate(
-          `/home/feed/post?sender=${postSender}&id=${postId}`
-        );
+        if (postSender && postId) {
+          router.replace("/home");
+
+          await delay(1);
+
+          return router.navigate(
+            `/home/feed/post?sender=${postSender}&id=${postId}`
+          );
+        }
       }
+
+      router.replace("/home");
+    } else {
+      const subParts = linking.split("/");
+
+      const content = subParts[3];
+
+      if (content === "profile") {
+        const username = subParts[4];
+        if (username)
+          return router.navigate(`/home/feed/profilePage?username=${username}`);
+      }
+
+      if (content === "post") {
+        const postIdentifier = subParts[4];
+
+        const postIdentifierContents = postIdentifier.split("-");
+
+        const postSender = postIdentifierContents[0];
+        const postId = postIdentifierContents[1];
+
+        if (postSender && postId)
+          return router.navigate(
+            `/home/feed/post?sender=${postSender}&id=${postId}`
+          );
+      }
+
+      router.replace("/home");
     }
-
-    router.replace("/home");
-  };
-
-  const handleLinking = (linking: string) => {
-    const subParts = linking.split("/");
-
-    const content = subParts[3];
-
-    if (content === "profile") {
-      const username = subParts[4];
-      if (username)
-        return router.navigate(`/home/feed/profilePage?username=${username}`);
-    }
-
-    if (content === "post") {
-      const postIdentifier = subParts[4];
-
-      const postIdentifierContents = postIdentifier.split("-");
-
-      const postSender = postIdentifierContents[0];
-      const postId = postIdentifierContents[1];
-
-      if (postSender && postId)
-        return router.navigate(
-          `/home/feed/post?sender=${postSender}&id=${postId}`
-        );
-    }
-
-    router.replace("/home");
   };
 
   return (
