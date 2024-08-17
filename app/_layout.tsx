@@ -3,13 +3,13 @@ import "expo-dev-client";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { SetStateAction, useEffect, useState } from "react";
 import "react-native-reanimated";
 
 import AuthProvider from "@/providers/AuthProvider";
-import { Alert, Dimensions, StatusBar, View } from "react-native";
+import { Alert, Dimensions, Linking, StatusBar, View } from "react-native";
 
 import NotificationProvider from "@/providers/NotificationProvider";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
@@ -32,65 +32,74 @@ export const unstable_settings = {
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-function RootLayoutNav() {
+type Props = {
+  linking: {
+    isInitial: boolean;
+    url: string;
+  };
+  setLinking: React.Dispatch<SetStateAction<{
+    isInitial: boolean;
+    url: string;
+}>>
+};
+
+function RootLayoutNav({ linking, setLinking }: Props) {
   return (
-    <>
-      <AuthProvider>
-        <NotificationProvider>
-          <StatusBar barStyle="light-content" />
-          <ThemeProvider value={DarkTheme}>
-            <GestureHandlerRootView
-              style={{
-                flex: 1,
-              }}
-            >
-              <BottomSheetModalProvider>
-                <Stack>
-                  <Stack.Screen
-                    name="(modals)"
-                    options={{
-                      headerShown: false,
-                      presentation: "modal",
-                    }}
-                  />
+    <AuthProvider linking={linking} setLinking={setLinking}>
+      <NotificationProvider>
+        <StatusBar barStyle="light-content" />
+        <ThemeProvider value={DarkTheme}>
+          <GestureHandlerRootView
+            style={{
+              flex: 1,
+            }}
+          >
+            <BottomSheetModalProvider>
+              <Stack>
+                <Stack.Screen
+                  name="(modals)"
+                  options={{
+                    headerShown: false,
+                    presentation: "modal",
+                  }}
+                />
 
-                  <Stack.Screen
-                    name="auth"
-                    options={{
-                      headerShown: false,
-                      title: "Auth",
-                    }}
-                  />
+                <Stack.Screen
+                  name="auth"
+                  options={{
+                    headerShown: false,
+                    title: "Auth",
+                  }}
+                />
 
-                  <Stack.Screen
-                    name="home"
-                    options={{
-                      title: "Home",
-                      headerShown: false,
-                    }}
-                  />
+                <Stack.Screen
+                  name="home"
+                  options={{
+                    title: "Home",
+                    headerShown: false,
+                  }}
+                />
 
-                  <Stack.Screen
-                    name="index"
-                    options={{
-                      title: "index",
-                      headerShown: false,
-                    }}
-                  />
+                <Stack.Screen
+                  name="index"
+                  options={{
+                    title: "index",
+                    headerShown: false,
+                  }}
+                />
 
-                  <Stack.Screen
-                    name="+not-found"
-                    options={{
-                      title: "Not Found",
-                    }}
-                  />
-                </Stack>
-              </BottomSheetModalProvider>
-            </GestureHandlerRootView>
-          </ThemeProvider>
-        </NotificationProvider>
-      </AuthProvider>
-    </>
+                <Stack.Screen
+                  name="+not-found"
+                  options={{
+                    title: "Not Found",
+                  }}
+                />
+              </Stack>
+            </BottomSheetModalProvider>
+          </GestureHandlerRootView>
+        </ThemeProvider>
+      </NotificationProvider>
+    </AuthProvider>
   );
 }
 
@@ -129,6 +138,53 @@ function RootLayout() {
 
   const { versionStatus } = useCheckUpdate();
 
+  const [linking, setLinking] = useState<{
+    isInitial: boolean;
+    url: string;
+  }>({
+    isInitial: true,
+    url: "",
+  });
+
+  useEffect(() => {
+    // Handle the initial URL if the app is opened via a Universal Link
+    const handleInitialURL = async () => {
+      const initialUrl = await Linking.getInitialURL();
+
+      if (!initialUrl) return;
+
+      const timeStampedURL = initialUrl + "/" + Date.now().toString();
+
+      setLinking({
+        isInitial: true,
+        url: timeStampedURL,
+      });
+    };
+
+    handleInitialURL();
+
+    // Listen for incoming URLs when the app is already open
+    const subscription = Linking.addListener("url", (event) => {
+      const url = event.url;
+
+      if (!url) return;
+      const timeStampedURL = url + "/" + Date.now().toString();
+
+      // To prevent "auto" redirecting....
+      // Not a good solution.
+      if (router.canGoBack()) router.back();
+
+      setLinking({
+        isInitial: false,
+        url: timeStampedURL,
+      });
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
@@ -158,6 +214,7 @@ function RootLayout() {
     );
     return <PlaceholderForWaiting />;
   }
+
   if (versionStatus === "updateNeeded") {
     Alert.alert(
       "New update available",
@@ -173,7 +230,7 @@ function RootLayout() {
     return <PlaceholderForWaiting />;
   }
 
-  return <RootLayoutNav />;
+  return <RootLayoutNav linking={linking} setLinking={setLinking} />;
 }
 
 export default RootLayout;

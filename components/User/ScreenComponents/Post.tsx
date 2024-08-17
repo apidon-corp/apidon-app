@@ -1,7 +1,8 @@
 import Post from "@/components/Post/Post";
+import Text from "@/components/Text/Text";
 import { useLocalSearchParams } from "expo-router";
 import React from "react";
-import { FlatList } from "react-native";
+import { FlatList, View } from "react-native";
 
 const post = () => {
   const { sender, id } = useLocalSearchParams<{
@@ -9,14 +10,28 @@ const post = () => {
     id: string;
   }>();
 
-  if (!sender || !id) return <></>;
+  if (!sender || !id)
+    return (
+      <View
+        style={{
+          width: "100%",
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Text>Sender or identifier is missing.</Text>
+      </View>
+    );
 
   const postDocPath = `users/${sender}/posts/${id}`;
 
   return (
     <FlatList
+      showsVerticalScrollIndicator={false}
       data={[postDocPath]}
       renderItem={({ item }) => <Post postDocPath={item} />}
+      keyExtractor={(item) => item}
     />
   );
 };

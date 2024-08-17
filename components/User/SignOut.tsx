@@ -1,8 +1,8 @@
-import { ActivityIndicator, Alert, Pressable } from "react-native";
-import React, { useState } from "react";
-import auth from "@react-native-firebase/auth";
 import { Text } from "@/components/Text/Text";
 import { updateNotificationTokenOnFirebase } from "@/utils/notificationHelpers";
+import auth from "@react-native-firebase/auth";
+import React, { useState } from "react";
+import { ActivityIndicator, Alert, Pressable } from "react-native";
 
 const SignOut = () => {
   const [loading, setLoading] = useState(false);
@@ -24,6 +24,7 @@ const SignOut = () => {
     }
 
     await auth().signOut();
+
     setLoading(false);
   };
 

@@ -7,6 +7,7 @@ import { Feather } from "@expo/vector-icons";
 import auth from "@react-native-firebase/auth";
 import { Image } from "expo-image";
 import { router, usePathname } from "expo-router";
+import * as Sharing from "expo-sharing";
 import { useSetAtom } from "jotai";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
@@ -80,6 +81,26 @@ const Header = ({ userData }: Props) => {
     router.push("/(modals)/settings");
   };
 
+  const handleShareButton = async () => {
+    try {
+      const isSharingAvailable = await Sharing.isAvailableAsync();
+      if (!isSharingAvailable) return;
+
+      const baseURL = process.env.EXPO_PUBLIC_APP_LINK_BASE_URL || "";
+      if (!baseURL) return;
+
+      const url = baseURL + "/" + "profile" + "/" + userData.username;
+
+      await Sharing.shareAsync(url, {
+        dialogTitle: `Share ${userData.fullname} with your friends!`,
+        mimeType: "text/plain",
+        UTI: "public.plain-text",
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   if (!userData) return <ActivityIndicator size="large" color="white" />;
 
   return (
@@ -91,13 +112,31 @@ const Header = ({ userData }: Props) => {
         gap: 5,
       }}
     >
-      {userOwnsPage && (
-        <View style={{ width: "100%", alignItems: "flex-end" }}>
-          <Pressable onPress={handlePressSettingsIcon}>
-            <Feather name="settings" size={23} color="white" />
+      <View
+        id="settings-share-part"
+        style={{
+          width: "100%",
+          gap: 15,
+        }}
+      >
+        {userOwnsPage && (
+          <View style={{ width: "100%", alignItems: "flex-end" }}>
+            <Pressable onPress={handlePressSettingsIcon}>
+              <Feather name="settings" size={23} color="white" />
+            </Pressable>
+          </View>
+        )}
+        <View
+          style={{
+            width: "100%",
+            alignItems: "flex-end",
+          }}
+        >
+          <Pressable onPress={handleShareButton}>
+            <Feather name="share-2" size={23} color="white" />
           </Pressable>
         </View>
-      )}
+      </View>
 
       <Image
         source={userData.profilePhoto || require("@/assets/images/user.jpg")}

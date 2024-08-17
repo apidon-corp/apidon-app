@@ -1,3 +1,4 @@
+import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
 import { useAuth } from "@/providers/AuthProvider";
@@ -8,14 +9,13 @@ import {
 } from "@/types/Trade";
 import { UserInServer } from "@/types/User";
 import firestore from "@react-native-firebase/firestore";
+import { useAtomValue } from "jotai";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Dimensions, View } from "react-native";
+import { ActivityIndicator, ScrollView, View } from "react-native";
 import { FlatList, Switch } from "react-native-gesture-handler";
 import Post from "../Post/Post";
 import Header from "./Header";
 import NftContent from "./NftContent";
-import { useAtomValue } from "jotai";
-import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 
 type Props = {
   username: string;
@@ -38,11 +38,11 @@ const UserContent = ({ username }: Props) => {
     boughtCollectibles: [],
   });
 
-  const [userData, setUserData] = useState<UserInServer | null>(null);
+  const [userData, setUserData] = useState<UserInServer | null | "not-found">(
+    null
+  );
 
   const [toggleValue, setToggleValue] = useState<"posts" | "nfts">("nfts");
-
-  const { height } = Dimensions.get("window");
 
   const onToggleValueChange = () => {
     setToggleValue((prev) => (prev === "posts" ? "nfts" : "posts"));
@@ -73,7 +73,7 @@ const UserContent = ({ username }: Props) => {
     return () => unsubscribe();
   }, [username, authStatus]);
 
-  // NFTs Fetching
+  // Collectible Fetching
   useEffect(() => {
     if (authStatus !== "authenticated") return;
     if (!username) return;
@@ -152,8 +152,8 @@ const UserContent = ({ username }: Props) => {
       .onSnapshot(
         (snapshot) => {
           if (!snapshot.exists) {
-            console.error("User's realtime data can not be fecthed.");
-            return setUserData(null);
+            console.error("User is not found.");
+            return setUserData("not-found");
           }
 
           const userDocData = snapshot.data() as UserInServer;
@@ -180,18 +180,36 @@ const UserContent = ({ username }: Props) => {
     return (
       <View
         style={{
+          flex: 1,
           alignItems: "center",
           justifyContent: "center",
-          height: height,
         }}
       >
-        <ActivityIndicator color="white" size="large" />
+        <ActivityIndicator color="white" />
       </View>
     );
 
+  if (userData === "not-found") {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Text>User not found.</Text>
+      </View>
+    );
+  }
+
   return (
-    <>
+    <ScrollView
+      keyboardShouldPersistTaps={"handled"}
+      showsVerticalScrollIndicator={false}
+    >
       <Header userData={userData} />
+
       <View
         id="toggle"
         style={{
@@ -249,7 +267,7 @@ const UserContent = ({ username }: Props) => {
           />
         </>
       )}
-    </>
+    </ScrollView>
   );
 };
 

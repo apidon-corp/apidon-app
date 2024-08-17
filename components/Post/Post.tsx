@@ -10,7 +10,7 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import firestore from "@react-native-firebase/firestore";
 import { formatDistanceToNowStrict } from "date-fns";
 import { Image } from "expo-image";
-import { router, usePathname } from "expo-router";
+import { Stack, router, usePathname } from "expo-router";
 import { useSetAtom } from "jotai";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -31,6 +31,8 @@ import NFTTag from "./NFT/NFTTag";
 import NftBottomSheetContent from "./NFT/NftBottomSheetContent";
 import PostImage from "./PostImage";
 
+import * as Sharing from "expo-sharing";
+
 type Props = {
   postDocPath: string;
 };
@@ -41,6 +43,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
   const [loading, setLoading] = useState(false);
 
   const [postDocData, setPostDocData] = useState<PostServerData | null>(null);
+  const [postNotFound, setPostNotFound] = useState(false);
   const [postSenderData, setPostSenderData] = useState<UserInServer | null>(
     null
   );
@@ -77,8 +80,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
   const pathname = usePathname();
 
-  const [isImageZooming, setIsImageZooming] = useState(false);
-
   // Dynamic Data Fetching / Post Object
   useEffect(() => {
     if (authStatus !== "authenticated") return;
@@ -92,7 +93,8 @@ const Post = React.memo(({ postDocPath }: Props) => {
       .onSnapshot(
         (snapshot) => {
           if (!snapshot.exists) {
-            console.log("Post's realtime data can not be fecthed.");
+            console.log("Post is not found.");
+            setPostNotFound(true);
             return setLoading(false);
           }
           const postDocData = snapshot.data() as PostServerData;
@@ -143,7 +145,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
       );
 
     return () => unsubscribe();
-  }, [authStatus, postDocData?.senderUsername]);
+  }, [authStatus, postDocData]);
 
   // Dynamic Data Fetching - Post Sender Data
   useEffect(() => {
@@ -339,6 +341,47 @@ const Post = React.memo(({ postDocPath }: Props) => {
     return console.log("Hmm");
   }
 
+  const handleShareButton = async () => {
+    if (!postDocData) return;
+
+    try {
+      const isSharingAvailable = await Sharing.isAvailableAsync();
+      if (!isSharingAvailable) return;
+
+      const baseURL = process.env.EXPO_PUBLIC_APP_LINK_BASE_URL || "";
+      if (!baseURL) return;
+
+      const url =
+        baseURL +
+        "/" +
+        "post" +
+        "/" +
+        postDocData.senderUsername +
+        "-" +
+        postDocData.id;
+
+      await Sharing.shareAsync(url, {
+        dialogTitle: `Share this post with your friends!`,
+        mimeType: "text/plain",
+        UTI: "public.plain-text",
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  function ScreenTitle({ isCollectible }: { isCollectible: boolean }) {
+    if (isCollectible) return <></>;
+
+    return (
+      <Stack.Screen
+        options={{
+          title: "Post",
+        }}
+      />
+    );
+  }
+
   if (loading)
     return (
       <View
@@ -349,14 +392,32 @@ const Post = React.memo(({ postDocPath }: Props) => {
           justifyContent: "center",
         }}
       >
-        <ActivityIndicator size="large" color="white" />
+        <ActivityIndicator color="white" />
       </View>
     );
+
+  if (postNotFound) {
+    return (
+      <View
+        style={{
+          width: "100%",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Text>Post not found.</Text>
+      </View>
+    );
+  }
 
   if (!postDocData || !postSenderData || postDeleted) return <></>;
 
   return (
     <>
+      <ScreenTitle
+        isCollectible={postDocData.collectibleStatus.isCollectible}
+      />
+
       <Animated.View
         id="post-root"
         style={{
@@ -574,9 +635,10 @@ const Post = React.memo(({ postDocPath }: Props) => {
               />
             </View>
 
-            <View
+            <Pressable
+              onPress={handleShareButton}
               style={{
-                opacity: 0.5,
+                opacity: 1,
                 width: "33%",
                 justifyContent: "center",
                 alignItems: "flex-end",
@@ -584,7 +646,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
               }}
             >
               <Feather name="share-2" size={24} color="white" />
-            </View>
+            </Pressable>
           </View>
 
           <Pressable onPress={handleOpenCommentsModal} style={{ height: 50 }}>

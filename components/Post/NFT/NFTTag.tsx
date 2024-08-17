@@ -1,11 +1,11 @@
 import { apidonPink } from "@/constants/Colors";
 import { BottomSheetModalMethods } from "@gorhom/bottom-sheet/lib/typescript/types";
 import React from "react";
-import { Easing, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { Text } from "@/components/Text/Text";
 
-import TextTicker from "react-native-text-ticker";
+import { Marquee } from "@animatereactnative/marquee";
 
 type Props = {
   username: string;
@@ -28,17 +28,16 @@ const NFTTag = ({ username, nftOptionsModalRef }: Props) => {
         borderWidth: 2,
         borderColor: apidonPink,
         borderRadius: 5,
-        paddingTop: 5,
-        paddingHorizontal: 5,
+        padding: 2,
       }}
     >
-      <TextTicker
-        style={{ textAlign: "center" }}
-        duration={10000}
-        animationType="scroll"
-        repeatSpacer={50}
-        scroll={false}
-        easing={Easing.linear}
+      <Marquee
+        spacing={5}
+        speed={0.40}
+        style={{
+          alignItems: "center",
+          justifyContent: "center",
+        }}
       >
         <View
           style={{
@@ -70,7 +69,7 @@ const NFTTag = ({ username, nftOptionsModalRef }: Props) => {
             {username}
           </Text>
         </View>
-      </TextTicker>
+      </Marquee>
     </Pressable>
   );
 };
