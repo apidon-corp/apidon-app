@@ -3,13 +3,13 @@ import "expo-dev-client";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack, router } from "expo-router";
+import { Stack, router, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SetStateAction, useEffect, useState } from "react";
 import "react-native-reanimated";
 
 import AuthProvider from "@/providers/AuthProvider";
-import { Alert, Dimensions, Linking, StatusBar, View } from "react-native";
+import { Alert, Linking, StatusBar } from "react-native";
 
 import NotificationProvider from "@/providers/NotificationProvider";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
@@ -21,8 +21,8 @@ export {
 } from "expo-router";
 
 import useAppCheck from "@/hooks/useAppCheck";
-import { Image } from "expo-image";
 import useCheckUpdate from "@/hooks/useCheckUpdate";
+import { Image } from "expo-image";
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
@@ -37,10 +37,12 @@ type Props = {
     isInitial: boolean;
     url: string;
   };
-  setLinking: React.Dispatch<SetStateAction<{
-    isInitial: boolean;
-    url: string;
-}>>
+  setLinking: React.Dispatch<
+    SetStateAction<{
+      isInitial: boolean;
+      url: string;
+    }>
+  >;
 };
 
 function RootLayoutNav({ linking, setLinking }: Props) {
@@ -104,26 +106,8 @@ function RootLayoutNav({ linking, setLinking }: Props) {
 }
 
 function PlaceholderForWaiting() {
-  const { width: screenWidth } = Dimensions.get("screen");
-  const width = screenWidth / 4.16;
-
   return (
-    <View
-      style={{
-        width: "100%",
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Image
-        source={require("@/assets/images/logo.png")}
-        style={{
-          width: width,
-          height: width,
-        }}
-      />
-    </View>
+    <Image source={require("@/assets/images/splash.png")} style={{ flex: 1 }} />
   );
 }
 
@@ -146,6 +130,9 @@ function RootLayout() {
     url: "",
   });
 
+  const pathname = usePathname();
+
+  // Linking
   useEffect(() => {
     // Handle the initial URL if the app is opened via a Universal Link
     const handleInitialURL = async () => {
@@ -191,14 +178,15 @@ function RootLayout() {
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
+    if (
+      loaded &&
+      appCheckLoaded &&
+      versionStatus === "hasLatestVersion" &&
+      pathname !== "/"
+    ) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
-
-  if (!loaded || !appCheckLoaded || versionStatus === "loading") {
-    return <PlaceholderForWaiting />;
-  }
+  }, [loaded, appCheckLoaded, versionStatus, pathname]);
 
   if (versionStatus === "error") {
     Alert.alert(

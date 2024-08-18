@@ -5,7 +5,7 @@ import firestore from "@react-native-firebase/firestore";
 import useAppCheck from "./useAppCheck";
 
 const MAX_RETRIES = 5;
-const RETRY_DELAY = 3000;
+const RETRY_DELAY = 1500;
 
 const useCheckUpdate = () => {
   const [versionStatus, setVersionStatus] = useState<
@@ -30,8 +30,6 @@ const useCheckUpdate = () => {
       );
       return setVersionStatus("error");
     }
-
-    let latestVersion: string;
 
     try {
       const versionDocSnapshot = await firestore().doc(`config/version`).get();
