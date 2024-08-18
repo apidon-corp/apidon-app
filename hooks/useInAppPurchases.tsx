@@ -19,6 +19,8 @@ let appStoreProductIds = [
   "1000_dollar_in_app_credit",
 ];
 
+let appStoreSubscriptionIds = ["dev_apidon_collector_10_1m"];
+
 if (envTypeForIAP === "test") {
   let testEnvironmentAppStoreProcuductIds = appStoreProductIds.map(
     (productId) => `${productId}_test`
@@ -30,6 +32,9 @@ export const useInAppPurchases = () => {
   const { authStatus } = useAuth();
 
   const [products, setProducts] = useState<PurchasesStoreProduct[]>([]);
+  const [subscriptions, setSubscriptions] = useState<PurchasesStoreProduct[]>(
+    []
+  );
 
   if (authStatus !== "authenticated") {
     console.log("User is not logged in to use in app purchases");
@@ -65,6 +70,24 @@ export const useInAppPurchases = () => {
     }
   }
 
+  async function getSubscriptions() {
+    try {
+      const subscriptionsFetched = await Purchases.getProducts(
+        appStoreSubscriptionIds
+      );
+
+      return setSubscriptions(subscriptionsFetched);
+    } catch (error) {
+      console.error("Error on fetching products:", error);
+      crashlytics().recordError(
+        new Error(
+          `Error on fetching subscriptions: ${error} Env Type for iap: ${envTypeForIAP} \n Subscriptions On App: ${appStoreProductIds} \n Apple API Key: ${appleAPIKey} \n Display Name: ${currentUserDisplayName}`
+        )
+      );
+      return setSubscriptions([]);
+    }
+  }
+
   useEffect(() => {
     if (currentUserDisplayName && appleAPIKey) {
       Purchases.configure({
@@ -72,10 +95,12 @@ export const useInAppPurchases = () => {
         appUserID: currentUserDisplayName,
       });
       getProducts();
+      getSubscriptions();
     }
   }, [currentUserDisplayName, appleAPIKey]);
 
   return {
     products,
+    subscriptions,
   };
 };
