@@ -3,55 +3,63 @@ import PlanBottomSheetContent from "@/components/Plans/PlanBottomSheetContent";
 import PlanCard from "@/components/Plans/PlanCard";
 import Text from "@/components/Text/Text";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
-import { BubbleId, PlanCardData } from "@/types/Plans";
+import {
+  BottomSheetModalData,
+  PlanCardData,
+  SubscriptionIdentifiers,
+  collectorPlanCardData,
+  creatorPlanCardData,
+  freePlanCardData,
+  visionaryPlanCardData,
+} from "@/types/Plans";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Dimensions, View } from "react-native";
 
 import Carousel from "react-native-reanimated-carousel";
-
-const planCardDatas: PlanCardData[] = [
-  {
-    title: "Free",
-    canCollectSoldOutItems: false,
-    collectibleLimit: 5,
-    stockLimit: 10,
-    price: "free",
-  },
-  {
-    title: "Collector",
-    canCollectSoldOutItems: true,
-    collectibleLimit: 10,
-    stockLimit: 20,
-    price: 10,
-  },
-  {
-    title: "Creator",
-    canCollectSoldOutItems: true,
-    collectibleLimit: 50,
-    stockLimit: 100,
-    price: 20,
-  },
-  {
-    title: "Visioner",
-    canCollectSoldOutItems: true,
-    collectibleLimit: 500,
-    stockLimit: 1000,
-    price: 30,
-  },
-];
 
 const plans = () => {
   const { width } = Dimensions.get("window");
 
   const planInformationBottomSheetModalRef = useRef<BottomSheetModal>(null);
 
-  const [informationBubbleId, setInformationBubbleId] =
-    useState<BubbleId>("collect-sold-out");
+  const [bottomSheetData, setBottomSheetData] = useState<BottomSheetModalData>({
+    description: "",
+    title: "",
+  });
 
   const { subscriptions } = useInAppPurchases();
 
-  console.log(subscriptions);
+  const [planCardDatas, setPlanCardDatas] = useState<PlanCardData[]>([]);
+
+  useEffect(() => {
+    const planCardDatasFetched: PlanCardData[] = [];
+
+    for (const subscription of subscriptions) {
+      let planCardData: PlanCardData | null = null;
+
+      const identifier = subscription.identifier as SubscriptionIdentifiers;
+
+      if (identifier === "dev_apidon_collector_10_1m")
+        planCardData = collectorPlanCardData;
+
+      if (identifier === "dev_apidon_creator_10_1m")
+        planCardData = creatorPlanCardData;
+
+      if (identifier === "dev_apidon_visionary_10_1m")
+        planCardData = visionaryPlanCardData;
+
+      if (planCardData) planCardDatasFetched.push(planCardData);
+    }
+
+    const freePlanCardDataFetched = freePlanCardData;
+
+    planCardDatasFetched.push(freePlanCardDataFetched);
+
+    planCardDatasFetched.sort((a, b) => a.price - b.price);
+
+    setPlanCardDatas(planCardDatasFetched);
+  }, [subscriptions]);
 
   return (
     <>
@@ -90,7 +98,7 @@ const plans = () => {
             <PlanCard
               planCardData={item}
               bottomSheetModalRef={planInformationBottomSheetModalRef}
-              setInformationBubbleId={setInformationBubbleId}
+              setBottomSheetData={setBottomSheetData}
             />
           )}
           width={width * 0.85}
@@ -103,7 +111,10 @@ const plans = () => {
         snapPoint="40%"
         backgroundColor="#1B1B1B"
       >
-        <PlanBottomSheetContent detailId={informationBubbleId} />
+        <PlanBottomSheetContent
+          description={bottomSheetData.description}
+          title={bottomSheetData.title}
+        />
       </CustomBottomModalSheet>
     </>
   );

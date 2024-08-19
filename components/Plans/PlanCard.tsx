@@ -1,234 +1,311 @@
-import React from "react";
-import { Pressable, View } from "react-native";
-import Text from "../Text/Text";
-import { BubbleId, PlanCardData } from "@/types/Plans";
-import { Ionicons } from "@expo/vector-icons";
+import { BottomSheetModalData, PlanCardData } from "@/types/Plans";
 import { BottomSheetModalMethods } from "@gorhom/bottom-sheet/lib/typescript/types";
-import Purchases, {
-  PRODUCT_CATEGORY,
-  PRODUCT_TYPE,
-  PurchasesStoreProduct,
-} from "react-native-purchases";
+import React from "react";
+import { Pressable, ScrollView, View } from "react-native";
+import Purchases from "react-native-purchases";
+import Text from "../Text/Text";
+import FeatureObject from "./FeatureObject";
+
+import { BlurView } from "@react-native-community/blur";
 
 type Props = {
   planCardData: PlanCardData;
   bottomSheetModalRef: React.RefObject<BottomSheetModalMethods>;
-  setInformationBubbleId: React.Dispatch<React.SetStateAction<BubbleId>>;
+  setBottomSheetData: React.Dispatch<
+    React.SetStateAction<BottomSheetModalData>
+  >;
 };
 
 const PlanCard = ({
-  planCardData: {
-    title,
-    canCollectSoldOutItems,
-    collectibleLimit,
-    price,
-    stockLimit,
-  },
+  planCardData,
   bottomSheetModalRef,
-  setInformationBubbleId,
+  setBottomSheetData,
 }: Props) => {
-  const handlePressInformationBubble = (id: BubbleId) => {
-    setInformationBubbleId(id);
-    if (bottomSheetModalRef.current) bottomSheetModalRef.current.present();
-  };
-
   const handleSubscribeButton = async () => {
+    if (!planCardData.purchaseStoreProduct) return;
+
     try {
-      await Purchases.purchaseStoreProduct({
-        currencyCode: "USD",
-        description: "Take your first steps with Collector!",
-        discounts: [],
-        identifier: "dev_apidon_collector_10_1m",
-        introPrice: null,
-        price: 10,
-        pricePerMonth: 10,
-        pricePerMonthString: "$10.00",
-        pricePerWeek: 2.3,
-        pricePerWeekString: "$2.30",
-        pricePerYear: 120,
-        pricePerYearString: "$120.00",
-        priceString: "$10.00",
-        productCategory: PRODUCT_CATEGORY.SUBSCRIPTION,
-        productType: PRODUCT_TYPE.AUTO_RENEWABLE_SUBSCRIPTION,
-        subscriptionPeriod: "P1M",
-        title: "Collector (Monthly)",
-        defaultOption: null,
-        subscriptionOptions: null,
-        presentedOfferingIdentifier: null,
-        presentedOfferingContext: null,
-      });
+      await Purchases.purchaseStoreProduct(planCardData.purchaseStoreProduct);
     } catch (error) {}
   };
 
   return (
-    <View
-      id="root"
-      style={{
-        width: "100%",
-        flex: 1,
-        padding: 10,
-        gap: 15,
-      }}
-    >
-      <View
-        id="title-area"
-        style={{
+    <>
+      <ScrollView
+        id="root"
+        contentContainerStyle={{
           width: "100%",
           padding: 10,
-          backgroundColor: "rgba(255,255,255,0.2)",
-          justifyContent: "center",
-          alignItems: "center",
-          borderRadius: 10,
-        }}
-      >
-        <Text bold fontSize={18}>
-          {title}
-        </Text>
-      </View>
-
-      <View
-        id="plan-details"
-        style={{
-          width: "100%",
-          backgroundColor: "rgba(255, 255, 255, 0.1)",
-          padding: 10,
-          borderRadius: 10,
           gap: 15,
         }}
+        showsVerticalScrollIndicator={false}
       >
-        <Text bold fontSize={12} style={{ color: "white" }}>
-          Plan Details
-        </Text>
-
         <View
-          id="details-body"
+          id="title-area"
           style={{
             width: "100%",
+            padding: 10,
+            backgroundColor: "rgba(255,255,255,0.2)",
+            justifyContent: "center",
+            alignItems: "center",
+            borderRadius: 10,
+          }}
+        >
+          <Text bold fontSize={18}>
+            {planCardData.title}
+          </Text>
+        </View>
+
+        <View
+          id="collectible-details"
+          style={{
+            width: "100%",
+            backgroundColor: "rgba(255, 255, 255, 0.1)",
+            padding: 10,
+            borderRadius: 10,
             gap: 10,
           }}
         >
-          <View
-            id="can-collect-sold-out"
-            style={{
-              width: "100%",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexDirection: "row",
-            }}
-          >
-            <Pressable
-              onPress={() => {
-                handlePressInformationBubble("collect-sold-out");
-              }}
-              style={{
-                flexDirection: "row",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: 5,
-              }}
-            >
-              <Text fontSize={13}>Collect Sold Out</Text>
-              <Ionicons name="information-circle" size={18} color="gray" />
-            </Pressable>
-
-            {canCollectSoldOutItems ? (
-              <Ionicons name="checkmark-circle" size={24} color="green" />
-            ) : (
-              <Ionicons name="close-circle" size={24} color="red" />
-            )}
-          </View>
+          <Text bold style={{ color: "white" }}>
+            Collectibles
+          </Text>
 
           <View
-            id="collectible-limit"
+            id="collectibles-body"
             style={{
               width: "100%",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexDirection: "row",
+              gap: 10,
             }}
           >
-            <Pressable
-              onPress={() => {
-                handlePressInformationBubble("collectible-limit");
+            <FeatureObject
+              title="Undo Collectible"
+              isChecked={planCardData.collectible.undo}
+              bottomSheetModalData={{
+                title: "Undo Collectible",
+                description:
+                  "Allows you to undo the creation of a collectible. This feature helps prevent mistakes during the creation process.",
               }}
-              style={{
-                flexDirection: "row",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: 5,
-              }}
-            >
-              <Text fontSize={13}>Collectible Limit</Text>
-              <Ionicons name="information-circle" size={18} color="gray" />
-            </Pressable>
+              bottomSheetModalRef={bottomSheetModalRef}
+              setBottomSheetData={setBottomSheetData}
+            />
 
-            <Text fontSize={14} bold>
-              {collectibleLimit}
-            </Text>
-          </View>
-
-          <View
-            id="stock-limit"
-            style={{
-              width: "100%",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexDirection: "row",
-            }}
-          >
-            <Pressable
-              onPress={() => {
-                handlePressInformationBubble("stock-limit");
+            <FeatureObject
+              title="Create up-to 5"
+              isChecked={planCardData.collectible.upToFive}
+              bottomSheetModalData={{
+                title: "Create Up to 5 Collectibles",
+                description:
+                  "This feature allows you to create up to 5 collectibles. Ideal for small-scale creators or users who want to try the platform.",
               }}
-              style={{
-                flexDirection: "row",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: 5,
-              }}
-            >
-              <Text fontSize={13}>Stock Limit</Text>
-              <Ionicons name="information-circle" size={18} color="gray" />
-            </Pressable>
+              bottomSheetModalRef={bottomSheetModalRef}
+              setBottomSheetData={setBottomSheetData}
+            />
 
-            <Text fontSize={14} bold>
-              {stockLimit}
-            </Text>
+            <FeatureObject
+              title="Create up-to 10"
+              isChecked={planCardData.collectible.upToTen}
+              bottomSheetModalData={{
+                title: "Create Up to 10 Collectibles",
+                description:
+                  "Enables the creation of up to 10 collectibles. Perfect for users looking to expand their collection on a medium scale.",
+              }}
+              bottomSheetModalRef={bottomSheetModalRef}
+              setBottomSheetData={setBottomSheetData}
+            />
+
+            <FeatureObject
+              title="Create up-to 50"
+              isChecked={planCardData.collectible.upToFifthy}
+              bottomSheetModalData={{
+                title: "Create Up to 50 Collectibles",
+                description:
+                  "Allows you to create up to 50 collectibles. Suitable for users who have a larger following or want to offer more products.",
+              }}
+              bottomSheetModalRef={bottomSheetModalRef}
+              setBottomSheetData={setBottomSheetData}
+            />
+
+            <FeatureObject
+              title="Create up-to 100"
+              isChecked={planCardData.collectible.upToHundred}
+              bottomSheetModalData={{
+                title: "Create Up to 100 Collectibles",
+                description:
+                  "Grants the ability to create up to 100 collectibles. Ideal for power users or large-scale projects.",
+              }}
+              bottomSheetModalRef={bottomSheetModalRef}
+              setBottomSheetData={setBottomSheetData}
+            />
           </View>
         </View>
-      </View>
 
-      <View
-        id="subscribe-button"
-        style={{
-          width: "100%",
-          justifyContent: "center",
-          alignItems: "center",
-          display: price === "free" ? "none" : undefined,
-        }}
-      >
-        <Pressable
-          onPress={handleSubscribeButton}
+        <View
+          id="stock-details"
           style={{
-            width: "50%",
+            width: "100%",
+            backgroundColor: "rgba(255, 255, 255, 0.1)",
             padding: 10,
-            backgroundColor: "white",
             borderRadius: 10,
-            justifyContent: "center",
-            alignItems: "center",
+            gap: 10,
           }}
         >
-          <Text
-            fontSize={13}
+          <Text bold style={{ color: "white" }}>
+            Stocks
+          </Text>
+
+          <View
+            id="stock-body"
             style={{
-              color: "black",
+              width: "100%",
+              gap: 15,
             }}
           >
-            Subscribe for ${price}
+            <FeatureObject
+              title="Allow Collecting Sold Out"
+              isChecked={planCardData.stock.allowCollectingSoldOut}
+              bottomSheetModalData={{
+                title: "Allow Collecting Sold Out",
+                description:
+                  "This feature allows users to continue collecting items even after they are marked as sold out. Useful for maintaining engagement with popular items.",
+              }}
+              bottomSheetModalRef={bottomSheetModalRef}
+              setBottomSheetData={setBottomSheetData}
+            />
+
+            <FeatureObject
+              title="Stock Up to 10"
+              isChecked={planCardData.stock.upToTen}
+              bottomSheetModalData={{
+                title: "Stock Up to 10",
+                description:
+                  "Allows you to set a stock limit of up to 10 items for a collectible. Ideal for creating exclusive and limited items.",
+              }}
+              bottomSheetModalRef={bottomSheetModalRef}
+              setBottomSheetData={setBottomSheetData}
+            />
+
+            <FeatureObject
+              title="Stock Up to 50"
+              isChecked={planCardData.stock.upToFifty}
+              bottomSheetModalData={{
+                title: "Stock Up to 50",
+                description:
+                  "Allows you to set a stock limit of up to 50 items for a collectible. Suitable for reaching a larger audience while maintaining some exclusivity.",
+              }}
+              bottomSheetModalRef={bottomSheetModalRef}
+              setBottomSheetData={setBottomSheetData}
+            />
+
+            <FeatureObject
+              title="Stock Up to 100"
+              isChecked={planCardData.stock.upToHundred}
+              bottomSheetModalData={{
+                title: "Stock Up to 100",
+                description:
+                  "Enables setting a stock limit of up to 100 items for a collectible. Perfect for creators looking to engage with a broad audience.",
+              }}
+              bottomSheetModalRef={bottomSheetModalRef}
+              setBottomSheetData={setBottomSheetData}
+            />
+
+            <FeatureObject
+              title="Stock Up to 1000"
+              isChecked={planCardData.stock.upToThousand}
+              bottomSheetModalData={{
+                title: "Stock Up to 1000",
+                description:
+                  "Grants the ability to set a stock limit of up to 1000 items for a collectible. Ideal for mass distribution or popular items.",
+              }}
+              bottomSheetModalRef={bottomSheetModalRef}
+              setBottomSheetData={setBottomSheetData}
+            />
+          </View>
+        </View>
+
+        <View
+          id="support-details"
+          style={{
+            width: "100%",
+            backgroundColor: "rgba(255, 255, 255, 0.1)",
+            padding: 10,
+            borderRadius: 10,
+            gap: 10,
+          }}
+        >
+          <Text bold style={{ color: "white" }}>
+            Support
           </Text>
-        </Pressable>
+
+          <View
+            id="support-body"
+            style={{
+              width: "100%",
+              gap: 15,
+            }}
+          >
+            <FeatureObject
+              title="Priority Support"
+              isChecked={planCardData.support.priority}
+              bottomSheetModalData={{
+                title: "Priority Support",
+                description:
+                  "Gain access to priority support, ensuring your issues and inquiries are addressed promptly by our support team.",
+              }}
+              bottomSheetModalRef={bottomSheetModalRef}
+              setBottomSheetData={setBottomSheetData}
+            />
+          </View>
+        </View>
+
+        <View
+          style={{
+            display: planCardData.price === 0 ? "none" : undefined,
+            height: 80,
+          }}
+        />
+      </ScrollView>
+
+      <View
+        style={{
+          position: "absolute",
+          width: "100%",
+          bottom: 10,
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 10,
+          display: planCardData.price === 0 ? "none" : undefined,
+        }}
+      >
+        <BlurView
+          blurType="extraDark"
+          blurAmount={3}
+          reducedTransparencyFallbackColor="white"
+          style={{
+            width: "100%",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 10,
+            borderRadius: 20,
+          }}
+        >
+          <Pressable
+            onPress={handleSubscribeButton}
+            style={{
+              width: "65%",
+              padding: 10,
+              backgroundColor: "black",
+              borderRadius: 10,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Text bold fontSize={18}>
+              Subscribe for ${planCardData.price}
+            </Text>
+          </Pressable>
+        </BlurView>
       </View>
-    </View>
+    </>
   );
 };
 
