@@ -1,7 +1,7 @@
 import { BottomSheetModalData, PlanCardData } from "@/types/Plans";
 import { BottomSheetModalMethods } from "@gorhom/bottom-sheet/lib/typescript/types";
 import React from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Alert, Pressable, ScrollView, View } from "react-native";
 import Purchases from "react-native-purchases";
 import Text from "../Text/Text";
 import FeatureObject from "./FeatureObject";
@@ -26,7 +26,18 @@ const PlanCard = ({
 
     try {
       await Purchases.purchaseStoreProduct(planCardData.purchaseStoreProduct);
-    } catch (error) {}
+    } catch (error: any) {
+      if (error.userCancelled) return console.log("User cancelled");
+
+      Alert.alert("Error", "Error on purchasing product.");
+      console.error(
+        "Error purchasing product: \n",
+        planCardData.purchaseStoreProduct,
+        "\n",
+        error
+      );
+      console.error("Error on purchasing:", error);
+    }
   };
 
   return (
@@ -297,11 +308,11 @@ const PlanCard = ({
               borderRadius: 10,
               justifyContent: "center",
               alignItems: "center",
+              borderWidth: 1,
+              borderColor: "gray",
             }}
           >
-            <Text bold fontSize={18}>
-              Subscribe for ${planCardData.price}
-            </Text>
+            <Text fontSize={16}>Subscribe for ${planCardData.price}</Text>
           </Pressable>
         </BlurView>
       </View>

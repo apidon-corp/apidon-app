@@ -19,7 +19,11 @@ let appStoreProductIds = [
   "1000_dollar_in_app_credit",
 ];
 
-let appStoreSubscriptionIds = ["dev_apidon_collector_10_1m"];
+let appStoreSubscriptionIds = [
+  "dev_apidon_collector_10_1m",
+  "dev_apidon_creator_10_1m",
+  "dev_apidon_visionary_10_1m",
+];
 
 if (envTypeForIAP === "test") {
   let testEnvironmentAppStoreProcuductIds = appStoreProductIds.map(

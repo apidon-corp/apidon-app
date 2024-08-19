@@ -41,13 +41,22 @@ const plans = () => {
       const identifier = subscription.identifier as SubscriptionIdentifiers;
 
       if (identifier === "dev_apidon_collector_10_1m")
-        planCardData = collectorPlanCardData;
+        planCardData = {
+          ...collectorPlanCardData,
+          purchaseStoreProduct: subscription,
+        };
 
       if (identifier === "dev_apidon_creator_10_1m")
-        planCardData = creatorPlanCardData;
+        planCardData = {
+          ...creatorPlanCardData,
+          purchaseStoreProduct: subscription,
+        };
 
       if (identifier === "dev_apidon_visionary_10_1m")
-        planCardData = visionaryPlanCardData;
+        planCardData = {
+          ...visionaryPlanCardData,
+          purchaseStoreProduct: subscription,
+        };
 
       if (planCardData) planCardDatasFetched.push(planCardData);
     }
