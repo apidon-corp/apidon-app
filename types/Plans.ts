@@ -124,3 +124,12 @@ export type BottomSheetModalData = {
   title: string;
   description: string;
 };
+
+export type PlanCardTitle = "Free" | "Collector" | "Creator" | "Visionary";
+
+export const PlanCardTitles: PlanCardTitle[] = [
+  "Free",
+  "Collector",
+  "Creator",
+  "Visionary",
+];
