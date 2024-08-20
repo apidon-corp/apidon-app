@@ -160,6 +160,12 @@ const _layout = () => {
           headerBackTitle: "Back",
         }}
       />
+      <Stack.Screen
+        name="currentPlan"
+        options={{
+          title: "Current Plan",
+        }}
+      />
     </Stack>
   );
 };

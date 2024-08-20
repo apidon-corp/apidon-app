@@ -44,9 +44,11 @@ const PlanCard = ({
     <>
       <ScrollView
         id="root"
+        style={{
+          marginHorizontal: 2,
+        }}
         contentContainerStyle={{
           width: "100%",
-          padding: 10,
           gap: 15,
         }}
         showsVerticalScrollIndicator={false}
@@ -85,7 +87,7 @@ const PlanCard = ({
             id="collectibles-body"
             style={{
               width: "100%",
-              gap: 10,
+              gap: 8,
             }}
           >
             <FeatureObject
@@ -168,7 +170,7 @@ const PlanCard = ({
             id="stock-body"
             style={{
               width: "100%",
-              gap: 15,
+              gap: 8,
             }}
           >
             <FeatureObject
@@ -251,7 +253,7 @@ const PlanCard = ({
             id="support-body"
             style={{
               width: "100%",
-              gap: 15,
+              gap: 8,
             }}
           >
             <FeatureObject
@@ -304,15 +306,15 @@ const PlanCard = ({
             style={{
               width: "65%",
               padding: 10,
-              backgroundColor: "black",
+              backgroundColor: "rgba(255,255,255,0.2)",
               borderRadius: 10,
               justifyContent: "center",
               alignItems: "center",
-              borderWidth: 1,
-              borderColor: "gray",
             }}
           >
-            <Text fontSize={16}>Subscribe for ${planCardData.price}</Text>
+            <Text fontSize={16} bold>
+              Subscribe for ${planCardData.price}
+            </Text>
           </Pressable>
         </BlurView>
       </View>

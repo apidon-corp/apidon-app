@@ -12,9 +12,11 @@ import {
   freePlanCardData,
   visionaryPlanCardData,
 } from "@/types/Plans";
+import { AntDesign } from "@expo/vector-icons";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { Dimensions, View } from "react-native";
+import { Dimensions, Pressable, View } from "react-native";
 
 import Carousel from "react-native-reanimated-carousel";
 
@@ -70,6 +72,10 @@ const plans = () => {
     setPlanCardDatas(planCardDatasFetched);
   }, [subscriptions]);
 
+  const handlePressCurrentPlan = () => {
+    router.push(`/home/feed/currentPlan`);
+  };
+
   return (
     <>
       <View
@@ -79,7 +85,8 @@ const plans = () => {
           flex: 1,
         }}
       >
-        <View
+        <Pressable
+          onPress={handlePressCurrentPlan}
           id="current-plan-area"
           style={{
             width: "100%",
@@ -88,13 +95,18 @@ const plans = () => {
             borderRadius: 20,
             flexDirection: "row",
             justifyContent: "space-between",
+            alignItems: "center",
           }}
         >
-          <Text fontSize={16}>Current Plan</Text>
-          <Text fontSize={16} bold>
-            Free
-          </Text>
-        </View>
+          <View id="plan-name">
+            <Text>Current Plan</Text>
+            <Text fontSize={16} bold>
+              Free
+            </Text>
+          </View>
+
+          <AntDesign name="right" size={24} color="white" />
+        </Pressable>
 
         <Carousel
           style={{
@@ -110,7 +122,7 @@ const plans = () => {
               setBottomSheetData={setBottomSheetData}
             />
           )}
-          width={width * 0.85}
+          width={width * 0.9}
           loop={false}
         />
       </View>
