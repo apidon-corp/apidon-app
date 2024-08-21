@@ -9,6 +9,7 @@ import FeatureObject from "./FeatureObject";
 import { BlurView } from "@react-native-community/blur";
 
 type Props = {
+  currentSubscriptionProductId: string;
   planCardData: PlanCardData;
   bottomSheetModalRef: React.RefObject<BottomSheetModalMethods>;
   setBottomSheetData: React.Dispatch<
@@ -17,6 +18,7 @@ type Props = {
 };
 
 const PlanCard = ({
+  currentSubscriptionProductId,
   planCardData,
   bottomSheetModalRef,
   setBottomSheetData,
@@ -286,7 +288,12 @@ const PlanCard = ({
           justifyContent: "center",
           alignItems: "center",
           padding: 10,
-          display: planCardData.price === 0 ? "none" : undefined,
+          display:
+            planCardData.price === 0 ||
+            planCardData.purchaseStoreProduct?.identifier ===
+              currentSubscriptionProductId
+              ? "none"
+              : undefined,
         }}
       >
         <BlurView

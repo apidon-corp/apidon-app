@@ -23,6 +23,8 @@ import apiRoutes from "@/helpers/ApiRoutes";
 import appCheck from "@react-native-firebase/app-check";
 import auth from "@react-native-firebase/auth";
 import { router } from "expo-router";
+import { CollectibleUsageDocData } from "@/types/CollectibleUsage";
+import { useAuth } from "@/providers/AuthProvider";
 
 const listNFT = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
@@ -47,6 +49,50 @@ const listNFT = () => {
 
   const createButtonOpacityValue = useRef(new Animated.Value(0.5)).current;
 
+  const [usageData, setUsageData] = useState<CollectibleUsageDocData | null>(
+    null
+  );
+
+  const { authStatus } = useAuth();
+
+  const [inLimits, setInLimits] = useState(false);
+
+  // Gets user's usage data, realtime.
+  useEffect(() => {
+    if (authStatus !== "authenticated") return;
+
+    const displayName = auth().currentUser?.displayName;
+    if (!displayName) return;
+
+    const unsubscribe = firestore()
+      .doc(`users/${displayName}/collectible/usage`)
+      .onSnapshot((snapshot) => {
+        if (!snapshot.exists) {
+          console.error("No usage data found");
+          return setUsageData(null);
+        }
+
+        const data = snapshot.data() as CollectibleUsageDocData;
+        if (!data) {
+          console.error("Undefined usage data found");
+          return setUsageData(null);
+        }
+
+        setUsageData(data);
+      });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [authStatus]);
+
+  // Checks if user is allowed to create more collectible.
+  useEffect(() => {
+    if (!usageData) return setInLimits(false);
+    setInLimits(usageData.used < usageData.limit);
+  }, [usageData]);
+
+  // Getting inital post data.
   useEffect(() => {
     getInitialData();
   }, [postDocPath]);
@@ -102,13 +148,14 @@ const listNFT = () => {
     };
   }, [containerRef]);
 
+  // Changing opactiy of create button.
   useEffect(() => {
     handleChangeOpactiy(
       createButtonOpacityValue,
-      price && stock && !loading ? 1 : 0.5,
+      price && stock && !loading && inLimits ? 1 : 0.5,
       250
     );
-  }, [price, stock, loading]);
+  }, [price, stock, loading, inLimits]);
 
   const handleChangeOpactiy = (
     animatedObject: Animated.Value,
@@ -262,6 +309,10 @@ const listNFT = () => {
     }
   };
 
+  const handlePressSeePlansButton = () => {
+    router.push("/(modals)/plans");
+  };
+
   if (!postDocPath) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -270,7 +321,7 @@ const listNFT = () => {
     );
   }
 
-  if (!postData) {
+  if (!postData || !usageData) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator color="white" />
@@ -500,6 +551,34 @@ const listNFT = () => {
             )}
           </Pressable>
         </Animated.View>
+
+        {!inLimits && (
+          <Pressable
+            onPress={handlePressSeePlansButton}
+            id="limit-error"
+            style={{
+              width: "100%",
+              padding: 15,
+              backgroundColor: "rgba(255,255,255,0.05)",
+              borderRadius: 20,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Text
+              bold
+              fontSize={12}
+              style={{
+                textAlign: "center",
+                textDecorationLine: "underline",
+                color: "yellow",
+                opacity: 0.75,
+              }}
+            >
+              Please, see plans to create more collectibles.
+            </Text>
+          </Pressable>
+        )}
       </Animated.View>
     </ScrollView>
   );

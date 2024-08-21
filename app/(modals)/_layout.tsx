@@ -116,6 +116,21 @@ const _layout = () => {
             title: "Identity",
           }}
         />
+
+        <Stack.Screen
+          name="plans"
+          options={{
+            title: "Plans",
+            headerBackTitle: "Back",
+          }}
+        />
+
+        <Stack.Screen
+          name="currentPlan"
+          options={{
+            title: "Current Plan",
+          }}
+        />
       </Stack>
     </>
   );
