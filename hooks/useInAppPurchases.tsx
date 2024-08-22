@@ -2,41 +2,22 @@ import { useAuth } from "@/providers/AuthProvider";
 import auth from "@react-native-firebase/auth";
 import { useEffect, useState } from "react";
 import Purchases, { PurchasesStoreProduct } from "react-native-purchases";
-
 import crashlytics from "@react-native-firebase/crashlytics";
-
 import firestore from "@react-native-firebase/firestore";
 import { ConfigDocData } from "@/types/Plans";
-
-const envTypeForIAP = process.env.EXPO_PUBLIC_ENVIRONMENT_TYPE_FOR_IAP || "";
-
-let appStoreProductIds = [
-  "1_dollar_in_app_credit",
-  "5_dollar_in_app_credit",
-  "10_dollar_in_app_credit",
-  "25_dollar_in_app_credit",
-  "50_dolar_in_app_credit",
-  "100_dolar_in_app_credit",
-  "250_dollar_in_app_credit",
-  "500_dollar_in_app_credit",
-  "1000_dollar_in_app_credit",
-];
-
-if (envTypeForIAP === "test") {
-  let testEnvironmentAppStoreProcuductIds = appStoreProductIds.map(
-    (productId) => `${productId}_test`
-  );
-  appStoreProductIds = testEnvironmentAppStoreProcuductIds;
-}
+import { TopUpPlansConfigDocData } from "@/types/IAP";
 
 export const useInAppPurchases = () => {
   const { authStatus } = useAuth();
 
+  const [appStoreTopUpProductIdS, setAppStoreTopUpProductIdS] = useState<
+    string[]
+  >([]);
+  const [products, setProducts] = useState<PurchasesStoreProduct[]>([]);
+
   const [appStoreSubscriptionIds, setAppStoreSubscriptionIds] = useState<
     string[]
   >([]);
-
-  const [products, setProducts] = useState<PurchasesStoreProduct[]>([]);
   const [subscriptions, setSubscriptions] = useState<PurchasesStoreProduct[]>(
     []
   );
@@ -86,9 +67,49 @@ export const useInAppPurchases = () => {
     }
   }
 
-  async function getProducts() {
+  async function getTopUpProductIdS() {
     try {
-      const productsFetched = await Purchases.getProducts(appStoreProductIds);
+      const configDocSnapshot = await firestore()
+        .doc("topUpPlans/config")
+        .get();
+
+      if (!configDocSnapshot.exists) {
+        console.error("topUpPlans/config doc does not exist");
+        crashlytics().recordError(
+          new Error("topUpPlans/config doc does not exist")
+        );
+        return setAppStoreTopUpProductIdS([]);
+      }
+
+      const data = configDocSnapshot.data() as TopUpPlansConfigDocData;
+
+      if (!data) {
+        console.error("topUpPlans/config doc data does not exist");
+        crashlytics().recordError(
+          new Error("topUpPlans/config doc data does not exist")
+        );
+        return setAppStoreTopUpProductIdS([]);
+      }
+
+      const activeTopUpProductIdS = data.activeTopUpProductIdS;
+
+      setAppStoreTopUpProductIdS(activeTopUpProductIdS);
+    } catch (error) {
+      console.error("Error on fetching top up product ids:", error);
+      crashlytics().recordError(
+        new Error(`Error on fetching top up product ids: ${error}`)
+      );
+      return setAppStoreTopUpProductIdS([]);
+    }
+  }
+
+  async function getProducts() {
+    if (!appStoreTopUpProductIdS.length) return;
+
+    try {
+      const productsFetched = await Purchases.getProducts(
+        appStoreTopUpProductIdS
+      );
       const sortedProducts = productsFetched.sort((a, b) => a.price - b.price);
 
       if (!sortedProducts.length) throw new Error("No products found");
@@ -98,7 +119,7 @@ export const useInAppPurchases = () => {
       console.error("Error on fetching products:", error);
       crashlytics().recordError(
         new Error(
-          `Error on fetching top up products: ${error} Env Type for iap: ${envTypeForIAP} \n ProductIds On App: ${appStoreProductIds} \n Apple API Key: ${appleAPIKey} \n Display Name: ${currentUserDisplayName}`
+          `Error on fetching top up products: ${error} \n ProductIds On App: ${appStoreTopUpProductIdS} \n Apple API Key: ${appleAPIKey} \n Display Name: ${currentUserDisplayName}`
         )
       );
       return setProducts([]);
@@ -118,7 +139,7 @@ export const useInAppPurchases = () => {
       console.error("Error on fetching products:", error);
       crashlytics().recordError(
         new Error(
-          `Error on fetching subscriptions: ${error} Env Type for iap: ${envTypeForIAP} \n Subscriptions On App: ${appStoreProductIds} \n Apple API Key: ${appleAPIKey} \n Display Name: ${currentUserDisplayName}`
+          `Error on fetching subscriptions: ${error} \n Subscriptions On App: ${appStoreTopUpProductIdS} \n Apple API Key: ${appleAPIKey} \n Display Name: ${currentUserDisplayName}`
         )
       );
       return setSubscriptions([]);
@@ -131,6 +152,7 @@ export const useInAppPurchases = () => {
     if (authStatus !== "authenticated") return;
 
     getSubscriptionProductIdS();
+    getTopUpProductIdS();
   }, [authStatus]);
 
   // Getting products from AppStore
@@ -144,7 +166,12 @@ export const useInAppPurchases = () => {
 
     getProducts();
     getSubscriptions();
-  }, [currentUserDisplayName, appleAPIKey, appStoreSubscriptionIds]);
+  }, [
+    currentUserDisplayName,
+    appleAPIKey,
+    appStoreSubscriptionIds,
+    appStoreTopUpProductIdS,
+  ]);
 
   return {
     products,
