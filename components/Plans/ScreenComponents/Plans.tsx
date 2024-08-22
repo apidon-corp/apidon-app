@@ -4,16 +4,7 @@ import PlanCard from "@/components/Plans/PlanCard";
 import Text from "@/components/Text/Text";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 import { useAuth } from "@/providers/AuthProvider";
-import {
-  BottomSheetModalData,
-  PlanCardData,
-  PlanCardTitles,
-  SubscriptionIdentifiers,
-  collectorPlanCardData,
-  creatorPlanCardData,
-  freePlanCardData,
-  visionaryPlanCardData,
-} from "@/types/Plans";
+import { BottomSheetModalData, PlanCardData, PlanDocData } from "@/types/Plans";
 import { AntDesign } from "@expo/vector-icons";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { router, usePathname } from "expo-router";
@@ -22,9 +13,9 @@ import { ActivityIndicator, Dimensions, Pressable, View } from "react-native";
 
 import Carousel from "react-native-reanimated-carousel";
 
+import { SubscriptionDocData } from "@/types/Subscriptions";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
-import { SubscriptionDocData } from "@/types/Subscriptions";
 
 const Plans = () => {
   const pathname = usePathname();
@@ -41,52 +32,15 @@ const Plans = () => {
   });
 
   const { subscriptions } = useInAppPurchases();
-
   const [planCardDatas, setPlanCardDatas] = useState<PlanCardData[]>([]);
-
   const [currentSubscriptionData, setCurrentSubscriptionData] = useState<
     SubscriptionDocData | "not-subscribed" | null
   >(null);
 
-  const [currentPlanName, setCurrentPlanName] =
-    useState<PlanCardData["title"]>("Free");
+  const [currentPlanName, setCurrentPlanName] = useState("Free");
 
   useEffect(() => {
-    const planCardDatasFetched: PlanCardData[] = [];
-
-    for (const subscription of subscriptions) {
-      let planCardData: PlanCardData | null = null;
-
-      const identifier = subscription.identifier as SubscriptionIdentifiers;
-
-      if (identifier === "dev_apidon_collector_10_1m")
-        planCardData = {
-          ...collectorPlanCardData,
-          purchaseStoreProduct: subscription,
-        };
-
-      if (identifier === "dev_apidon_creator_10_1m")
-        planCardData = {
-          ...creatorPlanCardData,
-          purchaseStoreProduct: subscription,
-        };
-
-      if (identifier === "dev_apidon_visionary_10_1m")
-        planCardData = {
-          ...visionaryPlanCardData,
-          purchaseStoreProduct: subscription,
-        };
-
-      if (planCardData) planCardDatasFetched.push(planCardData);
-    }
-
-    const freePlanCardDataFetched = freePlanCardData;
-
-    planCardDatasFetched.push(freePlanCardDataFetched);
-
-    planCardDatasFetched.sort((a, b) => a.price - b.price);
-
-    setPlanCardDatas(planCardDatasFetched);
+    handlePreparePlanCardDatas();
   }, [subscriptions]);
 
   useEffect(() => {
@@ -133,24 +87,79 @@ const Plans = () => {
     };
   }, [authStatus, subscriptions.length]);
 
+  // Getting current plan details
   useEffect(() => {
-    if (!currentSubscriptionData) return;
-
+    if (!currentSubscriptionData) return setCurrentPlanName("Free");
     if (currentSubscriptionData === "not-subscribed")
       return setCurrentPlanName("Free");
 
-    const identifier =
-      currentSubscriptionData.productId as SubscriptionIdentifiers;
+    if (!planCardDatas.length) return setCurrentPlanName("Free");
 
-    if (identifier === "dev_apidon_collector_10_1m")
-      return setCurrentPlanName("Collector");
+    const currentCardData = planCardDatas.find(
+      (c) => c.storeProductId === currentSubscriptionData.productId
+    );
 
-    if (identifier === "dev_apidon_creator_10_1m")
-      return setCurrentPlanName("Creator");
+    if (!currentCardData) return setCurrentPlanName("Free");
 
-    if (identifier === "dev_apidon_visionary_10_1m")
-      return setCurrentPlanName("Visionary");
-  }, [currentSubscriptionData]);
+    setCurrentPlanName(currentCardData.title);
+  }, [currentSubscriptionData, planCardDatas]);
+
+  const handleGetPlanDetailFromDatabase = async (storeProductId: string) => {
+    try {
+      const planDocSnapshot = await firestore()
+        .doc(`plans/${storeProductId}`)
+        .get();
+
+      if (!planDocSnapshot.exists) {
+        console.error("Plan doc not found");
+        return false;
+      }
+
+      const data = planDocSnapshot.data() as PlanDocData;
+
+      if (!data) {
+        console.error("Undefined plan doc data");
+        return false;
+      }
+
+      return data;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  };
+
+  const handlePreparePlanCardDatas = async () => {
+    if (!subscriptions.length) return setPlanCardDatas([]);
+
+    const planCardDatasPrepared: PlanCardData[] = [];
+
+    for (const subscription of subscriptions) {
+      const planDetailData = await handleGetPlanDetailFromDatabase(
+        subscription.identifier
+      );
+      if (!planDetailData) continue;
+
+      const planCardData: PlanCardData = {
+        ...planDetailData,
+        purchaseStoreProduct: subscription,
+      };
+
+      planCardDatasPrepared.push(planCardData);
+    }
+
+    // Free Plan Getting
+    const freePlanDetailData = await handleGetPlanDetailFromDatabase("free");
+    if (freePlanDetailData)
+      planCardDatasPrepared.push({
+        ...freePlanDetailData,
+        purchaseStoreProduct: null,
+      });
+
+    planCardDatasPrepared.sort((a, b) => a.price.price - b.price.price);
+
+    setPlanCardDatas(planCardDatasPrepared);
+  };
 
   const handlePressCurrentPlan = () => {
     const subScreens = pathname.split("/");
@@ -164,7 +173,7 @@ const Plans = () => {
     router.push(path);
   };
 
-  if (!currentSubscriptionData) {
+  if (!currentSubscriptionData || !planCardDatas.length) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="small" color="white" />
@@ -225,11 +234,6 @@ const Plans = () => {
           )}
           width={width * 0.9}
           loop={false}
-          defaultIndex={
-            PlanCardTitles.includes(currentPlanName)
-              ? PlanCardTitles.indexOf(currentPlanName)
-              : 0
-          }
         />
       </View>
 

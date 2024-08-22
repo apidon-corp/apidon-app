@@ -274,7 +274,7 @@ const PlanCard = ({
 
         <View
           style={{
-            display: planCardData.price === 0 ? "none" : undefined,
+            display: planCardData.price.price === 0 ? "none" : undefined,
             height: 80,
           }}
         />
@@ -289,7 +289,7 @@ const PlanCard = ({
           alignItems: "center",
           padding: 10,
           display:
-            planCardData.price === 0 ||
+            planCardData.price.price === 0 ||
             planCardData.purchaseStoreProduct?.identifier ===
               currentSubscriptionProductId
               ? "none"
@@ -320,7 +320,7 @@ const PlanCard = ({
             }}
           >
             <Text fontSize={16} bold>
-              Subscribe for ${planCardData.price}
+              Subscribe for ${planCardData.price.price}
             </Text>
           </Pressable>
         </BlurView>
