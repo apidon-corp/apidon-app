@@ -44,3 +44,14 @@ export type BottomSheetModalData = {
 export type ConfigDocData = {
   activeSubscriptionProductIdS: string[];
 };
+
+export function calculateStockLimit(stockData: PlanCardData["stock"]) {
+  let stockLimit = 0;
+
+  if (stockData.upToTen) stockLimit = 10;
+  if (stockData.upToFifty) stockLimit = 50;
+  if (stockData.upToHundred) stockLimit = 100;
+  if (stockData.upToThousand) stockLimit = 1000;
+
+  return stockLimit;
+}
