@@ -66,8 +66,6 @@ const Plans = () => {
   const [subscriptionButtonLoading, setSubscriptionButtonLoading] =
     useState(false);
 
-  const [waitingAppStore, setWaitingAppStore] = useState(false);
-
   useEffect(() => {
     handlePreparePlanCardDatas();
   }, [subscriptions]);
@@ -84,8 +82,6 @@ const Plans = () => {
       .collection(`users/${displayName}/subscriptions`)
       .where("isActive", "==", true)
       .onSnapshot((snapshot) => {
-        setWaitingAppStore(false);
-
         if (snapshot.size > 1) {
           console.error("More than one active subscription found");
           return;
@@ -122,8 +118,13 @@ const Plans = () => {
   // Getting current plan details
   useEffect(() => {
     if (!currentSubscriptionData) return setCurrentPlanCardData(null);
-    if (currentSubscriptionData === "not-subscribed")
-      return setCurrentPlanCardData(null);
+    if (currentSubscriptionData === "not-subscribed") {
+      // Free Card Data Getting
+      const currentCardData = planCardDatas.find(
+        (c) => c.storeProductId === ""
+      );
+      return setCurrentPlanCardData(currentCardData || null);
+    }
 
     if (!planCardDatas.length) return setCurrentPlanCardData(null);
 
@@ -151,12 +152,15 @@ const Plans = () => {
   useEffect(() => {
     let show = true;
 
-    if (
-      planCardDataInView?.storeProductId === currentPlanCardData?.storeProductId
-    )
+    if (planCardDataInView?.price.price === 0) {
       show = false;
-
-    if (planCardDataInView?.price.price === 0) show = false;
+    } else if (!currentPlanCardData || !planCardDataInView) {
+      show = false;
+    } else if (
+      planCardDataInView.storeProductId === currentPlanCardData.storeProductId
+    ) {
+      show = false;
+    }
 
     setShowSubscribeButton(show);
   }, [planCardDataInView, currentPlanCardData]);
@@ -167,12 +171,12 @@ const Plans = () => {
       return handleChangeOpactiy(subscribeButtonOpacityValue, 0, 250);
     }
 
-    if (subscriptionButtonLoading || waitingAppStore) {
+    if (subscriptionButtonLoading) {
       return handleChangeOpactiy(subscribeButtonOpacityValue, 0.5, 250);
     }
 
     return handleChangeOpactiy(subscribeButtonOpacityValue, 1, 250);
-  }, [showSubscribeButton, subscriptionButtonLoading, waitingAppStore]);
+  }, [showSubscribeButton, subscriptionButtonLoading]);
 
   const handleGetPlanDetailFromDatabase = async (storeProductId: string) => {
     try {
@@ -249,7 +253,6 @@ const Plans = () => {
     if (!planCardDatas.length) return;
 
     if (subscriptionButtonLoading) return;
-    if (waitingAppStore) return;
 
     const storeProduct = planCardDatas[currentIndex].purchaseStoreProduct;
     if (!storeProduct) return console.error("Undefined store product");
@@ -260,8 +263,7 @@ const Plans = () => {
       await Purchases.purchaseStoreProduct(storeProduct);
 
       setSubscriptionButtonLoading(false);
-
-      return setWaitingAppStore(true);
+      setShowSubscribeButton(false);
     } catch (error: any) {
       if (error.userCancelled) return setSubscriptionButtonLoading(false);
 
@@ -271,8 +273,6 @@ const Plans = () => {
       console.error("Error on purchasing:", error);
 
       setSubscriptionButtonLoading(false);
-
-      return setWaitingAppStore(false);
     }
   };
 
@@ -354,7 +354,7 @@ const Plans = () => {
           width={width - 15 * 2}
           loop={false}
           onSnapToItem={(index) => setCurrentIndex(index)}
-          enabled={!subscriptionButtonLoading && !waitingAppStore}
+          enabled={!subscriptionButtonLoading}
         />
       </View>
 
@@ -390,10 +390,6 @@ const Plans = () => {
           >
             {subscriptionButtonLoading ? (
               <ActivityIndicator size="small" color="black" />
-            ) : waitingAppStore ? (
-              <Text bold fontSize={15} style={{ color: "black" }}>
-                Waiting for Apple Verification
-              </Text>
             ) : (
               <Text bold fontSize={16} style={{ color: "black" }}>
                 Subscribe for ${planCardDataInView?.price.price || "ERROR"}
