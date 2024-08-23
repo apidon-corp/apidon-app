@@ -177,6 +177,7 @@ function RootLayout() {
     if (error) throw error;
   }, [error]);
 
+  // Splash Screen
   useEffect(() => {
     if (
       loaded &&

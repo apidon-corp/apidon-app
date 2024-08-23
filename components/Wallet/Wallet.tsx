@@ -6,7 +6,6 @@ import { Text } from "@/components/Text/Text";
 import TopUpProduct from "@/components/Wallet/TopUp/TopUpProduct";
 import { useBalance } from "@/hooks/useBalance";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
-import { ItemSKU } from "@/types/IAP";
 import Refund from "./Refund";
 
 const wallet = () => {
@@ -112,7 +111,7 @@ const wallet = () => {
             data={products}
             renderItem={({ item }) => (
               <TopUpProduct
-                id={item.identifier as ItemSKU}
+                id={item.identifier}
                 product={item}
                 key={item.identifier}
               />

@@ -32,8 +32,12 @@ import {
 } from "@gorhom/bottom-sheet";
 import CustomBottomModalSheet from "@/components/BottomSheet/CustomBottomModalSheet";
 import { AntDesign } from "@expo/vector-icons";
+import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 
 const listNFT = () => {
+  // Trigger In-App-Purchase Store Notifications
+  useInAppPurchases();
+
   const screenParameters = useAtomValue(screenParametersAtom);
 
   const postDocPath = screenParameters.find(
