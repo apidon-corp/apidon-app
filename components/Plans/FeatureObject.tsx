@@ -23,8 +23,8 @@ const FeatureObject = (props: Props) => {
   };
 
   return (
-    <View
-      id="undo-collectible"
+    <Pressable
+      onPress={handlePressInformationBubble}
       style={{
         width: "100%",
         justifyContent: "space-between",
@@ -32,8 +32,7 @@ const FeatureObject = (props: Props) => {
         flexDirection: "row",
       }}
     >
-      <Pressable
-        onPress={handlePressInformationBubble}
+      <View
         style={{
           flexDirection: "row",
           justifyContent: "center",
@@ -42,15 +41,15 @@ const FeatureObject = (props: Props) => {
         }}
       >
         <Text fontSize={13}>{props.title}</Text>
-        <Ionicons name="information-circle" size={18} color="gray" />
-      </Pressable>
+        <Ionicons name="information-circle" size={16} color="gray" />
+      </View>
 
       {props.isChecked ? (
         <Ionicons name="checkmark-circle" size={24} color="green" />
       ) : (
         <Ionicons name="close-circle" size={24} color="red" />
       )}
-    </View>
+    </Pressable>
   );
 };
 
