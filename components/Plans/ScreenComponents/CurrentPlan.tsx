@@ -1,14 +1,16 @@
 import { Text } from "@/components/Text/Text";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
 
 import * as Progress from "react-native-progress";
 
 import { useAuth } from "@/providers/AuthProvider";
 import { CollectibleUsageDocData } from "@/types/CollectibleUsage";
+import { PlanDocData } from "@/types/Plans";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
-import { PlanCardData } from "@/types/Plans";
+
+import * as Linking from "expo-linking";
 
 const CurrentPlan = () => {
   const { authStatus } = useAuth();
@@ -17,8 +19,7 @@ const CurrentPlan = () => {
     null
   );
 
-  const [currentPlanName, setCurrentPlanName] =
-    useState<PlanCardData["title"]>("Free");
+  const [currentPlanName, setCurrentPlanName] = useState<string | null>(null);
 
   useEffect(() => {
     if (authStatus !== "authenticated") return;
@@ -48,24 +49,38 @@ const CurrentPlan = () => {
     };
   }, [authStatus]);
 
+  // Getting Plan Details
   useEffect(() => {
-    if (!usageData) return;
-
-    if (usageData.planId === "free") return setCurrentPlanName("Free");
-
-    const identifier = usageData.planId;
-
-    if (identifier === "dev_apidon_collector_10_1m")
-      return setCurrentPlanName("Collector");
-
-    if (identifier === "dev_apidon_creator_10_1m")
-      return setCurrentPlanName("Creator");
-
-    if (identifier === "dev_apidon_visionary_10_1m")
-      return setCurrentPlanName("Visionary");
+    handleGetPlanDetails();
   }, [usageData]);
 
-  if (!usageData) {
+  // Especially to get plan name..
+  // Can a bit overkill
+  const handleGetPlanDetails = async () => {
+    if (!usageData || !usageData.planId) return setCurrentPlanName(null);
+
+    const planDoc = await firestore().doc(`plans/${usageData.planId}`).get();
+
+    if (!planDoc.exists) {
+      console.error("Plan not found on database");
+      return setCurrentPlanName(null);
+    }
+
+    const data = planDoc.data() as PlanDocData;
+
+    if (!data) {
+      console.error("Plan data is undefined");
+      return setCurrentPlanName(null);
+    }
+
+    setCurrentPlanName(data.title);
+  };
+
+  const handlePressCancelSubscriptionButton = () => {
+    Linking.openURL("https://support.apple.com/en-us/118428");
+  };
+
+  if (!usageData || !currentPlanName) {
     return (
       <View
         style={{
@@ -88,6 +103,7 @@ const CurrentPlan = () => {
         flex: 1,
         padding: 15,
         gap: 15,
+        alignItems: "center",
       }}
     >
       <View
@@ -156,7 +172,7 @@ const CurrentPlan = () => {
           id="info-panel"
           style={{
             width: "100%",
-            backgroundColor: "rgba(255,255,0,0.3)",
+            backgroundColor: "rgba(255,255,0,0.35)",
             padding: 10,
             borderRadius: 10,
             gap: 5,
@@ -190,6 +206,22 @@ const CurrentPlan = () => {
             so you can continue enjoying our services without any interruptions.
           </Text>
         </View>
+      )}
+
+      {usageData.planId !== "free" && (
+        <Pressable
+          onPress={handlePressCancelSubscriptionButton}
+          style={{
+            width: "75%",
+            backgroundColor: "red",
+            padding: 10,
+            borderRadius: 10,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Text bold>Cancel Subscription</Text>
+        </Pressable>
       )}
     </View>
   );
