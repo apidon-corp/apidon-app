@@ -148,18 +148,6 @@ const PlanCard = ({
           }}
         >
           <FeatureObject
-            title="Allow Collecting Sold Out"
-            isChecked={planCardData.stock.allowCollectingSoldOut}
-            bottomSheetModalData={{
-              title: "Allow Collecting Sold Out",
-              description:
-                "This feature allows users to continue collecting items even after they are marked as sold out. Useful for maintaining engagement with popular items.",
-            }}
-            bottomSheetModalRef={bottomSheetModalRef}
-            setBottomSheetData={setBottomSheetData}
-          />
-
-          <FeatureObject
             title="Stock Up to 10"
             isChecked={planCardData.stock.upToTen}
             bottomSheetModalData={{
