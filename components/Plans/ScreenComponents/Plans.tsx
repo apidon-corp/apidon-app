@@ -171,10 +171,6 @@ const Plans = () => {
       return handleChangeOpactiy(subscribeButtonOpacityValue, 0, 250);
     }
 
-    if (subscriptionButtonLoading) {
-      return handleChangeOpactiy(subscribeButtonOpacityValue, 0.5, 250);
-    }
-
     return handleChangeOpactiy(subscribeButtonOpacityValue, 1, 250);
   }, [showSubscribeButton, subscriptionButtonLoading]);
 
@@ -372,15 +368,15 @@ const Plans = () => {
             position: "absolute",
             bottom: 0,
             width: "100%",
-            height: 80,
+            height: 85,
             justifyContent: "flex-end",
-            backgroundColor: "rgba(0,0,0,0.7)",
+            backgroundColor: "rgba(0,0,0,0.6)",
             padding: 15,
           }}
         >
           <View
             style={{
-              height: "100%",
+              height: 45,
               width: "100%",
               justifyContent: "center",
               alignItems: "center",

@@ -77,19 +77,7 @@ const PlanCard = ({
           }}
         >
           <FeatureObject
-            title="Undo Collectible"
-            isChecked={planCardData.collectible.undo}
-            bottomSheetModalData={{
-              title: "Undo Collectible",
-              description:
-                "Allows you to undo the creation of a collectible. This feature helps prevent mistakes during the creation process.",
-            }}
-            bottomSheetModalRef={bottomSheetModalRef}
-            setBottomSheetData={setBottomSheetData}
-          />
-
-          <FeatureObject
-            title="Create up-to 5"
+            title="Create Up to 5"
             isChecked={planCardData.collectible.upToFive}
             bottomSheetModalData={{
               title: "Create Up to 5 Collectibles",
@@ -101,7 +89,7 @@ const PlanCard = ({
           />
 
           <FeatureObject
-            title="Create up-to 10"
+            title="Create Up to 10"
             isChecked={planCardData.collectible.upToTen}
             bottomSheetModalData={{
               title: "Create Up to 10 Collectibles",
@@ -113,7 +101,7 @@ const PlanCard = ({
           />
 
           <FeatureObject
-            title="Create up-to 50"
+            title="Create Up to 50"
             isChecked={planCardData.collectible.upToFifthy}
             bottomSheetModalData={{
               title: "Create Up to 50 Collectibles",
@@ -125,7 +113,7 @@ const PlanCard = ({
           />
 
           <FeatureObject
-            title="Create up-to 100"
+            title="Create Up to 100"
             isChecked={planCardData.collectible.upToHundred}
             bottomSheetModalData={{
               title: "Create Up to 100 Collectibles",
