@@ -42,7 +42,7 @@ const wallet = () => {
         style={{
           width: "100%",
           backgroundColor: "#222222",
-          padding: 15,
+          padding: 25,
           borderRadius: 10,
         }}
       >
@@ -50,17 +50,16 @@ const wallet = () => {
           id="balance-card"
           style={{
             width: "100%",
-            backgroundColor: "#333333",
-            padding: 20,
-            gap: 10,
-            borderRadius: 15,
+            gap: 20,
           }}
         >
-          <Text fontSize={18}>Balance</Text>
+          <View>
+            <Text fontSize={18}>Balance</Text>
 
-          <Text bold fontSize={48}>
-            ${balance}
-          </Text>
+            <Text bold fontSize={48}>
+              ${balance}
+            </Text>
+          </View>
 
           <View
             style={{
