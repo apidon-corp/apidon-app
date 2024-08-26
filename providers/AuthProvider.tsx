@@ -14,18 +14,15 @@ import {
   useState,
 } from "react";
 
+type LinkingValue = {
+  isInitial: boolean;
+  url: string;
+};
+
 type Props = {
   children: ReactNode;
-  linking: {
-    isInitial: boolean;
-    url: string;
-  };
-  setLinking: React.Dispatch<
-    SetStateAction<{
-      isInitial: boolean;
-      url: string;
-    }>
-  >;
+  linking: LinkingValue;
+  setLinking: React.Dispatch<SetStateAction<LinkingValue>>;
 };
 
 type AuthContextType = {
@@ -43,9 +40,12 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
 
   const authStatusRef = useRef<AuthStatus>("loading");
 
+  const linkingRef = useRef<LinkingValue>(linking);
+
   const handleAuthentication = async (
     user: FirebaseAuthTypes.User | null,
-    authStatusRef: React.MutableRefObject<AuthStatus>
+    authStatusRef: React.MutableRefObject<AuthStatus>,
+    linkingRef: React.MutableRefObject<LinkingValue>
   ) => {
     if (authStatusRef.current === "dontMess") return;
 
@@ -95,20 +95,24 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
 
     setAuthStatus("authenticated");
 
-    if (!linking.url) return router.replace("/home");
+    if (!linkingRef.current.url) return router.replace("/home");
   };
 
   useEffect(() => {
     const unsubscribe = auth().onAuthStateChanged((user) => {
-      handleAuthentication(user, authStatusRef);
+      handleAuthentication(user, authStatusRef, linkingRef);
     });
 
     return () => unsubscribe();
-  }, [authStatusRef]);
+  }, [authStatusRef, linkingRef]);
 
   useEffect(() => {
     authStatusRef.current = authStatus;
   }, [authStatus]);
+
+  useEffect(() => {
+    linkingRef.current = linking;
+  }, [linking]);
 
   useEffect(() => {
     if (authStatus !== "authenticated") return;
@@ -123,7 +127,6 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
 
   const handleLinking = async (linking: string, isInitial: boolean) => {
     if (!linking) return;
-    setLinking({ isInitial: false, url: "" });
 
     if (isInitial) {
       const subParts = linking.split("/");
@@ -137,7 +140,11 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
 
           await delay(1);
 
-          return router.navigate(`/home/feed/profilePage?username=${username}`);
+          router.navigate(`/home/feed/profilePage?username=${username}`);
+
+          await delay(500);
+
+          return setLinking({ isInitial: false, url: "" });
         }
       }
 
@@ -154,9 +161,11 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
 
           await delay(1);
 
-          return router.navigate(
-            `/home/feed/post?sender=${postSender}&id=${postId}`
-          );
+          router.navigate(`/home/feed/post?sender=${postSender}&id=${postId}`);
+
+          await delay(500);
+
+          return setLinking({ isInitial: false, url: "" });
         }
       }
 
@@ -168,8 +177,11 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
 
       if (content === "profile") {
         const username = subParts[4];
-        if (username)
-          return router.navigate(`/home/feed/profilePage?username=${username}`);
+        if (username) {
+          router.navigate(`/home/feed/profilePage?username=${username}`);
+          await delay(500);
+          return setLinking({ isInitial: false, url: "" });
+        }
       }
 
       if (content === "post") {
@@ -180,10 +192,11 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
         const postSender = postIdentifierContents[0];
         const postId = postIdentifierContents[1];
 
-        if (postSender && postId)
-          return router.navigate(
-            `/home/feed/post?sender=${postSender}&id=${postId}`
-          );
+        if (postSender && postId) {
+          router.navigate(`/home/feed/post?sender=${postSender}&id=${postId}`);
+          await delay(500);
+          return setLinking({ isInitial: false, url: "" });
+        }
       }
 
       router.replace("/home");

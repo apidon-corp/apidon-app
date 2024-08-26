@@ -6,16 +6,20 @@ import {
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
 import { Tabs, router, usePathname } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import { Pressable, StatusBar, View } from "react-native";
 
 import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
 import { useSetAtom } from "jotai";
+import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 
 const _layout = () => {
   const notificationData = useNotification();
 
   const pathname = usePathname();
+
+  // To Trigger In-App-Purchase to sent store notifications for expiration.
+  useInAppPurchases();
 
   const setHomeScreenParameters = useSetAtom(homeScreeenParametersAtom);
 

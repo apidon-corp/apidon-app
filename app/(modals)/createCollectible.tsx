@@ -23,8 +23,21 @@ import apiRoutes from "@/helpers/ApiRoutes";
 import appCheck from "@react-native-firebase/app-check";
 import auth from "@react-native-firebase/auth";
 import { router } from "expo-router";
+import { CollectibleUsageDocData } from "@/types/CollectibleUsage";
+import { useAuth } from "@/providers/AuthProvider";
+import { PlanDocData, calculateStockLimit } from "@/types/Plans";
+import {
+  BottomSheetModal,
+  BottomSheetModalProvider,
+} from "@gorhom/bottom-sheet";
+import CustomBottomModalSheet from "@/components/BottomSheet/CustomBottomModalSheet";
+import { AntDesign } from "@expo/vector-icons";
+import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 
 const listNFT = () => {
+  // Trigger In-App-Purchase Store Notifications
+  useInAppPurchases();
+
   const screenParameters = useAtomValue(screenParametersAtom);
 
   const postDocPath = screenParameters.find(
@@ -47,6 +60,54 @@ const listNFT = () => {
 
   const createButtonOpacityValue = useRef(new Animated.Value(0.5)).current;
 
+  const [usageData, setUsageData] = useState<CollectibleUsageDocData | null>(
+    null
+  );
+
+  const { authStatus } = useAuth();
+
+  const [inLimits, setInLimits] = useState(false);
+
+  const [stockLimit, setStockLimit] = useState(0);
+
+  const stockInformationModalRef = useRef<BottomSheetModal>(null);
+
+  // Gets user's usage data, realtime.
+  useEffect(() => {
+    if (authStatus !== "authenticated") return;
+
+    const displayName = auth().currentUser?.displayName;
+    if (!displayName) return;
+
+    const unsubscribe = firestore()
+      .doc(`users/${displayName}/collectible/usage`)
+      .onSnapshot((snapshot) => {
+        if (!snapshot.exists) {
+          console.error("No usage data found");
+          return setUsageData(null);
+        }
+
+        const data = snapshot.data() as CollectibleUsageDocData;
+        if (!data) {
+          console.error("Undefined usage data found");
+          return setUsageData(null);
+        }
+
+        setUsageData(data);
+      });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [authStatus]);
+
+  // Checks if user is allowed to create more collectible.
+  useEffect(() => {
+    if (!usageData) return setInLimits(false);
+    setInLimits(usageData.used < usageData.limit);
+  }, [usageData]);
+
+  // Getting inital post data.
   useEffect(() => {
     getInitialData();
   }, [postDocPath]);
@@ -102,13 +163,19 @@ const listNFT = () => {
     };
   }, [containerRef]);
 
+  // Get Plan Details For Stock
+  useEffect(() => {
+    handlePrepareStockData();
+  }, [usageData]);
+
+  // Changing opactiy of create button.
   useEffect(() => {
     handleChangeOpactiy(
       createButtonOpacityValue,
-      price && stock && !loading ? 1 : 0.5,
+      price && stock && !loading && inLimits ? 1 : 0.5,
       250
     );
-  }, [price, stock, loading]);
+  }, [price, stock, loading, inLimits]);
 
   const handleChangeOpactiy = (
     animatedObject: Animated.Value,
@@ -181,13 +248,14 @@ const listNFT = () => {
       return setStock(0);
     }
 
-    if (input.length > 2) {
-      return;
-    }
-
     const numberVersion = parseInt(input);
     if (isNaN(numberVersion)) {
       return;
+    }
+
+    if (numberVersion > stockLimit) {
+      setStockInput(stockLimit.toString());
+      return setStock(stockLimit);
     }
 
     const validInput = numberVersion.toString();
@@ -222,6 +290,8 @@ const listNFT = () => {
     if (!currentUserAuthObject) return console.error("No user");
 
     if (!price || !stock) return;
+
+    if (stock > stockLimit) return;
 
     if (loading) return;
 
@@ -262,6 +332,49 @@ const listNFT = () => {
     }
   };
 
+  const handlePrepareStockData = async () => {
+    if (!usageData) return setStockLimit(0);
+
+    try {
+      const planDocSnapshot = await firestore()
+        .doc(`plans/${usageData.planId}`)
+        .get();
+
+      if (!planDocSnapshot.exists) {
+        console.error("Plan doc snapshot does not exist");
+        return setStockLimit(0);
+      }
+
+      const data = planDocSnapshot.data() as PlanDocData;
+
+      if (!data) {
+        console.error("Plan doc data does not exist");
+        return setStockLimit(0);
+      }
+
+      const stockLimitCalculated = calculateStockLimit(data.stock);
+      setStockLimit(stockLimitCalculated);
+      console.log(stockLimitCalculated);
+    } catch (error) {
+      console.error("Error on getting plan data: ", error);
+      setStockLimit(0);
+    }
+  };
+
+  const handlePressSeePlansButton = () => {
+    if (stockInformationModalRef.current)
+      stockInformationModalRef.current.close();
+
+    router.push("/(modals)/plans");
+  };
+
+  const handlePressStockInformationButton = () => {
+    if (stockInformationModalRef.current) {
+      Keyboard.dismiss();
+      stockInformationModalRef.current.present();
+    }
+  };
+
   if (!postDocPath) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -270,7 +383,7 @@ const listNFT = () => {
     );
   }
 
-  if (!postData) {
+  if (!postData || !usageData) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator color="white" />
@@ -279,229 +392,304 @@ const listNFT = () => {
   }
 
   return (
-    <ScrollView
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}
-    >
-      <Animated.View
-        ref={containerRef}
-        style={{
-          padding: 10,
-          gap: 20,
-          transform: [
-            {
-              translateY: animatedTranslateValue,
-            },
-          ],
-        }}
+    <>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <View
-          id="image-area"
+        <Animated.View
+          ref={containerRef}
           style={{
-            width: "100%",
-            justifyContent: "center",
-            alignItems: "center",
+            padding: 10,
+            gap: 20,
+            transform: [
+              {
+                translateY: animatedTranslateValue,
+              },
+            ],
           }}
         >
-          <Image
-            source={postData.image}
-            style={{ width: "65%", aspectRatio: 1, borderRadius: 20 }}
-          />
-        </View>
-
-        <View
-          id="price-area"
-          style={{
-            backgroundColor: "rgba(255,255,255,0.1)",
-            borderRadius: 20,
-            padding: 15,
-            gap: 5,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 20,
-            }}
-            bold
-          >
-            Price
-          </Text>
           <View
-            id="input-description"
+            id="image-area"
             style={{
-              gap: 2,
               width: "100%",
-              flexDirection: "row",
-              justifyContent: "space-between",
+              justifyContent: "center",
+              alignItems: "center",
             }}
           >
-            <View
-              id="input"
-              style={{
-                flexDirection: "row",
-                width: "35%",
-                overflow: "hidden",
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: "rgba(255,255,255,0.05)",
-                padding: 15,
-                borderRadius: 20,
-              }}
-            >
-              <View
-                style={{
-                  width: "20%",
-                }}
-              >
-                <Text
-                  fontSize={20}
-                  style={{
-                    color: priceInput ? "white" : "#808080",
-                  }}
-                  bold
-                >
-                  $
-                </Text>
-              </View>
-              <TextInput
-                autoFocus
-                value={priceInput}
-                onChangeText={handlePriceChange}
-                placeholder="53"
-                placeholderTextColor="#808080"
-                style={{
-                  fontWeight: "bold",
-                  fontSize: 20,
-                  width: "80%",
-                  color: "white",
-                }}
-                keyboardType="number-pad"
-              />
-            </View>
+            <Image
+              source={postData.image}
+              style={{ width: "65%", aspectRatio: 1, borderRadius: 20 }}
+            />
+          </View>
 
-            <View
-              id="price-detail"
+          <View
+            id="price-area"
+            style={{
+              backgroundColor: "rgba(255,255,255,0.1)",
+              borderRadius: 20,
+              padding: 15,
+              gap: 5,
+            }}
+          >
+            <Text
               style={{
-                width: "50%",
-                justifyContent: "center",
-                alignItems: "flex-end",
-                overflow: "hidden",
+                fontSize: 20,
+              }}
+              bold
+            >
+              Price
+            </Text>
+            <View
+              id="input-description"
+              style={{
+                gap: 2,
+                width: "100%",
+                flexDirection: "row",
+                justifyContent: "space-between",
               }}
             >
               <View
-                id="apple-fee"
+                id="input"
                 style={{
-                  opacity: 0.5,
                   flexDirection: "row",
-                  gap: 4,
-                  alignItems: "center",
+                  width: "35%",
+                  overflow: "hidden",
                   justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "rgba(255,255,255,0.05)",
+                  padding: 15,
+                  borderRadius: 20,
                 }}
               >
-                <Text fontSize={13}>Apple Fee:</Text>
-                <Text bold>${(price * 0.3).toFixed(2)}</Text>
+                <View
+                  style={{
+                    width: "20%",
+                  }}
+                >
+                  <Text
+                    fontSize={20}
+                    style={{
+                      color: priceInput ? "white" : "#808080",
+                    }}
+                    bold
+                  >
+                    $
+                  </Text>
+                </View>
+                <TextInput
+                  autoFocus
+                  value={priceInput}
+                  onChangeText={handlePriceChange}
+                  placeholder="53"
+                  placeholderTextColor="#808080"
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: 20,
+                    width: "80%",
+                    color: "white",
+                  }}
+                  keyboardType="number-pad"
+                />
               </View>
+
               <View
-                id="apidon-fee"
+                id="price-detail"
                 style={{
-                  opacity: 0.5,
-                  flexDirection: "row",
-                  gap: 4,
-                  alignItems: "center",
+                  width: "50%",
                   justifyContent: "center",
+                  alignItems: "flex-end",
+                  overflow: "hidden",
                 }}
               >
-                <Text fontSize={13}>Apidon Fee:</Text>
-                <Text bold>${(price * 0.1).toFixed(2)}</Text>
-              </View>
-              <View
-                id="revenue"
-                style={{
-                  flexDirection: "row",
-                  gap: 4,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Text fontSize={13}>Your Revenue:</Text>
-                <Text bold>${(price * 0.6).toFixed(2)}</Text>
+                <View
+                  id="apple-fee"
+                  style={{
+                    opacity: 0.5,
+                    flexDirection: "row",
+                    gap: 4,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text fontSize={13}>Apple Fee:</Text>
+                  <Text bold>${(price * 0.3).toFixed(2)}</Text>
+                </View>
+                <View
+                  id="apidon-fee"
+                  style={{
+                    opacity: 0.5,
+                    flexDirection: "row",
+                    gap: 4,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text fontSize={13}>Apidon Fee:</Text>
+                  <Text bold>${(price * 0.1).toFixed(2)}</Text>
+                </View>
+                <View
+                  id="revenue"
+                  style={{
+                    flexDirection: "row",
+                    gap: 4,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text fontSize={13}>Your Revenue:</Text>
+                  <Text bold>${(price * 0.6).toFixed(2)}</Text>
+                </View>
               </View>
             </View>
           </View>
-        </View>
 
-        <View
-          id="stock"
-          style={{
-            width: "100%",
-            backgroundColor: "rgba(255,255,255,0.1)",
-            borderRadius: 20,
-            padding: 15,
-            gap: 5,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 20,
-            }}
-            bold
-          >
-            Stock
-          </Text>
-          <TextInput
-            value={stockInput === "" ? "" : stock.toString()}
-            onChangeText={handleStockChange}
-            placeholder="34"
-            placeholderTextColor="#808080"
+          <View
+            id="stock"
             style={{
               width: "100%",
-              color: "white",
-              backgroundColor: "rgba(255,255,255,0.05)",
-              padding: 10,
-              borderRadius: 10,
-            }}
-            keyboardType="number-pad"
-          />
-        </View>
-
-        <Animated.View
-          id="create"
-          style={{
-            width: "100%",
-            justifyContent: "center",
-            alignItems: "center",
-            opacity: createButtonOpacityValue,
-          }}
-        >
-          <Pressable
-            disabled={loading || !price || !stock}
-            onPress={handleCreateButton}
-            style={{
-              width: "25%",
-              height: 35,
-              backgroundColor: apidonPink,
-              borderRadius: 10,
-              alignItems: "center",
-              justifyContent: "center",
+              backgroundColor: "rgba(255,255,255,0.1)",
+              borderRadius: 20,
+              padding: 15,
+              gap: 5,
             }}
           >
-            {loading ? (
-              <ActivityIndicator color="white" />
-            ) : (
+            <View
+              style={{
+                flexDirection: "row",
+                gap: 5,
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 20,
+                }}
+                bold
+              >
+                Stock
+              </Text>
+              <Pressable onPress={handlePressStockInformationButton}>
+                <AntDesign name="infocirlceo" size={18} color="white" />
+              </Pressable>
+            </View>
+
+            <TextInput
+              value={stockInput === "" ? "" : stock.toString()}
+              onChangeText={handleStockChange}
+              placeholder={`Maximum ${stockLimit}`}
+              placeholderTextColor="#808080"
+              style={{
+                width: "100%",
+                color: "white",
+                backgroundColor: "rgba(255,255,255,0.05)",
+                padding: 10,
+                borderRadius: 10,
+              }}
+              keyboardType="number-pad"
+            />
+          </View>
+
+          <Animated.View
+            id="create"
+            style={{
+              width: "100%",
+              justifyContent: "center",
+              alignItems: "center",
+              opacity: createButtonOpacityValue,
+            }}
+          >
+            <Pressable
+              disabled={loading || !price || !stock}
+              onPress={handleCreateButton}
+              style={{
+                width: "25%",
+                height: 35,
+                backgroundColor: apidonPink,
+                borderRadius: 10,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text
+                  bold
+                  style={{
+                    color: "white",
+                    fontSize: 16,
+                  }}
+                >
+                  Create
+                </Text>
+              )}
+            </Pressable>
+          </Animated.View>
+
+          {!inLimits && (
+            <Pressable
+              onPress={handlePressSeePlansButton}
+              id="limit-error"
+              style={{
+                width: "100%",
+                padding: 15,
+                backgroundColor: "rgba(255,255,255,0.05)",
+                borderRadius: 20,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
               <Text
                 bold
+                fontSize={12}
                 style={{
-                  color: "white",
-                  fontSize: 16,
+                  textAlign: "center",
+                  textDecorationLine: "underline",
+                  color: "yellow",
+                  opacity: 0.75,
                 }}
               >
-                Create
+                Please, see plans to create more collectibles.
               </Text>
-            )}
-          </Pressable>
+            </Pressable>
+          )}
         </Animated.View>
-      </Animated.View>
-    </ScrollView>
+      </ScrollView>
+
+      <BottomSheetModalProvider>
+        <CustomBottomModalSheet
+          ref={stockInformationModalRef}
+          snapPoint="40%"
+          backgroundColor="#1B1B1B"
+        >
+          <View style={{ flex: 1, gap: 15, padding: 10 }}>
+            <>
+              <Text bold fontSize={18}>
+                Maximum Stock Limit
+              </Text>
+
+              <Text fontSize={13}>
+                You can set a maximum of {stockLimit} stock for each collectible
+                with your plan.
+              </Text>
+              <Pressable onPress={handlePressSeePlansButton}>
+                <Text
+                  bold
+                  fontSize={13}
+                  style={{
+                    textDecorationLine: "underline",
+                  }}
+                >
+                  See Plans
+                </Text>
+              </Pressable>
+            </>
+          </View>
+        </CustomBottomModalSheet>
+      </BottomSheetModalProvider>
+    </>
   );
 };
 

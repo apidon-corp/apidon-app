@@ -6,7 +6,6 @@ import { Text } from "@/components/Text/Text";
 import TopUpProduct from "@/components/Wallet/TopUp/TopUpProduct";
 import { useBalance } from "@/hooks/useBalance";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
-import { ItemSKU } from "@/types/IAP";
 import Refund from "./Refund";
 
 const wallet = () => {
@@ -43,7 +42,7 @@ const wallet = () => {
         style={{
           width: "100%",
           backgroundColor: "#222222",
-          padding: 15,
+          padding: 25,
           borderRadius: 10,
         }}
       >
@@ -51,17 +50,16 @@ const wallet = () => {
           id="balance-card"
           style={{
             width: "100%",
-            backgroundColor: "#333333",
-            padding: 20,
-            gap: 10,
-            borderRadius: 15,
+            gap: 20,
           }}
         >
-          <Text fontSize={18}>Balance</Text>
+          <View>
+            <Text fontSize={18}>Balance</Text>
 
-          <Text bold fontSize={48}>
-            ${balance}
-          </Text>
+            <Text bold fontSize={48}>
+              ${balance}
+            </Text>
+          </View>
 
           <View
             style={{
@@ -112,7 +110,7 @@ const wallet = () => {
             data={products}
             renderItem={({ item }) => (
               <TopUpProduct
-                id={item.identifier as ItemSKU}
+                id={item.identifier}
                 product={item}
                 key={item.identifier}
               />

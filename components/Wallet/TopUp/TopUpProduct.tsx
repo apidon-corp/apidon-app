@@ -8,13 +8,13 @@ import {
 import { Text } from "@/components/Text/Text";
 
 import React, { useState } from "react";
-import { ItemSKU } from "@/types/IAP";
+
 
 import Purchases, { PurchasesStoreProduct } from "react-native-purchases";
 import { useAuth } from "@/providers/AuthProvider";
 
 type Props = {
-  id: ItemSKU;
+  id: string;
   product: PurchasesStoreProduct;
 };
 
