@@ -56,9 +56,9 @@ const listNFT = () => {
 
   const screenParameters = useAtomValue(screenParametersAtom);
 
-  const postDocPath =
-    screenParameters.find((q) => q.queryId === "postDocPath")?.value ||
-    "users/abovestars/posts/1724761082966";
+  const postDocPath = screenParameters.find(
+    (q) => q.queryId === "postDocPath"
+  )?.value;
 
   const [postData, setPostData] = useState<PostServerData | null>(null);
 
@@ -398,8 +398,7 @@ const listNFT = () => {
   };
 
   const handlePressSeePlansButton = () => {
-    if (informationModalRef.current)
-      informationModalRef.current.close();
+    if (informationModalRef.current) informationModalRef.current.close();
 
     router.push("/(modals)/plans");
   };
