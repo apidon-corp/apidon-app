@@ -49,6 +49,7 @@
     "expo-status-bar": "~1.12.1",
     "expo-system-ui": "~3.0.7",
     "expo-web-browser": "~13.0.3",
+    "ibantools": "^4.5.1",
     "jotai": "^2.9.1",
     "promise": "^8.3.0",
     "react": "18.2.0",

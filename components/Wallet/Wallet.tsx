@@ -1,5 +1,11 @@
 import React from "react";
-import { ActivityIndicator, FlatList, ScrollView, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  ScrollView,
+  View,
+} from "react-native";
 
 import { Text } from "@/components/Text/Text";
 
@@ -7,10 +13,25 @@ import TopUpProduct from "@/components/Wallet/TopUp/TopUpProduct";
 import { useBalance } from "@/hooks/useBalance";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 import Refund from "./Refund";
+import { router, usePathname } from "expo-router";
 
 const wallet = () => {
+  const pathname = usePathname();
+
   const { products } = useInAppPurchases();
   const { balance } = useBalance();
+
+  const handlePressWithdrawButton = () => {
+    const subScreens = pathname.split("/");
+
+    const length = subScreens.length;
+
+    subScreens[length - 1] = "withdraw";
+
+    const path = subScreens.join("/");
+
+    router.push(path);
+  };
 
   if (balance === "error" || balance === "getting-balance") {
     return (
@@ -68,6 +89,26 @@ const wallet = () => {
             }}
           >
             <Refund />
+          </View>
+
+          <View
+            id="withdraw"
+            style={{
+              justifyContent: "center",
+              alignItems: "center",
+              width: "100%",
+            }}
+          >
+            <Pressable
+              onPress={handlePressWithdrawButton}
+              style={{
+                padding: 10,
+                backgroundColor: "rgba(255,255,255,0.1)",
+                borderRadius: 10,
+              }}
+            >
+              <Text>Withdraw</Text>
+            </Pressable>
           </View>
         </View>
       </View>

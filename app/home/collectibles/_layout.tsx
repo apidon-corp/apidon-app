@@ -50,6 +50,30 @@ const _layout = () => {
       />
 
       <Stack.Screen
+        name="withdraw"
+        options={{
+          title: "Withdraw",
+          headerBackTitle: "Wallet",
+        }}
+      />
+
+      <Stack.Screen
+        name="requestWithdraw"
+        options={{
+          title: "Request Withdraw",
+          headerBackTitle: "Withdraw",
+        }}
+      />
+
+      <Stack.Screen
+        name="identity"
+        options={{
+          title: "Identity",
+          headerBackTitle: "Request",
+        }}
+      />
+
+      <Stack.Screen
         name="profilePage"
         options={{
           headerShown: true,
