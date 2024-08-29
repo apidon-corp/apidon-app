@@ -45,6 +45,10 @@ const index = () => {
       if (prev.includes(createdPostDocPath)) return prev;
       return [createdPostDocPath, ...prev];
     });
+
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({ y: 0, animated: true });
+    }
   }, [createdPostDocPath]);
 
   useEffect(() => {
