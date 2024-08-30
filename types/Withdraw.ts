@@ -33,10 +33,7 @@ export type WithdrawRequestDocData = {
   requestedDate: string; // ISO 8601 format
 
   /** Current status of the withdraw request */
-  status: "pending" | "approved" | "rejected" | "inReview";
-
-  /** Date and time when the withdraw was processed (if applicable) */
-  processedDate: string; // ISO 8601 format
+  status: "pending" | "approved" | "rejected";
 
   /** Any additional notes or comments */
   notes: string;

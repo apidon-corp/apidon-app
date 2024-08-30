@@ -102,7 +102,7 @@ const withdraw = () => {
         id="requests-root"
         style={{
           width: "100%",
-          paddingHorizontal: 15,
+
           gap: 15,
         }}
       >

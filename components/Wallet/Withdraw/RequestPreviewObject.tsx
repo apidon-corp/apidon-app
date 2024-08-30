@@ -4,14 +4,32 @@ import { Text } from "@/components/Text/Text";
 import React from "react";
 import { WithdrawRequestDocData } from "@/types/Withdraw";
 import { AntDesign } from "@expo/vector-icons";
+import { router, usePathname } from "expo-router";
 
 type Props = {
   data: WithdrawRequestDocData;
 };
 
 const RequestPreviewObject = ({ data }: Props) => {
+  const pathname = usePathname();
+
+  const handlePressRequestPreview = () => {
+    const subScreens = pathname.split("/");
+
+    const length = subScreens.length;
+
+    subScreens[
+      length - 1
+    ] = `withdrawRequest?withdrawRequestId=${data.requestId}`;
+
+    const path = subScreens.join("/");
+
+    router.push(path);
+  };
+
   return (
-    <View
+    <Pressable
+      onPress={handlePressRequestPreview}
       style={{
         width: "100%",
         borderRadius: 15,
@@ -29,10 +47,12 @@ const RequestPreviewObject = ({ data }: Props) => {
             width: "100%",
           }}
         >
-          <Text fontSize={12} bold style={{ color: "gray" }}>
+          <Text fontSize={12} style={{ color: "gray" }}>
             Id
           </Text>
-          <Text fontSize={12}>{data.requestId}</Text>
+          <Text bold fontSize={13}>
+            {data.requestId}
+          </Text>
         </View>
 
         <View
@@ -41,10 +61,12 @@ const RequestPreviewObject = ({ data }: Props) => {
             width: "100%",
           }}
         >
-          <Text bold fontSize={12} style={{ color: "gray" }}>
+          <Text fontSize={12} style={{ color: "gray" }}>
             Status
           </Text>
-          <Text fontSize={12}>{data.status}</Text>
+          <Text bold fontSize={14}>
+            {data.status.toUpperCase()}
+          </Text>
         </View>
 
         <View
@@ -53,10 +75,10 @@ const RequestPreviewObject = ({ data }: Props) => {
             width: "100%",
           }}
         >
-          <Text bold fontSize={12} style={{ color: "gray" }}>
+          <Text fontSize={12} style={{ color: "gray" }}>
             Request Date
           </Text>
-          <Text fontSize={12}>
+          <Text fontSize={13} bold>
             {new Date(data.requestedDate).toLocaleString()}
           </Text>
         </View>
@@ -66,7 +88,7 @@ const RequestPreviewObject = ({ data }: Props) => {
           <AntDesign name="right" size={24} color="white" />
         </Pressable>
       </View>
-    </View>
+    </Pressable>
   );
 };
 
