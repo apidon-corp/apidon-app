@@ -47,12 +47,8 @@ const RequestPreviewObject = ({ data }: Props) => {
             width: "100%",
           }}
         >
-          <Text fontSize={12} style={{ color: "gray" }}>
-            Id
-          </Text>
-          <Text bold fontSize={13}>
-            {data.requestId}
-          </Text>
+          <Text style={{ color: "gray" }}>Id</Text>
+          <Text bold>{data.requestId}</Text>
         </View>
 
         <View
@@ -61,10 +57,18 @@ const RequestPreviewObject = ({ data }: Props) => {
             width: "100%",
           }}
         >
-          <Text fontSize={12} style={{ color: "gray" }}>
-            Status
-          </Text>
-          <Text bold fontSize={14}>
+          <Text style={{ color: "gray" }}>Status</Text>
+          <Text
+            bold
+            style={{
+              color:
+                data.status === "pending"
+                  ? "yellow"
+                  : data.status === "rejected"
+                  ? "red"
+                  : "green",
+            }}
+          >
             {data.status.toUpperCase()}
           </Text>
         </View>
@@ -75,12 +79,8 @@ const RequestPreviewObject = ({ data }: Props) => {
             width: "100%",
           }}
         >
-          <Text fontSize={12} style={{ color: "gray" }}>
-            Request Date
-          </Text>
-          <Text fontSize={13} bold>
-            {new Date(data.requestedDate).toLocaleString()}
-          </Text>
+          <Text style={{ color: "gray" }}>Request Date</Text>
+          <Text bold>{new Date(data.requestedDate).toLocaleString()}</Text>
         </View>
       </View>
       <View id="arrow-area">

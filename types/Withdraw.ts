@@ -29,8 +29,8 @@ export type WithdrawRequestDocData = {
     routingNumber?: string;
   };
 
-  /** Date and time when the withdraw request was made */
-  requestedDate: string; // ISO 8601 format
+  /** Timestamp when the withdraw request was made */
+  requestedDate: number;
 
   /** Current status of the withdraw request */
   status: "pending" | "approved" | "rejected";
