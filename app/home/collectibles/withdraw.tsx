@@ -14,6 +14,7 @@ import firestore from "@react-native-firebase/firestore";
 import { useAuth } from "@/providers/AuthProvider";
 import { WithdrawRequestDocData } from "@/types/Withdraw";
 import { router, usePathname } from "expo-router";
+import RequestPreviewObject from "@/components/Wallet/Withdraw/RequestPreviewObject";
 
 const withdraw = () => {
   const { authStatus } = useAuth();
@@ -112,7 +113,10 @@ const withdraw = () => {
         <FlatList
           scrollEnabled={false}
           data={requestDatas}
-          renderItem={({ item }) => <Text>{item.requestId}</Text>}
+          renderItem={({ item }) => (
+            <RequestPreviewObject data={item} key={item.requestId} />
+          )}
+          keyExtractor={(item) => item.requestId}
         />
       </View>
     </ScrollView>

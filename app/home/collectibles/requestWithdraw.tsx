@@ -1,3 +1,7 @@
+import Text from "@/components/Text/Text";
+import { useBalance } from "@/hooks/useBalance";
+import { WithdrawRequestInput } from "@/types/Withdraw";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -8,23 +12,17 @@ import {
   TextInput,
   View,
 } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
-import Text from "@/components/Text/Text";
-import { WithdrawRequestInput } from "@/types/Withdraw";
-import { useBalance } from "@/hooks/useBalance";
 
-import firestore from "@react-native-firebase/firestore";
-import auth from "@react-native-firebase/auth";
 import { useAuth } from "@/providers/AuthProvider";
 import { UserIdentityDoc } from "@/types/Identity";
+import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
 import { router, usePathname } from "expo-router";
 
-import {
-  isValidIBAN,
-  isValidBIC,
-  electronicFormatIBAN,
-  friendlyFormatIBAN,
-} from "ibantools";
+import { isValidBIC } from "ibantools";
+
+import appCheck from "@react-native-firebase/app-check";
+import apiRoutes from "@/helpers/ApiRoutes";
 
 const requestWithdraw = () => {
   const { authStatus } = useAuth();
@@ -53,6 +51,8 @@ const requestWithdraw = () => {
   const [hasValidSwift, setHasValidSwift] = useState(false);
 
   const requestButtonOpacityValue = useRef(new Animated.Value(0.5)).current;
+
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (authStatus !== "authenticated") return;
@@ -135,10 +135,11 @@ const requestWithdraw = () => {
       requestInputData.bankDetails.accountNumber &&
       requestInputData.bankDetails.bankName &&
       requestInputData.bankDetails.swiftCode &&
-      hasValidSwift;
+      hasValidSwift &&
+      !loading;
 
     handleChangeOpactiy(requestButtonOpacityValue, status ? 1 : 0.5, 250);
-  }, [hasValidSwift, requestInputData]);
+  }, [hasValidSwift, requestInputData, loading]);
 
   const handlePressVerifyButton = () => {
     const subScreens = pathname.split("/");
@@ -178,6 +179,53 @@ const requestWithdraw = () => {
       duration,
       useNativeDriver: true,
     }).start();
+  };
+
+  const handleCreateRequestButton = async () => {
+    const currentUserAuthObject = auth().currentUser;
+    if (!currentUserAuthObject) return;
+
+    if (!hasValidSwift) return;
+
+    if (loading) return;
+
+    setLoading(true);
+
+    try {
+      const idToken = await currentUserAuthObject.getIdToken();
+
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
+      const response = await fetch(apiRoutes.withdraw.requestWithdraw, {
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${idToken}`,
+          appchecktoken,
+        },
+        method: "POST",
+        body: JSON.stringify({
+          accountNumber: requestInputData.bankDetails.accountNumber,
+          bankName: requestInputData.bankDetails.bankName,
+          swiftCode: requestInputData.bankDetails.swiftCode,
+          routingNumber: requestInputData.bankDetails.routingNumber,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error(
+          "Response from postUpload API is not okay: ",
+          await response.text()
+        );
+        return setLoading(false);
+      }
+
+      if (router.canGoBack()) router.back();
+
+      return setLoading(false);
+    } catch (error) {
+      console.error("Error on fetching to requestWithdraw API: ", error);
+      return setLoading(false);
+    }
   };
 
   if (
@@ -524,13 +572,19 @@ const requestWithdraw = () => {
           }}
         >
           <Pressable
+            disabled={loading}
+            onPress={handleCreateRequestButton}
             style={{
               padding: 10,
               backgroundColor: "white",
               borderRadius: 10,
             }}
           >
-            <Text style={{ color: "black" }}>Create Request</Text>
+            {loading ? (
+              <ActivityIndicator />
+            ) : (
+              <Text style={{ color: "black" }}>Create Request</Text>
+            )}
           </Pressable>
         </Animated.View>
       </ScrollView>
