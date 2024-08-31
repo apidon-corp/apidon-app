@@ -691,7 +691,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
         </View>
       </Animated.View>
 
-      <CustomBottomModalSheet ref={postOptionsModalRef} snapPoint="25%">
+      <CustomBottomModalSheet ref={postOptionsModalRef} >
         <View
           style={{
             flex: 1,
@@ -742,7 +742,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
       <CustomBottomModalSheet
         ref={nftOptionsModalRef}
-        snapPoint="40%"
+
         backgroundColor="#1B1B1B"
       >
         <NftBottomSheetContent

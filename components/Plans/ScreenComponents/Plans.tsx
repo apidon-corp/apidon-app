@@ -408,7 +408,7 @@ const Plans = () => {
 
       <CustomBottomModalSheet
         ref={planInformationBottomSheetModalRef}
-        snapPoint="40%"
+
         backgroundColor="#1B1B1B"
       >
         <PlanBottomSheetContent

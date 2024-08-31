@@ -54,6 +54,9 @@ const RequestWithdraw = () => {
 
   const [loading, setLoading] = useState(false);
 
+  const [hasEnoughBalance, setHasEnoughBalance] = useState(false);
+
+  // Getting realtime identity data.
   useEffect(() => {
     if (authStatus !== "authenticated") return;
 
@@ -130,16 +133,28 @@ const RequestWithdraw = () => {
     };
   }, []);
 
+  // Defining if user has enough balance to withdraw
+  useEffect(() => {
+    if (balance === "error" || balance === "getting-balance")
+      return setHasEnoughBalance(false);
+
+    const netTotal = balance * 0.6 - 20;
+
+    setHasEnoughBalance(netTotal > 0);
+  }, [balance]);
+
+  // Managing opacity of button
   useEffect(() => {
     const status =
       requestInputData.bankDetails.accountNumber &&
       requestInputData.bankDetails.bankName &&
       requestInputData.bankDetails.swiftCode &&
       hasValidSwift &&
-      !loading;
+      !loading &&
+      hasEnoughBalance;
 
     handleChangeOpactiy(requestButtonOpacityValue, status ? 1 : 0.5, 250);
-  }, [hasValidSwift, requestInputData, loading]);
+  }, [hasValidSwift, requestInputData, loading, hasEnoughBalance]);
 
   const handlePressVerifyButton = () => {
     const subScreens = pathname.split("/");
@@ -305,10 +320,10 @@ const RequestWithdraw = () => {
             id="amount"
             style={{
               width: "100%",
-              gap: 5,
-              backgroundColor: "rgba(255,255,255,0.1)",
+              backgroundColor: "rgba(255,255,255,0.07)",
               borderRadius: 10,
               padding: 10,
+              gap: 5,
             }}
           >
             <View
@@ -320,12 +335,8 @@ const RequestWithdraw = () => {
                 alignItems: "center",
               }}
             >
-              <Text fontSize={16} bold>
-                Current Balance:{" "}
-              </Text>
-              <Text fontSize={16} bold>
-                ${balance}
-              </Text>
+              <Text>Current Balance: </Text>
+              <Text bold>${balance}</Text>
             </View>
 
             <View
@@ -335,13 +346,9 @@ const RequestWithdraw = () => {
                 gap: 5,
               }}
             >
-              <View id="fees-title" style={{ gap: 5, flexDirection: "row" }}>
-                <Text fontSize={16} bold>
-                  Fees:
-                </Text>
-                <Text fontSize={16} bold>
-                  ${balance * 0.4 + 20}
-                </Text>
+              <View id="fees-title" style={{ flexDirection: "row", gap: 5 }}>
+                <Text>Fees:</Text>
+                <Text bold>${balance * 0.4 + 20}</Text>
               </View>
 
               <View
@@ -412,13 +419,26 @@ const RequestWithdraw = () => {
                 alignItems: "center",
               }}
             >
-              <Text fontSize={16} bold>
-                Net Payout:
-              </Text>
-              <Text fontSize={16} bold>
-                $ {balance * 0.6 - 20}
-              </Text>
+              <Text>Net Payout:</Text>
+              <Text bold>${balance * 0.6 - 20}</Text>
             </View>
+          </View>
+
+          <View
+            id="warning-area"
+            style={{
+              display: hasEnoughBalance ? "none" : undefined,
+              width: "100%",
+              borderRadius: 10,
+              padding: 10,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "rgba(0, 255, 255, 0.3)",
+            }}
+          >
+            <Text style={{ textAlign: "center" }}>
+              You don't have sufficient balance to withdraw.
+            </Text>
           </View>
         </View>
 

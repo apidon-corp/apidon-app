@@ -14,11 +14,14 @@ import { useBalance } from "@/hooks/useBalance";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 import Refund from "./Refund";
 import { router, usePathname } from "expo-router";
+import { AntDesign, Entypo, Feather, Ionicons } from "@expo/vector-icons";
+
+import * as Linking from "expo-linking";
+import TopUpArea from "./TopUp/TopUpArea";
 
 const wallet = () => {
   const pathname = usePathname();
 
-  const { products } = useInAppPurchases();
   const { balance } = useBalance();
 
   const handlePressWithdrawButton = () => {
@@ -31,6 +34,10 @@ const wallet = () => {
     const path = subScreens.join("/");
 
     router.push(path);
+  };
+
+  const handlePressRefundButton = () => {
+    Linking.openURL("https://support.apple.com/en-us/118223");
   };
 
   if (balance === "error" || balance === "getting-balance") {
@@ -51,117 +58,125 @@ const wallet = () => {
   return (
     <ScrollView
       id="root"
-      style={{ flex: 1 }}
       contentContainerStyle={{
-        gap: 20,
         width: "100%",
+        gap: 10
       }}
       showsVerticalScrollIndicator={false}
     >
       <View
-        id="balance-root"
         style={{
           width: "100%",
-          backgroundColor: "#222222",
-          padding: 25,
-          borderRadius: 10,
+          gap: 20,
+          padding: 15,
         }}
       >
+        <View id="balance">
+          <Text fontSize={16}>Total Balance</Text>
+
+          <Text bold fontSize={48}>
+            ${balance}
+          </Text>
+        </View>
+
         <View
-          id="balance-card"
+          id="methods"
           style={{
             width: "100%",
-            gap: 20,
+            flexDirection: "row",
+            justifyContent: "space-between",
           }}
         >
-          <View>
-            <Text fontSize={18}>Balance</Text>
+          <View
+            id="receipts"
+            style={{
+              width: "25%",
+              aspectRatio: 1,
+              borderColor: "gray",
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "rgba(255,255,255,0.07)",
+              borderRadius: 15,
+              gap: 10,
+            }}
+          >
+            <Ionicons name="receipt-outline" size={28} color="white" />
 
-            <Text bold fontSize={48}>
-              ${balance}
+            <Text
+              bold
+              style={{
+                color: "gray",
+              }}
+              fontSize={12}
+            >
+              Receipts
             </Text>
           </View>
 
-          <View
-            style={{
-              justifyContent: "center",
-              alignContent: "center",
-            }}
-          >
-            <Refund />
-          </View>
-
-          <View
+          <Pressable
+            onPress={handlePressWithdrawButton}
             id="withdraw"
             style={{
+              width: "25%",
+              aspectRatio: 1,
+              borderColor: "gray",
               justifyContent: "center",
               alignItems: "center",
-              width: "100%",
+              backgroundColor: "rgba(255,255,255,0.07)",
+              borderRadius: 15,
+              gap: 10,
             }}
           >
-            <Pressable
-              onPress={handlePressWithdrawButton}
+            <AntDesign
+              name="arrowup"
+              size={28}
+              color="white"
               style={{
-                padding: 10,
-                backgroundColor: "rgba(255,255,255,0.1)",
-                borderRadius: 10,
+                transform: [{ rotate: "45deg" }],
               }}
-            >
-              <Text>Withdraw</Text>
-            </Pressable>
-          </View>
-        </View>
-      </View>
+            />
 
-      <View
-        id="top-up-root"
-        style={{ justifyContent: "center", alignItems: "center", gap: 20 }}
-      >
-        <View
-          id="title"
-          style={{
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Text bold fontSize={24}>
-            Top Up
-          </Text>
-          <Text
+            <Text
+              bold
+              style={{
+                color: "gray",
+              }}
+              fontSize={12}
+            >
+              Withdraw
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={handlePressRefundButton}
+            id="refund"
             style={{
-              color: "white",
+              width: "25%",
+              aspectRatio: 1,
+              borderColor: "gray",
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "rgba(255,255,255,0.07)",
+              borderRadius: 15,
+              gap: 10,
             }}
           >
-            Choose from below options to top up!
-          </Text>
-        </View>
+            <AntDesign name="shrink" size={28} color="white" />
 
-        {products.length === 0 ? (
-          <View>
-            <ActivityIndicator />
-          </View>
-        ) : (
-          <FlatList
-            contentContainerStyle={{
-              gap: 10,
-            }}
-            columnWrapperStyle={{
-              gap: 10,
-            }}
-            data={products}
-            renderItem={({ item }) => (
-              <TopUpProduct
-                id={item.identifier}
-                product={item}
-                key={item.identifier}
-              />
-            )}
-            numColumns={3}
-            scrollEnabled={false}
-            keyExtractor={(item) => item.identifier}
-          />
-        )}
+            <Text
+              bold
+              style={{
+                color: "gray",
+              }}
+              fontSize={12}
+            >
+              Refund
+            </Text>
+          </Pressable>
+        </View>
       </View>
+
+      <TopUpArea />
     </ScrollView>
   );
 };
