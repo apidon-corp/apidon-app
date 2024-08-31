@@ -118,7 +118,7 @@ const TopUpArea = () => {
             If you haven't made any transactions, you can request a full refund
             through Apple following their guidelines. However, if you have made
             transactions, withdrawing the amount will incur fees, and only 60%
-            of the remaining balance will be refundable.
+            of the remaining balance (except wire fee) will be refundable.
           </Text>
           <Text
             fontSize={13}
