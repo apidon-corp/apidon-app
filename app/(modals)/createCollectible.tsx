@@ -36,7 +36,23 @@ import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 
 const listNFT = () => {
   // Trigger In-App-Purchase Store Notifications
-  useInAppPurchases();
+  const { products } = useInAppPurchases();
+
+  const prices = products.map((product) => {
+    // Format of top up product item is like: "1_dollar_in_app_credit"
+    // We need to get first element of this string
+
+    const price = product.identifier.split("_")[0];
+
+    const priceInt = parseInt(price);
+
+    if (!isNaN(priceInt)) {
+      return priceInt;
+    } else {
+      console.error(`Invalid price format: ${product.identifier}`);
+      return 0;
+    }
+  });
 
   const screenParameters = useAtomValue(screenParametersAtom);
 
@@ -46,8 +62,7 @@ const listNFT = () => {
 
   const [postData, setPostData] = useState<PostServerData | null>(null);
 
-  const [priceInput, setPriceInput] = useState("");
-  const [price, setPrice] = useState(0);
+  const [price, setPrice] = useState(1);
 
   const [stockInput, setStockInput] = useState("");
   const [stock, setStock] = useState(0);
@@ -70,7 +85,11 @@ const listNFT = () => {
 
   const [stockLimit, setStockLimit] = useState(0);
 
-  const stockInformationModalRef = useRef<BottomSheetModal>(null);
+  const informationModalRef = useRef<BottomSheetModal>(null);
+
+  const [bottomModalType, setBottomModalType] = useState<"stock" | "price">(
+    "stock"
+  );
 
   // Gets user's usage data, realtime.
   useEffect(() => {
@@ -220,26 +239,44 @@ const listNFT = () => {
     }
   };
 
-  const handlePriceChange = (input: string) => {
-    if (input === "") {
-      setPriceInput("");
-      return setPrice(0);
+  const handleIncreasePrice = () => {
+    const currentPrice = price;
+
+    const currentPriceIndex = prices.indexOf(currentPrice);
+
+    if (currentPriceIndex === -1) {
+      console.error("Current price not found in prices array");
+      return setPrice(1);
     }
 
-    if (input.length > 4) {
-      return;
+    const maxIndex = prices.length - 1;
+
+    const nextIndex =
+      currentPriceIndex === maxIndex ? 0 : currentPriceIndex + 1;
+
+    const nextPrice = prices[nextIndex];
+
+    setPrice(nextPrice);
+  };
+
+  const handleDecreasePrice = () => {
+    const currentPrice = price;
+
+    const currentPriceIndex = prices.indexOf(currentPrice);
+
+    if (currentPriceIndex === -1) {
+      console.error("Current price not found in prices array");
+      return setPrice(1);
     }
 
-    const intVersion = parseInt(input);
+    const maxIndex = prices.length - 1;
 
-    if (isNaN(intVersion)) {
-      return;
-    }
+    const nextIndex =
+      currentPriceIndex === 0 ? maxIndex : currentPriceIndex - 1;
 
-    const validInput = intVersion.toString();
+    const nextPrice = prices[nextIndex];
 
-    setPriceInput(validInput);
-    setPrice(intVersion);
+    setPrice(nextPrice);
   };
 
   const handleStockChange = (input: string) => {
@@ -354,7 +391,6 @@ const listNFT = () => {
 
       const stockLimitCalculated = calculateStockLimit(data.stock);
       setStockLimit(stockLimitCalculated);
-      console.log(stockLimitCalculated);
     } catch (error) {
       console.error("Error on getting plan data: ", error);
       setStockLimit(0);
@@ -362,16 +398,24 @@ const listNFT = () => {
   };
 
   const handlePressSeePlansButton = () => {
-    if (stockInformationModalRef.current)
-      stockInformationModalRef.current.close();
+    if (informationModalRef.current) informationModalRef.current.close();
 
     router.push("/(modals)/plans");
   };
 
   const handlePressStockInformationButton = () => {
-    if (stockInformationModalRef.current) {
+    if (informationModalRef.current) {
       Keyboard.dismiss();
-      stockInformationModalRef.current.present();
+      setBottomModalType("stock");
+      informationModalRef.current.present();
+    }
+  };
+
+  const handlePressPriceInformationButton = () => {
+    if (informationModalRef.current) {
+      Keyboard.dismiss();
+      setBottomModalType("price");
+      informationModalRef.current.present();
     }
   };
 
@@ -432,16 +476,28 @@ const listNFT = () => {
               gap: 5,
             }}
           >
-            <Text
-              style={{
-                fontSize: 20,
-              }}
-              bold
-            >
-              Price
-            </Text>
             <View
-              id="input-description"
+              id="title-and-info-bubble"
+              style={{
+                width: "100%",
+                justifyContent: "space-between",
+                flexDirection: "row",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 20,
+                }}
+                bold
+              >
+                Price
+              </Text>
+              <Pressable onPress={handlePressPriceInformationButton}>
+                <AntDesign name="infocirlceo" size={18} color="white" />
+              </Pressable>
+            </View>
+
+            <View
               style={{
                 gap: 2,
                 width: "100%",
@@ -450,47 +506,51 @@ const listNFT = () => {
               }}
             >
               <View
-                id="input"
+                id="input-with-buttons"
                 style={{
                   flexDirection: "row",
-                  width: "35%",
-                  overflow: "hidden",
-                  justifyContent: "center",
+                  width: "45%",
                   alignItems: "center",
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  padding: 15,
-                  borderRadius: 20,
+                  justifyContent: "space-between",
                 }}
               >
                 <View
+                  id="input"
                   style={{
-                    width: "20%",
+                    flexDirection: "row",
+                    width: "70%",
+                    overflow: "hidden",
+                    justifyContent: "flex-start",
+                    alignItems: "center",
+                    backgroundColor: "rgba(255,255,255,0.05)",
+                    padding: 15,
+                    borderRadius: 20,
                   }}
                 >
                   <Text
-                    fontSize={20}
-                    style={{
-                      color: priceInput ? "white" : "#808080",
-                    }}
                     bold
+                    style={{
+                      fontSize: 20,
+                      color: "white",
+                    }}
                   >
-                    $
+                    $ {price}
                   </Text>
                 </View>
-                <TextInput
-                  autoFocus
-                  value={priceInput}
-                  onChangeText={handlePriceChange}
-                  placeholder="53"
-                  placeholderTextColor="#808080"
+                <View
+                  id="buttons"
                   style={{
-                    fontWeight: "bold",
-                    fontSize: 20,
-                    width: "80%",
-                    color: "white",
+                    width: "20%",
+                    gap: 10,
                   }}
-                  keyboardType="number-pad"
-                />
+                >
+                  <Pressable onPress={handleIncreasePrice}>
+                    <AntDesign name="pluscircleo" size={24} color="white" />
+                  </Pressable>
+                  <Pressable onPress={handleDecreasePrice}>
+                    <AntDesign name="minuscircle" size={24} color="white" />
+                  </Pressable>
+                </View>
               </View>
 
               <View
@@ -660,32 +720,45 @@ const listNFT = () => {
 
       <BottomSheetModalProvider>
         <CustomBottomModalSheet
-          ref={stockInformationModalRef}
-          snapPoint="40%"
+          ref={informationModalRef}
+
           backgroundColor="#1B1B1B"
         >
           <View style={{ flex: 1, gap: 15, padding: 10 }}>
-            <>
-              <Text bold fontSize={18}>
-                Maximum Stock Limit
-              </Text>
-
-              <Text fontSize={13}>
-                You can set a maximum of {stockLimit} stock for each collectible
-                with your plan.
-              </Text>
-              <Pressable onPress={handlePressSeePlansButton}>
-                <Text
-                  bold
-                  fontSize={13}
-                  style={{
-                    textDecorationLine: "underline",
-                  }}
-                >
-                  See Plans
+            {bottomModalType === "stock" && (
+              <>
+                <Text bold fontSize={18}>
+                  Maximum Stock Limit
                 </Text>
-              </Pressable>
-            </>
+                <Text fontSize={13}>
+                  You can set a maximum of {stockLimit} stock for each
+                  collectible with your plan.
+                </Text>
+                <Pressable onPress={handlePressSeePlansButton}>
+                  <Text
+                    bold
+                    fontSize={13}
+                    style={{
+                      textDecorationLine: "underline",
+                    }}
+                  >
+                    See Plans
+                  </Text>
+                </Pressable>
+              </>
+            )}
+            {bottomModalType === "price" && (
+              <>
+                <Text bold fontSize={18}>
+                  Fixed Price Options
+                </Text>
+                <Text fontSize={13}>
+                  Choose from our preset prices to ensure a seamless purchasing
+                  experience through in-app purchases. This makes buying your
+                  items easier and more straightforward for everyone.
+                </Text>
+              </>
+            )}
           </View>
         </CustomBottomModalSheet>
       </BottomSheetModalProvider>

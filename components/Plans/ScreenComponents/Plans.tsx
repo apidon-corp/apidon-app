@@ -24,6 +24,7 @@ import Carousel from "react-native-reanimated-carousel";
 import { SubscriptionDocData } from "@/types/Subscriptions";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Plans = () => {
   const pathname = usePathname();
@@ -31,6 +32,8 @@ const Plans = () => {
   const { authStatus } = useAuth();
 
   const { width } = Dimensions.get("window");
+
+  const { bottom } = useSafeAreaInsets();
 
   const planInformationBottomSheetModalRef = useRef<BottomSheetModal>(null);
 
@@ -65,6 +68,8 @@ const Plans = () => {
 
   const [subscriptionButtonLoading, setSubscriptionButtonLoading] =
     useState(false);
+
+  const [needBottomPadding, setNeedBottomPadding] = useState(false);
 
   useEffect(() => {
     handlePreparePlanCardDatas();
@@ -173,6 +178,11 @@ const Plans = () => {
 
     return handleChangeOpactiy(subscribeButtonOpacityValue, 1, 250);
   }, [showSubscribeButton, subscriptionButtonLoading]);
+
+  // Setting if we need bottom padding
+  useEffect(() => {
+    setNeedBottomPadding(pathname === "/plans");
+  }, [pathname]);
 
   const handleGetPlanDetailFromDatabase = async (storeProductId: string) => {
     try {
@@ -356,6 +366,7 @@ const Plans = () => {
 
       <Animated.View
         style={{
+          bottom: needBottomPadding ? bottom : undefined,
           opacity: subscribeButtonOpacityValue,
           display: showSubscribeButton ? "flex" : "none",
         }}
@@ -397,7 +408,7 @@ const Plans = () => {
 
       <CustomBottomModalSheet
         ref={planInformationBottomSheetModalRef}
-        snapPoint="40%"
+
         backgroundColor="#1B1B1B"
       >
         <PlanBottomSheetContent

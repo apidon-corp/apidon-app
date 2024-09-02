@@ -17,6 +17,7 @@ import {
   Keyboard,
   Pressable,
   SafeAreaView,
+  ScrollView,
   TextInput,
   View,
 } from "react-native";
@@ -224,91 +225,6 @@ const comments = () => {
     }
   };
 
-  function CreateCommentPanel({
-    profilePhoto,
-    username,
-  }: {
-    profilePhoto: string;
-    username: string;
-  }) {
-    return (
-      <Animated.View
-        ref={containerRef}
-        style={{
-          backgroundColor: "black",
-          zIndex: 1,
-          bottom: bottom + 10,
-          position: "absolute",
-          borderWidth: 1,
-          borderColor: "rgba(255,255,255,0.25)",
-          borderRadius: 20,
-          flexDirection: "row",
-          width: "95%",
-          height: 75,
-          alignSelf: "center",
-          justifyContent: "space-between",
-          padding: 10,
-          transform: [
-            {
-              translateY: animatedTranslateValue,
-            },
-          ],
-        }}
-      >
-        <Image
-          source={profilePhoto || require("@/assets/images/user.jpg")}
-          style={{
-            width: 50,
-            height: 50,
-            borderRadius: 25,
-          }}
-          transition={500}
-        />
-        <TextInput
-          placeholderTextColor="#808080"
-          placeholder={"Comment as " + username + "..."}
-          style={{
-            width: "70%",
-            height: 50,
-            padding: 10,
-            borderColor: "rgba(255,255,255,0.25)",
-            borderWidth: 1,
-            borderRadius: 20,
-            color: "white",
-          }}
-          value={comment}
-          onChangeText={(input) => {
-            setComment(input);
-          }}
-        />
-        <Animated.View
-          style={{
-            opacity: animatedOpacityValue,
-            width: "10%",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Pressable
-            disabled={sendCommentLoading || comment.length === 0}
-            onPress={handleSendComment}
-            style={{
-              width: "100%",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            {sendCommentLoading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Ionicons name="send" size={24} color="white" />
-            )}
-          </Pressable>
-        </Animated.View>
-      </Animated.View>
-    );
-  }
-
   if (!postDocPath) {
     return (
       <SafeAreaView
@@ -337,56 +253,124 @@ const comments = () => {
     );
   }
 
-  if (commentData.length === 0) {
-    return (
-      <SafeAreaView
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Text>No comments yet.</Text>
-        {currentUserData && (
-          <CreateCommentPanel
-            profilePhoto={currentUserData.profilePhoto}
-            username={currentUserData.username}
-          />
-        )}
-      </SafeAreaView>
-    );
-  }
-
   return (
-    <View
-      style={{
-        flex: 1,
-        paddingBottom: 100,
-      }}
-    >
-      <FlatList
-        data={commentData}
-        contentContainerStyle={{
-          gap: 5,
-          paddingHorizontal: 10,
-          paddingVertical: 5,
-        }}
-        renderItem={({ item }) => (
-          <CommentItem
-            commentServerData={item}
-            postDocPath={postDocPath}
-            key={`${item.sender}-${item.message}-${item.ts}`}
+    <>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ flex: 1 }}
+      >
+        {commentData.length === 0 && (
+          <View
+            style={{
+              width: "100%",
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Text>No comments yet.</Text>
+          </View>
+        )}
+        {commentData.length !== 0 && (
+          <FlatList
+            scrollEnabled={false}
+            data={commentData}
+            contentContainerStyle={{
+              gap: 5,
+              paddingHorizontal: 10,
+              paddingVertical: 5,
+            }}
+            renderItem={({ item }) => (
+              <CommentItem
+                commentServerData={item}
+                postDocPath={postDocPath}
+                key={`${item.sender}-${item.message}-${item.ts}`}
+              />
+            )}
+            keyExtractor={(item) => `${item.sender}-${item.message}-${item.ts}`}
           />
         )}
-        keyExtractor={(item) => `${item.sender}-${item.message}-${item.ts}`}
-      />
+      </ScrollView>
       {currentUserData && (
-        <CreateCommentPanel
-          profilePhoto={currentUserData.profilePhoto}
-          username={currentUserData.username}
-        />
+        <Animated.View
+          ref={containerRef}
+          style={{
+            backgroundColor: "black",
+            zIndex: 1,
+            bottom: bottom + 10,
+            position: "absolute",
+            borderWidth: 1,
+            borderColor: "rgba(255,255,255,0.25)",
+            borderRadius: 20,
+            flexDirection: "row",
+            width: "95%",
+            height: 75,
+            alignSelf: "center",
+            justifyContent: "space-between",
+            padding: 10,
+            transform: [
+              {
+                translateY: animatedTranslateValue,
+              },
+            ],
+          }}
+        >
+          <Image
+            source={
+              currentUserData.profilePhoto ||
+              require("@/assets/images/user.jpg")
+            }
+            style={{
+              width: 50,
+              height: 50,
+              borderRadius: 25,
+            }}
+            transition={500}
+          />
+          <TextInput
+            placeholderTextColor="#808080"
+            placeholder={"Comment as " + currentUserData.username + "..."}
+            style={{
+              width: "70%",
+              height: 50,
+              padding: 10,
+              borderColor: "rgba(255,255,255,0.25)",
+              borderWidth: 1,
+              borderRadius: 20,
+              color: "white",
+            }}
+            value={comment}
+            onChangeText={(input) => {
+              setComment(input);
+            }}
+          />
+          <Animated.View
+            style={{
+              opacity: animatedOpacityValue,
+              width: "10%",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Pressable
+              disabled={sendCommentLoading || comment.length === 0}
+              onPress={handleSendComment}
+              style={{
+                width: "100%",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              {sendCommentLoading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Ionicons name="send" size={24} color="white" />
+              )}
+            </Pressable>
+          </Animated.View>
+        </Animated.View>
       )}
-    </View>
+    </>
   );
 };
 

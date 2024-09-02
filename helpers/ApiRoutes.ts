@@ -58,6 +58,9 @@ const apiRoutes = {
   identity: {
     createVerificationSession: `${apiEndpoint}/identity-createVerificationSession`,
   },
+  withdraw: {
+    requestWithdraw: `${apiEndpoint}/withdraw-requestWithdraw`,
+  },
 };
 
 export default apiRoutes;

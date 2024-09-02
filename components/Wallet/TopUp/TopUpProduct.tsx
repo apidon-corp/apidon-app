@@ -1,65 +1,43 @@
-import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  Pressable,
-  View,
-} from "react-native";
 import { Text } from "@/components/Text/Text";
+import { Pressable } from "react-native";
 
-import React, { useState } from "react";
+import React from "react";
 
-
-import Purchases, { PurchasesStoreProduct } from "react-native-purchases";
 import { useAuth } from "@/providers/AuthProvider";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { PurchasesStoreProduct } from "react-native-purchases";
 
 type Props = {
   id: string;
   product: PurchasesStoreProduct;
+  setChosenProduct: React.Dispatch<
+    React.SetStateAction<{
+      product: PurchasesStoreProduct;
+      price: string;
+    } | null>
+  >;
+  topUpInformationBottomSheetModalRef: React.RefObject<BottomSheetModal>;
 };
 
-const TopUpProduct = ({ id, product }: Props) => {
+const TopUpProduct = ({
+  id,
+  setChosenProduct,
+  topUpInformationBottomSheetModalRef,
+  product,
+}: Props) => {
   const { authStatus } = useAuth();
-
-  const { width } = Dimensions.get("screen");
-
-  const [loading, setLoading] = useState(false);
 
   const price = id.split("_")[0];
 
   const handlePressProduct = () => {
-    if (loading) return;
+    if (!topUpInformationBottomSheetModalRef.current) return;
 
-    Alert.alert(
-      "Top Up Balance", // Title
-      `Are you sure you want to top up your balance with ${price} USD?`, // Message
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Yes",
-          onPress: handleTopUp,
-        },
-      ]
-    );
-  };
+    setChosenProduct({
+      price: price,
+      product: product,
+    });
 
-  const handleTopUp = async () => {
-    setLoading(true);
-
-    try {
-      await Purchases.purchaseStoreProduct(product);
-      setLoading(false);
-    } catch (error: any) {
-      setLoading(false);
-
-      if (error.userCancelled) return console.log("User cancelled");
-
-      Alert.alert("Error", "Error on purchasing product.");
-      console.error("Error purchasing product: \n", id, "\n", error);
-    }
+    topUpInformationBottomSheetModalRef.current.present();
   };
 
   if (authStatus !== "authenticated") {
@@ -68,31 +46,24 @@ const TopUpProduct = ({ id, product }: Props) => {
   }
 
   return (
-    <Pressable id="root" onPress={handlePressProduct} disabled={loading}>
-      <View
-        id="price-container"
-        style={{
-          height: (width - 30) / 3,
-          width: (width - 30) / 3,
-          backgroundColor: "#202020",
-          borderWidth: 1,
-          borderColor: "gray",
-          borderRadius: 10,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {loading ? (
-          <ActivityIndicator color="gray" />
-        ) : (
-          <>
-            <Text id="price" fontSize={32} bold>
-              ${price}
-            </Text>
-            <Text id="currency">USD</Text>
-          </>
-        )}
-      </View>
+    <Pressable
+      id="root"
+      onPress={handlePressProduct}
+      style={{
+        width: "30%",
+        aspectRatio: 1,
+        backgroundColor: "rgba(255,255,255,0.09)",
+        borderRadius: 15,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <>
+        <Text id="price" fontSize={28} bold>
+          ${price}
+        </Text>
+        <Text id="currency">USD</Text>
+      </>
     </Pressable>
   );
 };

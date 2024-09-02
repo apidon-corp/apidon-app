@@ -8,14 +8,13 @@ import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
-  snapPoint: string;
   backgroundColor?: string;
 };
 
 const CustomBottomModalSheet = forwardRef<
   BottomSheetModal,
   PropsWithChildren<Props>
->(({ children, snapPoint, backgroundColor }, ref) => {
+>(({ children, backgroundColor }, ref) => {
   const renderBackdrops = useCallback(
     (props: any) => (
       <BottomSheetBackdrop
