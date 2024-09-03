@@ -9,19 +9,20 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
   backgroundColor?: string;
-  presentInitially?: boolean;
+  locked?: boolean;
 };
 
 const CustomBottomModalSheet = forwardRef<
   BottomSheetModal,
   PropsWithChildren<Props>
->(({ children, backgroundColor, presentInitially }, ref) => {
+>(({ children, backgroundColor, locked }, ref) => {
   const renderBackdrops = useCallback(
     (props: any) => (
       <BottomSheetBackdrop
         {...props}
         appearsOnIndex={0}
         disappearsOnIndex={-1}
+        pressBehavior={locked ? "none" : undefined}
       />
     ),
     []
@@ -37,6 +38,9 @@ const CustomBottomModalSheet = forwardRef<
       backgroundStyle={{ backgroundColor: backgroundColor || "#353935" }}
       handleIndicatorStyle={{ backgroundColor: "white" }}
       enableDynamicSizing={true}
+      enableContentPanningGesture={locked ? false: undefined}
+      enableHandlePanningGesture={locked ? false: undefined}
+      enablePanDownToClose={locked ? false: undefined}
     >
       <BottomSheetScrollView contentContainerStyle={{ padding: 10 }}>
         {children}

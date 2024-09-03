@@ -239,7 +239,7 @@ function RootLayout() {
           <BottomSheetModalProvider>
             <CustomBottomModalSheet
               backgroundColor="#1B1B1B"
-              presentInitially
+              locked
               ref={networkErrorBottomSheetModalRef}
             >
               <View style={{ flex: 1, gap: 15, padding: 10 }}>
