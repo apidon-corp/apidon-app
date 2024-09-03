@@ -9,12 +9,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
   backgroundColor?: string;
+  presentInitially?: boolean;
 };
 
 const CustomBottomModalSheet = forwardRef<
   BottomSheetModal,
   PropsWithChildren<Props>
->(({ children, backgroundColor }, ref) => {
+>(({ children, backgroundColor, presentInitially }, ref) => {
   const renderBackdrops = useCallback(
     (props: any) => (
       <BottomSheetBackdrop
