@@ -146,6 +146,7 @@ const TopUpArea = () => {
             )}
           </Pressable>
           <Pressable
+            disabled={loading}
             onPress={handleCancelButton}
             style={{
               borderWidth: 1,

@@ -3,7 +3,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { CollectibleDocData } from "@/types/Collectible";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
-import { Foundation } from "@expo/vector-icons";
+import { Foundation, MaterialIcons } from "@expo/vector-icons";
 import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
 import { router, usePathname } from "expo-router";
@@ -141,7 +141,11 @@ const NftOnUserPreviewItem = ({ postDocPath, collectibleDocPath }: Props) => {
   return (
     <Pressable
       onPress={handlePressPreview}
-      style={{ position: "relative", flex: 1, padding: 15 }}
+      style={{
+        position: "relative",
+        flex: 1,
+        padding: 15,
+      }}
     >
       <View>
         <Image
@@ -155,86 +159,72 @@ const NftOnUserPreviewItem = ({ postDocPath, collectibleDocPath }: Props) => {
       </View>
 
       <View
+        id="price-tag"
         style={{
           position: "absolute",
-          top: 20,
-          right: 20,
+          top: 25,
+          right: 25,
+          flexDirection: "row",
+          backgroundColor: "black",
+          borderRadius: 20,
+          alignItems: "center",
+          gap: 3,
           padding: 5,
-          opacity: 0.85,
+          paddingHorizontal: 10,
         }}
       >
-        <View
+        <Foundation name="dollar" size={20} color="white" />
+        <Text
           style={{
-            paddingHorizontal: 10,
-            flexDirection: "row",
-            backgroundColor: "white",
-            borderRadius: 10,
-            alignItems: "center",
-            gap: 1,
+            fontSize: 13,
           }}
+          bold
         >
-          <Foundation name="dollar" size={20} color="#036704" />
-          <Text
-            style={{
-              color: "#036704",
-              fontSize: 13,
-            }}
-            bold
-          >
-            {collectibleDocData.price.price}
-          </Text>
-        </View>
+          {collectibleDocData.price.price}
+        </Text>
       </View>
 
       <View
+        id="creator-data"
         style={{
           position: "absolute",
           bottom: 20,
-          right: 20,
+          left: 20,
           padding: 5,
-          opacity: 1,
+          paddingRight: 15,
+          backgroundColor: "black",
+          borderRadius: 20,
+          alignItems: "center",
+          flexDirection: "row",
+          gap: 5,
         }}
       >
-        <View
+        <Image
+          source={
+            postSenderData.profilePhoto || require("@/assets/images/user.jpg")
+          }
           style={{
-            paddingHorizontal: 5,
-            flexDirection: "row",
-            backgroundColor: "white",
-            borderRadius: 10,
-            alignItems: "center",
+            width: 40,
+            height: 40,
+            borderRadius: 20,
           }}
-        >
-          <Text
+          transition={500}
+        />
+        <View id="username-fullname">
+          <View
+            id="fullanme-verified"
             style={{
-              color: "purple",
-              fontSize: 12,
+              alignItems: "center",
+              gap: 5,
+              flexDirection: "row",
             }}
-            bold
           >
-            {collectibleDocData.stock.remainingStock} out of{" "}
-            {collectibleDocData.stock.initialStock}
-          </Text>
-        </View>
-      </View>
-
-      <View style={{ position: "absolute", bottom: 20, left: 20, padding: 5 }}>
-        <View
-          style={{
-            alignItems: "center",
-            borderRadius: 10,
-          }}
-        >
-          <Image
-            source={
-              postSenderData.profilePhoto || require("@/assets/images/user.jpg")
-            }
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-            }}
-            transition={500}
-          />
+            <Text fontSize={12}>{postSenderData.fullname}</Text>
+            {postSenderData.verified && (
+              <MaterialIcons name="verified" size={14} color={apidonPink} />
+            )}
+          </View>
+          <Text fontSize={10}>@{postDocData.senderUsername}</Text>
         </View>
       </View>
     </Pressable>

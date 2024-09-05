@@ -5,7 +5,7 @@ import apiRoutes from "@/helpers/ApiRoutes";
 import { useAuth } from "@/providers/AuthProvider";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
-import { Entypo, Feather } from "@expo/vector-icons";
+import { Entypo, Feather, MaterialIcons } from "@expo/vector-icons";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import firestore from "@react-native-firebase/firestore";
 import { formatDistanceToNowStrict } from "date-fns";
@@ -481,16 +481,33 @@ const Post = React.memo(({ postDocPath }: Props) => {
                     gap: 1,
                   }}
                 >
-                  <Text
-                    bold
+                  <View
+                    id="fullname-verified"
                     style={{
-                      fontSize: 11,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 3,
                     }}
                   >
-                    {postSenderData.fullname}
-                  </Text>
+                    <Text
+                      bold
+                      style={{
+                        fontSize: 11,
+                      }}
+                    >
+                      {postSenderData.fullname}
+                    </Text>
+                    {postSenderData.verified && (
+                      <MaterialIcons
+                        name="verified"
+                        size={14}
+                        color={apidonPink}
+                      />
+                    )}
+                  </View>
 
                   <View
+                    id="username-time"
                     style={{
                       flexDirection: "row",
                       alignItems: "center",
@@ -504,7 +521,9 @@ const Post = React.memo(({ postDocPath }: Props) => {
                     >
                       @{postSenderData.username}
                     </Text>
+
                     <Entypo name="dot-single" size={15} color="gray" />
+
                     <Text style={{ fontSize: 10, color: "gray" }}>
                       {formatDistanceToNowStrict(
                         new Date(postDocData.creationTime)

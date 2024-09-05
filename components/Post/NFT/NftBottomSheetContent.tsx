@@ -5,7 +5,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { CollectibleDocData } from "@/types/Collectible";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
@@ -163,20 +163,31 @@ const NftBottomSheetContent = ({
             Creator
           </Text>
           <View id="username-fullaname">
-            <Text
-              bold
+            <View
+              id="fullname-verifed"
               style={{
-                fontSize: 14,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 3,
               }}
             >
-              {postData.senderUsername}
-            </Text>
+              <Text
+                bold
+                style={{
+                  fontSize: 14,
+                }}
+              >
+                {postSenderData.fullname}
+              </Text>
+              <MaterialIcons name="verified" size={18} color={apidonPink} />
+            </View>
+
             <Text
               style={{
-                fontSize: 14,
+                fontSize: 12,
               }}
             >
-              {postSenderData.fullname}
+              @{postData.senderUsername}
             </Text>
           </View>
         </View>

@@ -11,6 +11,8 @@ export type UserInServer = {
 
   email: string;
   uid: string;
+
+  verified:boolean,
 };
 
 export type FollowerDocData = {
