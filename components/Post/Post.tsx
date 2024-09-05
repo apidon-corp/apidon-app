@@ -660,12 +660,13 @@ const Post = React.memo(({ postDocPath }: Props) => {
                 id="description"
                 style={{
                   flexDirection: "row",
-                  gap: 6,
                   alignItems: "center",
+                  gap: 5,
+                  flexWrap: "wrap",
                 }}
               >
                 <Text bold>{postSenderData.username}</Text>
-                <Text>{postDocData.description}</Text>
+                <Text numberOfLines={1}>{postDocData.description}</Text>
               </View>
               <View
                 id="comment-count"
@@ -691,7 +692,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
         </View>
       </Animated.View>
 
-      <CustomBottomModalSheet ref={postOptionsModalRef} >
+      <CustomBottomModalSheet ref={postOptionsModalRef}>
         <View
           style={{
             flex: 1,
@@ -742,7 +743,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
       <CustomBottomModalSheet
         ref={nftOptionsModalRef}
-
         backgroundColor="#1B1B1B"
       >
         <NftBottomSheetContent
