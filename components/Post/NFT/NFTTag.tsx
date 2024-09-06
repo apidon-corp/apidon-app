@@ -22,7 +22,7 @@ const NFTTag = ({ username, nftOptionsModalRef }: Props) => {
       onPress={handleNFTButton}
       id="nft-tag"
       style={{
-        width: "30%",
+        width: "100%",
         justifyContent: "center",
         alignItems: "center",
         borderWidth: 2,

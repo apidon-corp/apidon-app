@@ -542,10 +542,12 @@ const Post = React.memo(({ postDocPath }: Props) => {
           />
 
           {postDocData.collectibleStatus.isCollectible && (
-            <NFTTag
-              nftOptionsModalRef={nftOptionsModalRef}
-              username={postDocData.senderUsername}
-            />
+            <View id="collectible-tag" style={{ width: "30%" }}>
+              <NFTTag
+                nftOptionsModalRef={nftOptionsModalRef}
+                username={postDocData.senderUsername}
+              />
+            </View>
           )}
 
           {(doesOwnPost || !doesFollow) && (
@@ -580,8 +582,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
             !doesFollow && (
               <View
                 style={{
-                  width: "10%",
-                  overflow: "hidden",
+                  width: "5%",
                 }}
               >
                 <Pressable
@@ -589,9 +590,9 @@ const Post = React.memo(({ postDocPath }: Props) => {
                   disabled={followLoading}
                 >
                   {followLoading ? (
-                    <ActivityIndicator color="white" />
+                    <ActivityIndicator color="white" size="small" />
                   ) : (
-                    <Feather name="user-plus" size={24} color="white" />
+                    <Feather name="user-plus" size={18} color="white" />
                   )}
                 </Pressable>
               </View>
