@@ -179,7 +179,9 @@ const NftBottomSheetContent = ({
               >
                 {postSenderData.fullname}
               </Text>
-              <MaterialIcons name="verified" size={18} color={apidonPink} />
+              {postSenderData.verified && (
+                <MaterialIcons name="verified" size={18} color={apidonPink} />
+              )}
             </View>
 
             <Text
