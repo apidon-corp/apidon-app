@@ -28,6 +28,12 @@ import { useAuth } from "@/providers/AuthProvider";
 import { CollectibleDocData } from "@/types/Collectible";
 import { UserIdentityDoc } from "@/types/Identity";
 import { router } from "expo-router";
+import { MaterialIcons } from "@expo/vector-icons";
+import {
+  BottomSheetModal,
+  BottomSheetModalProvider,
+} from "@gorhom/bottom-sheet";
+import CustomBottomModalSheet from "@/components/BottomSheet/CustomBottomModalSheet";
 
 const buyNFT = () => {
   const [screenParameters, setScreenParameters] = useAtom(screenParametersAtom);
@@ -52,6 +58,8 @@ const buyNFT = () => {
   const [isIdentityVerified, setIsIdentityVerified] = useState(false);
 
   const buyButtonOpacityValue = useRef(new Animated.Value(0.5)).current;
+
+  const buyCollectilbeWarningModal = useRef<BottomSheetModal>(null);
 
   // Getting collectible data.
   useEffect(() => {
@@ -209,23 +217,11 @@ const buyNFT = () => {
   const handleBuyButton = () => {
     if (!collectibleData) return;
 
-    Alert.alert(
-      "Buy Collectible",
-      `Are you sure you want to buy this collectible for $${collectibleData.price.price}?`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Buy",
-          onPress: handleBuy,
-        },
-      ]
-    );
+    if (buyCollectilbeWarningModal.current)
+      buyCollectilbeWarningModal.current.present();
   };
 
-  const handleBuy = async () => {
+  const handleConfirmButton = async () => {
     const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("No user");
 
@@ -266,17 +262,24 @@ const buyNFT = () => {
       }
 
       // Good to go...
-      setLoading(false);
+      buyCollectilbeWarningModal.current?.dismiss();
+
+      router.dismiss();
+
       setScreenParameters([
         { queryId: "collectedNFTPostDocPath", value: postDocPath },
       ]);
+      router.push(`/home/feed/profilePage?username=${username}`);
 
-      router.dismiss();
-      return router.push(`/home/feed/profilePage?username=${username}`);
+      return setLoading(false);
     } catch (error) {
       console.error("Error on buying collectible ", error);
       return setLoading(false);
     }
+  };
+
+  const handleCancelButton = () => {
+    buyCollectilbeWarningModal.current?.dismiss();
   };
 
   const handlePressBalanceArea = () => {
@@ -310,210 +313,277 @@ const buyNFT = () => {
   }
 
   return (
-    <ScrollView
-      style={{ flex: 1 }}
-      contentContainerStyle={{
-        padding: 15,
-        gap: 15,
-      }}
-      showsVerticalScrollIndicator={false}
-    >
-      <View
-        id="image-area"
-        style={{
-          width: "100%",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Image
-          source={postData.image}
-          style={{
-            width: "80%",
-            aspectRatio: 1,
-            borderRadius: 15,
-          }}
-        />
-      </View>
-
-      <Pressable
-        onPress={handlePressCreatorInformation}
-        id="creator-area"
-        style={{
-          width: "100%",
-          backgroundColor: "rgba(255,255,255,0.05)",
+    <>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{
           padding: 15,
-          borderRadius: 20,
-          flexDirection: "row",
+          gap: 15,
         }}
+        showsVerticalScrollIndicator={false}
       >
         <View
-          id="creator-username-fullname"
+          id="image-area"
           style={{
-            width: "80%",
-            gap: 5,
-          }}
-        >
-          <Text fontSize={18} bold>
-            Creator
-          </Text>
-
-          <View id="username-fullname">
-            <Text
-              style={{
-                color: "white",
-              }}
-            >
-              {creatorData.fullname}
-            </Text>
-            <Text
-              fontSize={12}
-              style={{
-                color: "#808080",
-              }}
-            >
-              @{creatorData.username}
-            </Text>
-          </View>
-        </View>
-        <View
-          style={{
-            width: "20%",
+            width: "100%",
             justifyContent: "center",
             alignItems: "center",
           }}
         >
           <Image
-            source={
-              creatorData.profilePhoto || require("@/assets/images/user.jpg")
-            }
+            source={postData.image}
             style={{
-              width: "100%",
+              width: "80%",
               aspectRatio: 1,
-              borderRadius: 100,
+              borderRadius: 15,
             }}
           />
         </View>
-      </Pressable>
 
-      <Pressable
-        onPress={handlePressBalanceArea}
-        id="balance"
-        style={{
-          width: "100%",
-          flexDirection: "row",
-          padding: 15,
-          backgroundColor: "rgba(255,255,255,0.05)",
-          borderRadius: 20,
-          alignItems: "center",
-        }}
-      >
-        <View
-          style={{
-            width: "80%",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 5,
-          }}
-        >
-          <Text bold>Your balance: </Text>
-          {balanceStatus === "loading" || balanceStatus === "error" ? (
-            <ActivityIndicator />
-          ) : (
-            <Text
-              bold
-              style={{
-                color: "#808080",
-              }}
-            >
-              ${balance}
-            </Text>
-          )}
-        </View>
-        <View
-          id="top-up-area"
-          style={{
-            display: balanceStatus === "not-enough" ? undefined : "none",
-            width: "20%",
-            alignItems: "center",
-            justifyContent: "flex-end",
-          }}
-        >
-          <Text
-            bold
-            style={{ color: "green", textDecorationLine: "underline" }}
-          >
-            Top Up
-          </Text>
-        </View>
-      </Pressable>
-
-      {!isIdentityVerified && (
         <Pressable
-          onPress={handleVerifyIdentityButton}
+          onPress={handlePressCreatorInformation}
+          id="creator-area"
           style={{
             width: "100%",
+            backgroundColor: "rgba(255,255,255,0.05)",
+            padding: 15,
+            borderRadius: 20,
+            flexDirection: "row",
+          }}
+        >
+          <View
+            id="creator-username-fullname"
+            style={{
+              width: "80%",
+              gap: 5,
+            }}
+          >
+            <Text fontSize={18} bold>
+              Creator
+            </Text>
+
+            <View id="username-fullname">
+              <View
+                id="fullname-verified"
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 3,
+                }}
+              >
+                <Text
+                  style={{
+                    color: "white",
+                  }}
+                >
+                  {creatorData.fullname}
+                </Text>
+                {creatorData.verified && (
+                  <MaterialIcons name="verified" size={14} color={apidonPink} />
+                )}
+              </View>
+
+              <Text
+                fontSize={12}
+                style={{
+                  color: "#808080",
+                }}
+              >
+                @{creatorData.username}
+              </Text>
+            </View>
+          </View>
+          <View
+            style={{
+              width: "20%",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Image
+              source={
+                creatorData.profilePhoto || require("@/assets/images/user.jpg")
+              }
+              style={{
+                width: "100%",
+                aspectRatio: 1,
+                borderRadius: 100,
+              }}
+            />
+          </View>
+        </Pressable>
+
+        <Pressable
+          onPress={handlePressBalanceArea}
+          id="balance"
+          style={{
+            width: "100%",
+            flexDirection: "row",
             padding: 15,
             backgroundColor: "rgba(255,255,255,0.05)",
             borderRadius: 20,
-            justifyContent: "center",
             alignItems: "center",
           }}
         >
-          <Text
-            bold
+          <View
             style={{
-              textAlign: "center",
-              textDecorationLine: "underline",
-              color: "yellow",
-              opacity: 0.75,
+              width: "80%",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 5,
             }}
           >
-            Verify yourself to collect this item.
-          </Text>
+            <Text bold>Your balance: </Text>
+            {balanceStatus === "loading" || balanceStatus === "error" ? (
+              <ActivityIndicator />
+            ) : (
+              <Text
+                bold
+                style={{
+                  color: "#808080",
+                }}
+              >
+                ${balance}
+              </Text>
+            )}
+          </View>
+          <View
+            id="top-up-area"
+            style={{
+              display: balanceStatus === "not-enough" ? undefined : "none",
+              width: "20%",
+              alignItems: "center",
+              justifyContent: "flex-end",
+            }}
+          >
+            <Text
+              bold
+              style={{ color: "green", textDecorationLine: "underline" }}
+            >
+              Top Up
+            </Text>
+          </View>
         </Pressable>
-      )}
 
-      <Animated.View
-        id="buy-button"
-        style={{
-          width: "100%",
-          justifyContent: "center",
-          alignItems: "center",
-          opacity: buyButtonOpacityValue,
-        }}
-      >
-        <Pressable
-          disabled={
-            balanceStatus !== "enough" || !isIdentityVerified || loading
-          }
-          onPress={handleBuyButton}
-          style={{
-            width: "50%",
-            opacity: loading ? 1 : balanceStatus !== "enough" ? 0.5 : 1,
-            backgroundColor: apidonPink,
-            padding: 10,
-            borderRadius: 10,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {loading ? (
-            <ActivityIndicator color="white" />
-          ) : (
+        {!isIdentityVerified && (
+          <Pressable
+            onPress={handleVerifyIdentityButton}
+            style={{
+              width: "100%",
+              padding: 15,
+              backgroundColor: "rgba(255,255,255,0.05)",
+              borderRadius: 20,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
             <Text
               bold
               style={{
-                color: "white",
-                fontSize: 15,
+                textAlign: "center",
+                textDecorationLine: "underline",
+                color: "yellow",
+                opacity: 0.75,
               }}
             >
-              Buy for ${collectibleData.price.price}
+              Verify yourself to collect this item.
             </Text>
-          )}
-        </Pressable>
-      </Animated.View>
-    </ScrollView>
+          </Pressable>
+        )}
+
+        <Animated.View
+          id="buy-button"
+          style={{
+            width: "100%",
+            justifyContent: "center",
+            alignItems: "center",
+            opacity: buyButtonOpacityValue,
+          }}
+        >
+          <Pressable
+            disabled={
+              balanceStatus !== "enough" || !isIdentityVerified || loading
+            }
+            onPress={handleBuyButton}
+            style={{
+              width: "50%",
+              opacity: loading ? 1 : balanceStatus !== "enough" ? 0.5 : 1,
+              backgroundColor: apidonPink,
+              padding: 10,
+              borderRadius: 10,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text
+                bold
+                style={{
+                  color: "white",
+                  fontSize: 15,
+                }}
+              >
+                Buy for ${collectibleData.price.price}
+              </Text>
+            )}
+          </Pressable>
+        </Animated.View>
+      </ScrollView>
+      <BottomSheetModalProvider>
+        <CustomBottomModalSheet
+          ref={buyCollectilbeWarningModal}
+          backgroundColor="#1B1B1B"
+        >
+          <View style={{ flex: 1, gap: 15, padding: 10 }}>
+            <Text fontSize={18} bold>
+              Confirm Your Purhcase
+            </Text>
+            <Text fontSize={13}>
+              You are about to purchase a digital collectible item for $
+              {collectibleData.price.price}.
+            </Text>
+            <Text fontSize={13}>
+              Please note that this purchase is final and non-refundable. Once
+              the transaction is completed, the digital item will be added to
+              your collection, and no refunds will be issued.
+            </Text>
+            <Text fontSize={13}>Review and confirm your purchase.</Text>
+            <Pressable
+              onPress={handleConfirmButton}
+              style={{
+                backgroundColor: "white",
+                padding: 10,
+                borderRadius: 10,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {loading ? (
+                <ActivityIndicator color="black" size="small" />
+              ) : (
+                <Text style={{ color: "black" }}>Confirm</Text>
+              )}
+            </Pressable>
+            <Pressable
+              disabled={loading}
+              onPress={handleCancelButton}
+              style={{
+                borderWidth: 1,
+                borderColor: "white",
+                padding: 10,
+                borderRadius: 10,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text>Cancel</Text>
+            </Pressable>
+          </View>
+        </CustomBottomModalSheet>
+      </BottomSheetModalProvider>
+    </>
   );
 };
 

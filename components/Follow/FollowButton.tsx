@@ -8,12 +8,15 @@ import React, { useEffect, useState } from "react";
 
 import auth from "@react-native-firebase/auth";
 import appCheck from "@react-native-firebase/app-check";
+import { useAuth } from "@/providers/AuthProvider";
 
 type Props = {
   username: string | undefined;
 };
 
 const FollowButton = ({ username }: Props) => {
+  const { authStatus } = useAuth();
+
   const [loading, setLoading] = useState(false);
 
   const [doesFollow, setDoesFollow] = useState(false);
@@ -91,39 +94,34 @@ const FollowButton = ({ username }: Props) => {
       );
 
     return () => unsubscribe();
-  }, [auth().currentUser, username]);
+  }, [authStatus, username]);
 
   return (
     <Pressable
       onPress={() => {
         handleFollowButton(doesFollow ? "unfollow" : "follow");
       }}
-      style={
-        doesFollow
-          ? {
-              borderColor: apidonPink,
-              borderWidth: 1,
-              borderRadius: 10,
-              paddingHorizontal: 15,
-              paddingVertical: 5,
-              marginTop: 10,
-            }
-          : {
-              backgroundColor: apidonPink,
-              borderRadius: 10,
-              paddingHorizontal: 15,
-              paddingVertical: 5,
-              marginTop: 10,
-            }
-      }
+      style={[
+        {
+          justifyContent: "center",
+          alignItems: "center",
+          height: 30,
+          width: 85,
+          borderColor: apidonPink,
+          borderWidth: 1,
+          borderRadius: 10,
+          marginTop: 10,
+        },
+        !doesFollow && { backgroundColor: apidonPink },
+      ]}
       disabled={loading || followLoading}
     >
       {loading || followLoading ? (
-        <ActivityIndicator color="white" />
+        <ActivityIndicator color="white" size="small" />
       ) : (
         <Text
+          fontSize={13}
           style={{
-            fontSize: 14,
             textAlign: "center",
           }}
           bold

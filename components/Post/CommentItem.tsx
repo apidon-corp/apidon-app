@@ -2,7 +2,7 @@ import { Text } from "@/components/Text/Text";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { CommentServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
-import { Entypo, Feather } from "@expo/vector-icons";
+import { Entypo, Feather, MaterialIcons } from "@expo/vector-icons";
 import firestore from "@react-native-firebase/firestore";
 import { formatDistanceToNow } from "date-fns";
 import { Image } from "expo-image";
@@ -11,6 +11,7 @@ import { ActivityIndicator, Alert, Pressable, View } from "react-native";
 import auth from "@react-native-firebase/auth";
 import appCheck from "@react-native-firebase/app-check";
 import { router, usePathname } from "expo-router";
+import { apidonPink } from "@/constants/Colors";
 
 type Props = {
   commentServerData: CommentServerData;
@@ -193,13 +194,21 @@ const CommentItem = ({
           }}
         >
           <View
+            id="username-time-verified"
             style={{
               flexDirection: "row",
-              gap: 1,
               alignItems: "center",
+              flexWrap: "wrap",
             }}
           >
-            <Text bold>{userData.username}</Text>
+            <View
+              id="username-verified"
+              style={{ flexDirection: "row", gap: 3, alignItems: "center" }}
+            >
+              <Text bold>{userData.username}</Text>
+              <MaterialIcons name="verified" size={14} color={apidonPink} />
+            </View>
+
             <Entypo name="dot-single" size={20} color="gray" />
             <Text
               style={{

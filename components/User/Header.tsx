@@ -3,7 +3,7 @@ import FollowButton from "@/components/Follow/FollowButton";
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
 import { UserInServer } from "@/types/User";
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialIcons } from "@expo/vector-icons";
 import auth from "@react-native-firebase/auth";
 import { Image } from "expo-image";
 import { router, usePathname } from "expo-router";
@@ -147,15 +147,24 @@ const Header = ({ userData }: Props) => {
         }}
         transition={100}
       />
-      <Text
-        bold
-        style={{
-          fontSize: 25,
-          textAlign: "center",
-        }}
+      <View
+        id="fullname-verified"
+        style={{ flexDirection: "row", gap: 3, alignItems: "center" }}
       >
-        {userData.fullname}
-      </Text>
+        <Text
+          bold
+          style={{
+            fontSize: 25,
+            textAlign: "center",
+          }}
+        >
+          {userData.fullname}
+        </Text>
+        {userData.verified && (
+          <MaterialIcons name="verified" size={25} color={apidonPink} />
+        )}
+      </View>
+
       <Text
         style={{
           color: "white",

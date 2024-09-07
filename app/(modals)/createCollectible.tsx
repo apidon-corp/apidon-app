@@ -87,9 +87,9 @@ const listNFT = () => {
 
   const informationModalRef = useRef<BottomSheetModal>(null);
 
-  const [bottomModalType, setBottomModalType] = useState<"stock" | "price">(
-    "stock"
-  );
+  const [bottomModalType, setBottomModalType] = useState<
+    "stock" | "price" | "createWarning"
+  >("stock");
 
   // Gets user's usage data, realtime.
   useEffect(() => {
@@ -306,23 +306,11 @@ const listNFT = () => {
 
     Keyboard.dismiss();
 
-    Alert.alert(
-      "Confirm Creation",
-      `\nYou are about to create a collectible post priced at ${price} USD with a stock of ${stock}.\n\nPlease note that once listed, this collectible cannot be deleted, and you won't be able to change the stock or price.\n\nAre you sure you want to proceed?`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Confirm",
-          onPress: handleCreate,
-        },
-      ]
-    );
+    setBottomModalType("createWarning");
+    informationModalRef.current?.present();
   };
 
-  const handleCreate = async () => {
+  const handleConfirmButton = async () => {
     const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("No user");
 
@@ -360,6 +348,8 @@ const listNFT = () => {
         return setLoading(false);
       }
 
+      informationModalRef.current?.dismiss();
+
       router.dismiss();
 
       return setLoading(false);
@@ -367,6 +357,10 @@ const listNFT = () => {
       console.error("Error on creating collectible: ", error);
       return setLoading(false);
     }
+  };
+
+  const handleCancelButton = () => {
+    informationModalRef.current?.dismiss();
   };
 
   const handlePrepareStockData = async () => {
@@ -721,7 +715,6 @@ const listNFT = () => {
       <BottomSheetModalProvider>
         <CustomBottomModalSheet
           ref={informationModalRef}
-
           backgroundColor="#1B1B1B"
         >
           <View style={{ flex: 1, gap: 15, padding: 10 }}>
@@ -757,6 +750,53 @@ const listNFT = () => {
                   experience through in-app purchases. This makes buying your
                   items easier and more straightforward for everyone.
                 </Text>
+              </>
+            )}
+            {bottomModalType === "createWarning" && (
+              <>
+                <Text fontSize={18} bold>
+                  Confirm Creation
+                </Text>
+                <Text fontSize={13}>
+                  You are about to create a collectible post priced at ${price}{" "}
+                  with a stock of ${stock}.
+                </Text>
+                <Text fontSize={13}>
+                  Please note that once listed, this collectible cannot be
+                  deleted by yourself, and you won't be able to change the stock
+                  or price.
+                </Text>
+                <Text fontSize={13}>Review and confirm your purchase.</Text>
+                <Pressable
+                  onPress={handleConfirmButton}
+                  style={{
+                    backgroundColor: "white",
+                    padding: 10,
+                    borderRadius: 10,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="black" size="small" />
+                  ) : (
+                    <Text style={{ color: "black" }}>Confirm</Text>
+                  )}
+                </Pressable>
+                <Pressable
+                  disabled={loading}
+                  onPress={handleCancelButton}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: "white",
+                    padding: 10,
+                    borderRadius: 10,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text>Cancel</Text>
+                </Pressable>
               </>
             )}
           </View>

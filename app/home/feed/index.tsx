@@ -55,6 +55,7 @@ const index = () => {
     handleGetInitialPostRecommendations();
   }, []);
 
+  // Handling home button pressing to refresh.
   useEffect(() => {
     if (!homeScreenParametersValue.isHomeButtonPressed) return;
     if (refreshLoading) return;

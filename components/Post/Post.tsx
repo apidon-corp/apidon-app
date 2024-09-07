@@ -5,7 +5,7 @@ import apiRoutes from "@/helpers/ApiRoutes";
 import { useAuth } from "@/providers/AuthProvider";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
-import { Entypo, Feather } from "@expo/vector-icons";
+import { Entypo, Feather, MaterialIcons } from "@expo/vector-icons";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import firestore from "@react-native-firebase/firestore";
 import { formatDistanceToNowStrict } from "date-fns";
@@ -481,16 +481,33 @@ const Post = React.memo(({ postDocPath }: Props) => {
                     gap: 1,
                   }}
                 >
-                  <Text
-                    bold
+                  <View
+                    id="fullname-verified"
                     style={{
-                      fontSize: 11,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 3,
                     }}
                   >
-                    {postSenderData.fullname}
-                  </Text>
+                    <Text
+                      bold
+                      style={{
+                        fontSize: 11,
+                      }}
+                    >
+                      {postSenderData.fullname}
+                    </Text>
+                    {postSenderData.verified && (
+                      <MaterialIcons
+                        name="verified"
+                        size={14}
+                        color={apidonPink}
+                      />
+                    )}
+                  </View>
 
                   <View
+                    id="username-time"
                     style={{
                       flexDirection: "row",
                       alignItems: "center",
@@ -504,7 +521,9 @@ const Post = React.memo(({ postDocPath }: Props) => {
                     >
                       @{postSenderData.username}
                     </Text>
+
                     <Entypo name="dot-single" size={15} color="gray" />
+
                     <Text style={{ fontSize: 10, color: "gray" }}>
                       {formatDistanceToNowStrict(
                         new Date(postDocData.creationTime)
@@ -523,10 +542,12 @@ const Post = React.memo(({ postDocPath }: Props) => {
           />
 
           {postDocData.collectibleStatus.isCollectible && (
-            <NFTTag
-              nftOptionsModalRef={nftOptionsModalRef}
-              username={postDocData.senderUsername}
-            />
+            <View id="collectible-tag" style={{ width: "30%" }}>
+              <NFTTag
+                nftOptionsModalRef={nftOptionsModalRef}
+                username={postDocData.senderUsername}
+              />
+            </View>
           )}
 
           {(doesOwnPost || !doesFollow) && (
@@ -561,8 +582,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
             !doesFollow && (
               <View
                 style={{
-                  width: "10%",
-                  overflow: "hidden",
+                  width: "5%",
                 }}
               >
                 <Pressable
@@ -570,9 +590,9 @@ const Post = React.memo(({ postDocPath }: Props) => {
                   disabled={followLoading}
                 >
                   {followLoading ? (
-                    <ActivityIndicator color="white" />
+                    <ActivityIndicator color="white" size="small" />
                   ) : (
-                    <Feather name="user-plus" size={24} color="white" />
+                    <Feather name="user-plus" size={18} color="white" />
                   )}
                 </Pressable>
               </View>
@@ -660,12 +680,13 @@ const Post = React.memo(({ postDocPath }: Props) => {
                 id="description"
                 style={{
                   flexDirection: "row",
-                  gap: 6,
                   alignItems: "center",
+                  gap: 5,
+                  flexWrap: "wrap",
                 }}
               >
                 <Text bold>{postSenderData.username}</Text>
-                <Text>{postDocData.description}</Text>
+                <Text numberOfLines={1}>{postDocData.description}</Text>
               </View>
               <View
                 id="comment-count"
@@ -691,7 +712,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
         </View>
       </Animated.View>
 
-      <CustomBottomModalSheet ref={postOptionsModalRef} >
+      <CustomBottomModalSheet ref={postOptionsModalRef}>
         <View
           style={{
             flex: 1,
@@ -742,7 +763,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
       <CustomBottomModalSheet
         ref={nftOptionsModalRef}
-
         backgroundColor="#1B1B1B"
       >
         <NftBottomSheetContent

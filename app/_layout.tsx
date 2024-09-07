@@ -5,14 +5,17 @@ import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack, router, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { SetStateAction, useEffect, useState } from "react";
+import { SetStateAction, useEffect, useRef, useState } from "react";
 import "react-native-reanimated";
 
 import AuthProvider from "@/providers/AuthProvider";
-import { Alert, Linking, StatusBar } from "react-native";
+import { Alert, Linking, StatusBar, View } from "react-native";
 
 import NotificationProvider from "@/providers/NotificationProvider";
-import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import {
+  BottomSheetModal,
+  BottomSheetModalProvider,
+} from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export {
@@ -23,6 +26,9 @@ export {
 import useAppCheck from "@/hooks/useAppCheck";
 import useCheckUpdate from "@/hooks/useCheckUpdate";
 import { Image } from "expo-image";
+import useCheckInternet from "@/hooks/useCheckInternet";
+import CustomBottomModalSheet from "@/components/BottomSheet/CustomBottomModalSheet";
+import Text from "@/components/Text/Text";
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
@@ -122,6 +128,10 @@ function RootLayout() {
 
   const { versionStatus } = useCheckUpdate();
 
+  const { isConnected } = useCheckInternet();
+
+  const networkErrorBottomSheetModalRef = useRef<BottomSheetModal>(null);
+
   const [linking, setLinking] = useState<{
     isInitial: boolean;
     url: string;
@@ -217,6 +227,36 @@ function RootLayout() {
       { cancelable: false }
     );
     return <PlaceholderForWaiting />;
+  }
+
+  if (!isConnected) {
+    if (networkErrorBottomSheetModalRef.current)
+      networkErrorBottomSheetModalRef.current.present();
+
+    return (
+      <>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <BottomSheetModalProvider>
+            <CustomBottomModalSheet
+              backgroundColor="#1B1B1B"
+              locked
+              ref={networkErrorBottomSheetModalRef}
+            >
+              <View style={{ flex: 1, gap: 15, padding: 10 }}>
+                <Text fontSize={18} bold>
+                  Check Your Connection
+                </Text>
+                <Text fontSize={13}>
+                  It seems that you are not connected to the internet. Please
+                  check your internet connection and try again.
+                </Text>
+              </View>
+            </CustomBottomModalSheet>
+            <PlaceholderForWaiting />
+          </BottomSheetModalProvider>
+        </GestureHandlerRootView>
+      </>
+    );
   }
 
   return <RootLayoutNav linking={linking} setLinking={setLinking} />;

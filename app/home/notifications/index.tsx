@@ -2,16 +2,32 @@ import NotificationItem from "@/components/Notification/NotificationItem";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { useNotification } from "@/providers/NotificationProvider";
 import { usePathname } from "expo-router";
-import React, { useEffect } from "react";
-import { FlatList, ScrollView } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { FlatList, NativeScrollEvent, ScrollView } from "react-native";
 
 import auth from "@react-native-firebase/auth";
 
 import appCheck from "@react-native-firebase/app-check";
+import { NotificationData } from "@/types/Notification";
 
 const notifications = () => {
   const notificationDocData = useNotification();
   const pathName = usePathname();
+
+  const [servedNotifications, setServedNotifications] = useState<
+    NotificationData[]
+  >([]);
+
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    if (pathName === "/home/notifications") updateLastOpenedTime();
+  }, [pathName]);
+
+  useEffect(() => {
+    if (!notificationDocData) return setServedNotifications([]);
+    setServedNotifications(notificationDocData.notifications.slice(0, 8));
+  }, [notificationDocData?.notifications.length]);
 
   const updateLastOpenedTime = async () => {
     const currentUserAuthObject = auth().currentUser;
@@ -47,14 +63,49 @@ const notifications = () => {
     }
   };
 
-  useEffect(() => {
-    if (pathName === "/home/notifications") updateLastOpenedTime();
-  }, [pathName]);
+  const handleServeMoreNotifications = () => {
+    if (!notificationDocData) return setServedNotifications([]);
+
+    if (servedNotifications.length === notificationDocData.notifications.length)
+      return;
+
+    if (servedNotifications.length === 0) {
+      return setServedNotifications(
+        notificationDocData.notifications.slice(0, 8)
+      );
+    }
+
+    setServedNotifications((prev) => {
+      return [
+        ...prev,
+        ...notificationDocData.notifications.slice(
+          prev.length,
+          prev.length + 4
+        ),
+      ];
+    });
+  };
+
+  const handleScroll = (event: NativeScrollEvent) => {
+    const threshold = 0;
+
+    const { layoutMeasurement, contentOffset, contentSize } = event;
+    const isCloseToBottom =
+      layoutMeasurement.height + contentOffset.y >=
+      contentSize.height - threshold;
+    if (isCloseToBottom) handleServeMoreNotifications();
+  };
 
   if (!notificationDocData) return <></>;
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic">
+    <ScrollView
+      ref={scrollViewRef}
+      contentInsetAdjustmentBehavior="automatic"
+      showsVerticalScrollIndicator={false}
+      onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
+      scrollEventThrottle={500}
+    >
       <FlatList
         scrollEnabled={false}
         contentContainerStyle={{
@@ -62,7 +113,7 @@ const notifications = () => {
           paddingHorizontal: 10,
           gap: 10,
         }}
-        data={notificationDocData.notifications}
+        data={servedNotifications}
         renderItem={({ item }) => (
           <NotificationItem
             notificationData={item}

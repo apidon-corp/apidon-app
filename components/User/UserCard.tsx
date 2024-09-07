@@ -11,6 +11,7 @@ import { ActivityIndicator, Pressable, View } from "react-native";
 
 import { useAuth } from "@/providers/AuthProvider";
 import appCheck from "@react-native-firebase/app-check";
+import { MaterialIcons } from "@expo/vector-icons";
 
 type Props = {
   username: string;
@@ -187,15 +188,24 @@ const UserCard = ({ username }: Props) => {
             borderRadius: 25,
           }}
         />
-        <View>
-          <Text
-            style={{
-              fontSize: 13,
-            }}
-            bold
+        <View id="username-fullname">
+          <View
+            id="fullname-verified"
+            style={{ flexDirection: "row", gap: 3, alignItems: "center" }}
           >
-            {userData.fullname}
-          </Text>
+            <Text
+              style={{
+                fontSize: 13,
+              }}
+              bold
+            >
+              {userData.fullname}
+            </Text>
+            {userData.verified && (
+              <MaterialIcons name="verified" size={14} color={apidonPink} />
+            )}
+          </View>
+
           <Text
             style={{
               fontSize: 12,
