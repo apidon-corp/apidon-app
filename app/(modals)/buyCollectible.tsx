@@ -24,9 +24,7 @@ import apiRoutes from "@/helpers/ApiRoutes";
 import { useBalance } from "@/hooks/useBalance";
 
 import CustomBottomModalSheet from "@/components/BottomSheet/CustomBottomModalSheet";
-import { useAuth } from "@/providers/AuthProvider";
 import { CollectibleDocData } from "@/types/Collectible";
-import { UserIdentityDoc } from "@/types/Identity";
 import { MaterialIcons } from "@expo/vector-icons";
 import {
   BottomSheetModal,
@@ -51,8 +49,6 @@ const buyNFT = () => {
   const [balanceStatus, setBalanceStatus] = useState<
     "loading" | "error" | "enough" | "not-enough"
   >("loading");
-
-  const { authStatus } = useAuth();
 
   const buyButtonOpacityValue = useRef(new Animated.Value(0.5)).current;
 

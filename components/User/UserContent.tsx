@@ -10,8 +10,8 @@ import {
 import { UserInServer } from "@/types/User";
 import firestore from "@react-native-firebase/firestore";
 import { useAtomValue } from "jotai";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Dimensions, ScrollView, View } from "react-native";
 import { FlatList, Switch } from "react-native-gesture-handler";
 import Post from "../Post/Post";
 import Header from "./Header";
@@ -25,9 +25,9 @@ const UserContent = ({ username }: Props) => {
   const { authStatus } = useAuth();
 
   const screenParameters = useAtomValue(screenParametersAtom);
-  const collectedNFTPostDocPath = screenParameters.find(
-    (q) => q.queryId === "collectedNFTPostDocPath"
-  )?.value as string;
+  const collectedNFTPostDocPath =
+    (screenParameters.find((q) => q.queryId === "collectedNFTPostDocPath")
+      ?.value as string) || "idd";
 
   const [postDocPathArray, setPostDocPathArray] = useState<string[]>([]);
   const [collectibleData, setCollectibleData] = useState<{
@@ -44,9 +44,13 @@ const UserContent = ({ username }: Props) => {
 
   const [toggleValue, setToggleValue] = useState<"posts" | "nfts">("nfts");
 
+  const scrollViewRef = useRef<ScrollView>(null);
+
   const onToggleValueChange = () => {
     setToggleValue((prev) => (prev === "posts" ? "nfts" : "posts"));
   };
+
+  const { width } = Dimensions.get("screen");
 
   // Post Fetching
   useEffect(() => {
@@ -58,17 +62,25 @@ const UserContent = ({ username }: Props) => {
     const unsubscribe = firestore()
       .collection(`users/${username}/posts`)
       .orderBy("creationTime", "desc")
-      .onSnapshot((snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-          if (change.type === "added") {
-            setPostDocPathArray((prev) => [change.doc.ref.path, ...prev]);
-          } else if (change.type === "removed") {
-            setPostDocPathArray((prev) =>
-              prev.filter((path) => path !== change.doc.ref.path)
-            );
-          }
-        });
-      });
+      .onSnapshot(
+        (snapshot) => {
+          snapshot.docChanges().forEach((change) => {
+            if (change.doc.data().collectibleStatus.isCollectible) return;
+
+            if (change.type === "added") {
+              setPostDocPathArray((prev) => [change.doc.ref.path, ...prev]);
+            } else if (change.type === "removed") {
+              setPostDocPathArray((prev) =>
+                prev.filter((path) => path !== change.doc.ref.path)
+              );
+            }
+          });
+        },
+        (error) => {
+          console.error("Error on getting realtime posts: ", error);
+          return setPostDocPathArray([]);
+        }
+      );
 
     return () => unsubscribe();
   }, [username, authStatus]);
@@ -173,7 +185,15 @@ const UserContent = ({ username }: Props) => {
   useEffect(() => {
     if (!collectedNFTPostDocPath) return;
 
+    if (!scrollViewRef.current) return;
+
     setToggleValue("nfts");
+
+    const diff = 430 - width;
+
+    const dest = 290 + diff;
+
+    scrollViewRef.current.scrollTo({ x: 0, y: dest });
   }, [collectedNFTPostDocPath]);
 
   if (!userData)
@@ -205,6 +225,7 @@ const UserContent = ({ username }: Props) => {
 
   return (
     <ScrollView
+      ref={scrollViewRef}
       keyboardShouldPersistTaps={"handled"}
       showsVerticalScrollIndicator={false}
     >

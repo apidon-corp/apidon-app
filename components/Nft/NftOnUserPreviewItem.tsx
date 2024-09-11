@@ -176,7 +176,7 @@ const NftOnUserPreviewItem = ({ postDocPath, collectibleDocPath }: Props) => {
         <Foundation name="dollar" size={20} color="white" />
         <Text
           style={{
-            fontSize: 13,
+            fontSize: 14,
           }}
           bold
         >
@@ -215,7 +215,7 @@ const NftOnUserPreviewItem = ({ postDocPath, collectibleDocPath }: Props) => {
             id="fullanme-verified"
             style={{
               alignItems: "center",
-              gap: 5,
+              gap: 3,
               flexDirection: "row",
             }}
           >
