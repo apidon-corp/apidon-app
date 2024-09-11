@@ -759,7 +759,7 @@ const listNFT = () => {
                 </Text>
                 <Text fontSize={13}>
                   You are about to create a collectible post priced at ${price}{" "}
-                  with a stock of ${stock}.
+                  with a stock of {stock}.
                 </Text>
                 <Text fontSize={13}>
                   Please note that once listed, this collectible cannot be
