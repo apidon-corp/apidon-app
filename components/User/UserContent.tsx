@@ -16,6 +16,7 @@ import { FlatList, Switch } from "react-native-gesture-handler";
 import Post from "../Post/Post";
 import Header from "./Header";
 import NftContent from "./NftContent";
+import { usePathname } from "expo-router";
 
 type Props = {
   username: string;
@@ -25,9 +26,9 @@ const UserContent = ({ username }: Props) => {
   const { authStatus } = useAuth();
 
   const screenParameters = useAtomValue(screenParametersAtom);
-  const collectedNFTPostDocPath =
-    (screenParameters.find((q) => q.queryId === "collectedNFTPostDocPath")
-      ?.value as string) || "idd";
+  const collectedNFTPostDocPath = screenParameters.find(
+    (q) => q.queryId === "collectedNFTPostDocPath"
+  )?.value as string;
 
   const [postDocPathArray, setPostDocPathArray] = useState<string[]>([]);
   const [collectibleData, setCollectibleData] = useState<{
@@ -51,6 +52,8 @@ const UserContent = ({ username }: Props) => {
   };
 
   const { width } = Dimensions.get("screen");
+
+  const pathname = usePathname();
 
   // Post Fetching
   useEffect(() => {
@@ -193,8 +196,28 @@ const UserContent = ({ username }: Props) => {
 
     const dest = 290 + diff;
 
+    console.log(pathname);
+  }, [collectedNFTPostDocPath, scrollViewRef, pathname]);
+
+  const handleOnLayout = () => {
+    if (!collectedNFTPostDocPath) {
+      console.log("No NFT Post Path");
+      return;
+    }
+
+    if (!scrollViewRef.current) {
+      console.log("No Scroll View Ref");
+      return;
+    }
+
+    setToggleValue("nfts");
+
+    const diff = 430 - width;
+
+    const dest = 290 + diff;
+
     scrollViewRef.current.scrollTo({ x: 0, y: dest });
-  }, [collectedNFTPostDocPath]);
+  };
 
   if (!userData)
     return (
@@ -228,6 +251,7 @@ const UserContent = ({ username }: Props) => {
       ref={scrollViewRef}
       keyboardShouldPersistTaps={"handled"}
       showsVerticalScrollIndicator={false}
+      onLayout={handleOnLayout}
     >
       <Header userData={userData} />
 
