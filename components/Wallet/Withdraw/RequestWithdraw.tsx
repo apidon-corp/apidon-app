@@ -348,7 +348,7 @@ const RequestWithdraw = () => {
             >
               <View id="fees-title" style={{ flexDirection: "row", gap: 5 }}>
                 <Text>Fees:</Text>
-                <Text bold>${balance * 0.4 + 20}</Text>
+                <Text bold>${(balance * 0.4 + 20).toFixed(1)}</Text>
               </View>
 
               <View
@@ -372,7 +372,7 @@ const RequestWithdraw = () => {
                     Apple Fee:
                   </Text>
                   <Text bold fontSize={12}>
-                    ${balance * 0.3}
+                    ${(balance * 0.3).toFixed(1)}
                   </Text>
                 </View>
 
@@ -388,7 +388,7 @@ const RequestWithdraw = () => {
                     Apidon Fee:
                   </Text>
                   <Text bold fontSize={12}>
-                    ${balance * 0.1}
+                    ${(balance * 0.1).toFixed(1)}
                   </Text>
                 </View>
 
@@ -420,7 +420,7 @@ const RequestWithdraw = () => {
               }}
             >
               <Text>Net Payout:</Text>
-              <Text bold>${balance * 0.6 - 20}</Text>
+              <Text bold>${(balance * 0.6 - 20).toFixed(1)}</Text>
             </View>
           </View>
 

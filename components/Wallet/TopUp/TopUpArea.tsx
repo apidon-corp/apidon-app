@@ -5,7 +5,10 @@ import Text from "@/components/Text/Text";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 import TopUpProduct from "./TopUpProduct";
 import CustomBottomModalSheet from "@/components/BottomSheet/CustomBottomModalSheet";
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import {
+  BottomSheetModal,
+  BottomSheetModalProvider,
+} from "@gorhom/bottom-sheet";
 import Purchases, { PurchasesStoreProduct } from "react-native-purchases";
 
 const TopUpArea = () => {
@@ -99,68 +102,72 @@ const TopUpArea = () => {
         )}
       </View>
 
-      <CustomBottomModalSheet
-        ref={topUpInformationBottomSheetModalRef}
-        backgroundColor="#1B1B1B"
-      >
-        <View style={{ flex: 1, gap: 15, padding: 10 }}>
-          <Text fontSize={18} bold>
-            Confirm Your ${chosenProduct?.price} Purhcase
-          </Text>
-          <Text fontSize={13}>
-            You are about to purchase a top-up of ${chosenProduct?.price}.
-          </Text>
-          <Text fontSize={13}>
-            You can use the full amount of this credit to purchase digital items
-            without any fees.
-          </Text>
-          <Text fontSize={13}>
-            If you haven't made any transactions, you can request a full refund
-            through Apple following their guidelines. However, if you have made
-            transactions, withdrawing the amount will incur fees, and only 60%
-            of the remaining balance (except wire fee) will be refundable.
-          </Text>
-          <Text
-            fontSize={13}
-            style={{
-              textDecorationLine: "underline",
-            }}
-          >
-            Please note that the update to your balance may take a few minutes.
-          </Text>
-          <Text fontSize={13}>Please review and confirm your purchase.</Text>
-          <Pressable
-            onPress={handleAcceptButton}
-            style={{
-              backgroundColor: "white",
-              padding: 10,
-              borderRadius: 10,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {loading ? (
-              <ActivityIndicator color="black" size="small" />
-            ) : (
-              <Text style={{ color: "black" }}>Confirm</Text>
-            )}
-          </Pressable>
-          <Pressable
-            disabled={loading}
-            onPress={handleCancelButton}
-            style={{
-              borderWidth: 1,
-              borderColor: "white",
-              padding: 10,
-              borderRadius: 10,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text>Cancel</Text>
-          </Pressable>
-        </View>
-      </CustomBottomModalSheet>
+      <BottomSheetModalProvider>
+        <CustomBottomModalSheet
+          ref={topUpInformationBottomSheetModalRef}
+          backgroundColor="#1B1B1B"
+        >
+          <View style={{ flex: 1, gap: 15, padding: 10 }}>
+            <Text fontSize={18} bold>
+              Confirm Your ${chosenProduct?.price} Purhcase
+            </Text>
+            <Text fontSize={13}>
+              You are about to purchase a top-up of ${chosenProduct?.price}.
+            </Text>
+            <Text fontSize={13}>
+              You can use the full amount of this credit to purchase digital
+              items without any fees.
+            </Text>
+            <Text fontSize={13}>
+              If you haven't made any transactions, you can request a full
+              refund through Apple following their guidelines. However, if you
+              have made transactions, withdrawing the amount will incur fees,
+              and only 60% of the remaining balance (except wire fee) will be
+              refundable.
+            </Text>
+            <Text
+              fontSize={13}
+              style={{
+                textDecorationLine: "underline",
+              }}
+            >
+              Please note that the update to your balance may take a few
+              minutes.
+            </Text>
+            <Text fontSize={13}>Please review and confirm your purchase.</Text>
+            <Pressable
+              onPress={handleAcceptButton}
+              style={{
+                backgroundColor: "white",
+                padding: 10,
+                borderRadius: 10,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {loading ? (
+                <ActivityIndicator color="black" size="small" />
+              ) : (
+                <Text style={{ color: "black" }}>Confirm</Text>
+              )}
+            </Pressable>
+            <Pressable
+              disabled={loading}
+              onPress={handleCancelButton}
+              style={{
+                borderWidth: 1,
+                borderColor: "white",
+                padding: 10,
+                borderRadius: 10,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text>Cancel</Text>
+            </Pressable>
+          </View>
+        </CustomBottomModalSheet>
+      </BottomSheetModalProvider>
     </>
   );
 };

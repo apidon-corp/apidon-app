@@ -1,7 +1,6 @@
 import { Text } from "@/components/Text/Text";
 import {
   ActivityIndicator,
-  Alert,
   Animated,
   Pressable,
   ScrollView,
@@ -24,16 +23,16 @@ import auth from "@react-native-firebase/auth";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { useBalance } from "@/hooks/useBalance";
 
+import CustomBottomModalSheet from "@/components/BottomSheet/CustomBottomModalSheet";
 import { useAuth } from "@/providers/AuthProvider";
 import { CollectibleDocData } from "@/types/Collectible";
 import { UserIdentityDoc } from "@/types/Identity";
-import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import {
   BottomSheetModal,
   BottomSheetModalProvider,
 } from "@gorhom/bottom-sheet";
-import CustomBottomModalSheet from "@/components/BottomSheet/CustomBottomModalSheet";
+import { router } from "expo-router";
 
 const buyNFT = () => {
   const [screenParameters, setScreenParameters] = useAtom(screenParametersAtom);
@@ -55,8 +54,6 @@ const buyNFT = () => {
 
   const { authStatus } = useAuth();
 
-  const [isIdentityVerified, setIsIdentityVerified] = useState(false);
-
   const buyButtonOpacityValue = useRef(new Animated.Value(0.5)).current;
 
   const buyCollectilbeWarningModal = useRef<BottomSheetModal>(null);
@@ -65,38 +62,6 @@ const buyNFT = () => {
   useEffect(() => {
     getInitialData();
   }, [postDocPath]);
-
-  // Checking identity verification status - realtime.
-  useEffect(() => {
-    if (authStatus !== "authenticated") return;
-
-    const currentUserDisplayname = auth().currentUser?.displayName || "";
-    if (!currentUserDisplayname) return;
-
-    const unsubscribe = firestore()
-      .doc(`users/${currentUserDisplayname}/personal/identity`)
-      .onSnapshot(
-        (doc) => {
-          if (doc.exists) {
-            const data = doc.data() as UserIdentityDoc;
-
-            if (data.status === "verified") {
-              setIsIdentityVerified(true);
-            } else {
-              setIsIdentityVerified(false);
-            }
-          } else {
-            setIsIdentityVerified(false);
-          }
-        },
-        (error) => {
-          console.error("Error fetching identity data:", error);
-          setIsIdentityVerified(false);
-        }
-      );
-
-    () => unsubscribe();
-  }, [authStatus]);
 
   // Balance Status Setting
   useEffect(() => {
@@ -118,10 +83,10 @@ const buyNFT = () => {
   useEffect(() => {
     handleChangeOpactiy(
       buyButtonOpacityValue,
-      isIdentityVerified && balanceStatus === "enough" && !loading ? 1 : 0.5,
+      balanceStatus === "enough" && !loading ? 1 : 0.5,
       500
     );
-  }, [isIdentityVerified, balanceStatus, loading]);
+  }, [balanceStatus, loading]);
 
   const handleChangeOpactiy = (
     animatedObject: Animated.Value,
@@ -228,7 +193,6 @@ const buyNFT = () => {
     if (!postDocPath) return;
 
     if (balanceStatus !== "enough") return;
-    if (!isIdentityVerified) return;
 
     const username = currentUserAuthObject.displayName;
     if (!username) return;
@@ -284,10 +248,6 @@ const buyNFT = () => {
 
   const handlePressBalanceArea = () => {
     router.push("/(modals)/wallet");
-  };
-
-  const handleVerifyIdentityButton = () => {
-    router.push("/(modals)/identity");
   };
 
   const handlePressCreatorInformation = () => {
@@ -465,32 +425,6 @@ const buyNFT = () => {
           </View>
         </Pressable>
 
-        {!isIdentityVerified && (
-          <Pressable
-            onPress={handleVerifyIdentityButton}
-            style={{
-              width: "100%",
-              padding: 15,
-              backgroundColor: "rgba(255,255,255,0.05)",
-              borderRadius: 20,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Text
-              bold
-              style={{
-                textAlign: "center",
-                textDecorationLine: "underline",
-                color: "yellow",
-                opacity: 0.75,
-              }}
-            >
-              Verify yourself to collect this item.
-            </Text>
-          </Pressable>
-        )}
-
         <Animated.View
           id="buy-button"
           style={{
@@ -501,9 +435,7 @@ const buyNFT = () => {
           }}
         >
           <Pressable
-            disabled={
-              balanceStatus !== "enough" || !isIdentityVerified || loading
-            }
+            disabled={balanceStatus !== "enough" || loading}
             onPress={handleBuyButton}
             style={{
               width: "50%",
@@ -531,6 +463,7 @@ const buyNFT = () => {
           </Pressable>
         </Animated.View>
       </ScrollView>
+
       <BottomSheetModalProvider>
         <CustomBottomModalSheet
           ref={buyCollectilbeWarningModal}
