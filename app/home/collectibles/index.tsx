@@ -26,8 +26,6 @@ const index = () => {
   }, []);
 
   const handleGetInitialCollectibles = async () => {
-    console.log("Getting initial collectibles");
-
     try {
       const query = await firestore()
         .collection("collectibles")
@@ -48,7 +46,6 @@ const index = () => {
 
   const serveMoreCollectibles = () => {
     if (servedCollectibles.length === collectibleDocDatas.length) {
-      console.log("No more collectible to serve.");
       return;
     }
 
