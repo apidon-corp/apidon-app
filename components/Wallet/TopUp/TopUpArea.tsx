@@ -1,5 +1,4 @@
 import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
-
 import React, { useRef, useState } from "react";
 import Text from "@/components/Text/Text";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
