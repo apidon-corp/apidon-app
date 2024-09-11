@@ -268,9 +268,6 @@ const wallet = () => {
                 scrollEnabled={false}
                 keyExtractor={(item) => item.identifier}
               />
-              <View style={{ height: 50 }} />
-              <View style={{ height: 50 }} />
-              <View style={{ height: 50 }} />
             </>
           )}
         </View>

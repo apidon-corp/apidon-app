@@ -9,14 +9,13 @@ import {
 } from "@/types/Trade";
 import { UserInServer } from "@/types/User";
 import firestore from "@react-native-firebase/firestore";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Dimensions, ScrollView, View } from "react-native";
 import { FlatList, Switch } from "react-native-gesture-handler";
 import Post from "../Post/Post";
 import Header from "./Header";
 import NftContent from "./NftContent";
-import { usePathname } from "expo-router";
 
 type Props = {
   username: string;
@@ -25,7 +24,7 @@ type Props = {
 const UserContent = ({ username }: Props) => {
   const { authStatus } = useAuth();
 
-  const screenParameters = useAtomValue(screenParametersAtom);
+  const [screenParameters, setScreenParameters] = useAtom(screenParametersAtom);
   const collectedNFTPostDocPath = screenParameters.find(
     (q) => q.queryId === "collectedNFTPostDocPath"
   )?.value as string;
@@ -52,8 +51,6 @@ const UserContent = ({ username }: Props) => {
   };
 
   const { width } = Dimensions.get("screen");
-
-  const pathname = usePathname();
 
   // Post Fetching
   useEffect(() => {
@@ -184,24 +181,8 @@ const UserContent = ({ username }: Props) => {
     return () => unsubscribe();
   }, [username, authStatus]);
 
-  // New Purchased NFT Showing
-  useEffect(() => {
-    if (!collectedNFTPostDocPath) return;
-
-    if (!scrollViewRef.current) return;
-
-    setToggleValue("nfts");
-
-    const diff = 430 - width;
-
-    const dest = 290 + diff;
-
-    console.log(pathname);
-  }, [collectedNFTPostDocPath, scrollViewRef, pathname]);
-
   const handleOnLayout = () => {
     if (!collectedNFTPostDocPath) {
-      console.log("No NFT Post Path");
       return;
     }
 
@@ -216,7 +197,14 @@ const UserContent = ({ username }: Props) => {
 
     const dest = 290 + diff;
 
-    scrollViewRef.current.scrollTo({ x: 0, y: dest });
+    scrollViewRef.current.scrollTo({ x: 0, y: dest, animated: true });
+
+    setScreenParameters([
+      {
+        queryId: "collectedNFTPostDocPath",
+        value: undefined,
+      },
+    ]);
   };
 
   if (!userData)
