@@ -545,7 +545,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
             <View id="collectible-tag" style={{ width: "30%" }}>
               <NFTTag
                 nftOptionsModalRef={nftOptionsModalRef}
-                username={postDocData.senderUsername}
+                username={postSenderData.username}
               />
             </View>
           )}
