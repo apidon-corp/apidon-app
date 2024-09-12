@@ -27,13 +27,13 @@ const NFTTag = ({ username, nftOptionsModalRef }: Props) => {
         alignItems: "center",
         borderWidth: 2,
         borderColor: apidonPink,
-        borderRadius: 5,
+        borderRadius: 10,
         padding: 2,
       }}
     >
       <Marquee
         spacing={5}
-        speed={0.40}
+        speed={0.3}
         style={{
           alignItems: "center",
           justifyContent: "center",
@@ -53,14 +53,16 @@ const NFTTag = ({ username, nftOptionsModalRef }: Props) => {
               color: apidonPink,
               textAlign: "center",
             }}
-            fontSize={11}
+            fontSize={12}
           >
             Collectible
           </Text>
-          <Text fontSize={11}>by</Text>
+
+          <Text fontSize={12}>by</Text>
+
           <Text
             bold
-            fontSize={11}
+            fontSize={12}
             numberOfLines={1}
             style={{
               overflow: "hidden",

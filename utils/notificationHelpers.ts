@@ -1,14 +1,45 @@
-import { Platform } from "react-native";
-import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
+import * as Notifications from "expo-notifications";
+import { Platform } from "react-native";
 
-import Constants from "expo-constants";
-import auth from "@react-native-firebase/auth";
 import apiRoutes from "@/helpers/ApiRoutes";
+import auth from "@react-native-firebase/auth";
+import Constants from "expo-constants";
 
 import appCheck from "@react-native-firebase/app-check";
 
 import crashlytics from "@react-native-firebase/crashlytics";
+
+import { NotificationSettingsDocData } from "@/types/Notification";
+import firestore from "@react-native-firebase/firestore";
+
+async function getNotificationTokenFromDatabase() {
+  const displayName = auth().currentUser?.displayName || "";
+  if (!displayName) return false;
+
+  try {
+    const notificationSettingsSnapshot = await firestore()
+      .doc(`users/${displayName}/notifications/notificationSettings`)
+      .get();
+
+    if (!notificationSettingsSnapshot.exists) {
+      console.error("Notification settings doc does not exist.");
+      return false;
+    }
+
+    const data =
+      notificationSettingsSnapshot.data() as NotificationSettingsDocData;
+    if (!data) {
+      console.error("Notification settings doc data is null.");
+      return false;
+    }
+
+    return data.notificationToken;
+  } catch (error) {
+    console.error("Error getting notification settings doc: ", error);
+    return false;
+  }
+}
 
 async function registerForPushNotifications() {
   // Android specific adjusting for channel.
@@ -27,7 +58,21 @@ async function registerForPushNotifications() {
 
   try {
     const currentNotificationStatus = await Notifications.getPermissionsAsync();
-    if (currentNotificationStatus.granted) return false;
+    if (currentNotificationStatus.granted) {
+      const notificationTokenOnServer =
+        await getNotificationTokenFromDatabase();
+      if (!notificationTokenOnServer) {
+        // We have authorized notifications but we don't have token.
+        // Probably, we sign out and then in on same device.
+        // We need to create notification token...
+        const createdNotificationToken = await createExpoPushToken();
+        return createdNotificationToken;
+      }
+
+      // We authorized notifications and also have a valid notification token.
+      // Don't need to make action.
+      return false;
+    }
   } catch (error) {
     console.error("Error while getting notification permissions: ", error);
     return false;
@@ -66,7 +111,9 @@ export async function createExpoPushToken() {
     const token = tokenGetResult.data;
     return token;
   } catch (error) {
-    crashlytics().recordError(new Error(`Error while getting push token: ${error}`));
+    crashlytics().recordError(
+      new Error(`Error while getting push token: ${error}`)
+    );
     console.error("Error while getting push token: ", error);
     return false;
   }
