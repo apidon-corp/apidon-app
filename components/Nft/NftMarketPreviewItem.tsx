@@ -1,21 +1,15 @@
 import { apidonPink } from "@/constants/Colors";
 import { useAuth } from "@/providers/AuthProvider";
+import { CollectibleDocData } from "@/types/Collectible";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
-import {
-  Entypo,
-  FontAwesome,
-  FontAwesome5,
-  Foundation,
-  MaterialIcons,
-} from "@expo/vector-icons";
+import { FontAwesome, Foundation, MaterialIcons } from "@expo/vector-icons";
 import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import Text from "../Text/Text";
-import { CollectibleDocData } from "@/types/Collectible";
 
 type Props = {
   postDocPath: string;
