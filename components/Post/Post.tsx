@@ -80,6 +80,8 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
   const pathname = usePathname();
 
+  const [isVerified, setIsVerified] = useState(false);
+
   // Dynamic Data Fetching / Post Object
   useEffect(() => {
     if (authStatus !== "authenticated") return;
@@ -178,6 +180,40 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
     return () => unsubscribe();
   }, [authStatus, postDocData]);
+
+  // Dynamic Data Fetching - Current User Status
+  useEffect(() => {
+    if (authStatus !== "authenticated") return;
+
+    const displayName = auth().currentUser?.displayName || "";
+    if (!displayName) return;
+
+    const unsubscribe = firestore()
+      .doc(`users/${displayName}`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.error("User data is not found.");
+            return setIsVerified(false);
+          }
+
+          const data = snapshot.data() as UserInServer;
+
+          if (!data) {
+            console.error("User data is undefined.");
+            return setIsVerified(false);
+          }
+
+          setIsVerified(data.verified);
+        },
+        (error) => {
+          console.error("Error on getting realtime data  ", error);
+          setIsVerified(false);
+        }
+      );
+
+    return () => unsubscribe();
+  }, [authStatus]);
 
   const handleOpenRatesModal = () => {
     setScreenParameters([{ queryId: "postDocPath", value: postDocPath }]);
@@ -720,7 +756,9 @@ const Post = React.memo(({ postDocPath }: Props) => {
           }}
         >
           {postDocData.image &&
-            !postDocData.collectibleStatus.isCollectible && (
+            !postDocData.collectibleStatus.isCollectible &&
+            doesOwnPost &&
+            isVerified && (
               <Pressable
                 onPress={handleCreateNFTButton}
                 style={{
