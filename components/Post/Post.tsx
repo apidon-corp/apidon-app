@@ -448,6 +448,14 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
   if (!postDocData || !postSenderData || postDeleted) return <></>;
 
+  if (
+    !(
+      postDocData.reviewStatus === "approved" ||
+      postDocData.reviewStatus === "pending"
+    )
+  )
+    return <></>;
+
   return (
     <>
       <ScreenTitle
