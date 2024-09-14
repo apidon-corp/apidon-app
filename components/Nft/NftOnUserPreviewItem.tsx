@@ -3,7 +3,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { CollectibleDocData } from "@/types/Collectible";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
-import { Foundation, MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome, Foundation, MaterialIcons } from "@expo/vector-icons";
 import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
 import { router, usePathname } from "expo-router";
@@ -173,7 +173,7 @@ const NftOnUserPreviewItem = ({ postDocPath, collectibleDocPath }: Props) => {
           paddingHorizontal: 10,
         }}
       >
-        <Foundation name="dollar" size={20} color="white" />
+        <Foundation name="dollar" size={19} color="white" />
         <Text
           style={{
             fontSize: 14,
@@ -226,6 +226,27 @@ const NftOnUserPreviewItem = ({ postDocPath, collectibleDocPath }: Props) => {
           </View>
           <Text fontSize={10}>@{postDocData.senderUsername}</Text>
         </View>
+      </View>
+
+      <View
+        style={{
+          position: "absolute",
+          bottom: 25,
+          right: 25,
+          flexDirection: "row",
+          backgroundColor: "black",
+          borderRadius: 20,
+          alignItems: "center",
+          gap: 5,
+          padding: 5,
+          paddingHorizontal: 10,
+        }}
+      >
+        <FontAwesome name="cubes" size={19} color="white" />
+        <Text bold>
+          {collectibleDocData.stock.remainingStock}/
+          {collectibleDocData.stock.initialStock}
+        </Text>
       </View>
     </Pressable>
   );

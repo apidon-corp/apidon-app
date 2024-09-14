@@ -92,7 +92,6 @@ const index = () => {
       <FlatList
         scrollEnabled={false}
         style={{ width: "100%" }}
-        numColumns={2}
         data={servedCollectibles.sort((a, b) => b.timestamp - a.timestamp)}
         renderItem={({ item }) => (
           <NftMarketPreviewItem
