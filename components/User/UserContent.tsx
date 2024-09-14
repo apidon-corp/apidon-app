@@ -9,7 +9,7 @@ import {
 } from "@/types/Trade";
 import { UserInServer } from "@/types/User";
 import firestore from "@react-native-firebase/firestore";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Dimensions, ScrollView, View } from "react-native";
 import { FlatList, Switch } from "react-native-gesture-handler";
@@ -51,6 +51,8 @@ const UserContent = ({ username }: Props) => {
   };
 
   const { width } = Dimensions.get("screen");
+
+  const [layoutReady, setLayoutReady] = useState(false);
 
   // Post Fetching
   useEffect(() => {
@@ -181,20 +183,19 @@ const UserContent = ({ username }: Props) => {
     return () => unsubscribe();
   }, [username, authStatus]);
 
-  const handleOnLayout = () => {
-    if (!collectedNFTPostDocPath) {
-      return;
-    }
+  useEffect(() => {
+    if (!collectedNFTPostDocPath) return;
+
+    if (!layoutReady) return;
+
+    if (toggleValue !== "nfts") return setToggleValue("nfts");
 
     if (!scrollViewRef.current) {
       console.log("No Scroll View Ref");
       return;
     }
 
-    setToggleValue("nfts");
-
     const diff = 430 - width;
-
     const dest = 290 + diff;
 
     scrollViewRef.current.scrollTo({ x: 0, y: dest, animated: true });
@@ -205,6 +206,10 @@ const UserContent = ({ username }: Props) => {
         value: undefined,
       },
     ]);
+  }, [collectedNFTPostDocPath, layoutReady, toggleValue]);
+
+  const handleOnLayout = () => {
+    setLayoutReady(true);
   };
 
   if (!userData)
