@@ -5,7 +5,6 @@ import { useAtomValue } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Animated,
   Dimensions,
   Keyboard,
@@ -23,16 +22,16 @@ import apiRoutes from "@/helpers/ApiRoutes";
 import appCheck from "@react-native-firebase/app-check";
 import auth from "@react-native-firebase/auth";
 import { router } from "expo-router";
-import { CollectibleUsageDocData } from "@/types/CollectibleUsage";
-import { useAuth } from "@/providers/AuthProvider";
-import { PlanDocData, calculateStockLimit } from "@/types/Plans";
+
+import CustomBottomModalSheet from "@/components/BottomSheet/CustomBottomModalSheet";
+import { useInAppPurchases } from "@/hooks/useInAppPurchases";
+import { AntDesign } from "@expo/vector-icons";
 import {
   BottomSheetModal,
   BottomSheetModalProvider,
 } from "@gorhom/bottom-sheet";
-import CustomBottomModalSheet from "@/components/BottomSheet/CustomBottomModalSheet";
-import { AntDesign } from "@expo/vector-icons";
-import { useInAppPurchases } from "@/hooks/useInAppPurchases";
+
+const STOCK_LIMIT = 100;
 
 const listNFT = () => {
   // Trigger In-App-Purchase Store Notifications
@@ -75,56 +74,11 @@ const listNFT = () => {
 
   const createButtonOpacityValue = useRef(new Animated.Value(0.5)).current;
 
-  const [usageData, setUsageData] = useState<CollectibleUsageDocData | null>(
-    null
-  );
-
-  const { authStatus } = useAuth();
-
-  const [inLimits, setInLimits] = useState(false);
-
-  const [stockLimit, setStockLimit] = useState(0);
-
   const informationModalRef = useRef<BottomSheetModal>(null);
 
   const [bottomModalType, setBottomModalType] = useState<
     "stock" | "price" | "createWarning"
   >("stock");
-
-  // Gets user's usage data, realtime.
-  useEffect(() => {
-    if (authStatus !== "authenticated") return;
-
-    const displayName = auth().currentUser?.displayName;
-    if (!displayName) return;
-
-    const unsubscribe = firestore()
-      .doc(`users/${displayName}/collectible/usage`)
-      .onSnapshot((snapshot) => {
-        if (!snapshot.exists) {
-          console.error("No usage data found");
-          return setUsageData(null);
-        }
-
-        const data = snapshot.data() as CollectibleUsageDocData;
-        if (!data) {
-          console.error("Undefined usage data found");
-          return setUsageData(null);
-        }
-
-        setUsageData(data);
-      });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [authStatus]);
-
-  // Checks if user is allowed to create more collectible.
-  useEffect(() => {
-    if (!usageData) return setInLimits(false);
-    setInLimits(usageData.used < usageData.limit);
-  }, [usageData]);
 
   // Getting inital post data.
   useEffect(() => {
@@ -182,19 +136,14 @@ const listNFT = () => {
     };
   }, [containerRef]);
 
-  // Get Plan Details For Stock
-  useEffect(() => {
-    handlePrepareStockData();
-  }, [usageData]);
-
   // Changing opactiy of create button.
   useEffect(() => {
     handleChangeOpactiy(
       createButtonOpacityValue,
-      price && stock && !loading && inLimits ? 1 : 0.5,
+      price && stock && !loading ? 1 : 0.5,
       250
     );
-  }, [price, stock, loading, inLimits]);
+  }, [price, stock, loading]);
 
   const handleChangeOpactiy = (
     animatedObject: Animated.Value,
@@ -290,9 +239,9 @@ const listNFT = () => {
       return;
     }
 
-    if (numberVersion > stockLimit) {
-      setStockInput(stockLimit.toString());
-      return setStock(stockLimit);
+    if (numberVersion > STOCK_LIMIT) {
+      setStockInput(STOCK_LIMIT.toString());
+      return setStock(STOCK_LIMIT);
     }
 
     const validInput = numberVersion.toString();
@@ -316,7 +265,7 @@ const listNFT = () => {
 
     if (!price || !stock) return;
 
-    if (stock > stockLimit) return;
+    if (stock > STOCK_LIMIT) return;
 
     if (loading) return;
 
@@ -363,40 +312,6 @@ const listNFT = () => {
     informationModalRef.current?.dismiss();
   };
 
-  const handlePrepareStockData = async () => {
-    if (!usageData) return setStockLimit(0);
-
-    try {
-      const planDocSnapshot = await firestore()
-        .doc(`plans/${usageData.planId}`)
-        .get();
-
-      if (!planDocSnapshot.exists) {
-        console.error("Plan doc snapshot does not exist");
-        return setStockLimit(0);
-      }
-
-      const data = planDocSnapshot.data() as PlanDocData;
-
-      if (!data) {
-        console.error("Plan doc data does not exist");
-        return setStockLimit(0);
-      }
-
-      const stockLimitCalculated = calculateStockLimit(data.stock);
-      setStockLimit(stockLimitCalculated);
-    } catch (error) {
-      console.error("Error on getting plan data: ", error);
-      setStockLimit(0);
-    }
-  };
-
-  const handlePressSeePlansButton = () => {
-    if (informationModalRef.current) informationModalRef.current.close();
-
-    router.push("/(modals)/plans");
-  };
-
   const handlePressStockInformationButton = () => {
     if (informationModalRef.current) {
       Keyboard.dismiss();
@@ -421,7 +336,7 @@ const listNFT = () => {
     );
   }
 
-  if (!postData || !usageData) {
+  if (!postData) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator color="white" />
@@ -632,7 +547,7 @@ const listNFT = () => {
             <TextInput
               value={stockInput === "" ? "" : stock.toString()}
               onChangeText={handleStockChange}
-              placeholder={`Maximum ${stockLimit}`}
+              placeholder={`Maximum ${STOCK_LIMIT}`}
               placeholderTextColor="#808080"
               style={{
                 width: "100%",
@@ -681,34 +596,6 @@ const listNFT = () => {
               )}
             </Pressable>
           </Animated.View>
-
-          {!inLimits && (
-            <Pressable
-              onPress={handlePressSeePlansButton}
-              id="limit-error"
-              style={{
-                width: "100%",
-                padding: 15,
-                backgroundColor: "rgba(255,255,255,0.05)",
-                borderRadius: 20,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Text
-                bold
-                fontSize={12}
-                style={{
-                  textAlign: "center",
-                  textDecorationLine: "underline",
-                  color: "yellow",
-                  opacity: 0.75,
-                }}
-              >
-                Please, see plans to create more collectibles.
-              </Text>
-            </Pressable>
-          )}
         </Animated.View>
       </ScrollView>
 
@@ -724,20 +611,9 @@ const listNFT = () => {
                   Maximum Stock Limit
                 </Text>
                 <Text fontSize={13}>
-                  You can set a maximum of {stockLimit} stock for each
-                  collectible with your plan.
+                  You can set a maximum of {STOCK_LIMIT} stock for each
+                  collectible.
                 </Text>
-                <Pressable onPress={handlePressSeePlansButton}>
-                  <Text
-                    bold
-                    fontSize={13}
-                    style={{
-                      textDecorationLine: "underline",
-                    }}
-                  >
-                    See Plans
-                  </Text>
-                </Pressable>
               </>
             )}
             {bottomModalType === "price" && (
