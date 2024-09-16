@@ -17,7 +17,7 @@
     "@expo/vector-icons": "^14.0.2",
     "@gorhom/bottom-sheet": "^4.6.4",
     "@likashefqet/react-native-image-zoom": "^4.1.0",
-    "@react-native-async-storage/async-storage": "2.0.0",
+    "@react-native-async-storage/async-storage": "1.23.1",
     "@react-native-firebase/analytics": "^20.5.0",
     "@react-native-firebase/app": "^20.5.0",
     "@react-native-firebase/app-check": "^20.5.0",
@@ -65,13 +65,13 @@
     "react-native-safe-area-context": "4.10.5",
     "react-native-screens": "3.31.1",
     "react-native-svg": "15.2.0",
-    "@react-native-community/netinfo": "11.3.2"
+    "@react-native-community/netinfo": "11.3.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~18.2.45",
     "jest": "^29.2.1",
-    "jest-expo": "~51.0.1",
+    "jest-expo": "~51.0.4",
     "react-test-renderer": "18.2.0",
     "typescript": "~5.3.3"
   },
