@@ -1,14 +1,8 @@
-export type BuyersArrayObject = {
-  username: string;
-  ts: number;
-};
-
 export type CollectibleDocData = {
   id: string;
   creator: string;
   timestamp: number;
   postDocPath: string;
-  buyers: BuyersArrayObject[];
   price: {
     price: number;
     currency: "USD";
@@ -17,4 +11,9 @@ export type CollectibleDocData = {
     initialStock: number;
     remainingStock: number;
   };
+};
+
+export type CollectorDocData = {
+  username: string;
+  timestamp: number;
 };

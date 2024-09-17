@@ -6,7 +6,7 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, SafeAreaView, View } from "react-native";
 
 import UserCard from "@/components/User/UserCard";
-import { CollectibleDocData } from "@/types/Collectible";
+import { CollectibleDocData, CollectorDocData } from "@/types/Collectible";
 import firestore from "@react-native-firebase/firestore";
 import { FlatList } from "react-native-gesture-handler";
 
@@ -21,9 +21,34 @@ const collectors = () => {
   const [collectibleData, setCollectibleData] =
     useState<CollectibleDocData | null>(null);
 
+  const [collectorDocDatas, setCollectorDocDatas] = useState<
+    CollectorDocData[] | null
+  >(null);
+
   useEffect(() => {
     getInitialData();
   }, [postDocPath]);
+
+  useEffect(() => {
+    if (!collectibleData) return;
+
+    const unsubscribe = firestore()
+      .collection(`collectibles/${collectibleData.id}/collectors`)
+      .onSnapshot(
+        (snapshot) => {
+          const collectorDocDatasFetched = snapshot.docs.map(
+            (doc) => doc.data() as CollectorDocData
+          );
+          setCollectorDocDatas(collectorDocDatasFetched);
+        },
+
+        (error) => {
+          console.error("Error on getting realtime collectors ", error);
+          return setCollectorDocDatas(null);
+        }
+      );
+    return () => unsubscribe();
+  }, [collectibleData]);
 
   const getInitialData = async () => {
     if (!postDocPath) return;
@@ -87,7 +112,7 @@ const collectors = () => {
     );
   }
 
-  if (!postData || !collectibleData) {
+  if (!postData || !collectibleData || !collectorDocDatas) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator color="white" />
@@ -95,7 +120,7 @@ const collectors = () => {
     );
   }
 
-  if (collectibleData.buyers.length === 0) {
+  if (collectorDocDatas.length === 0) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <Text>No one collected this collectible yet.</Text>
@@ -114,7 +139,7 @@ const collectors = () => {
           gap: 5,
           paddingHorizontal: 10,
         }}
-        data={collectibleData.buyers}
+        data={collectorDocDatas}
         renderItem={({ item }) => (
           <UserCard username={item.username} key={item.username} />
         )}
