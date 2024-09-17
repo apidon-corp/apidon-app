@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Purchases, { PurchasesStoreProduct } from "react-native-purchases";
 import crashlytics from "@react-native-firebase/crashlytics";
 import firestore from "@react-native-firebase/firestore";
-import { ConfigDocData } from "@/types/Plans";
 import { TopUpPlansConfigDocData } from "@/types/IAP";
 
 export const useInAppPurchases = () => {
@@ -14,13 +13,6 @@ export const useInAppPurchases = () => {
     string[]
   >([]);
   const [products, setProducts] = useState<PurchasesStoreProduct[]>([]);
-
-  const [appStoreSubscriptionIds, setAppStoreSubscriptionIds] = useState<
-    string[]
-  >([]);
-  const [subscriptions, setSubscriptions] = useState<PurchasesStoreProduct[]>(
-    []
-  );
 
   if (authStatus !== "authenticated") {
     console.log("User is not logged in to use in app purchases");
@@ -35,36 +27,6 @@ export const useInAppPurchases = () => {
     process.env.EXPO_PUBLIC_REVENUE_CAT_IOS_IAP_PUBLIC_KEY || "";
   if (!appleAPIKey) {
     console.error("Apple API key is not defined to use in app purchases");
-  }
-
-  async function getSubscriptionProductIdS() {
-    try {
-      const configSnapshot = await firestore().doc(`plans/config`).get();
-
-      if (!configSnapshot.exists) {
-        console.error("plans/consif doc does not exist");
-        crashlytics().recordError(new Error("plans/consif doc does not exist"));
-        return setAppStoreSubscriptionIds([]);
-      }
-
-      const data = configSnapshot.data() as ConfigDocData;
-
-      if (!data) {
-        console.error("plans/consif doc data not exist");
-        crashlytics().recordError(new Error("plans/consif doc data not exist"));
-        return setAppStoreSubscriptionIds([]);
-      }
-
-      const activeSubscriptionProductIdS = data.activeSubscriptionProductIdS;
-
-      setAppStoreSubscriptionIds(activeSubscriptionProductIdS);
-    } catch (error) {
-      console.error("Error on fetching subscription product ids:", error);
-      crashlytics().recordError(
-        new Error(`Error on fetching subscription product ids: ${error}`)
-      );
-      return setAppStoreSubscriptionIds([]);
-    }
   }
 
   async function getTopUpProductIdS() {
@@ -126,32 +88,11 @@ export const useInAppPurchases = () => {
     }
   }
 
-  async function getSubscriptions() {
-    if (!appStoreSubscriptionIds.length) return;
-
-    try {
-      const subscriptionsFetched = await Purchases.getProducts(
-        appStoreSubscriptionIds
-      );
-
-      return setSubscriptions(subscriptionsFetched);
-    } catch (error) {
-      console.error("Error on fetching products:", error);
-      crashlytics().recordError(
-        new Error(
-          `Error on fetching subscriptions: ${error} \n Subscriptions On App: ${appStoreTopUpProductIdS} \n Apple API Key: ${appleAPIKey} \n Display Name: ${currentUserDisplayName}`
-        )
-      );
-      return setSubscriptions([]);
-    }
-  }
-
   // Getting productIds of subscription from database.
   // Rather than hardcoding it in the code, it is better to get it from the database.
   useEffect(() => {
     if (authStatus !== "authenticated") return;
 
-    getSubscriptionProductIdS();
     getTopUpProductIdS();
   }, [authStatus]);
 
@@ -165,16 +106,9 @@ export const useInAppPurchases = () => {
     });
 
     getProducts();
-    getSubscriptions();
-  }, [
-    currentUserDisplayName,
-    appleAPIKey,
-    appStoreSubscriptionIds,
-    appStoreTopUpProductIdS,
-  ]);
+  }, [currentUserDisplayName, appleAPIKey, appStoreTopUpProductIdS]);
 
   return {
     products,
-    subscriptions,
   };
 };

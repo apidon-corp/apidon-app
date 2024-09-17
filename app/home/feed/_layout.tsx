@@ -47,10 +47,6 @@ const _layout = () => {
     router.push(`/home/feed/profilePage?username=${currentUserDisplayName}`);
   };
 
-  const handlePressPlansButton = () => {
-    router.push("/home/feed/plans");
-  };
-
   return (
     <Stack
       screenOptions={{
@@ -86,22 +82,6 @@ const _layout = () => {
               ) : (
                 <FontAwesome name="user" size={25} color="white" />
               )}
-            </Pressable>
-          ),
-          headerLeft: () => (
-            <Pressable
-              onPress={handlePressPlansButton}
-              style={{
-                height: 25,
-                borderWidth: 1,
-                borderColor: "gray",
-                justifyContent: "center",
-                alignItems: "center",
-                borderRadius: 10,
-                paddingHorizontal: 10,
-              }}
-            >
-              <Text fontSize={12}>Plans</Text>
             </Pressable>
           ),
         }}
@@ -151,19 +131,6 @@ const _layout = () => {
         options={{
           title: "Collectible",
           headerBackTitle: "Back",
-        }}
-      />
-      <Stack.Screen
-        name="plans"
-        options={{
-          title: "Plans",
-          headerBackTitle: "Back",
-        }}
-      />
-      <Stack.Screen
-        name="currentPlan"
-        options={{
-          title: "Current Plan",
         }}
       />
     </Stack>
