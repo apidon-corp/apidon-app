@@ -5,7 +5,8 @@ export type PostServerData = {
   image: string;
 
   rates: RateData[];
-  comments: CommentServerData[];
+
+  commentCount: number;
 
   collectibleStatus:
     | {

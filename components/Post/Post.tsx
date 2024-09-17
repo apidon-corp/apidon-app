@@ -745,10 +745,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
                     color: "gray",
                   }}
                 >
-                  {postDocData.comments.length
-                    ? postDocData.comments.length
-                    : 0}{" "}
-                  comments
+                  {postDocData.commentCount} comments
                 </Text>
               </View>
             </View>
