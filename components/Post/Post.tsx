@@ -3,7 +3,7 @@ import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { useAuth } from "@/providers/AuthProvider";
-import { PostServerData } from "@/types/Post";
+import { PostServerData, RatingData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
 import { Entypo, Feather, MaterialIcons } from "@expo/vector-icons";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
@@ -64,23 +64,13 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
   const nftOptionsModalRef = useRef<BottomSheetModal>(null);
 
-  const overallRating = useMemo(() => {
-    if (!postDocData) return 0;
-
-    // Prevent 0-division
-    const rateCount = postDocData.rates.length ? postDocData.rates.length : 1;
-
-    let totalRates = postDocData.rates.reduce(
-      (acc, current) => acc + current.rate,
-      0
-    );
-
-    return totalRates / rateCount;
-  }, [postDocData?.rates]);
-
   const pathname = usePathname();
 
   const [isVerified, setIsVerified] = useState(false);
+
+  const [ratingOfCurrentUser, setRatingOfCurrentUser] = useState<
+    undefined | number
+  >(undefined);
 
   // Dynamic Data Fetching / Post Object
   useEffect(() => {
@@ -212,6 +202,33 @@ const Post = React.memo(({ postDocPath }: Props) => {
         }
       );
 
+    return () => unsubscribe();
+  }, [authStatus]);
+
+  // Dynamic Data Fetching - Current Rating
+  useEffect(() => {
+    if (authStatus !== "authenticated") return;
+
+    const displayName = auth().currentUser?.displayName || "";
+    if (!displayName) return;
+
+    const unsubscribe = firestore()
+      .doc(postDocPath)
+      .collection("ratings")
+      .where("sender", "==", displayName)
+      .onSnapshot(
+        (snapshot) => {
+          if (snapshot.empty) return setRatingOfCurrentUser(undefined);
+
+          const data = snapshot.docs[0].data() as RatingData;
+
+          return setRatingOfCurrentUser(data.rating);
+        },
+        (error) => {
+          console.error("Error on getting realtime data  ", error);
+          setRatingOfCurrentUser(undefined);
+        }
+      );
     return () => unsubscribe();
   }, [authStatus]);
 
@@ -672,11 +689,17 @@ const Post = React.memo(({ postDocPath }: Props) => {
                 gap: 5,
               }}
             >
-              <Stars score={overallRating} />
+              <Stars
+                score={
+                  postDocData.ratingCount
+                    ? postDocData.ratingSum / postDocData.ratingCount
+                    : 0
+                }
+              />
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Text bold>{postDocData.rates.length}</Text>
+                <Text bold>{postDocData.ratingCount}</Text>
                 <Text> </Text>
-                <Text>Rate{postDocData.rates.length !== 1 && "s"}</Text>
+                <Text>Rate{postDocData.ratingCount !== 1 && "s"}</Text>
               </View>
             </Pressable>
 
@@ -690,11 +713,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
               }}
             >
               <RateStar
-                previousValue={
-                  postDocData.rates.find(
-                    (r) => r.sender === auth().currentUser?.displayName
-                  )?.rate
-                }
+                previousValue={ratingOfCurrentUser}
                 postDocPath={postDocPath}
               />
             </View>

@@ -1,7 +1,7 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import Text from "@/components/Text/Text";
 import UserCard from "@/components/User/UserCard";
-import { PostServerData, RateData } from "@/types/Post";
+import { PostServerData, RateData, RatingData } from "@/types/Post";
 import firestore from "@react-native-firebase/firestore";
 import { useAtomValue } from "jotai";
 import React, { useEffect, useState } from "react";
@@ -14,32 +14,24 @@ const Likes = () => {
     (query) => query.queryId === "postDocPath"
   )?.value as string;
 
-  const [loading, setLoading] = useState(false);
-  const [rateData, setRateData] = useState<RateData[]>([]);
+  const [ratings, setRatings] = useState<RatingData[] | null>(null);
 
   // Dynamic Data Fetching
   useEffect(() => {
     if (!postDocPath) return;
 
-    if (loading) return;
-    setLoading(true);
-
     const unsubscribe = firestore()
       .doc(postDocPath)
+      .collection("ratings")
       .onSnapshot(
         (snapshot) => {
-          if (!snapshot.exists) {
-            console.log("Post's realtime data can not be fecthed.");
-            return setLoading(false);
-          }
-          const postDocData = snapshot.data() as PostServerData;
-          setRateData(postDocData.rates);
-
-          return setLoading(false);
+          return setRatings(
+            snapshot.docs.map((doc) => doc.data() as RatingData)
+          );
         },
         (error) => {
           console.error("Error on getting realtime data: ", error);
-          return setLoading(false);
+          return setRatings(null);
         }
       );
 
@@ -59,7 +51,7 @@ const Likes = () => {
       </SafeAreaView>
     );
 
-  if (loading)
+  if (!ratings)
     return (
       <SafeAreaView
         style={{
@@ -72,7 +64,7 @@ const Likes = () => {
       </SafeAreaView>
     );
 
-  if (rateData.length === 0) {
+  if (ratings.length === 0) {
     return (
       <SafeAreaView
         style={{
@@ -97,7 +89,7 @@ const Likes = () => {
           gap: 5,
           paddingHorizontal: 10,
         }}
-        data={rateData}
+        data={ratings}
         renderItem={({ item }) => (
           <UserCard username={item.sender} key={item.sender} />
         )}
