@@ -1,5 +1,4 @@
 import { apidonPink } from "@/constants/Colors";
-import { useAuth } from "@/providers/AuthProvider";
 import { CollectibleDocData } from "@/types/Collectible";
 import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
@@ -27,37 +26,14 @@ const NftMarketPreviewItem = ({
     null
   );
 
-  const { authStatus } = useAuth();
-
   const animatedWidth = useRef(new Animated.Value(48)).current;
 
-  // Dynamic Data Fetching / Post Object
+  // Getting post data
   useEffect(() => {
-    if (authStatus !== "authenticated") return;
+    handleGetPostData();
+  }, [postDocPath]);
 
-    const unsubscribe = firestore()
-      .doc(postDocPath)
-      .onSnapshot(
-        (snapshot) => {
-          if (!snapshot.exists) {
-            return console.log("Post's realtime data can not be fecthed.");
-          }
-          const postDocData = snapshot.data() as PostServerData;
-          setPostDocData(postDocData);
-
-          if (!postSenderData)
-            handleGetPostSenderInformation(postDocData.senderUsername);
-
-          return;
-        },
-        (error) => {
-          return console.error("Error on getting realtime data: ", error);
-        }
-      );
-
-    return () => unsubscribe();
-  }, [postDocPath, authStatus]);
-
+  // Changing width based oriantation.
   useEffect(() => {
     Animated.timing(animatedWidth, {
       toValue: isGrid ? 48 : 100,
@@ -65,6 +41,27 @@ const NftMarketPreviewItem = ({
       useNativeDriver: false,
     }).start();
   }, [isGrid]);
+
+  const handleGetPostData = async () => {
+    if (!postDocPath) return setPostDocData(null);
+
+    try {
+      const postDoc = await firestore().doc(postDocPath).get();
+
+      if (!postDoc.exists) {
+        console.error("Post not found");
+        return setPostDocData(null);
+      }
+
+      const postData = postDoc.data() as PostServerData;
+      setPostDocData(postData);
+
+      handleGetPostSenderInformation(postData.senderUsername);
+    } catch (error) {
+      console.error("Error on getting post data: ", error);
+      return setPostDocData(null);
+    }
+  };
 
   const handleGetPostSenderInformation = async (senderUsername: string) => {
     try {
@@ -89,7 +86,7 @@ const NftMarketPreviewItem = ({
     );
   };
 
-  if (!postDocData || !postSenderData) {
+  if (!postDocData) {
     return (
       <View style={{ width: "48%", marginVertical: 8 }}>
         <View
@@ -180,54 +177,57 @@ const NftMarketPreviewItem = ({
           </Text>
         </View>
 
-        <View
-          id="creator-data"
-          style={{
-            position: "absolute",
-            bottom: isGrid ? 5 : 10,
-            left: isGrid ? 5 : 10,
-            padding: isGrid ? 0 : 5,
-            paddingRight: isGrid ? 0 : 15,
-            backgroundColor: "black",
-            borderRadius: 20,
-            alignItems: "center",
-            flexDirection: "row",
-            gap: 5,
-          }}
-        >
-          <Image
-            source={
-              postSenderData.profilePhoto || require("@/assets/images/user.jpg")
-            }
-            style={{
-              width: isGrid ? 30 : 40,
-              height: isGrid ? 30 : 40,
-              borderRadius: 20,
-            }}
-            transition={500}
-          />
+        {postSenderData && (
           <View
-            id="username-fullname"
+            id="creator-data"
             style={{
-              display: isGrid ? "none" : undefined,
+              position: "absolute",
+              bottom: isGrid ? 5 : 10,
+              left: isGrid ? 5 : 10,
+              padding: isGrid ? 0 : 5,
+              paddingRight: isGrid ? 0 : 15,
+              backgroundColor: "black",
+              borderRadius: 20,
+              alignItems: "center",
+              flexDirection: "row",
+              gap: 5,
             }}
           >
-            <View
-              id="fullanme-verified"
+            <Image
+              source={
+                postSenderData.profilePhoto ||
+                require("@/assets/images/user.jpg")
+              }
               style={{
-                alignItems: "center",
-                gap: 3,
-                flexDirection: "row",
+                width: isGrid ? 30 : 40,
+                height: isGrid ? 30 : 40,
+                borderRadius: 20,
+              }}
+              transition={500}
+            />
+            <View
+              id="username-fullname"
+              style={{
+                display: isGrid ? "none" : undefined,
               }}
             >
-              <Text fontSize={12}>{postSenderData.fullname}</Text>
-              {postSenderData.verified && (
-                <MaterialIcons name="verified" size={14} color={apidonPink} />
-              )}
+              <View
+                id="fullanme-verified"
+                style={{
+                  alignItems: "center",
+                  gap: 3,
+                  flexDirection: "row",
+                }}
+              >
+                <Text fontSize={12}>{postSenderData.fullname}</Text>
+                {postSenderData.verified && (
+                  <MaterialIcons name="verified" size={14} color={apidonPink} />
+                )}
+              </View>
+              <Text fontSize={10}>@{postDocData.senderUsername}</Text>
             </View>
-            <Text fontSize={10}>@{postDocData.senderUsername}</Text>
           </View>
-        </View>
+        )}
       </Pressable>
     </Animated.View>
   );
