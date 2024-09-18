@@ -14,7 +14,7 @@ import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 import { useSetAtom } from "jotai";
 
 const _layout = () => {
-  const notificationData = useNotification();
+  const { haveUnread } = useNotification();
 
   const pathname = usePathname();
 
@@ -22,20 +22,6 @@ const _layout = () => {
   useInAppPurchases();
 
   const setHomeScreenParameters = useSetAtom(homeScreeenParametersAtom);
-
-  const areThereUnReadNotifications = () => {
-    if (!notificationData) return false;
-
-    let unReadFlag = false;
-    for (const notification of notificationData.notifications) {
-      if (notification.timestamp > notificationData.lastOpenedTime) {
-        unReadFlag = true;
-        break;
-      }
-    }
-
-    return unReadFlag;
-  };
 
   const handleHomeButtonPress = () => {
     if (pathname === "/home/feed")
@@ -114,7 +100,7 @@ const _layout = () => {
                 }}
               >
                 <Ionicons name="notifications" size={size} color={color} />
-                {areThereUnReadNotifications() && (
+                {haveUnread && (
                   <Entypo
                     style={{
                       position: "absolute",

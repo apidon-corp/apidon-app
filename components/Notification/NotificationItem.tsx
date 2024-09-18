@@ -1,5 +1,5 @@
 import { Text } from "@/components/Text/Text";
-import { NotificationData } from "@/types/Notification";
+import { ReceivedNotificationDocData } from "@/types/Notification";
 import { UserInServer } from "@/types/User";
 import { Entypo, Feather } from "@expo/vector-icons";
 import crashlytics from "@react-native-firebase/crashlytics";
@@ -11,11 +11,14 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
 type Props = {
-  notificationData: NotificationData;
+  receivedNotificationDocData: ReceivedNotificationDocData;
   lastOpenedTime: number;
 };
 
-const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
+const NotificationItem = ({
+  receivedNotificationDocData,
+  lastOpenedTime,
+}: Props) => {
   const [senderData, setSenderData] = useState<UserInServer | null>(null);
 
   const [lastOpenedTimeLocal, setLastOpenedTimeLocal] =
@@ -24,8 +27,8 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (notificationData.source) handleGetSenderData();
-  }, [notificationData.source]);
+    if (receivedNotificationDocData.source) handleGetSenderData();
+  }, [receivedNotificationDocData.source]);
 
   useEffect(() => {
     if (pathname !== "/home/notifications") {
@@ -36,13 +39,13 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
   const handleGetSenderData = async () => {
     try {
       const userDocSnapshot = await firestore()
-        .doc(`users/${notificationData.source}`)
+        .doc(`users/${receivedNotificationDocData.source}`)
         .get();
 
       if (!userDocSnapshot.exists) {
         console.error(
           "User's data can not be fecthed: ",
-          notificationData.source
+          receivedNotificationDocData.source
         );
         return setSenderData(null);
       }
@@ -101,13 +104,14 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
   };
 
   const handleClickSenderInformation = () => {
-    const route = `/home/notifications/profilePage?username=${notificationData.source}`;
+    const route = `/home/notifications/profilePage?username=${receivedNotificationDocData.source}`;
     return router.push(route);
   };
 
   const handleClickPreviewButton = () => {
-    if (notificationData.type === "comment") {
-      const postDocPath = notificationData.params.commentedPostDocPath;
+    if (receivedNotificationDocData.type === "comment") {
+      const postDocPath =
+        receivedNotificationDocData.params.commentedPostDocPath;
 
       const routerPath = createRouteForPost(postDocPath);
       if (!routerPath) return;
@@ -115,8 +119,8 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
       return router.push(routerPath);
     }
 
-    if (notificationData.type === "ratePost") {
-      const postDocPath = notificationData.params.ratedPostDocPath;
+    if (receivedNotificationDocData.type === "ratePost") {
+      const postDocPath = receivedNotificationDocData.params.ratedPostDocPath;
 
       const routerPath = createRouteForPost(postDocPath);
       if (!routerPath) return;
@@ -124,8 +128,9 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
       return router.push(routerPath);
     }
 
-    if (notificationData.type === "collectibleBought") {
-      const postDocPath = notificationData.params.collectiblePostDocPath;
+    if (receivedNotificationDocData.type === "collectibleBought") {
+      const postDocPath =
+        receivedNotificationDocData.params.collectiblePostDocPath;
 
       const routerPath = createRouteForPost(postDocPath);
       if (!routerPath) return;
@@ -133,7 +138,7 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
       return router.push(routerPath);
     }
 
-    if (notificationData.type === "follow") {
+    if (receivedNotificationDocData.type === "follow") {
       handleClickSenderInformation();
     }
   };
@@ -154,13 +159,13 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
     );
 
   const message =
-    notificationData.type === "comment"
-      ? `commented to your post: "${notificationData.params.comment}"`
-      : notificationData.type === "follow"
+    receivedNotificationDocData.type === "comment"
+      ? `commented to your post: "${receivedNotificationDocData.params.comment}"`
+      : receivedNotificationDocData.type === "follow"
       ? "started to follow you."
-      : notificationData.type === "ratePost"
-      ? `rated your post with ${notificationData.params.rate} ⭐️.`
-      : notificationData.type === "collectibleBought"
+      : receivedNotificationDocData.type === "ratePost"
+      ? `rated your post with ${receivedNotificationDocData.params.rate} ⭐️.`
+      : receivedNotificationDocData.type === "collectibleBought"
       ? `bought a collectible from you.`
       : "made unknown action";
 
@@ -222,7 +227,9 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
               color: "gray",
             }}
           >
-            {formatDistanceToNow(new Date(notificationData.timestamp))}
+            {formatDistanceToNow(
+              new Date(receivedNotificationDocData.timestamp)
+            )}
           </Text>
         </View>
       </View>
@@ -235,13 +242,13 @@ const NotificationItem = ({ notificationData, lastOpenedTime }: Props) => {
           alignItems: "center",
         }}
       >
-        {(notificationData.type === "ratePost" ||
-          notificationData.type === "comment" ||
-          notificationData.type === "collectibleBought") && (
+        {(receivedNotificationDocData.type === "ratePost" ||
+          receivedNotificationDocData.type === "comment" ||
+          receivedNotificationDocData.type === "collectibleBought") && (
           <Feather name="image" size={24} color="white" />
         )}
 
-        {lastOpenedTimeLocal < notificationData.timestamp && (
+        {lastOpenedTimeLocal < receivedNotificationDocData.timestamp && (
           <Entypo name="dot-single" size={24} color="red" />
         )}
       </View>
