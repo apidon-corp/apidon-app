@@ -16,7 +16,7 @@ type Props = {
   isGrid: boolean;
 };
 
-const NftMarketPreviewItem = ({
+const CollectibleOnMarketPreviewItem = ({
   postDocPath,
   collectibleDocData,
   isGrid,
@@ -233,4 +233,4 @@ const NftMarketPreviewItem = ({
   );
 };
 
-export default NftMarketPreviewItem;
+export default CollectibleOnMarketPreviewItem;

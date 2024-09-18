@@ -16,7 +16,10 @@ type Props = {
   collectibleDocPath: string;
 };
 
-const NftOnUserPreviewItem = ({ postDocPath, collectibleDocPath }: Props) => {
+const CollectibleOnUserPreviewItem = ({
+  postDocPath,
+  collectibleDocPath,
+}: Props) => {
   const pathname = usePathname();
 
   const [postDocData, setPostDocData] = useState<PostServerData | null>(null);
@@ -123,16 +126,22 @@ const NftOnUserPreviewItem = ({ postDocPath, collectibleDocPath }: Props) => {
 
   if (!postDocData || !postSenderData || !collectibleDocData) {
     return (
-      <View style={{ flex: 1, backgroundColor: "black", padding: 15 }}>
+      <View
+        style={{
+          padding: 15,
+        }}
+      >
         <View
           style={{
+            width: "100%",
+            aspectRatio: 1,
             justifyContent: "center",
             alignItems: "center",
             backgroundColor: "rgba(255,255,255,0.1)",
-            height: 200,
+            borderRadius: 25,
           }}
         >
-          <ActivityIndicator color={apidonPink} />
+          <ActivityIndicator color="white" />
         </View>
       </View>
     );
@@ -252,4 +261,4 @@ const NftOnUserPreviewItem = ({ postDocPath, collectibleDocPath }: Props) => {
   );
 };
 
-export default NftOnUserPreviewItem;
+export default CollectibleOnUserPreviewItem;

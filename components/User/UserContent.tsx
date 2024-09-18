@@ -3,9 +3,8 @@ import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
 import { useAuth } from "@/providers/AuthProvider";
 import {
-  BoughtCollectiblesArrayObject,
-  CollectibleTradeDocData,
-  CreatedCollectiblesArrayObject,
+  BoughtCollectibleDocData,
+  CreatedCollectibleDocData,
 } from "@/types/Trade";
 import { UserInServer } from "@/types/User";
 import firestore from "@react-native-firebase/firestore";
@@ -15,7 +14,7 @@ import { ActivityIndicator, Dimensions, ScrollView, View } from "react-native";
 import { FlatList, Switch } from "react-native-gesture-handler";
 import Post from "../Post/Post";
 import Header from "./Header";
-import NftContent from "./NftContent";
+import CollectibleContent from "./CollectibleContent";
 
 type Props = {
   username: string;
@@ -31,8 +30,8 @@ const UserContent = ({ username }: Props) => {
 
   const [postDocPathArray, setPostDocPathArray] = useState<string[]>([]);
   const [collectibleData, setCollectibleData] = useState<{
-    createdCollectibles: CreatedCollectiblesArrayObject[];
-    boughtCollectibles: BoughtCollectiblesArrayObject[];
+    createdCollectibles: CreatedCollectibleDocData[];
+    boughtCollectibles: BoughtCollectibleDocData[];
   }>({
     createdCollectibles: [],
     boughtCollectibles: [],
@@ -87,73 +86,62 @@ const UserContent = ({ username }: Props) => {
     return () => unsubscribe();
   }, [username, authStatus]);
 
-  // Collectible Fetching
+  // Realtime Created Collectible Fetching
   useEffect(() => {
     if (authStatus !== "authenticated") return;
     if (!username) return;
 
     const unsubscribe = firestore()
-      .doc(`users/${username}/collectible/trade`)
+      .collection(`users/${username}/collectible/trade/createdCollectibles`)
+      .orderBy("ts", "desc")
       .onSnapshot(
         (snapshot) => {
-          if (!snapshot.exists) {
-            console.error("Collectible Trade doc doesn't exist.");
-            return setCollectibleData({
-              createdCollectibles: [],
-              boughtCollectibles: [],
-            });
-          }
-
-          const collectibleTradeData =
-            snapshot.data() as CollectibleTradeDocData;
-          if (!collectibleTradeData) {
-            console.error("Collectible Trade doc doesn't exist.");
-            return setCollectibleData({
-              createdCollectibles: [],
-              boughtCollectibles: [],
-            });
-          }
-
-          const boughtCollectibles = collectibleTradeData.boughtCollectibles;
-
-          if (!boughtCollectibles) {
-            console.error("BoughtNFTs is undefined on collectible trade doc");
-            return setCollectibleData({
-              createdCollectibles: [],
-              boughtCollectibles: [],
-            });
-          }
-
-          boughtCollectibles.sort((a, b) => b.ts - a.ts);
-
-          const createdCollectibles = collectibleTradeData.createdCollectibles;
-          if (!createdCollectibles) {
-            console.error(
-              "createdCollectibles is undefined on collectible trade doc"
-            );
-            return setCollectibleData({
-              createdCollectibles: [],
-              boughtCollectibles: [],
-            });
-          }
-
-          createdCollectibles.sort((a, b) => b.ts - a.ts);
-
-          return setCollectibleData({
-            createdCollectibles: createdCollectibles,
-            boughtCollectibles: boughtCollectibles,
-          });
+          setCollectibleData((prev) => ({
+            ...prev,
+            createdCollectibles: snapshot.docs.map(
+              (doc) => doc.data() as CreatedCollectibleDocData
+            ),
+          }));
         },
         (error) => {
-          console.error("Error on getting realtime nftTrade data: ", error);
-          return setCollectibleData({
+          console.error("Error on getting realtime data: ", error);
+          return setCollectibleData((prev) => ({
+            ...prev,
             createdCollectibles: [],
-            boughtCollectibles: [],
-          });
+          }));
         }
       );
 
-    () => unsubscribe();
+    return () => unsubscribe();
+  }, [username, authStatus]);
+
+  // Realtime Collected Collectible Fetching
+  useEffect(() => {
+    if (authStatus !== "authenticated") return;
+    if (!username) return;
+
+    const unsubscribe = firestore()
+      .collection(`users/${username}/collectible/trade/boughtCollectibles`)
+      .orderBy("ts", "desc")
+      .onSnapshot(
+        (snapshot) => {
+          setCollectibleData((prev) => ({
+            ...prev,
+            boughtCollectibles: snapshot.docs.map(
+              (doc) => doc.data() as BoughtCollectibleDocData
+            ),
+          }));
+        },
+        (error) => {
+          console.error("Error on getting realtime data: ", error);
+          return setCollectibleData((prev) => ({
+            ...prev,
+            boughtCollectibles: [],
+          }));
+        }
+      );
+
+    return () => unsubscribe();
   }, [username, authStatus]);
 
   // User Data Fetching
@@ -299,7 +287,7 @@ const UserContent = ({ username }: Props) => {
 
       {toggleValue === "nfts" && (
         <>
-          <NftContent
+          <CollectibleContent
             createdCollectibles={collectibleData.createdCollectibles}
             boughtCollectibles={collectibleData.boughtCollectibles}
           />

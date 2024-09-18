@@ -1,4 +1,4 @@
-import NftMarketPreviewItem from "@/components/Nft/NftMarketPreviewItem";
+import CollectibleOnMarketPreviewItem from "@/components/Collectible/CollectibleOnMarketPreviewItem";
 import { View } from "@/components/Themed";
 import { CollectibleDocData } from "@/types/Collectible";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -171,7 +171,7 @@ const index = () => {
         data={collectibleDocs.map((doc) => doc.data() as CollectibleDocData)}
         numColumns={2}
         renderItem={({ item }) => (
-          <NftMarketPreviewItem
+          <CollectibleOnMarketPreviewItem
             postDocPath={item.postDocPath}
             collectibleDocData={item}
             key={item.id}

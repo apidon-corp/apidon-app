@@ -1,20 +1,23 @@
-import { FlatList, Pressable, View } from "react-native";
 import { Text } from "@/components/Text/Text";
-import React, { useState } from "react";
-import NftOnUserPreviewItem from "../Nft/NftOnUserPreviewItem";
 import {
-  BoughtCollectiblesArrayObject,
-  CreatedCollectiblesArrayObject,
+  BoughtCollectibleDocData,
+  CreatedCollectibleDocData,
 } from "@/types/Trade";
+import React, { useState } from "react";
+import { FlatList, Pressable, View } from "react-native";
+import CollectibleOnUserPreviewItem from "../Collectible/CollectibleOnUserPreviewItem";
 
 type Props = {
-  createdCollectibles: CreatedCollectiblesArrayObject[];
-  boughtCollectibles: BoughtCollectiblesArrayObject[];
+  createdCollectibles: CreatedCollectibleDocData[];
+  boughtCollectibles: BoughtCollectibleDocData[];
 };
 
 type Option = "all" | "collected" | "created";
 
-const NftContent = ({ createdCollectibles, boughtCollectibles }: Props) => {
+const CollectibleContent = ({
+  createdCollectibles,
+  boughtCollectibles,
+}: Props) => {
   const [option, setOption] = useState<Option>("all");
 
   const handleChangeOption = (option: Option) => {
@@ -87,7 +90,7 @@ const NftContent = ({ createdCollectibles, boughtCollectibles }: Props) => {
       {option === "all" && (
         <FlatList
           contentContainerStyle={{
-            gap: 20,
+            gap: 10,
           }}
           keyExtractor={(item) => item.postDocPath}
           numColumns={1}
@@ -96,7 +99,7 @@ const NftContent = ({ createdCollectibles, boughtCollectibles }: Props) => {
             (a, b) => b.ts - a.ts
           )}
           renderItem={({ item }) => (
-            <NftOnUserPreviewItem
+            <CollectibleOnUserPreviewItem
               collectibleDocPath={item.collectibleDocPath}
               postDocPath={item.postDocPath}
               key={item.postDocPath}
@@ -107,14 +110,14 @@ const NftContent = ({ createdCollectibles, boughtCollectibles }: Props) => {
       {option === "collected" && (
         <FlatList
           contentContainerStyle={{
-            gap: 20,
+            gap: 10,
           }}
           keyExtractor={(item) => item.postDocPath}
           numColumns={1}
           scrollEnabled={false}
           data={[...boughtCollectibles]}
           renderItem={({ item }) => (
-            <NftOnUserPreviewItem
+            <CollectibleOnUserPreviewItem
               collectibleDocPath={item.collectibleDocPath}
               postDocPath={item.postDocPath}
               key={item.postDocPath}
@@ -125,14 +128,14 @@ const NftContent = ({ createdCollectibles, boughtCollectibles }: Props) => {
       {option === "created" && (
         <FlatList
           contentContainerStyle={{
-            gap: 20,
+            gap: 10,
           }}
           keyExtractor={(item) => item.postDocPath}
           numColumns={1}
           scrollEnabled={false}
           data={[...createdCollectibles]}
           renderItem={({ item }) => (
-            <NftOnUserPreviewItem
+            <CollectibleOnUserPreviewItem
               collectibleDocPath={item.collectibleDocPath}
               postDocPath={item.postDocPath}
               key={item.postDocPath}
@@ -144,4 +147,4 @@ const NftContent = ({ createdCollectibles, boughtCollectibles }: Props) => {
   );
 };
 
-export default NftContent;
+export default CollectibleContent;
