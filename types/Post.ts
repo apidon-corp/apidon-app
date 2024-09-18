@@ -63,3 +63,9 @@ export type ReviewStatus =
       status: "rejected";
       rejectionReason: string;
     };
+
+export type PostDataOnMainPostsCollection = {
+  postDocPath: string;
+  sender: string;
+  timestamp: number;
+};

@@ -1,25 +1,31 @@
 import NftMarketPreviewItem from "@/components/Nft/NftMarketPreviewItem";
+import { View } from "@/components/Themed";
 import { CollectibleDocData } from "@/types/Collectible";
-import firestore from "@react-native-firebase/firestore";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
 import React, { useEffect, useRef, useState } from "react";
 import {
   FlatList,
   NativeScrollEvent,
+  Pressable,
   RefreshControl,
   ScrollView,
 } from "react-native";
 
 const index = () => {
-  const [collectibleDocDatas, setCollectibleDocDatas] = useState<
-    CollectibleDocData[]
-  >([]);
-  const [servedCollectibles, setServedCollectibles] = useState<
-    CollectibleDocData[]
+  const [collectibleDocs, setCollectibleDocs] = useState<
+    FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]
   >([]);
 
   const scrollViewRef = useRef<ScrollView>(null);
 
   const [refreshLoading, setRefreshLoading] = useState(false);
+
+  const [displayPrefrence, setDisplayPreference] = useState<
+    "grid" | "portrait"
+  >("grid");
 
   useEffect(() => {
     handleGetInitialCollectibles();
@@ -30,31 +36,33 @@ const index = () => {
       const query = await firestore()
         .collection("collectibles")
         .orderBy("timestamp", "desc")
+        .limit(8)
         .get();
 
-      const collectibleDocDatasFetched: CollectibleDocData[] = [];
-
-      for (const doc of query.docs) {
-        collectibleDocDatasFetched.push(doc.data() as CollectibleDocData);
-      }
-      setCollectibleDocDatas(collectibleDocDatasFetched);
-      setServedCollectibles(collectibleDocDatasFetched.slice(0, 8));
+      setCollectibleDocs(query.docs);
     } catch (error) {
       console.error("Error on getting initial collectibles: ", error);
+      setCollectibleDocs([]);
     }
   };
 
-  const serveMoreCollectibles = () => {
-    if (servedCollectibles.length === collectibleDocDatas.length) {
-      return;
-    }
+  const serveMoreCollectibles = async () => {
+    try {
+      const lastDoc = collectibleDocs[collectibleDocs.length - 1];
 
-    setServedCollectibles((prev) => {
-      return [
-        ...prev,
-        ...collectibleDocDatas.slice(prev.length, prev.length + 4),
-      ];
-    });
+      if (!lastDoc) return;
+
+      const query = await firestore()
+        .collection("collectibles")
+        .orderBy("timestamp", "desc")
+        .startAfter(lastDoc)
+        .limit(8)
+        .get();
+
+      setCollectibleDocs([...collectibleDocs, ...query.docs]);
+    } catch (error) {
+      console.error("Error on serving more collectibles: ", error);
+    }
   };
 
   const handleScroll = (event: NativeScrollEvent) => {
@@ -79,6 +87,10 @@ const index = () => {
     setRefreshLoading(false);
   };
 
+  const handleDisplayPreferenceChange = (pref: "grid" | "portrait") => {
+    setDisplayPreference(pref);
+  };
+
   return (
     <ScrollView
       ref={scrollViewRef}
@@ -88,16 +100,82 @@ const index = () => {
       refreshControl={
         <RefreshControl refreshing={refreshLoading} onRefresh={handleRefresh} />
       }
+      contentContainerStyle={{ paddingHorizontal: 15 }}
     >
+      <View
+        id="display-preference"
+        style={{
+          width: "100%",
+          marginVertical: 10,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <View
+          style={{
+            backgroundColor: "rgba(255,255,255,0.25)",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            borderRadius: 20,
+          }}
+        >
+          <Pressable
+            onPress={() => handleDisplayPreferenceChange("grid")}
+            style={{
+              backgroundColor:
+                displayPrefrence === "grid"
+                  ? "rgba(255,255,255,0.25)"
+                  : undefined,
+              borderRadius: 20,
+              paddingVertical: 3,
+              paddingHorizontal: 15,
+              justifyContent: "center",
+            }}
+          >
+            <MaterialCommunityIcons
+              name="view-grid-outline"
+              size={24}
+              color="white"
+            />
+          </Pressable>
+
+          <Pressable
+            onPress={() => handleDisplayPreferenceChange("portrait")}
+            style={{
+              backgroundColor:
+                displayPrefrence === "portrait"
+                  ? "rgba(255,255,255,0.25)"
+                  : undefined,
+
+              borderRadius: 20,
+              paddingVertical: 3,
+              paddingHorizontal: 15,
+              justifyContent: "center",
+            }}
+          >
+            <MaterialCommunityIcons
+              name="crop-portrait"
+              size={24}
+              color="white"
+            />
+          </Pressable>
+        </View>
+      </View>
+
       <FlatList
+        columnWrapperStyle={{
+          flexWrap: "wrap",
+          justifyContent: "space-between",
+        }}
         scrollEnabled={false}
-        style={{ width: "100%" }}
-        data={servedCollectibles.sort((a, b) => b.timestamp - a.timestamp)}
+        data={collectibleDocs.map((doc) => doc.data() as CollectibleDocData)}
+        numColumns={2}
         renderItem={({ item }) => (
           <NftMarketPreviewItem
             postDocPath={item.postDocPath}
             collectibleDocData={item}
             key={item.id}
+            isGrid={displayPrefrence === "grid" ? true : false}
           />
         )}
         keyExtractor={(item) => item.id}

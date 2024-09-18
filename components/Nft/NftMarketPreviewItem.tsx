@@ -7,22 +7,29 @@ import { FontAwesome, Foundation, MaterialIcons } from "@expo/vector-icons";
 import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Animated, Pressable, View } from "react-native";
 import Text from "../Text/Text";
 
 type Props = {
   postDocPath: string;
   collectibleDocData: CollectibleDocData;
+  isGrid: boolean;
 };
 
-const NftMarketPreviewItem = ({ postDocPath, collectibleDocData }: Props) => {
+const NftMarketPreviewItem = ({
+  postDocPath,
+  collectibleDocData,
+  isGrid,
+}: Props) => {
   const [postDocData, setPostDocData] = useState<PostServerData | null>(null);
   const [postSenderData, setPostSenderData] = useState<UserInServer | null>(
     null
   );
 
   const { authStatus } = useAuth();
+
+  const animatedWidth = useRef(new Animated.Value(48)).current;
 
   // Dynamic Data Fetching / Post Object
   useEffect(() => {
@@ -51,6 +58,14 @@ const NftMarketPreviewItem = ({ postDocPath, collectibleDocData }: Props) => {
     return () => unsubscribe();
   }, [postDocPath, authStatus]);
 
+  useEffect(() => {
+    Animated.timing(animatedWidth, {
+      toValue: isGrid ? 48 : 100,
+      duration: 250,
+      useNativeDriver: false,
+    }).start();
+  }, [isGrid]);
+
   const handleGetPostSenderInformation = async (senderUsername: string) => {
     try {
       const userDocSnapshot = await firestore()
@@ -76,16 +91,17 @@ const NftMarketPreviewItem = ({ postDocPath, collectibleDocData }: Props) => {
 
   if (!postDocData || !postSenderData) {
     return (
-      <View style={{ flex: 1, backgroundColor: "black", padding: 15 }}>
+      <View style={{ width: "48%", marginVertical: 8 }}>
         <View
           style={{
             justifyContent: "center",
             alignItems: "center",
             backgroundColor: "rgba(255,255,255,0.1)",
-            height: 200,
+            aspectRatio: 1,
+            borderRadius: 25,
           }}
         >
-          <ActivityIndicator color={apidonPink} />
+          <ActivityIndicator color="white" />
         </View>
       </View>
     );
@@ -96,112 +112,124 @@ const NftMarketPreviewItem = ({ postDocPath, collectibleDocData }: Props) => {
   }
 
   return (
-    <Pressable
-      onPress={handlePressPreview}
-      style={{ position: "relative", flex: 1, padding: 15 }}
+    <Animated.View
+      style={{
+        marginVertical: 8,
+        width: animatedWidth.interpolate({
+          inputRange: [48, 100],
+          outputRange: ["48%", "100%"],
+        }),
+      }}
     >
-      <View>
-        <Image
-          source={postDocData.image}
-          style={{
-            width: "100%",
-            aspectRatio: 1,
-            borderRadius: 25,
-          }}
-        />
-      </View>
-
-      <View
-        id="price-tag"
-        style={{
-          position: "absolute",
-          top: 25,
-          right: 25,
-          flexDirection: "row",
-          backgroundColor: "black",
-          borderRadius: 20,
-          alignItems: "center",
-          gap: 3,
-          padding: 5,
-          paddingHorizontal: 10,
-        }}
-      >
-        <Foundation name="dollar" size={19} color="white" />
-        <Text
-          style={{
-            fontSize: 14,
-          }}
-          bold
-        >
-          {collectibleDocData.price.price}
-        </Text>
-      </View>
-
-      <View
-        style={{
-          position: "absolute",
-          bottom: 25,
-          right: 25,
-          flexDirection: "row",
-          backgroundColor: "black",
-          borderRadius: 20,
-          alignItems: "center",
-          gap: 5,
-          padding: 5,
-          paddingHorizontal: 10,
-        }}
-      >
-        <FontAwesome name="cubes" size={19} color="white" />
-        <Text bold>
-          {collectibleDocData.stock.remainingStock}/
-          {collectibleDocData.stock.initialStock}
-        </Text>
-      </View>
-
-      <View
-        id="creator-data"
-        style={{
-          position: "absolute",
-          bottom: 20,
-          left: 20,
-          padding: 5,
-          paddingRight: 15,
-          backgroundColor: "black",
-          borderRadius: 20,
-          alignItems: "center",
-          flexDirection: "row",
-          gap: 5,
-        }}
-      >
-        <Image
-          source={
-            postSenderData.profilePhoto || require("@/assets/images/user.jpg")
-          }
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-          }}
-          transition={500}
-        />
-        <View id="username-fullname">
-          <View
-            id="fullanme-verified"
+      <Pressable onPress={handlePressPreview} style={{ position: "relative" }}>
+        <View>
+          <Image
+            source={postDocData.image}
             style={{
-              alignItems: "center",
-              gap: 3,
-              flexDirection: "row",
+              width: "100%",
+              aspectRatio: 1,
+              borderRadius: 25,
+            }}
+          />
+        </View>
+
+        <View
+          id="price-tag"
+          style={{
+            position: "absolute",
+            top: isGrid ? 5 : 10,
+            right: isGrid ? 5 : 10,
+            flexDirection: "row",
+            backgroundColor: "black",
+            borderRadius: 20,
+            alignItems: "center",
+            gap: 3,
+            padding: 5,
+            paddingHorizontal: 10,
+          }}
+        >
+          <Foundation name="dollar" size={isGrid ? 16 : 19} color="white" />
+          <Text
+            style={{
+              fontSize: isGrid ? 12 : 14,
+            }}
+            bold
+          >
+            {collectibleDocData.price.price}
+          </Text>
+        </View>
+
+        <View
+          style={{
+            position: "absolute",
+            bottom: isGrid ? 5 : 10,
+            right: isGrid ? 5 : 10,
+            flexDirection: "row",
+            backgroundColor: "black",
+            borderRadius: 20,
+            alignItems: "center",
+            gap: 5,
+            padding: 5,
+            paddingHorizontal: 10,
+          }}
+        >
+          <FontAwesome name="cubes" size={isGrid ? 12 : 19} color="white" />
+          <Text bold fontSize={isGrid ? 10 : 14}>
+            {collectibleDocData.stock.remainingStock}/
+            {collectibleDocData.stock.initialStock}
+          </Text>
+        </View>
+
+        <View
+          id="creator-data"
+          style={{
+            position: "absolute",
+            bottom: isGrid ? 5 : 10,
+            left: isGrid ? 5 : 10,
+            padding: isGrid ? 0 : 5,
+            paddingRight: isGrid ? 0 : 15,
+            backgroundColor: "black",
+            borderRadius: 20,
+            alignItems: "center",
+            flexDirection: "row",
+            gap: 5,
+          }}
+        >
+          <Image
+            source={
+              postSenderData.profilePhoto || require("@/assets/images/user.jpg")
+            }
+            style={{
+              width: isGrid ? 30 : 40,
+              height: isGrid ? 30 : 40,
+              borderRadius: 20,
+            }}
+            transition={500}
+          />
+          <View
+            id="username-fullname"
+            style={{
+              display: isGrid ? "none" : undefined,
             }}
           >
-            <Text fontSize={12}>{postSenderData.fullname}</Text>
-            {postSenderData.verified && (
-              <MaterialIcons name="verified" size={14} color={apidonPink} />
-            )}
+            <View
+              id="fullanme-verified"
+              style={{
+                alignItems: "center",
+                gap: 3,
+                flexDirection: "row",
+              }}
+            >
+              <Text fontSize={12}>{postSenderData.fullname}</Text>
+              {postSenderData.verified && (
+                <MaterialIcons name="verified" size={14} color={apidonPink} />
+              )}
+            </View>
+            <Text fontSize={10}>@{postDocData.senderUsername}</Text>
           </View>
-          <Text fontSize={10}>@{postDocData.senderUsername}</Text>
         </View>
-      </View>
-    </Pressable>
+      </Pressable>
+    </Animated.View>
   );
 };
 

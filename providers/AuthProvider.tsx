@@ -95,7 +95,7 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
 
     setAuthStatus("authenticated");
 
-    if (!linkingRef.current.url) return router.replace("/home");
+    if (!linkingRef.current.url) return router.replace("/home/collectibles");
   };
 
   useEffect(() => {
