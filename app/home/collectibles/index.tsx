@@ -36,7 +36,7 @@ const index = () => {
       const query = await firestore()
         .collection("collectibles")
         .orderBy("timestamp", "desc")
-        .limit(8)
+        .limit(12)
         .get();
 
       setCollectibleDocs(query.docs);
@@ -56,7 +56,7 @@ const index = () => {
         .collection("collectibles")
         .orderBy("timestamp", "desc")
         .startAfter(lastDoc)
-        .limit(8)
+        .limit(12)
         .get();
 
       setCollectibleDocs([...collectibleDocs, ...query.docs]);
@@ -66,7 +66,7 @@ const index = () => {
   };
 
   const handleScroll = (event: NativeScrollEvent) => {
-    const threshold = 0;
+    const threshold = 200;
 
     const { layoutMeasurement, contentOffset, contentSize } = event;
     const isCloseToBottom =
