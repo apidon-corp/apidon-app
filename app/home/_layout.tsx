@@ -6,15 +6,15 @@ import {
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
 import { Tabs, router, usePathname } from "expo-router";
-import React, { useEffect } from "react";
+import React from "react";
 import { Pressable, StatusBar, View } from "react-native";
 
 import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
-import { useSetAtom } from "jotai";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
+import { useSetAtom } from "jotai";
 
 const _layout = () => {
-  const notificationData = useNotification();
+  const { haveUnread } = useNotification();
 
   const pathname = usePathname();
 
@@ -22,20 +22,6 @@ const _layout = () => {
   useInAppPurchases();
 
   const setHomeScreenParameters = useSetAtom(homeScreeenParametersAtom);
-
-  const areThereUnReadNotifications = () => {
-    if (!notificationData) return false;
-
-    let unReadFlag = false;
-    for (const notification of notificationData.notifications) {
-      if (notification.timestamp > notificationData.lastOpenedTime) {
-        unReadFlag = true;
-        break;
-      }
-    }
-
-    return unReadFlag;
-  };
 
   const handleHomeButtonPress = () => {
     if (pathname === "/home/feed")
@@ -53,6 +39,8 @@ const _layout = () => {
             backgroundColor: "rgba(255,255,255,0.04)",
           },
           headerShadowVisible: false,
+          tabBarInactiveTintColor: "gray",
+          tabBarActiveTintColor: "white",
         }}
       >
         <Tabs.Screen
@@ -66,16 +54,17 @@ const _layout = () => {
           name="feed"
           options={{
             headerShown: false,
-            tabBarButton: () => (
+            tabBarIcon: ({ color, size }) => (
               <Pressable
                 onPress={handleHomeButtonPress}
                 style={{
+                  width: "100%",
                   flex: 1,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
-                <Entypo name="home" size={25} color="white" />
+                <Entypo name="home" size={size} color={color} />
               </Pressable>
             ),
             tabBarLabel: () => <></>,
@@ -84,8 +73,8 @@ const _layout = () => {
         <Tabs.Screen
           name="search"
           options={{
-            tabBarIcon: () => (
-              <AntDesign name="search1" size={25} color="white" />
+            tabBarIcon: ({ color, size }) => (
+              <AntDesign name="search1" size={size} color={color} />
             ),
             tabBarLabel: () => <></>,
             headerShown: false,
@@ -95,8 +84,8 @@ const _layout = () => {
           name="create"
           options={{
             headerTitle: "Create Post",
-            tabBarIcon: () => (
-              <Entypo name="circle-with-plus" size={25} color="white" />
+            tabBarIcon: ({ color, size }) => (
+              <Entypo name="circle-with-plus" size={size} color={color} />
             ),
             tabBarLabel: () => <></>,
           }}
@@ -104,14 +93,14 @@ const _layout = () => {
         <Tabs.Screen
           name="notifications"
           options={{
-            tabBarIcon: () => (
+            tabBarIcon: ({ size, color }) => (
               <View
                 style={{
                   position: "relative",
                 }}
               >
-                <Ionicons name="notifications" size={25} color="white" />
-                {areThereUnReadNotifications() && (
+                <Ionicons name="notifications" size={size} color={color} />
+                {haveUnread && (
                   <Entypo
                     style={{
                       position: "absolute",
@@ -132,8 +121,12 @@ const _layout = () => {
         <Tabs.Screen
           name="collectibles"
           options={{
-            tabBarIcon: () => (
-              <MaterialCommunityIcons name="shopping" size={25} color="white" />
+            tabBarIcon: ({ size, color }) => (
+              <MaterialCommunityIcons
+                name="shopping"
+                size={size}
+                color={color}
+              />
             ),
             tabBarLabel: () => <></>,
             headerShown: false,

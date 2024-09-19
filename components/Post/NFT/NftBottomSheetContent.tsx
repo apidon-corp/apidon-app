@@ -81,19 +81,35 @@ const NftBottomSheetContent = ({
     const currentUserDisplayName = auth().currentUser?.displayName;
     if (!currentUserDisplayName) return setCollectibleStatus(null);
 
-    if (collectibleDocData) {
-      let alreadyBoughtStatus = true;
+    const unsubscribe = firestore()
+      .collection(`collectibles/${collectibleDocData.id}/collectors`)
+      .where("username", "==", currentUserDisplayName)
+      .onSnapshot(
+        (snapshot) => {
+          if (snapshot.empty) {
+            setCollectibleStatus({
+              alreadyBought: false,
+              fromCurrentUser:
+                postData.senderUsername === currentUserDisplayName,
+            });
+          } else {
+            setCollectibleStatus({
+              alreadyBought:true,
+              fromCurrentUser:
+                postData.senderUsername === currentUserDisplayName,
+            });
+          }
+        },
+        (error) => {
+          console.error(
+            "Error on getting realtime collectible data at: \n",
+            error
+          );
+          return setCollectibleStatus(null);
+        }
+      );
 
-      const buyersUsername = collectibleDocData.buyers.map((b) => b.username);
-      alreadyBoughtStatus = buyersUsername.includes(currentUserDisplayName);
-
-      setCollectibleStatus({
-        alreadyBought: alreadyBoughtStatus,
-        fromCurrentUser: postData.senderUsername === currentUserDisplayName,
-      });
-    } else {
-      setCollectibleStatus("not-collectible");
-    }
+    return () => unsubscribe();
   }, [collectibleDocData]);
 
   const handleCollectButton = () => {

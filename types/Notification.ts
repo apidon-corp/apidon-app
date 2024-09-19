@@ -1,9 +1,11 @@
-export type NotificationDocData = {
-  notifications: NotificationData[];
+export type NotificationsDocData = {
   lastOpenedTime: number;
 };
 
-export type NotificationData =
+/**
+ * Can be used on various areas.
+ */
+export type ReceivedNotificationDocData =
   | {
       /**
        * Type of the notification.

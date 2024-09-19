@@ -6,21 +6,29 @@ import { UserInServer } from "@/types/User";
 import { FontAwesome, Foundation, MaterialIcons } from "@expo/vector-icons";
 import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import Text from "../Text/Text";
 
 type Props = {
   postDocPath: string;
-  collectibleDocData: CollectibleDocData;
+  collectibleDocPath: string;
 };
 
-const NftMarketPreviewItem = ({ postDocPath, collectibleDocData }: Props) => {
+const CollectibleOnUserPreviewItem = ({
+  postDocPath,
+  collectibleDocPath,
+}: Props) => {
+  const pathname = usePathname();
+
   const [postDocData, setPostDocData] = useState<PostServerData | null>(null);
   const [postSenderData, setPostSenderData] = useState<UserInServer | null>(
     null
   );
+
+  const [collectibleDocData, setCollectibleDocData] =
+    useState<CollectibleDocData | null>(null);
 
   const { authStatus } = useAuth();
 
@@ -51,6 +59,38 @@ const NftMarketPreviewItem = ({ postDocPath, collectibleDocData }: Props) => {
     return () => unsubscribe();
   }, [postDocPath, authStatus]);
 
+  // Dynamic Data Fetching / Nft Object
+  useEffect(() => {
+    if (authStatus !== "authenticated") return;
+
+    const unsubscribe = firestore()
+      .doc(collectibleDocPath)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            setCollectibleDocData(null);
+            return console.log(
+              "Collectible's realtime data can not be fecthed."
+            );
+          }
+          const collectibleDocDataFetched =
+            snapshot.data() as CollectibleDocData;
+          setCollectibleDocData(collectibleDocDataFetched);
+
+          return;
+        },
+        (error) => {
+          setCollectibleDocData(null);
+          return console.error(
+            "Error on getting realtime data of collectible: ",
+            error
+          );
+        }
+      );
+
+    return () => unsubscribe();
+  }, [collectibleDocPath, authStatus]);
+
   const handleGetPostSenderInformation = async (senderUsername: string) => {
     try {
       const userDocSnapshot = await firestore()
@@ -69,36 +109,52 @@ const NftMarketPreviewItem = ({ postDocPath, collectibleDocData }: Props) => {
 
   const handlePressPreview = () => {
     if (!postDocData || !postSenderData) return;
-    return router.push(
-      `/home/collectibles/post?sender=${postDocData.senderUsername}&id=${postDocData.id}`
-    );
+
+    const destination = `post?sender=${postDocData.senderUsername}&id=${postDocData.id}`;
+
+    const subScreens = pathname.split("/");
+
+    if (subScreens[2] === "feed") {
+      const route = `/home/feed/${destination}`;
+      return router.navigate(route);
+    }
+
+    subScreens[subScreens.length - 1] = destination;
+    const route = subScreens.join("/");
+    return router.push(route);
   };
 
-  if (!postDocData || !postSenderData) {
+  if (!postDocData || !postSenderData || !collectibleDocData) {
     return (
-      <View style={{ flex: 1, backgroundColor: "black", padding: 15 }}>
+      <View
+        style={{
+          padding: 15,
+        }}
+      >
         <View
           style={{
+            width: "100%",
+            aspectRatio: 1,
             justifyContent: "center",
             alignItems: "center",
             backgroundColor: "rgba(255,255,255,0.1)",
-            height: 200,
+            borderRadius: 25,
           }}
         >
-          <ActivityIndicator color={apidonPink} />
+          <ActivityIndicator color="white" />
         </View>
       </View>
     );
   }
 
-  if (!collectibleDocData) {
-    return null;
-  }
-
   return (
     <Pressable
       onPress={handlePressPreview}
-      style={{ position: "relative", flex: 1, padding: 15 }}
+      style={{
+        position: "relative",
+        flex: 1,
+        padding: 15,
+      }}
     >
       <View>
         <Image
@@ -134,27 +190,6 @@ const NftMarketPreviewItem = ({ postDocPath, collectibleDocData }: Props) => {
           bold
         >
           {collectibleDocData.price.price}
-        </Text>
-      </View>
-
-      <View
-        style={{
-          position: "absolute",
-          bottom: 25,
-          right: 25,
-          flexDirection: "row",
-          backgroundColor: "black",
-          borderRadius: 20,
-          alignItems: "center",
-          gap: 5,
-          padding: 5,
-          paddingHorizontal: 10,
-        }}
-      >
-        <FontAwesome name="cubes" size={19} color="white" />
-        <Text bold>
-          {collectibleDocData.stock.remainingStock}/
-          {collectibleDocData.stock.initialStock}
         </Text>
       </View>
 
@@ -201,8 +236,29 @@ const NftMarketPreviewItem = ({ postDocPath, collectibleDocData }: Props) => {
           <Text fontSize={10}>@{postDocData.senderUsername}</Text>
         </View>
       </View>
+
+      <View
+        style={{
+          position: "absolute",
+          bottom: 25,
+          right: 25,
+          flexDirection: "row",
+          backgroundColor: "black",
+          borderRadius: 20,
+          alignItems: "center",
+          gap: 5,
+          padding: 5,
+          paddingHorizontal: 10,
+        }}
+      >
+        <FontAwesome name="cubes" size={19} color="white" />
+        <Text bold>
+          {collectibleDocData.stock.remainingStock}/
+          {collectibleDocData.stock.initialStock}
+        </Text>
+      </View>
     </Pressable>
   );
 };
 
-export default NftMarketPreviewItem;
+export default CollectibleOnUserPreviewItem;

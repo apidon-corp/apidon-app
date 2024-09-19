@@ -149,7 +149,13 @@ const Header = ({ userData }: Props) => {
       />
       <View
         id="fullname-verified"
-        style={{ flexDirection: "row", gap: 3, alignItems: "center" }}
+        style={{
+          flexDirection: "row",
+          gap: 3,
+          alignItems: "center",
+          width: "100%",
+          justifyContent: "center",
+        }}
       >
         <Text
           bold

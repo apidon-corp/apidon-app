@@ -1,6 +1,5 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import Post from "@/components/Post/Post";
-import apiRoutes from "@/helpers/ApiRoutes";
 import { useAtom, useAtomValue } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -13,15 +12,12 @@ import {
 
 import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
 import PostSkeleton from "@/components/Post/PostSkeleon";
-import appCheck from "@react-native-firebase/app-check";
-import auth from "@react-native-firebase/auth";
+
+import { PostDataOnMainPostsCollection } from "@/types/Post";
+import firestore from "@react-native-firebase/firestore";
 
 const index = () => {
   const [loading, setLoading] = useState(false);
-  const [recommendedPostsDocPathArray, setRecommendedPostsDocPathArray] =
-    useState<string[]>([]);
-
-  const [servedPosts, setServedPosts] = useState<string[]>([]);
 
   const screenParameters = useAtomValue(screenParametersAtom);
 
@@ -35,16 +31,21 @@ const index = () => {
   );
 
   const scrollViewRef = useRef<ScrollView>(null);
-  const isHandlingHomeButtonPress = useRef<boolean>(false);
 
+  const [postDocSnapshots, setPostDocSnapshots] = useState<any[]>([]);
+  const [postDocPaths, setPostDocPaths] = useState<string[]>([]);
+
+  // Getting Initial Post Doc Paths
+  useEffect(() => {
+    getInitialPostDocPaths();
+  }, []);
+
+  // Managing created post.
   useEffect(() => {
     if (!createdPostDocPath) return;
-    if (servedPosts.includes(createdPostDocPath)) return;
+    if (postDocPaths.includes(createdPostDocPath)) return;
 
-    setServedPosts((prev) => {
-      if (prev.includes(createdPostDocPath)) return prev;
-      return [createdPostDocPath, ...prev];
-    });
+    setPostDocPaths((prev) => [createdPostDocPath, ...prev]);
 
     if (scrollViewRef.current) {
       scrollViewRef.current.scrollTo({ y: 0, animated: true });
@@ -52,83 +53,75 @@ const index = () => {
   }, [createdPostDocPath]);
 
   useEffect(() => {
-    handleGetInitialPostRecommendations();
-  }, []);
+    if (homeScreenParametersValue.isHomeButtonPressed) {
+      scrollViewRef.current?.scrollTo({ y: 0 });
 
-  // Handling home button pressing to refresh.
-  useEffect(() => {
-    if (!homeScreenParametersValue.isHomeButtonPressed) return;
-    if (refreshLoading) return;
-    if (isHandlingHomeButtonPress.current) return;
-
-    handleHomeButtonPress();
-  }, [
-    homeScreenParametersValue.isHomeButtonPressed,
-    refreshLoading,
-    isHandlingHomeButtonPress,
-  ]);
-
-  /**
-   * Fetches paths of recommended posts from server.
-   * @returns
-   */
-  const handleGetInitialPostRecommendations = async () => {
-    const currentUserAuthObject = auth().currentUser;
-    if (!currentUserAuthObject) return false;
-
-    if (loading) return false;
-
-    setLoading(true);
-
-    try {
-      const idToken = await currentUserAuthObject.getIdToken();
-
-      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
-
-      const response = await fetch(apiRoutes.feed.getPersonalizedFeed, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: `Bearer ${idToken}`,
-          appchecktoken,
-        },
-      });
-
-      if (!response.ok) {
-        const message = await response.text();
-        console.error(
-          "Response from getPersonalizedMainFeed API is not okay: ",
-          message
-        );
-        setLoading(false);
-        return setRecommendedPostsDocPathArray([]);
-      }
-
-      const result = await response.json();
-
-      const postDocPathArrayFetched = result.postDocPathArray as string[];
-
-      if (createdPostDocPath)
-        postDocPathArrayFetched.unshift(createdPostDocPath);
-
-      // We are removing first "/" from post doc path because react native firebase firestore doesn't like it.
-      const unSlicedAtFirstPostDocPathArrayFetched =
-        postDocPathArrayFetched.map((p) => {
-          if (p[0] === "/") return p.slice(1);
-          return p;
+      handleRefresh().then(() => {
+        setHomeScreenParameters({
+          isHomeButtonPressed: false,
         });
 
-      const onlyFourPosts = unSlicedAtFirstPostDocPathArrayFetched.slice(0, 4);
-
-      setRecommendedPostsDocPathArray(unSlicedAtFirstPostDocPathArrayFetched);
-      setLoading(false);
-      return setServedPosts(onlyFourPosts);
-    } catch (error) {
-      console.error("Error while fetching getPersonalizedMainFeed: ", error);
-      setLoading(false);
-      return setRecommendedPostsDocPathArray([]);
+        scrollViewRef.current?.scrollTo({ y: 0 });
+      });
     }
-  };
+  }, [homeScreenParametersValue]);
+
+  async function getInitialPostDocPaths(refreshing?: boolean) {
+    if (!refreshing) setLoading(true);
+
+    try {
+      const query = await firestore()
+        .collection("posts")
+        .orderBy("timestamp", "desc")
+        .limit(8)
+        .get();
+
+      setPostDocSnapshots(query.docs);
+      setPostDocPaths(
+        query.docs.map(
+          (d) => (d.data() as PostDataOnMainPostsCollection).postDocPath
+        )
+      );
+    } catch (error) {
+      console.error("Error while fetching getInitialPostDocPaths: ", error);
+      setPostDocPaths([]);
+    }
+
+    setLoading(false);
+  }
+
+  async function getMorePostDocPaths() {
+    const lastDoc = postDocSnapshots[postDocSnapshots.length - 1];
+    if (!lastDoc) return;
+
+    try {
+      const query = await firestore()
+        .collection("posts")
+        .orderBy("timestamp", "desc")
+        .startAfter(lastDoc)
+        .limit(8)
+        .get();
+
+      setPostDocSnapshots((prev) => [...prev, ...query.docs]);
+
+      setPostDocPaths((prev) => [
+        ...prev,
+        ...query.docs.map(
+          (d) => (d.data() as PostDataOnMainPostsCollection).postDocPath
+        ),
+      ]);
+    } catch (error) {
+      console.error("Error while fetching getMorePostDocPaths: ", error);
+    }
+  }
+
+  async function handleRefresh() {
+    if (refreshLoading) return;
+
+    setRefreshLoading(true);
+    await getInitialPostDocPaths(true);
+    setRefreshLoading(false);
+  }
 
   const handleScroll = (event: NativeScrollEvent) => {
     const threshold = 500;
@@ -138,93 +131,8 @@ const index = () => {
       layoutMeasurement.height + contentOffset.y >=
       contentSize.height - threshold;
     if (isCloseToBottom) {
-      serveMorePosts();
+      getMorePostDocPaths();
     }
-  };
-
-  const serveMorePosts = () => {
-    if (servedPosts.length === recommendedPostsDocPathArray.length) {
-      console.log("No more posts to serve.");
-      return;
-    }
-
-    setServedPosts((prev) => {
-      return [
-        ...prev,
-        ...recommendedPostsDocPathArray.slice(prev.length, prev.length + 4),
-      ];
-    });
-  };
-
-  const handleRefresh = async () => {
-    const currentUserAuthObject = auth().currentUser;
-    if (!currentUserAuthObject) return false;
-
-    setRefreshLoading(true);
-
-    try {
-      const idToken = await currentUserAuthObject.getIdToken();
-
-      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
-
-      const response = await fetch(apiRoutes.feed.getPersonalizedFeed, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: `Bearer ${idToken}`,
-          appchecktoken,
-        },
-      });
-
-      if (!response.ok) {
-        const message = await response.text();
-        console.error(
-          "Response from getPersonalizedMainFeed API is not okay: ",
-          message
-        );
-        setRefreshLoading(false);
-        return setRecommendedPostsDocPathArray([]);
-      }
-
-      const result = await response.json();
-
-      const postDocPathArrayFetched = result.postDocPathArray as string[];
-
-      // We are removing first "/" from post doc path because react native firebase firestore doesn't like it.
-      const unSlicedAtFirstPostDocPathArrayFetched =
-        postDocPathArrayFetched.map((p) => {
-          if (p[0] === "/") return p.slice(1);
-          return p;
-        });
-      setRecommendedPostsDocPathArray(unSlicedAtFirstPostDocPathArrayFetched);
-
-      const onlyFourPosts = unSlicedAtFirstPostDocPathArrayFetched.slice(0, 4);
-      setServedPosts(onlyFourPosts);
-
-      return setRefreshLoading(false);
-    } catch (error) {
-      console.error("Error while fetching getPersonalizedMainFeed: ", error);
-
-      setRecommendedPostsDocPathArray([]);
-      setServedPosts([]);
-
-      return setRefreshLoading(false);
-    }
-  };
-
-  const handleHomeButtonPress = async () => {
-    if (!homeScreenParametersValue.isHomeButtonPressed) return;
-    if (refreshLoading) return;
-    if (!scrollViewRef.current) return;
-    if (isHandlingHomeButtonPress.current) return;
-
-    isHandlingHomeButtonPress.current = true;
-
-    scrollViewRef.current.scrollTo({ y: 0, animated: true });
-
-    await handleRefresh();
-    setHomeScreenParameters({ isHomeButtonPressed: false });
-    isHandlingHomeButtonPress.current = false;
   };
 
   if (loading)
@@ -261,7 +169,7 @@ const index = () => {
           gap: 20,
         }}
         keyExtractor={(item) => item}
-        data={servedPosts}
+        data={postDocPaths}
         renderItem={({ item }) => <Post postDocPath={item} key={item} />}
         showsVerticalScrollIndicator={false}
         scrollEnabled={false}

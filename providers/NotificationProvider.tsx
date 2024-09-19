@@ -1,4 +1,4 @@
-import { NotificationDocData } from "@/types/Notification";
+import { NotificationsDocData } from "@/types/Notification";
 import {
   adjustNotificationSettings,
   makeDeviceReadyToGetNotifications,
@@ -16,20 +16,28 @@ import React, {
 import { AppState, AppStateStatus } from "react-native";
 import { useAuth } from "./AuthProvider";
 
-const NotificationContext = createContext<NotificationDocData | null>(null);
+const NotificationContext = createContext<{
+  notificationsDocData: NotificationsDocData | null;
+  haveUnread: boolean;
+}>({
+  notificationsDocData: null,
+  haveUnread: false,
+});
 
 const NotificationProvider = ({ children }: PropsWithChildren) => {
   const { authStatus } = useAuth();
 
-  const [notificationDocData, setNotificationDocData] =
-    useState<NotificationDocData | null>(null);
+  const [notificationsDocData, setNotificationsDocData] =
+    useState<NotificationsDocData | null>(null);
 
-  // Notification Data Fetching
+  const [haveUnread, setHaveUnread] = useState(false);
+
+  // Notifications Doc Fetching - Realtime
   useEffect(() => {
-    if (authStatus !== "authenticated") return setNotificationDocData(null);
+    if (authStatus !== "authenticated") return setNotificationsDocData(null);
 
     const displayName = auth().currentUser?.displayName;
-    if (!displayName) return setNotificationDocData(null);
+    if (!displayName) return setNotificationsDocData(null);
 
     const notificationDocPath = `users/${displayName}/notifications/notifications`;
 
@@ -39,29 +47,48 @@ const NotificationProvider = ({ children }: PropsWithChildren) => {
         (snapshot) => {
           if (!snapshot.exists) {
             console.log("No notification doc found.");
-            return setNotificationDocData(null);
+            return setNotificationsDocData(null);
           }
 
-          const notificationDocData = snapshot.data() as NotificationDocData;
-
-          const notificationsFetched = notificationDocData.notifications;
-
-          notificationsFetched.sort((a, b) => b.timestamp - a.timestamp);
-
-          return setNotificationDocData({
-            lastOpenedTime: notificationDocData.lastOpenedTime,
-            notifications: notificationsFetched,
-          });
+          setNotificationsDocData(snapshot.data() as NotificationsDocData);
         },
         (error) => {
           console.error("Error on getting notification data: ", error);
-          return setNotificationDocData(null);
+          return setNotificationsDocData(null);
         }
       );
 
     return () => unsubscribe();
   }, [authStatus]);
 
+  // Handling Unread Notifications for badge on bottom-bar navigation.
+  useEffect(() => {
+    if (!authStatus) return;
+
+    const displayName = auth().currentUser?.displayName;
+    if (!displayName) return setHaveUnread(false);
+
+    if (!notificationsDocData) return setHaveUnread(false);
+
+    const unsubscribe = firestore()
+      .collection(
+        `users/${displayName}/notifications/notifications/receivedNotifications`
+      )
+      .where("timestamp", ">", notificationsDocData.lastOpenedTime)
+      .limit(1)
+      .onSnapshot(
+        (snapshot) => {
+          return setHaveUnread(snapshot.size > 0);
+        },
+        (error) => {
+          console.error("Error on getting received notifications: ", error);
+          return setHaveUnread(false);
+        }
+      );
+    return () => unsubscribe();
+  }, [authStatus, notificationsDocData]);
+
+  // Initial notification managing
   useEffect(() => {
     if (authStatus === "authenticated") {
       if (auth().currentUser?.displayName) {
@@ -92,7 +119,12 @@ const NotificationProvider = ({ children }: PropsWithChildren) => {
   };
 
   return (
-    <NotificationContext.Provider value={notificationDocData}>
+    <NotificationContext.Provider
+      value={{
+        notificationsDocData,
+        haveUnread: haveUnread,
+      }}
+    >
       {children}
     </NotificationContext.Provider>
   );

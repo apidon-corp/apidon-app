@@ -4,8 +4,10 @@ export type PostServerData = {
   description: string;
   image: string;
 
-  rates: RateData[];
-  comments: CommentServerData[];
+  ratingCount: number;
+  ratingSum: number;
+
+  commentCount: number;
 
   collectibleStatus:
     | {
@@ -19,7 +21,13 @@ export type PostServerData = {
   creationTime: number;
   id: string;
 
-  reviewStatus?: ReviewStatus;
+  reviewStatus: ReviewStatus;
+};
+
+export type RatingData = {
+  sender: string;
+  rating: number;
+  timestamp: number;
 };
 
 export type CommentServerData = {
@@ -55,3 +63,9 @@ export type ReviewStatus =
       status: "rejected";
       rejectionReason: string;
     };
+
+export type PostDataOnMainPostsCollection = {
+  postDocPath: string;
+  sender: string;
+  timestamp: number;
+};

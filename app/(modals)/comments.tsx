@@ -1,11 +1,11 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import CommentItem from "@/components/Post/CommentItem";
 import { Text } from "@/components/Text/Text";
-import firestore from "@react-native-firebase/firestore";
 import apiRoutes from "@/helpers/ApiRoutes";
-import { CommentServerData, PostServerData } from "@/types/Post";
+import { CommentServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
 import { Ionicons } from "@expo/vector-icons";
+import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
 import { useAtomValue } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
@@ -34,8 +34,7 @@ const comments = () => {
     (query) => query.queryId === "postDocPath"
   )?.value as string;
 
-  const [loading, setLoading] = useState(false);
-  const [commentData, setCommentData] = useState<CommentServerData[]>([]);
+  const [comments, setComments] = useState<CommentServerData[] | null>(null);
 
   const [currentUserData, setCurrentUserData] = useState<UserInServer | null>(
     null
@@ -55,31 +54,17 @@ const comments = () => {
 
   // Dynamic Data Fetching
   useEffect(() => {
-    if (!postDocPath) return;
-
-    if (loading) return;
-    setLoading(true);
+    if (!postDocPath) return setComments(null);
 
     const unsubscribe = firestore()
-      .doc(postDocPath)
+      .collection(`${postDocPath}/comments`)
       .onSnapshot(
         (snapshot) => {
-          if (!snapshot.exists) {
-            console.log("Post's realtime data can not be fecthed.");
-            return setLoading(false);
-          }
-          const postDocData = snapshot.data() as PostServerData;
-
-          const sortedComments = postDocData.comments;
-          sortedComments.sort((a, b) => b.ts - a.ts);
-
-          setCommentData(sortedComments);
-
-          return setLoading(false);
+          setComments(snapshot.docs.map((d) => d.data() as CommentServerData));
         },
         (error) => {
-          console.error("Error on getting realtime data: ", error);
-          return setLoading(false);
+          console.error("Error on getting realtime data of comments: ", error);
+          return setComments(null);
         }
       );
 
@@ -239,7 +224,7 @@ const comments = () => {
     );
   }
 
-  if (loading) {
+  if (!comments) {
     return (
       <SafeAreaView
         style={{
@@ -259,7 +244,7 @@ const comments = () => {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ flex: 1 }}
       >
-        {commentData.length === 0 && (
+        {comments.length === 0 && (
           <View
             style={{
               width: "100%",
@@ -271,10 +256,10 @@ const comments = () => {
             <Text>No comments yet.</Text>
           </View>
         )}
-        {commentData.length !== 0 && (
+        {comments.length !== 0 && (
           <FlatList
             scrollEnabled={false}
-            data={commentData}
+            data={comments}
             contentContainerStyle={{
               gap: 5,
               paddingHorizontal: 10,

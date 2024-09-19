@@ -6,28 +6,51 @@ import React, { useEffect, useRef, useState } from "react";
 import { FlatList, NativeScrollEvent, ScrollView } from "react-native";
 
 import auth from "@react-native-firebase/auth";
-
 import appCheck from "@react-native-firebase/app-check";
-import { NotificationData } from "@/types/Notification";
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
+
+import { ReceivedNotificationDocData } from "@/types/Notification";
 
 const notifications = () => {
-  const notificationDocData = useNotification();
+  const { notificationsDocData } = useNotification();
   const pathName = usePathname();
-
-  const [servedNotifications, setServedNotifications] = useState<
-    NotificationData[]
-  >([]);
 
   const scrollViewRef = useRef<ScrollView>(null);
 
+  const [receivedNotificationDocs, setReceivedNotificationDocs] = useState<
+    FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]
+  >([]);
+
+  // Handling updating last opened time.
   useEffect(() => {
     if (pathName === "/home/notifications") updateLastOpenedTime();
   }, [pathName]);
 
+  // Handle Realtime
   useEffect(() => {
-    if (!notificationDocData) return setServedNotifications([]);
-    setServedNotifications(notificationDocData.notifications.slice(0, 8));
-  }, [notificationDocData?.notifications.length]);
+    if (!notificationsDocData) return;
+
+    const displayName = auth().currentUser?.displayName;
+    if (!displayName) return;
+
+    const unsubscribe = firestore()
+      .collection(
+        `users/${displayName}/notifications/notifications/receivedNotifications`
+      )
+      .orderBy("timestamp", "desc")
+      .limit(10)
+      .onSnapshot(
+        (snaphot) => {
+          setReceivedNotificationDocs(snaphot.docs);
+        },
+        (error) => {
+          console.error("Error on getting received notifications: ", error);
+        }
+      );
+    return () => unsubscribe();
+  }, [notificationsDocData]);
 
   const updateLastOpenedTime = async () => {
     const currentUserAuthObject = auth().currentUser;
@@ -63,40 +86,43 @@ const notifications = () => {
     }
   };
 
-  const handleServeMoreNotifications = () => {
-    if (!notificationDocData) return setServedNotifications([]);
-
-    if (servedNotifications.length === notificationDocData.notifications.length)
-      return;
-
-    if (servedNotifications.length === 0) {
-      return setServedNotifications(
-        notificationDocData.notifications.slice(0, 8)
-      );
-    }
-
-    setServedNotifications((prev) => {
-      return [
-        ...prev,
-        ...notificationDocData.notifications.slice(
-          prev.length,
-          prev.length + 4
-        ),
-      ];
-    });
-  };
-
   const handleScroll = (event: NativeScrollEvent) => {
-    const threshold = 0;
+    const threshold = 250;
 
     const { layoutMeasurement, contentOffset, contentSize } = event;
     const isCloseToBottom =
       layoutMeasurement.height + contentOffset.y >=
       contentSize.height - threshold;
-    if (isCloseToBottom) handleServeMoreNotifications();
+    if (isCloseToBottom) {
+      serveMoreNotifications();
+    }
   };
 
-  if (!notificationDocData) return <></>;
+  const serveMoreNotifications = async () => {
+    const displayName = auth().currentUser?.displayName;
+    if (!displayName) return;
+
+    const lastDoc =
+      receivedNotificationDocs[receivedNotificationDocs.length - 1];
+    if (!lastDoc) return;
+
+    try {
+      const querySnapshot = await firestore()
+        .collection(
+          `users/${displayName}/notifications/notifications/receivedNotifications`
+        )
+        .orderBy("timestamp", "desc")
+        .startAfter(lastDoc)
+        .limit(10)
+        .get();
+      const newDocs = querySnapshot.docs;
+      setReceivedNotificationDocs((prev) => [...prev, ...newDocs]);
+    } catch (error) {
+      console.error("Error on serving more notifications: ", error);
+    }
+  };
+
+  if (!notificationsDocData) return <></>;
 
   return (
     <ScrollView
@@ -113,11 +139,13 @@ const notifications = () => {
           paddingHorizontal: 10,
           gap: 10,
         }}
-        data={servedNotifications}
+        data={receivedNotificationDocs.map(
+          (f) => f.data() as ReceivedNotificationDocData
+        )}
         renderItem={({ item }) => (
           <NotificationItem
-            notificationData={item}
-            lastOpenedTime={notificationDocData.lastOpenedTime}
+            receivedNotificationDocData={item}
+            lastOpenedTime={notificationsDocData.lastOpenedTime}
             key={`${item.source}- ${item.timestamp}`}
           />
         )}
