@@ -216,8 +216,8 @@ function RootLayout() {
 
   if (versionStatus === "updateNeeded") {
     Alert.alert(
-      "New update available",
-      "Please update the app to continue using it.",
+      "Update Available",
+      "Please update the app to the latest version.",
       [
         {
           text: "OK",
