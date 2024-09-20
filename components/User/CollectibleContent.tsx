@@ -52,7 +52,7 @@ const CollectibleContent = ({
             }}
             style={[
               {
-                width: "33%",
+                width: "33.3%",
                 paddingVertical: 4,
                 justifyContent: "center",
                 alignItems: "center",
@@ -71,7 +71,7 @@ const CollectibleContent = ({
             }}
             style={[
               {
-                width: "33%",
+                width: "33.3%",
                 paddingVertical: 4,
                 justifyContent: "center",
                 alignItems: "center",
@@ -90,7 +90,7 @@ const CollectibleContent = ({
             }}
             style={[
               {
-                width: "33%",
+                width: "33.3%",
                 paddingVertical: 4,
                 justifyContent: "center",
                 alignItems: "center",
