@@ -206,7 +206,9 @@ const CommentItem = ({
               style={{ flexDirection: "row", gap: 3, alignItems: "center" }}
             >
               <Text bold>{userData.username}</Text>
-              <MaterialIcons name="verified" size={14} color={apidonPink} />
+              {userData.verified && (
+                <MaterialIcons name="verified" size={16} color={apidonPink} />
+              )}
             </View>
 
             <Entypo name="dot-single" size={20} color="gray" />
