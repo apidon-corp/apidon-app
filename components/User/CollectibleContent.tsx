@@ -43,6 +43,7 @@ const CollectibleContent = ({
             overflow: "hidden",
             flexDirection: "row",
             backgroundColor: "#323232",
+            width: "75%",
           }}
         >
           <Pressable
@@ -50,7 +51,12 @@ const CollectibleContent = ({
               handleChangeOption("all");
             }}
             style={[
-              { paddingVertical: 4, paddingHorizontal: 15 },
+              {
+                width: "33%",
+                paddingVertical: 4,
+                justifyContent: "center",
+                alignItems: "center",
+              },
               option === "all" && { backgroundColor: "#707070" },
             ]}
           >
@@ -64,7 +70,12 @@ const CollectibleContent = ({
               handleChangeOption("created");
             }}
             style={[
-              { paddingVertical: 4, paddingHorizontal: 15 },
+              {
+                width: "33%",
+                paddingVertical: 4,
+                justifyContent: "center",
+                alignItems: "center",
+              },
               option === "created" && { backgroundColor: "#707070" },
             ]}
           >
@@ -78,7 +89,12 @@ const CollectibleContent = ({
               handleChangeOption("collected");
             }}
             style={[
-              { paddingVertical: 4, paddingHorizontal: 15 },
+              {
+                width: "33%",
+                paddingVertical: 4,
+                justifyContent: "center",
+                alignItems: "center",
+              },
               option === "collected" && { backgroundColor: "#707070" },
             ]}
           >
@@ -107,6 +123,7 @@ const CollectibleContent = ({
           )}
         />
       )}
+
       {option === "collected" && (
         <FlatList
           contentContainerStyle={{
@@ -125,6 +142,7 @@ const CollectibleContent = ({
           )}
         />
       )}
+
       {option === "created" && (
         <FlatList
           contentContainerStyle={{

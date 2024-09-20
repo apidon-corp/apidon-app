@@ -35,6 +35,12 @@ const _layout = () => {
           headerTitle: "Identity",
         }}
       />
+      <Stack.Screen
+        name="getPinkTick"
+        options={{
+          headerTitle: "Get Pink Tick",
+        }}
+      />
     </Stack>
   );
 };

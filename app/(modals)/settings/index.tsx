@@ -1,4 +1,5 @@
 import DeleteAccount from "@/components/Settings/DeleteAccount";
+import GetPinkTick from "@/components/Settings/GetPinkTick";
 import IdentitySettings from "@/components/Settings/IdentitySettings";
 import NotificationSettings from "@/components/Settings/NotificationSettings";
 import SignOut from "@/components/User/SignOut";
@@ -18,6 +19,7 @@ const settings = () => {
     >
       <NotificationSettings />
       <IdentitySettings />
+      <GetPinkTick/>
       <SignOut />
       <View
         style={{
