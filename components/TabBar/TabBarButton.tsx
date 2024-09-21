@@ -4,7 +4,7 @@ import {
   Ionicons,
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, StyleSheet } from "react-native";
 
 type Props = {
@@ -13,23 +13,24 @@ type Props = {
   isFocused: boolean;
   routeName: string;
   color: string;
+  buttonSize: number;
 };
 
 const icon: {
   [key: string]: (props: any) => JSX.Element;
 } = {
-  index: (props: any) => <Entypo name="home" size={24} {...props} />,
-  feed: (props: any) => <Entypo name="home" size={24} {...props} />,
-  search: (props: any) => <AntDesign name="search1" size={24} {...props} />,
-  create: (props: any) => (
-    <Entypo name="circle-with-plus" size={24} {...props} />
-  ),
-  notifications: (props: any) => (
-    <Ionicons name="notifications" size={24} {...props} />
-  ),
+  index: (props: any) => <Entypo name="home"  {...props} />,
+  feed: (props: any) => <Entypo name="home" {...props} />,
+  search: (props: any) => <AntDesign name="search1" {...props} />,
+  create: (props: any) => <Entypo name="circle-with-plus" {...props} />,
+  notifications: (props: any) => <Ionicons name="notifications" {...props} />,
   collectibles: (props: any) => (
-    <MaterialCommunityIcons name="shopping" size={24} {...props} />
+    <MaterialCommunityIcons name="shopping" {...props} />
   ),
+};
+
+const delay = (ms: number): Promise<void> => {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
 const TabBarButton = ({
@@ -38,7 +39,16 @@ const TabBarButton = ({
   isFocused,
   routeName,
   color,
+  buttonSize,
 }: Props) => {
+  const [animatedColor, setAnimatedColor] = useState(color);
+
+  useEffect(() => {
+    delay(250).then(() => {
+      setAnimatedColor(color);
+    });
+  }, [color]);
+
   return (
     <Pressable
       onPress={onPress}
@@ -47,7 +57,8 @@ const TabBarButton = ({
     >
       {icon[routeName]({
         focused: isFocused,
-        color: color,
+        color: animatedColor,
+        size: buttonSize,
       })}
     </Pressable>
   );
@@ -57,7 +68,6 @@ const styles = StyleSheet.create({
   tabBarItem: {
     width: 65,
     height: 55,
-
     justifyContent: "center",
     alignItems: "center",
   },

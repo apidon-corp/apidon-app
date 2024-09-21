@@ -3,9 +3,9 @@ import { useEffect, useRef } from "react";
 import { Animated, View } from "react-native";
 import TabBarButton from "./TabBarButton";
 
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useSetAtom } from "jotai";
 import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
+import { useSetAtom } from "jotai";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function MyTabBar({ state, navigation }: BottomTabBarProps) {
   const { bottom } = useSafeAreaInsets();
@@ -96,6 +96,7 @@ export default function MyTabBar({ state, navigation }: BottomTabBarProps) {
             isFocused={isFocused}
             routeName={route.name}
             color={isFocused ? "black" : "white"}
+            buttonSize={24}
           />
         );
       })}
