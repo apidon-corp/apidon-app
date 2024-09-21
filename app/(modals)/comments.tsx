@@ -57,7 +57,9 @@ const comments = () => {
     if (!postDocPath) return setComments(null);
 
     const unsubscribe = firestore()
-      .collection(`${postDocPath}/comments`)
+      .doc(postDocPath)
+      .collection("comments")
+      .orderBy("ts", "desc")
       .onSnapshot(
         (snapshot) => {
           setComments(snapshot.docs.map((d) => d.data() as CommentServerData));
