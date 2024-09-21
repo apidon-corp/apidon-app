@@ -6,6 +6,7 @@ import TabBarButton from "./TabBarButton";
 import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
 import { useSetAtom } from "jotai";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useNotification } from "@/providers/NotificationProvider";
 
 export default function MyTabBar({ state, navigation }: BottomTabBarProps) {
   const { bottom } = useSafeAreaInsets();
@@ -16,6 +17,8 @@ export default function MyTabBar({ state, navigation }: BottomTabBarProps) {
   const animatedTranslateXValue = useRef(new Animated.Value(0)).current;
 
   const setHomeScreenParameters = useSetAtom(homeScreeenParametersAtom);
+
+  const { haveUnread } = useNotification();
 
   useEffect(() => {
     Animated.spring(animatedTranslateXValue, {
@@ -97,6 +100,9 @@ export default function MyTabBar({ state, navigation }: BottomTabBarProps) {
             routeName={route.name}
             color={isFocused ? "black" : "white"}
             buttonSize={24}
+            haveUnReadNotifications={
+              route.name === "notifications" ? haveUnread : undefined
+            }
           />
         );
       })}
