@@ -1,5 +1,6 @@
 import { Text } from "@/components/Text/Text";
 import { ReceivedNotificationDocData } from "@/types/Notification";
+import { PostServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
 import { Entypo, Feather } from "@expo/vector-icons";
 import crashlytics from "@react-native-firebase/crashlytics";
@@ -26,6 +27,8 @@ const NotificationItem = ({
 
   const pathname = usePathname();
 
+  const [postPreviewImage, setPostPreviewImage] = useState("");
+
   useEffect(() => {
     if (receivedNotificationDocData.source) handleGetSenderData();
   }, [receivedNotificationDocData.source]);
@@ -35,6 +38,31 @@ const NotificationItem = ({
       setLastOpenedTimeLocal(lastOpenedTime);
     }
   }, [lastOpenedTime, pathname]);
+
+  useEffect(() => {
+    if (receivedNotificationDocData.type === "follow") return;
+
+    let postDocPath = "";
+    if (receivedNotificationDocData.type === "ratePost")
+      postDocPath = receivedNotificationDocData.params.ratedPostDocPath;
+    if (receivedNotificationDocData.type === "comment")
+      postDocPath = receivedNotificationDocData.params.commentedPostDocPath;
+    if (receivedNotificationDocData.type === "collectibleBought")
+      postDocPath = receivedNotificationDocData.params.collectiblePostDocPath;
+
+    if (!postDocPath) return;
+
+    firestore()
+      .doc(postDocPath)
+      .get()
+      .then((doc) => {
+        if (!doc.exists) return setPostPreviewImage("");
+        setPostPreviewImage((doc.data() as PostServerData).image);
+      })
+      .catch(() => {
+        setPostPreviewImage("");
+      });
+  }, [receivedNotificationDocData]);
 
   const handleGetSenderData = async () => {
     try {
@@ -244,9 +272,18 @@ const NotificationItem = ({
       >
         {(receivedNotificationDocData.type === "ratePost" ||
           receivedNotificationDocData.type === "comment" ||
-          receivedNotificationDocData.type === "collectibleBought") && (
-          <Feather name="image" size={24} color="white" />
-        )}
+          receivedNotificationDocData.type === "collectibleBought") &&
+          (postPreviewImage ? (
+            <Image
+              source={postPreviewImage}
+              style={{
+                width: 24,
+                aspectRatio: 1,
+              }}
+            />
+          ) : (
+            <Feather name="image" size={24} color="white" />
+          ))}
 
         {lastOpenedTimeLocal < receivedNotificationDocData.timestamp && (
           <Entypo name="dot-single" size={24} color="red" />

@@ -10,11 +10,21 @@ import { UserInServer } from "@/types/User";
 import firestore from "@react-native-firebase/firestore";
 import { useAtom } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Dimensions, ScrollView, View } from "react-native";
+import {
+  ActivityIndicator,
+  Dimensions,
+  Pressable,
+  ScrollView,
+  View,
+} from "react-native";
 import { FlatList, Switch } from "react-native-gesture-handler";
 import Post from "../Post/Post";
 import Header from "./Header";
 import CollectibleContent from "./CollectibleContent";
+import { Stack, router } from "expo-router";
+import { Feather } from "@expo/vector-icons";
+
+import auth from "@react-native-firebase/auth";
 
 type Props = {
   username: string;
@@ -53,7 +63,9 @@ const UserContent = ({ username }: Props) => {
 
   const [layoutReady, setLayoutReady] = useState(false);
 
-  // Post Fetching
+  const [isOwnPage, setIsOwnPage] = useState(false);
+
+  // Realtime Post Fetching
   useEffect(() => {
     if (authStatus !== "authenticated") return;
     if (!username) return;
@@ -196,8 +208,24 @@ const UserContent = ({ username }: Props) => {
     ]);
   }, [collectedNFTPostDocPath, layoutReady, toggleValue]);
 
+  useEffect(() => {
+    if (authStatus !== "authenticated") return setIsOwnPage(false);
+    if (!userData || userData === "not-found") return setIsOwnPage(false);
+
+    const displayName = auth().currentUser?.displayName || "";
+    if (!displayName) return setIsOwnPage(false);
+
+    const pageOwner = userData.username;
+
+    setIsOwnPage(displayName === pageOwner);
+  }, [authStatus, userData]);
+
   const handleOnLayout = () => {
     setLayoutReady(true);
+  };
+
+  const handlePressSettingsIcon = () => {
+    router.push("/(modals)/settings");
   };
 
   if (!userData)
@@ -228,72 +256,93 @@ const UserContent = ({ username }: Props) => {
   }
 
   return (
-    <ScrollView
-      ref={scrollViewRef}
-      keyboardShouldPersistTaps={"handled"}
-      showsVerticalScrollIndicator={false}
-      onLayout={handleOnLayout}
-    >
-      <Header userData={userData} />
-
-      <View
-        id="toggle"
-        style={{
-          width: "100%",
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "row",
-          gap: 10,
-          marginVertical: 15,
+    <>
+      <Stack.Screen
+        options={{
+          headerTitle: `@${userData.username}`,
+          headerRight: () => (
+            <Pressable
+              onPress={handlePressSettingsIcon}
+              style={{ display: isOwnPage ? undefined : "none" }}
+            >
+              <Feather name="settings" size={21} color="white" />
+            </Pressable>
+          ),
         }}
+      />
+      <ScrollView
+        ref={scrollViewRef}
+        keyboardShouldPersistTaps={"handled"}
+        showsVerticalScrollIndicator={false}
+        onLayout={handleOnLayout}
       >
-        <Text
-          bold
+        <Header
+          userData={userData}
+          collsCount={
+            collectibleData.createdCollectibles.length +
+            collectibleData.boughtCollectibles.length
+          }
+        />
+
+        <View
+          id="toggle"
           style={{
-            fontSize: 14,
+            width: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "row",
+            gap: 10,
+            marginVertical: 15,
           }}
         >
-          Posts
-        </Text>
-        <Switch
-          trackColor={{ false: apidonPink, true: apidonPink }}
-          ios_backgroundColor={apidonPink}
-          thumbColor="black"
-          onValueChange={onToggleValueChange}
-          value={toggleValue === "posts" ? false : true}
-        />
-        <Text
-          bold
-          style={{
-            fontSize: 14,
-          }}
-        >
-          Colls
-        </Text>
-      </View>
-
-      {toggleValue === "posts" && (
-        <FlatList
-          contentContainerStyle={{
-            gap: 20,
-          }}
-          keyExtractor={(item) => item}
-          data={postDocPathArray}
-          renderItem={({ item }) => <Post postDocPath={item} key={item} />}
-          showsVerticalScrollIndicator={false}
-          scrollEnabled={false}
-        />
-      )}
-
-      {toggleValue === "nfts" && (
-        <>
-          <CollectibleContent
-            createdCollectibles={collectibleData.createdCollectibles}
-            boughtCollectibles={collectibleData.boughtCollectibles}
+          <Text
+            bold
+            style={{
+              fontSize: 14,
+            }}
+          >
+            Posts
+          </Text>
+          <Switch
+            trackColor={{ false: apidonPink, true: apidonPink }}
+            ios_backgroundColor={apidonPink}
+            thumbColor="black"
+            onValueChange={onToggleValueChange}
+            value={toggleValue === "posts" ? false : true}
           />
-        </>
-      )}
-    </ScrollView>
+          <Text
+            bold
+            style={{
+              fontSize: 14,
+            }}
+          >
+            Colls
+          </Text>
+        </View>
+
+        {toggleValue === "posts" && (
+          <FlatList
+            contentContainerStyle={{
+              gap: 20,
+            }}
+            keyExtractor={(item) => item}
+            data={postDocPathArray}
+            renderItem={({ item }) => <Post postDocPath={item} key={item} />}
+            showsVerticalScrollIndicator={false}
+            scrollEnabled={false}
+          />
+        )}
+
+        {toggleValue === "nfts" && (
+          <>
+            <CollectibleContent
+              createdCollectibles={collectibleData.createdCollectibles}
+              boughtCollectibles={collectibleData.boughtCollectibles}
+            />
+          </>
+        )}
+      </ScrollView>
+    </>
   );
 };
 

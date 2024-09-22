@@ -1,11 +1,8 @@
-import Constants from "expo-constants";
-import { useEffect, useRef, useState } from "react";
-import crashlytics from "@react-native-firebase/crashlytics";
+import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
+import Constants from "expo-constants";
+import { useEffect, useState } from "react";
 import useAppCheck from "./useAppCheck";
-
-const MAX_RETRIES = 5;
-const RETRY_DELAY = 1500;
 
 const useCheckUpdate = () => {
   const [versionStatus, setVersionStatus] = useState<
@@ -14,84 +11,40 @@ const useCheckUpdate = () => {
 
   const appCheckLoaded = useAppCheck();
 
-  const retryCountRef = useRef(0);
+  useEffect(() => {
+    const currentUser = auth().currentUser?.displayName || "";
+    if (!currentUser) return setVersionStatus("loading");
 
-  const checkForUpdates = async (
-    retryCountRef: React.MutableRefObject<number>
-  ) => {
+    if (!appCheckLoaded) return setVersionStatus("loading");
+
     setVersionStatus("loading");
 
-    const currentVersion = Constants.expoConfig?.version;
+    const unsubscribe = firestore()
+      .doc("config/version")
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) return setVersionStatus("error");
 
-    if (!currentVersion) {
-      console.error("Current version is not defined");
-      crashlytics().recordError(
-        new Error("Current version is not defined on checking for new udates.")
+          const availableVersions = (snapshot.data() as VersionDocData)
+            .availableVersions;
+
+          const currentVersion = Constants.expoConfig?.version;
+          if (!currentVersion) return setVersionStatus("error");
+
+          if (availableVersions.includes(currentVersion)) {
+            setVersionStatus("hasLatestVersion");
+          } else {
+            setVersionStatus("updateNeeded");
+          }
+        },
+        (error) => {
+          setVersionStatus("loading");
+        }
       );
-      return setVersionStatus("error");
-    }
-
-    try {
-      const versionDocSnapshot = await firestore().doc(`config/version`).get();
-
-      if (!versionDocSnapshot.exists) {
-        console.error("Version document does not exist");
-        crashlytics().recordError(
-          new Error(
-            "Version document does not exist on checking for new udates."
-          )
-        );
-        return setVersionStatus("error");
-      }
-
-      const versionDocData = versionDocSnapshot.data() as VersionDocData;
-
-      if (!versionDocData) {
-        console.error("Version document data is not defined");
-        crashlytics().recordError(
-          new Error(
-            "Version document data is not defined on checking for new udates."
-          )
-        );
-        return setVersionStatus("error");
-      }
-
-      const availableVersions = versionDocData.availableVersions;
-
-      if (!availableVersions) {
-        console.error("availableVersions is not defined");
-        crashlytics().recordError(
-          new Error(
-            "availableVersions is not defined on checking for new updates."
-          )
-        );
-        return setVersionStatus("error");
-      }
-
-      if (availableVersions.includes(currentVersion)) {
-        return setVersionStatus("hasLatestVersion");
-      } else {
-        return setVersionStatus("updateNeeded");
-      }
-    } catch (error) {
-      if (retryCountRef.current < MAX_RETRIES) {
-        retryCountRef.current++;
-        setTimeout(() => {
-          checkForUpdates(retryCountRef);
-        }, RETRY_DELAY);
-      } else {
-        console.error("Error on checking for new udates:", error);
-        crashlytics().recordError(
-          new Error("Error on checking for new udates:" + error)
-        );
-        return setVersionStatus("error");
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (appCheckLoaded) checkForUpdates(retryCountRef);
-  }, [appCheckLoaded, retryCountRef]);
+    return () => {
+      unsubscribe();
+    };
+  }, [appCheckLoaded, auth().currentUser]);
 
   return {
     versionStatus,

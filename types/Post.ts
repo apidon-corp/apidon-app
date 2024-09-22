@@ -36,12 +36,6 @@ export type CommentServerData = {
   ts: number;
 };
 
-export type RateData = {
-  sender: string;
-  rate: number;
-  ts: number;
-};
-
 export type ReviewStatus =
   /**
    * Indicates that the review is currently pending and has not yet been reviewed.

@@ -35,6 +35,8 @@ const index = () => {
   const [postDocSnapshots, setPostDocSnapshots] = useState<any[]>([]);
   const [postDocPaths, setPostDocPaths] = useState<string[]>([]);
 
+  const [scrollPositionY, setScrollPositionY] = useState(0);
+
   // Getting Initial Post Doc Paths
   useEffect(() => {
     getInitialPostDocPaths();
@@ -48,23 +50,23 @@ const index = () => {
     setPostDocPaths((prev) => [createdPostDocPath, ...prev]);
 
     if (scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({ y: 0, animated: true });
+      scrollViewRef.current.scrollTo({ y: 0 });
     }
   }, [createdPostDocPath]);
 
+  // Managing Home Button Press
   useEffect(() => {
     if (homeScreenParametersValue.isHomeButtonPressed) {
       scrollViewRef.current?.scrollTo({ y: 0 });
 
-      handleRefresh().then(() => {
-        setHomeScreenParameters({
-          isHomeButtonPressed: false,
+      if (scrollPositionY === 0)
+        handleRefresh().then(() => {
+          setHomeScreenParameters({
+            isHomeButtonPressed: false,
+          });
         });
-
-        scrollViewRef.current?.scrollTo({ y: 0 });
-      });
     }
-  }, [homeScreenParametersValue]);
+  }, [homeScreenParametersValue, scrollPositionY]);
 
   async function getInitialPostDocPaths(refreshing?: boolean) {
     if (!refreshing) setLoading(true);
@@ -127,6 +129,9 @@ const index = () => {
     const threshold = 500;
 
     const { layoutMeasurement, contentOffset, contentSize } = event;
+
+    setScrollPositionY(contentOffset.y);
+
     const isCloseToBottom =
       layoutMeasurement.height + contentOffset.y >=
       contentSize.height - threshold;
@@ -169,7 +174,7 @@ const index = () => {
           gap: 20,
         }}
         keyExtractor={(item) => item}
-        data={postDocPaths}
+        data={Array.from(new Set(postDocPaths))}
         renderItem={({ item }) => <Post postDocPath={item} key={item} />}
         showsVerticalScrollIndicator={false}
         scrollEnabled={false}

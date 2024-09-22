@@ -1,13 +1,11 @@
-import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import UserCard from "@/components/User/UserCard";
 import { FollowerDocData } from "@/types/User";
-import { useAtomValue } from "jotai";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 
+import Text from "@/components/Text/Text";
 import firestore from "@react-native-firebase/firestore";
 import { useLocalSearchParams } from "expo-router";
-import Text from "@/components/Text/Text";
 
 type FollowingData = {
   following: string;

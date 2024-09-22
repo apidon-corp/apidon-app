@@ -1,7 +1,7 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import Text from "@/components/Text/Text";
 import UserCard from "@/components/User/UserCard";
-import { PostServerData, RateData, RatingData } from "@/types/Post";
+import { RatingData } from "@/types/Post";
 import firestore from "@react-native-firebase/firestore";
 import { useAtomValue } from "jotai";
 import React, { useEffect, useState } from "react";
@@ -23,6 +23,7 @@ const Likes = () => {
     const unsubscribe = firestore()
       .doc(postDocPath)
       .collection("ratings")
+      .orderBy("timestamp", "desc")
       .onSnapshot(
         (snapshot) => {
           return setRatings(
@@ -31,7 +32,7 @@ const Likes = () => {
         },
         (error) => {
           console.error("Error on getting realtime data: ", error);
-          return setRatings(null);
+          setRatings(null);
         }
       );
 

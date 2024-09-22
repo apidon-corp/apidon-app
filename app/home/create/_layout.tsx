@@ -13,7 +13,7 @@ const _layout = () => {
     >
       <Stack.Screen
         name="index"
-        options={{ title: "Pick Image", headerLargeTitle: true }}
+        options={{ title: "Create Post", headerLargeTitle: true }}
       />
       <Stack.Screen name="details" options={{ title: "Details" }} />
     </Stack>

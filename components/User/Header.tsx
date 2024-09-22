@@ -14,9 +14,10 @@ import { ActivityIndicator, Pressable, View } from "react-native";
 
 type Props = {
   userData: UserInServer;
+  collsCount: number,
 };
 
-const Header = ({ userData }: Props) => {
+const Header = ({ userData, collsCount }: Props) => {
   const pathname = usePathname();
 
   const [userOwnsPage, setUserOwnsPage] = useState(false);
@@ -77,10 +78,6 @@ const Header = ({ userData }: Props) => {
     router.push(finalDestination);
   };
 
-  const handlePressSettingsIcon = () => {
-    router.push("/(modals)/settings");
-  };
-
   const handleShareButton = async () => {
     try {
       const isSharingAvailable = await Sharing.isAvailableAsync();
@@ -113,27 +110,20 @@ const Header = ({ userData }: Props) => {
       }}
     >
       <View
-        id="settings-share-part"
+        id="share-part"
         style={{
           width: "100%",
-          gap: 15,
         }}
       >
-        {userOwnsPage && (
-          <View style={{ width: "100%", alignItems: "flex-end" }}>
-            <Pressable onPress={handlePressSettingsIcon}>
-              <Feather name="settings" size={23} color="white" />
-            </Pressable>
-          </View>
-        )}
         <View
           style={{
             width: "100%",
             alignItems: "flex-end",
+            paddingHorizontal: 5,
           }}
         >
           <Pressable onPress={handleShareButton}>
-            <Feather name="share-2" size={23} color="white" />
+            <Feather name="share-2" size={21} color="white" />
           </Pressable>
         </View>
       </View>
@@ -150,8 +140,9 @@ const Header = ({ userData }: Props) => {
       <View
         id="fullname-verified"
         style={{
+          marginTop: 5,
           flexDirection: "row",
-          gap: 3,
+          gap: 5,
           alignItems: "center",
           width: "100%",
           justifyContent: "center",
@@ -171,15 +162,6 @@ const Header = ({ userData }: Props) => {
         )}
       </View>
 
-      <Text
-        style={{
-          color: "white",
-          fontSize: 14,
-          textAlign: "center",
-        }}
-      >
-        @{userData.username}
-      </Text>
       <View
         style={{
           flexDirection: "row",
@@ -193,18 +175,18 @@ const Header = ({ userData }: Props) => {
         <View
           style={{
             gap: 4,
-            width: "20%",
+            width: "25%",
           }}
         >
           <Text
             style={{
               fontSize: 15,
               textAlign: "center",
-              color: "gray",
+              color: "white",
             }}
             bold
           >
-            5
+            {collsCount}
           </Text>
           <Text
             style={{
@@ -213,13 +195,13 @@ const Header = ({ userData }: Props) => {
               textAlign: "center",
             }}
           >
-            Score
+            Colls
           </Text>
         </View>
 
         <View
           style={{
-            width: "20%",
+            width: "25%",
           }}
         >
           <Pressable
@@ -253,7 +235,7 @@ const Header = ({ userData }: Props) => {
         <View
           style={{
             gap: 4,
-            width: "20%",
+            width: "25%",
           }}
         >
           <Pressable

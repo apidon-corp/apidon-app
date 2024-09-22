@@ -94,7 +94,7 @@ const NftBottomSheetContent = ({
             });
           } else {
             setCollectibleStatus({
-              alreadyBought:true,
+              alreadyBought: true,
               fromCurrentUser:
                 postData.senderUsername === currentUserDisplayName,
             });
@@ -138,7 +138,14 @@ const NftBottomSheetContent = ({
 
   if (!collectibleStatus || !collectibleDocData) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          height: 291,
+        }}
+      >
         <ActivityIndicator color="white" />
       </View>
     );
