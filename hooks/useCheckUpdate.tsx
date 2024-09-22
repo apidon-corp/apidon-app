@@ -17,6 +17,8 @@ const useCheckUpdate = () => {
 
     if (!appCheckLoaded) return setVersionStatus("loading");
 
+    setVersionStatus("loading");
+
     const unsubscribe = firestore()
       .doc("config/version")
       .onSnapshot(
@@ -36,7 +38,7 @@ const useCheckUpdate = () => {
           }
         },
         (error) => {
-          setVersionStatus("error");
+          setVersionStatus("loading");
         }
       );
     return () => {
