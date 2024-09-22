@@ -40,9 +40,10 @@ const getPinkTick = () => {
       </Text>
       <Text fontSize={13} style={{ textAlign: "center" }}>
         To get started, simply send a direct message to Apidon's official
-        Instagram account with your unique UID. You can easily copy your UID
-        using the button below. This helps us verify your account and grant you
-        the Pink Tick, unlocking special privileges for creators like you!
+        Instagram account (@apidon_com) with your unique UID. You can easily
+        copy your UID using the button below. This helps us verify your account
+        and grant you the Pink Tick, unlocking special privileges for creators
+        like you!
       </Text>
       <Pressable
         disabled={copied}
