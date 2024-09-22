@@ -111,7 +111,7 @@ const notifications = () => {
         )
         .orderBy("timestamp", "desc")
         .startAfter(lastDoc)
-        .limit(10)
+        .limit(5)
         .get();
       const newDocs = querySnapshot.docs;
       setReceivedNotificationDocs((prev) => [...prev, ...newDocs]);
