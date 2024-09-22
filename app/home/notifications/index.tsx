@@ -28,10 +28,8 @@ const notifications = () => {
     if (pathName === "/home/notifications") updateLastOpenedTime();
   }, [pathName]);
 
-  // Handle Realtime
+  // Handle Realtime Notification Fetching
   useEffect(() => {
-    if (!notificationsDocData) return;
-
     const displayName = auth().currentUser?.displayName;
     if (!displayName) return;
 
@@ -50,7 +48,7 @@ const notifications = () => {
         }
       );
     return () => unsubscribe();
-  }, [notificationsDocData]);
+  }, []);
 
   const updateLastOpenedTime = async () => {
     const currentUserAuthObject = auth().currentUser;
@@ -139,14 +137,14 @@ const notifications = () => {
           paddingHorizontal: 10,
           gap: 10,
         }}
-        data={receivedNotificationDocs.map(
+        data={Array.from(new Set(receivedNotificationDocs)).map(
           (f) => f.data() as ReceivedNotificationDocData
         )}
         renderItem={({ item }) => (
           <NotificationItem
             receivedNotificationDocData={item}
             lastOpenedTime={notificationsDocData.lastOpenedTime}
-            key={`${item.source}- ${item.timestamp}`}
+            key={`${item.source}-${item.type}-${item.timestamp}`}
           />
         )}
         keyExtractor={(item) => `${item.source}-${item.type}-${item.timestamp}`}

@@ -174,7 +174,7 @@ const index = () => {
           gap: 20,
         }}
         keyExtractor={(item) => item}
-        data={postDocPaths}
+        data={Array.from(new Set(postDocPaths))}
         renderItem={({ item }) => <Post postDocPath={item} key={item} />}
         showsVerticalScrollIndicator={false}
         scrollEnabled={false}

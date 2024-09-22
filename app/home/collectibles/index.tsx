@@ -168,7 +168,9 @@ const index = () => {
           justifyContent: "space-between",
         }}
         scrollEnabled={false}
-        data={collectibleDocs.map((doc) => doc.data() as CollectibleDocData)}
+        data={Array.from(new Set(collectibleDocs)).map(
+          (doc) => doc.data() as CollectibleDocData
+        )}
         numColumns={2}
         renderItem={({ item }) => (
           <CollectibleOnMarketPreviewItem
