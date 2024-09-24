@@ -6,6 +6,7 @@ import { Stack, usePathname } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const search = () => {
   const pathname = usePathname();
@@ -13,6 +14,8 @@ const search = () => {
   const [queryResult, setQueryResult] = useState<string[]>([]);
 
   const [popularPeople, setPopularPeople] = useState<string[]>([]);
+
+  const { bottom } = useSafeAreaInsets();
 
   const handleGetQueryResult = async (input: string) => {
     try {
@@ -100,6 +103,7 @@ const search = () => {
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{
           paddingHorizontal: 20,
+          paddingBottom: (bottom || 20) + 60,
         }}
         showsVerticalScrollIndicator={false}
       >

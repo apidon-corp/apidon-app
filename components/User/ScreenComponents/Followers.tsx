@@ -1,11 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  SafeAreaView,
+  ScrollView,
+} from "react-native";
 
 import Text from "@/components/Text/Text";
 import UserCard from "@/components/User/UserCard";
 import { FollowerDocData } from "@/types/User";
 import firestore from "@react-native-firebase/firestore";
 import { useLocalSearchParams } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type FollowerData = {
   follower: string;
@@ -18,6 +24,8 @@ const followers = () => {
   const [loading, setLoading] = useState(false);
 
   const [followerDatas, setFollowerDatas] = useState<FollowerData[]>([]);
+
+  const { bottom } = useSafeAreaInsets();
 
   useEffect(() => {
     handleGetInitialData();
@@ -80,27 +88,21 @@ const followers = () => {
   }
 
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{
+        paddingBottom: (bottom || 20) + 60,
+        paddingHorizontal: 15,
       }}
     >
-      <View
-        style={{
-          flex: 1,
-        }}
-      >
-        <FlatList
-          data={followerDatas}
-          renderItem={({ item }) => (
-            <UserCard username={item.follower} key={item.follower} />
-          )}
-          contentContainerStyle={{
-            padding: 10,
-          }}
-        />
-      </View>
-    </SafeAreaView>
+      <FlatList
+        scrollEnabled={false}
+        data={followerDatas}
+        renderItem={({ item }) => (
+          <UserCard username={item.follower} key={item.follower} />
+        )}
+      />
+    </ScrollView>
   );
 };
 

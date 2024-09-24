@@ -12,8 +12,11 @@ import firestore, {
 } from "@react-native-firebase/firestore";
 
 import { ReceivedNotificationDocData } from "@/types/Notification";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const notifications = () => {
+  const { bottom } = useSafeAreaInsets();
+
   const { notificationsDocData } = useNotification();
   const pathName = usePathname();
 
@@ -129,6 +132,9 @@ const notifications = () => {
       showsVerticalScrollIndicator={false}
       onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
       scrollEventThrottle={500}
+      contentContainerStyle={{
+        paddingBottom: (bottom || 20) + 60,
+      }}
     >
       <FlatList
         scrollEnabled={false}
@@ -137,9 +143,8 @@ const notifications = () => {
           paddingHorizontal: 10,
           gap: 10,
         }}
-        data={Array.from(new Set(receivedNotificationDocs)).map(
-          (f) => f.data() as ReceivedNotificationDocData
-        )}
+        data={Array.from(new Set(receivedNotificationDocs))
+        .map((f) => f.data() as ReceivedNotificationDocData)}
         renderItem={({ item }) => (
           <NotificationItem
             receivedNotificationDocData={item}

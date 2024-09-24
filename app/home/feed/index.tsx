@@ -15,6 +15,7 @@ import PostSkeleton from "@/components/Post/PostSkeleon";
 
 import { PostDataOnMainPostsCollection } from "@/types/Post";
 import firestore from "@react-native-firebase/firestore";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const index = () => {
   const [loading, setLoading] = useState(false);
@@ -36,6 +37,8 @@ const index = () => {
   const [postDocPaths, setPostDocPaths] = useState<string[]>([]);
 
   const [scrollPositionY, setScrollPositionY] = useState(0);
+
+  const { bottom } = useSafeAreaInsets();
 
   // Getting Initial Post Doc Paths
   useEffect(() => {
@@ -165,6 +168,9 @@ const index = () => {
       refreshControl={
         <RefreshControl refreshing={refreshLoading} onRefresh={handleRefresh} />
       }
+      contentContainerStyle={{
+        paddingBottom: (bottom || 20) + 60,
+      }}
     >
       <FlatList
         style={{
