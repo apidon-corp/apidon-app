@@ -45,7 +45,6 @@ const _layout = () => {
         options={{
           title: "Wallet",
           headerTitle: "Wallet",
-          headerBackTitle: "Market",
         }}
       />
 
@@ -85,7 +84,7 @@ const _layout = () => {
         name="profilePage"
         options={{
           headerShown: true,
-          headerTitle: "",
+          headerTitle: "@",
         }}
       />
       <Stack.Screen
@@ -123,14 +122,18 @@ const _layout = () => {
         name="post"
         options={{
           title: "Collectible",
-          headerBackTitle: "Market",
         }}
       />
       <Stack.Screen
         name="rates"
         options={{
           title: "Rates",
-          headerBackTitle: "Back",
+        }}
+      />
+      <Stack.Screen
+        name="comments"
+        options={{
+          title: "Comments",
         }}
       />
     </Stack>

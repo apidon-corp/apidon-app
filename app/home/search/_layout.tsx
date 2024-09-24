@@ -68,6 +68,12 @@ const _layout = () => {
           title: "Rates",
         }}
       />
+      <Stack.Screen
+        name="comments"
+        options={{
+          title: "Comments",
+        }}
+      />
     </Stack>
   );
 };

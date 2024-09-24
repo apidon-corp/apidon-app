@@ -270,8 +270,28 @@ const Post = React.memo(({ postDocPath }: Props) => {
   };
 
   const handleOpenCommentsModal = () => {
-    setScreenParameters([{ queryId: "postDocPath", value: postDocPath }]);
-    router.push("/(modals)/comments");
+
+    const path = pathname;
+
+    const subScreens = path.split("/");
+
+    const currentScreen = subScreens[subScreens.length - 1];
+
+    const query = `comments?sender=${postSenderData?.username}&id=${postDocData?.id}`;
+
+    if (currentScreen === "feed") {
+      subScreens.push(query);
+      const route = subScreens.join("/");
+      return router.push(route);
+    }
+
+    subScreens[subScreens.length - 1] = query;
+
+    const route = subScreens.join("/");
+    return router.push(route);
+
+    // setScreenParameters([{ queryId: "postDocPath", value: postDocPath }]);
+    // router.push("/(modals)/comments");
   };
 
   const handleOptionsButton = () => {

@@ -67,14 +67,13 @@ const _layout = () => {
           name="rates"
           options={{
             title: "Rates",
-         //   presentation: "modal",
+            //   presentation: "modal",
           }}
         />
         <Stack.Screen
           name="comments"
           options={{
             title: "Comments",
-            presentation: "modal",
           }}
         />
         <Stack.Screen

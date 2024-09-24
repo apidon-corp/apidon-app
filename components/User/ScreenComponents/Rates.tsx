@@ -19,15 +19,14 @@ const Rates = () => {
     sender: string;
     id: string;
   }>();
+  let postDocPath = "";
+  if (!sender || !id) postDocPath = "";
+  postDocPath = `users/${sender}/posts/${id}`;
 
   const [ratings, setRatings] = useState<RatingData[] | null>(null);
 
-  const postDocPath = `users/${sender}/posts/${id}`;
-
   // Dynamic Data Fetching
   useEffect(() => {
-    if (!sender || !id) return;
-
     const unsubscribe = firestore()
       .doc(postDocPath)
       .collection("ratings")
