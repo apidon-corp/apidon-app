@@ -67,7 +67,7 @@ const _layout = () => {
           name="rates"
           options={{
             title: "Rates",
-            presentation: "modal",
+         //   presentation: "modal",
           }}
         />
         <Stack.Screen

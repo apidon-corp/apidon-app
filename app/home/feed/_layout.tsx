@@ -54,6 +54,8 @@ const _layout = () => {
           backgroundColor: "black",
         },
         headerShadowVisible: false,
+        headerBackTitleVisible: false,
+        headerBackButtonMenuEnabled: false,
       }}
     >
       <Stack.Screen
@@ -92,7 +94,6 @@ const _layout = () => {
         options={{
           headerShown: true,
           headerTitle: "",
-          headerBackTitle: "Back",
         }}
       />
       <Stack.Screen
@@ -101,7 +102,6 @@ const _layout = () => {
           headerShown: true,
           title: "Edit Profile",
           presentation: "card",
-          headerBackTitleVisible: false,
         }}
       />
       <Stack.Screen
@@ -130,7 +130,12 @@ const _layout = () => {
         name="post"
         options={{
           title: "Collectible",
-          headerBackTitle: "Back",
+        }}
+      />
+      <Stack.Screen
+        name="rates"
+        options={{
+          title: "Rates",
         }}
       />
     </Stack>

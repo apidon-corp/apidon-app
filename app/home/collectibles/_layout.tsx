@@ -126,6 +126,13 @@ const _layout = () => {
           headerBackTitle: "Market",
         }}
       />
+      <Stack.Screen
+        name="rates"
+        options={{
+          title: "Rates",
+          headerBackTitle: "Back",
+        }}
+      />
     </Stack>
   );
 };

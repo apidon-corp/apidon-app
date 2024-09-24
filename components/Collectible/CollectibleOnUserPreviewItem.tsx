@@ -114,13 +114,14 @@ const CollectibleOnUserPreviewItem = ({
 
     const subScreens = pathname.split("/");
 
-    if (subScreens[2] === "feed") {
+    // We are not on "modals" environment
+    if (subScreens.includes("home")) {
       const route = `/home/feed/${destination}`;
-      return router.navigate(route);
+      return router.push(route);
     }
 
-    subScreens[subScreens.length - 1] = destination;
-    const route = subScreens.join("/");
+    const route = `/(modals)/${destination}`;
+
     return router.push(route);
   };
 

@@ -12,7 +12,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 import { Image } from "expo-image";
 import { Stack, router, usePathname } from "expo-router";
 import { useSetAtom } from "jotai";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -233,8 +233,40 @@ const Post = React.memo(({ postDocPath }: Props) => {
   }, [authStatus]);
 
   const handleOpenRatesModal = () => {
-    setScreenParameters([{ queryId: "postDocPath", value: postDocPath }]);
-    router.push("/(modals)/rates");
+    const path = pathname;
+
+    const subScreens = path.split("/");
+
+    const currentScreen = subScreens[subScreens.length - 1];
+
+    const query = `rates?sender=${postSenderData?.username}&id=${postDocData?.id}`;
+
+    if (currentScreen === "feed") {
+      subScreens.push(query);
+      const route = subScreens.join("/");
+      return router.push(route);
+    }
+
+    subScreens[subScreens.length - 1] = query;
+
+    const route = subScreens.join("/");
+    return router.push(route);
+
+    // if (currentScreen === "post") {
+    //   subScreens[subScreens.length - 1] = "rates";
+
+    //   const route = subScreens.join("/");
+    //   return router.push(route);
+    // }
+
+    // if (currentScreen === "feed") {
+    //   subScreens.push("rates");
+
+    //   const route = subScreens.join("/");
+    //   return router.push(route);
+    // }
+
+    // return console.log("Hmm");
   };
 
   const handleOpenCommentsModal = () => {
