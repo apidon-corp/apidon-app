@@ -86,7 +86,6 @@ export default function MyTabBar({ state, navigation }: BottomTabBarProps) {
 
             // Home Button Refreshing Logic
             if (route.name === "feed" && pathname === "/home/feed") {
-              console.log("Home Button Pressed");
               setHomeScreenParameters({
                 isHomeButtonPressed: true,
               });
