@@ -36,8 +36,6 @@ const index = () => {
   const [postDocSnapshots, setPostDocSnapshots] = useState<any[]>([]);
   const [postDocPaths, setPostDocPaths] = useState<string[]>([]);
 
-  const [scrollPositionY, setScrollPositionY] = useState(0);
-
   const { bottom } = useSafeAreaInsets();
 
   // Getting Initial Post Doc Paths
@@ -61,15 +59,8 @@ const index = () => {
   useEffect(() => {
     if (homeScreenParametersValue.isHomeButtonPressed) {
       scrollViewRef.current?.scrollTo({ y: 0 });
-
-      if (scrollPositionY === 0)
-        handleRefresh().then(() => {
-          setHomeScreenParameters({
-            isHomeButtonPressed: false,
-          });
-        });
     }
-  }, [homeScreenParametersValue, scrollPositionY]);
+  }, [homeScreenParametersValue]);
 
   async function getInitialPostDocPaths(refreshing?: boolean) {
     if (!refreshing) setLoading(true);
@@ -133,8 +124,6 @@ const index = () => {
 
     const { layoutMeasurement, contentOffset, contentSize } = event;
 
-    setScrollPositionY(contentOffset.y);
-
     const isCloseToBottom =
       layoutMeasurement.height + contentOffset.y >=
       contentSize.height - threshold;
@@ -161,6 +150,7 @@ const index = () => {
 
   return (
     <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
       ref={scrollViewRef}
       onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
       scrollEventThrottle={500}

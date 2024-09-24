@@ -4,11 +4,12 @@ import { Animated, View } from "react-native";
 import TabBarButton from "./TabBarButton";
 
 import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
+import { useNotification } from "@/providers/NotificationProvider";
 import { useSetAtom } from "jotai";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNotification } from "@/providers/NotificationProvider";
 
 import { BlurView } from "expo-blur";
+import { usePathname } from "expo-router";
 
 export default function MyTabBar({ state, navigation }: BottomTabBarProps) {
   const { bottom } = useSafeAreaInsets();
@@ -21,6 +22,8 @@ export default function MyTabBar({ state, navigation }: BottomTabBarProps) {
   const setHomeScreenParameters = useSetAtom(homeScreeenParametersAtom);
 
   const { haveUnread } = useNotification();
+
+  const pathname = usePathname();
 
   useEffect(() => {
     Animated.spring(animatedTranslateXValue, {
@@ -82,7 +85,8 @@ export default function MyTabBar({ state, navigation }: BottomTabBarProps) {
             }
 
             // Home Button Refreshing Logic
-            if (route.name === "feed" && isFocused) {
+            if (route.name === "feed" && pathname === "/home/feed") {
+              console.log("Home Button Pressed");
               setHomeScreenParameters({
                 isHomeButtonPressed: true,
               });

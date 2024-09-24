@@ -247,7 +247,7 @@ const Comments = () => {
     <>
       <ScrollView
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ flex: 1 }}
+        contentContainerStyle={{ flex: 1, paddingBottom: (bottom || 20) + 60 }}
       >
         {comments.length === 0 && (
           <View
@@ -287,7 +287,7 @@ const Comments = () => {
           style={{
             backgroundColor: "black",
             zIndex: 1,
-            bottom: bottom + 10,
+            bottom: (bottom || 20) + 60 + 10,
             position: "absolute",
             borderWidth: 1,
             borderColor: "rgba(255,255,255,0.25)",

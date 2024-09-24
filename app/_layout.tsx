@@ -142,8 +142,6 @@ function RootLayout() {
 
   const pathname = usePathname();
 
-  console.log(pathname)
-
   // Linking
   useEffect(() => {
     // Handle the initial URL if the app is opened via a Universal Link
