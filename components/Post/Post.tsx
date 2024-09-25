@@ -251,26 +251,9 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
     const route = subScreens.join("/");
     return router.push(route);
-
-    // if (currentScreen === "post") {
-    //   subScreens[subScreens.length - 1] = "rates";
-
-    //   const route = subScreens.join("/");
-    //   return router.push(route);
-    // }
-
-    // if (currentScreen === "feed") {
-    //   subScreens.push("rates");
-
-    //   const route = subScreens.join("/");
-    //   return router.push(route);
-    // }
-
-    // return console.log("Hmm");
   };
 
   const handleOpenCommentsModal = () => {
-
     const path = pathname;
 
     const subScreens = path.split("/");
@@ -289,9 +272,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
     const route = subScreens.join("/");
     return router.push(route);
-
-    // setScreenParameters([{ queryId: "postDocPath", value: postDocPath }]);
-    // router.push("/(modals)/comments");
   };
 
   const handleOptionsButton = () => {
@@ -501,6 +481,16 @@ const Post = React.memo(({ postDocPath }: Props) => {
       </View>
     );
 
+  if (!postDocData || !postSenderData || postDeleted) return <></>;
+
+  if (
+    !(
+      postDocData.reviewStatus === "approved" ||
+      postDocData.reviewStatus === "pending"
+    )
+  )
+    return <></>;
+
   if (postNotFound) {
     return (
       <View
@@ -514,16 +504,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
       </View>
     );
   }
-
-  if (!postDocData || !postSenderData || postDeleted) return <></>;
-
-  if (
-    !(
-      postDocData.reviewStatus === "approved" ||
-      postDocData.reviewStatus === "pending"
-    )
-  )
-    return <></>;
 
   return (
     <>
