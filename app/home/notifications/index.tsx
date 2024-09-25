@@ -88,7 +88,7 @@ const notifications = () => {
   };
 
   const handleScroll = (event: NativeScrollEvent) => {
-    const threshold = 250;
+    const threshold = 50;
 
     const { layoutMeasurement, contentOffset, contentSize } = event;
     const isCloseToBottom =
@@ -114,7 +114,7 @@ const notifications = () => {
         )
         .orderBy("timestamp", "desc")
         .startAfter(lastDoc)
-        .limit(5)
+        .limit(4)
         .get();
       const newDocs = querySnapshot.docs;
       setReceivedNotificationDocs((prev) => [...prev, ...newDocs]);
@@ -143,8 +143,9 @@ const notifications = () => {
           paddingHorizontal: 10,
           gap: 10,
         }}
-        data={Array.from(new Set(receivedNotificationDocs))
-        .map((f) => f.data() as ReceivedNotificationDocData)}
+        data={Array.from(new Set(receivedNotificationDocs)).map(
+          (f) => f.data() as ReceivedNotificationDocData
+        )}
         renderItem={({ item }) => (
           <NotificationItem
             receivedNotificationDocData={item}

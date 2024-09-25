@@ -120,7 +120,7 @@ const index = () => {
   }
 
   const handleScroll = (event: NativeScrollEvent) => {
-    const threshold = 500;
+    const threshold = 250;
 
     const { layoutMeasurement, contentOffset, contentSize } = event;
 
