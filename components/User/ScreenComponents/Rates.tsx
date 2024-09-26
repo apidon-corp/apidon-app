@@ -1,12 +1,15 @@
 import Text from "@/components/Text/Text";
 import UserCard from "@/components/User/UserCard";
 import { RatingData } from "@/types/Post";
-import firestore from "@react-native-firebase/firestore";
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  NativeScrollEvent,
   SafeAreaView,
   ScrollView,
 } from "react-native";
@@ -23,28 +26,61 @@ const Rates = () => {
   if (!sender || !id) postDocPath = "";
   postDocPath = `users/${sender}/posts/${id}`;
 
-  const [ratings, setRatings] = useState<RatingData[] | null>(null);
+  const [ratingDocs, setRatingDocs] = useState<
+    | FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]
+    | null
+  >(null);
 
-  // Dynamic Data Fetching
   useEffect(() => {
-    const unsubscribe = firestore()
+    handleFetchInitialRatings();
+  }, []);
+
+  const handleFetchInitialRatings = async () => {
+    if (!postDocPath) return;
+
+    const ratingDocSnapshots = await firestore()
       .doc(postDocPath)
       .collection("ratings")
       .orderBy("timestamp", "desc")
-      .onSnapshot(
-        (snapshot) => {
-          return setRatings(
-            snapshot.docs.map((doc) => doc.data() as RatingData)
-          );
-        },
-        (error) => {
-          console.error("Error on getting realtime data: ", error);
-          setRatings(null);
-        }
-      );
+      .limit(15)
+      .get();
 
-    return () => unsubscribe();
-  }, [postDocPath]);
+    setRatingDocs(ratingDocSnapshots.docs);
+  };
+
+  const serveMoreRatings = async () => {
+    if (!postDocPath) return;
+    if (!ratingDocs) return;
+
+    const lastDoc = ratingDocs[ratingDocs.length - 1];
+    if (!lastDoc) return;
+
+    const query = await firestore()
+      .doc(postDocPath)
+      .collection("ratings")
+      .orderBy("timestamp", "desc")
+      .startAfter(lastDoc)
+      .limit(5)
+      .get();
+
+    setRatingDocs((prev) => [
+      ...(prev as FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]),
+      ...query.docs,
+    ]);
+  };
+
+  const handleScroll = (event: NativeScrollEvent) => {
+    const threshold = 50;
+
+    const { layoutMeasurement, contentOffset, contentSize } = event;
+
+    const isCloseToBottom =
+      layoutMeasurement.height + contentOffset.y >=
+      contentSize.height - threshold;
+    if (isCloseToBottom) {
+      serveMoreRatings();
+    }
+  };
 
   if (!sender || !id)
     return (
@@ -59,7 +95,7 @@ const Rates = () => {
       </SafeAreaView>
     );
 
-  if (!ratings)
+  if (!ratingDocs)
     return (
       <SafeAreaView
         style={{
@@ -68,11 +104,11 @@ const Rates = () => {
           alignItems: "center",
         }}
       >
-        <ActivityIndicator color="white" size="large" />
+        <ActivityIndicator color="white" />
       </SafeAreaView>
     );
 
-  if (ratings.length === 0) {
+  if (ratingDocs.length === 0) {
     return (
       <SafeAreaView
         style={{
@@ -91,6 +127,9 @@ const Rates = () => {
       contentContainerStyle={{
         paddingBottom: (bottom | 20) + 60,
       }}
+      showsVerticalScrollIndicator={false}
+      onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
+      scrollEventThrottle={500}
     >
       <FlatList
         scrollEnabled={false}
@@ -98,7 +137,9 @@ const Rates = () => {
           gap: 5,
           paddingHorizontal: 10,
         }}
-        data={ratings}
+        data={Array.from(new Set(ratingDocs)).map(
+          (d) => d.data() as RatingData
+        )}
         renderItem={({ item }) => (
           <UserCard username={item.sender} key={item.sender} />
         )}

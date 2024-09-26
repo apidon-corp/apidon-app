@@ -107,6 +107,7 @@ const index = () => {
         paddingHorizontal: 15,
         paddingBottom: (bottom || 20) + 60,
       }}
+      scrollEventThrottle={500}
     >
       <View
         id="display-preference"

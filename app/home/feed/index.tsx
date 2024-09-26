@@ -14,7 +14,9 @@ import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
 import PostSkeleton from "@/components/Post/PostSkeleon";
 
 import { PostDataOnMainPostsCollection } from "@/types/Post";
-import firestore from "@react-native-firebase/firestore";
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const index = () => {
@@ -33,7 +35,9 @@ const index = () => {
 
   const scrollViewRef = useRef<ScrollView>(null);
 
-  const [postDocSnapshots, setPostDocSnapshots] = useState<any[]>([]);
+  const [postDocSnapshots, setPostDocSnapshots] = useState<
+    FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]
+  >([]);
   const [postDocPaths, setPostDocPaths] = useState<string[]>([]);
 
   const { bottom } = useSafeAreaInsets();

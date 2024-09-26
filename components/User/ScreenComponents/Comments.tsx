@@ -1,13 +1,13 @@
-import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import CommentItem from "@/components/Post/CommentItem";
 import { Text } from "@/components/Text/Text";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { CommentServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
 import { Ionicons } from "@expo/vector-icons";
-import firestore from "@react-native-firebase/firestore";
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
-import { useAtomValue } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -15,6 +15,7 @@ import {
   Dimensions,
   FlatList,
   Keyboard,
+  NativeScrollEvent,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -25,8 +26,8 @@ import {
 import auth from "@react-native-firebase/auth";
 
 import appCheck from "@react-native-firebase/app-check";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Comments = () => {
   const { sender, id } = useLocalSearchParams<{
@@ -37,7 +38,10 @@ const Comments = () => {
   if (!sender || !id) postDocPath = "";
   postDocPath = `users/${sender}/posts/${id}`;
 
-  const [comments, setComments] = useState<CommentServerData[] | null>(null);
+  const [commentDocSnapshots, setCommentDocSnapshots] = useState<
+    | FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]
+    | null
+  >(null);
 
   const [currentUserData, setCurrentUserData] = useState<UserInServer | null>(
     null
@@ -55,31 +59,23 @@ const Comments = () => {
 
   const { bottom } = useSafeAreaInsets();
 
-  // Dynamic Data Fetching
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  // Getting initial comments
   useEffect(() => {
-    if (!postDocPath) return setComments(null);
-
-    const unsubscribe = firestore()
-      .doc(postDocPath)
-      .collection("comments")
-      .orderBy("ts", "desc")
-      .onSnapshot(
-        (snapshot) => {
-          setComments(snapshot.docs.map((d) => d.data() as CommentServerData));
-        },
-        (error) => {
-          console.error("Error on getting realtime data of comments: ", error);
-          return setComments(null);
-        }
-      );
-
-    return () => unsubscribe();
+    if (postDocPath) handleGetInitialComments();
   }, [postDocPath]);
 
+  /**
+   * Getting profile picture of current user.
+   */
   useEffect(() => {
     if (postDocPath) handleGetCurrentUserData();
   }, [postDocPath]);
 
+  /**
+   * Handling opacity of "send" button.
+   */
   useEffect(() => {
     Animated.timing(animatedOpacityValue, {
       toValue: comment.length > 0 ? 1 : 0.5,
@@ -208,10 +204,62 @@ const Comments = () => {
 
       Keyboard.dismiss();
       setComment("");
+
+      // To show user his new comment.
+      await handleGetInitialComments();
       return setSendCommentLoading(false);
     } catch (error) {
       setSendCommentLoading(false);
       return console.error("Error on sending comment: ", error);
+    }
+  };
+
+  const handleGetInitialComments = async () => {
+    if (!postDocPath) return;
+
+    const query = await firestore()
+      .doc(postDocPath)
+      .collection("comments")
+      .orderBy("ts", "desc")
+      .limit(15)
+      .get();
+
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+
+    setCommentDocSnapshots(query.docs);
+  };
+
+  const serveMoreComments = async () => {
+    if (!postDocPath) return;
+    if (!commentDocSnapshots) return;
+
+    const lastDoc = commentDocSnapshots[commentDocSnapshots.length - 1];
+    if (!lastDoc) return;
+
+    const query = await firestore()
+      .doc(postDocPath)
+      .collection("comments")
+      .orderBy("ts", "desc")
+      .startAfter(lastDoc)
+      .limit(5)
+      .get();
+
+    setCommentDocSnapshots((prev) => [
+      ...(prev as FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]),
+      ...query.docs,
+    ]);
+  };
+
+  const handleScroll = (event: NativeScrollEvent) => {
+    const threshold = 50;
+
+    const { layoutMeasurement, contentOffset, contentSize } = event;
+
+    const isCloseToBottom =
+      layoutMeasurement.height + contentOffset.y >=
+      contentSize.height - threshold;
+    if (isCloseToBottom) {
+      serveMoreComments();
     }
   };
 
@@ -229,7 +277,7 @@ const Comments = () => {
     );
   }
 
-  if (!comments) {
+  if (!commentDocSnapshots) {
     return (
       <SafeAreaView
         style={{
@@ -243,28 +291,120 @@ const Comments = () => {
     );
   }
 
+  if (commentDocSnapshots.length === 0) {
+    return (
+      <>
+        <SafeAreaView
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Text>No Comments yet.</Text>
+        </SafeAreaView>
+
+        {currentUserData && (
+          <Animated.View
+            ref={containerRef}
+            style={{
+              backgroundColor: "black",
+              zIndex: 1,
+              bottom: bottom || 20, //+ 60 + 10,
+              position: "absolute",
+              borderWidth: 1,
+              borderColor: "rgba(255,255,255,0.25)",
+              borderRadius: 20,
+              flexDirection: "row",
+              width: "95%",
+              height: 75,
+              alignSelf: "center",
+              justifyContent: "space-between",
+              padding: 10,
+              transform: [
+                {
+                  translateY: animatedTranslateValue,
+                },
+              ],
+            }}
+          >
+            <Image
+              source={
+                currentUserData.profilePhoto ||
+                require("@/assets/images/user.jpg")
+              }
+              style={{
+                width: 50,
+                height: 50,
+                borderRadius: 25,
+              }}
+              transition={500}
+            />
+            <TextInput
+              placeholderTextColor="#808080"
+              placeholder={"Comment as " + currentUserData.username + "..."}
+              style={{
+                width: "70%",
+                height: 50,
+                padding: 10,
+                borderColor: "rgba(255,255,255,0.25)",
+                borderWidth: 1,
+                borderRadius: 20,
+                color: "white",
+              }}
+              value={comment}
+              onChangeText={(input) => {
+                setComment(input);
+              }}
+            />
+            <Animated.View
+              style={{
+                opacity: animatedOpacityValue,
+                width: "10%",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Pressable
+                disabled={sendCommentLoading || comment.length === 0}
+                onPress={handleSendComment}
+                style={{
+                  width: "100%",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                {sendCommentLoading ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Ionicons name="send" size={24} color="white" />
+                )}
+              </Pressable>
+            </Animated.View>
+          </Animated.View>
+        )}
+      </>
+    );
+  }
+
   return (
     <>
       <ScrollView
+        ref={scrollViewRef}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ flex: 1, paddingBottom: (bottom || 20) + 60 }}
+        contentContainerStyle={{
+          paddingBottom: (bottom || 20) + 80,
+        }}
+        showsVerticalScrollIndicator={false}
+        onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
+        scrollEventThrottle={500}
       >
-        {comments.length === 0 && (
-          <View
-            style={{
-              width: "100%",
-              flex: 1,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Text>No comments yet.</Text>
-          </View>
-        )}
-        {comments.length !== 0 && (
+        {commentDocSnapshots.length !== 0 && (
           <FlatList
             scrollEnabled={false}
-            data={comments}
+            data={Array.from(new Set(commentDocSnapshots)).map(
+              (d) => d.data() as CommentServerData
+            )}
             contentContainerStyle={{
               gap: 5,
               paddingHorizontal: 10,
@@ -281,13 +421,14 @@ const Comments = () => {
           />
         )}
       </ScrollView>
+
       {currentUserData && (
         <Animated.View
           ref={containerRef}
           style={{
             backgroundColor: "black",
             zIndex: 1,
-            bottom: (bottom || 20) + 60 + 10,
+            bottom: bottom || 20, //+ 60 + 10,
             position: "absolute",
             borderWidth: 1,
             borderColor: "rgba(255,255,255,0.25)",
