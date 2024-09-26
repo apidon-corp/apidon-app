@@ -22,6 +22,7 @@ const _layout = () => {
       <Stack.Screen
         name="index"
         options={{
+          headerStyle: { backgroundColor: undefined },
           title: "Collectibles",
           headerRight: () => (
             <Pressable
@@ -36,7 +37,10 @@ const _layout = () => {
               <FontAwesome5 name="wallet" size={25} color="white" />
             </Pressable>
           ),
+          headerTransparent: true,
+          headerBlurEffect: "dark",
           headerLargeTitle: true,
+          headerLargeStyle: { backgroundColor: "black" },
         }}
       />
 
