@@ -58,7 +58,8 @@ const index = () => {
   // Managing Home Button Press
   useEffect(() => {
     if (homeScreenParametersValue.isHomeButtonPressed) {
-      scrollViewRef.current?.scrollTo({ y: 0 });
+      scrollViewRef.current?.scrollTo({ y: -150 });
+      setHomeScreenParameters({ isHomeButtonPressed: false });
     }
   }, [homeScreenParametersValue]);
 
@@ -161,6 +162,7 @@ const index = () => {
       contentContainerStyle={{
         paddingBottom: (bottom || 20) + 60,
       }}
+      scrollToOverflowEnabled={true}
     >
       <FlatList
         style={{

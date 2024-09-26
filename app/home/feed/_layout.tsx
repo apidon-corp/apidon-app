@@ -52,20 +52,19 @@ const _layout = () => {
           backgroundColor: "black",
         },
         headerShadowVisible: false,
-        headerBackTitleVisible: false,
+        headerBackTitle: "Back",
         headerBackButtonMenuEnabled: false,
       }}
     >
       <Stack.Screen
         name="index"
         options={{
-          headerTitle: "Apidon",
           headerRight: () => (
             <Pressable
               onPress={handleUserIconButtonPress}
               style={{
                 width: 35,
-                height: 25,
+                height: 32,
                 justifyContent: "center",
                 alignItems: "flex-end",
               }}
@@ -80,10 +79,22 @@ const _layout = () => {
                   }}
                 />
               ) : (
-                <FontAwesome name="user" size={25} color="white" />
+                <FontAwesome name="user" size={30} color="white" />
               )}
             </Pressable>
           ),
+          headerStyle: { backgroundColor: undefined },
+          headerTitle: "Apidon",
+          headerTitleStyle: {
+            fontFamily: "Poppins-Bold",
+          },
+          headerTransparent: true,
+          headerBlurEffect: "dark",
+          headerLargeTitle: true,
+          headerLargeStyle: { backgroundColor: "black" },
+          headerLargeTitleStyle: {
+            fontFamily: "Poppins-Bold",
+          },
         }}
       />
 
