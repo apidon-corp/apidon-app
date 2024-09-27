@@ -1,11 +1,17 @@
 import UserCard from "@/components/User/UserCard";
 import { FollowerDocData } from "@/types/User";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  SafeAreaView,
+  ScrollView,
+} from "react-native";
 
 import Text from "@/components/Text/Text";
 import firestore from "@react-native-firebase/firestore";
 import { useLocalSearchParams } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type FollowingData = {
   following: string;
@@ -13,6 +19,8 @@ type FollowingData = {
 };
 
 const following = () => {
+  const { bottom } = useSafeAreaInsets();
+
   const { username } = useLocalSearchParams() as { username: string };
 
   const [loading, setLoading] = useState(false);
@@ -79,28 +87,24 @@ const following = () => {
   }
 
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
+    <ScrollView
+      contentContainerStyle={{
+        paddingBottom: (bottom || 20) + 60,
       }}
+      showsVerticalScrollIndicator={false}
     >
-      <View
-        style={{
-          flex: 1,
+      <FlatList
+        scrollEnabled={false}
+        data={followingsData}
+        renderItem={({ item }) => (
+          <UserCard username={item.following} key={item.following} />
+        )}
+        contentContainerStyle={{
+          padding: 10,
+          gap: 5,
         }}
-      >
-        <FlatList
-          data={followingsData}
-          renderItem={({ item }) => (
-            <UserCard username={item.following} key={item.following} />
-          )}
-          contentContainerStyle={{
-            padding: 10,
-            gap: 5,
-          }}
-        />
-      </View>
-    </SafeAreaView>
+      />
+    </ScrollView>
   );
 };
 

@@ -24,18 +24,16 @@ import createBlobFromURI from "@/utils/createBlobFromURI";
 import auth from "@react-native-firebase/auth";
 
 import appCheck from "@react-native-firebase/app-check";
-import { useAtomValue } from "jotai";
-import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
+
+import { Buffer } from "buffer";
 
 const editProfile = () => {
-  const { fullname } = useLocalSearchParams() as {
+  let { fullname, image } = useLocalSearchParams() as {
     fullname: string;
+    image: string;
   };
 
-  const image =
-    (useAtomValue(screenParametersAtom).find(
-      (parameter) => parameter.queryId === "editProfileImage"
-    )?.value as string) || "";
+  image = Buffer.from(image, "base64").toString("utf-8");
 
   const [error, setError] = useState("");
 
@@ -306,7 +304,7 @@ const editProfile = () => {
       }}
     >
       <ScrollView
-       showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           flex: 1,
         }}

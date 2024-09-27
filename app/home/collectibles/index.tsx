@@ -13,8 +13,11 @@ import {
   RefreshControl,
   ScrollView,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const index = () => {
+  const { bottom } = useSafeAreaInsets();
+
   const [collectibleDocs, setCollectibleDocs] = useState<
     FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]
   >([]);
@@ -56,7 +59,7 @@ const index = () => {
         .collection("collectibles")
         .orderBy("timestamp", "desc")
         .startAfter(lastDoc)
-        .limit(12)
+        .limit(6)
         .get();
 
       setCollectibleDocs([...collectibleDocs, ...query.docs]);
@@ -66,7 +69,7 @@ const index = () => {
   };
 
   const handleScroll = (event: NativeScrollEvent) => {
-    const threshold = 200;
+    const threshold = 100;
 
     const { layoutMeasurement, contentOffset, contentSize } = event;
     const isCloseToBottom =
@@ -100,7 +103,11 @@ const index = () => {
       refreshControl={
         <RefreshControl refreshing={refreshLoading} onRefresh={handleRefresh} />
       }
-      contentContainerStyle={{ paddingHorizontal: 15 }}
+      contentContainerStyle={{
+        paddingHorizontal: 15,
+        paddingBottom: (bottom || 20) + 60,
+      }}
+      scrollEventThrottle={500}
     >
       <View
         id="display-preference"

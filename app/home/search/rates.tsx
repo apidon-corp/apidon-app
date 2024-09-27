@@ -1,7 +1,9 @@
 import Rates from "@/components/User/ScreenComponents/Rates";
 import React from "react";
 
-const rates = () => {
+type Props = {};
+
+const rates = (props: Props) => {
   return <Rates />;
 };
 

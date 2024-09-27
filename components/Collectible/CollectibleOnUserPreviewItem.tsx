@@ -108,18 +108,14 @@ const CollectibleOnUserPreviewItem = ({
   };
 
   const handlePressPreview = () => {
-    if (!postDocData || !postSenderData) return;
+    const path = pathname;
 
-    const destination = `post?sender=${postDocData.senderUsername}&id=${postDocData.id}`;
+    const subScreens = path.split("/");
 
-    const subScreens = pathname.split("/");
+    const query = `post?sender=${postDocData?.senderUsername}&id=${postDocData?.id}`;
 
-    if (subScreens[2] === "feed") {
-      const route = `/home/feed/${destination}`;
-      return router.navigate(route);
-    }
+    subScreens[subScreens.length - 1] = query;
 
-    subScreens[subScreens.length - 1] = destination;
     const route = subScreens.join("/");
     return router.push(route);
   };

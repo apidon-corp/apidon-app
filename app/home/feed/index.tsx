@@ -14,7 +14,10 @@ import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
 import PostSkeleton from "@/components/Post/PostSkeleon";
 
 import { PostDataOnMainPostsCollection } from "@/types/Post";
-import firestore from "@react-native-firebase/firestore";
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const index = () => {
   const [loading, setLoading] = useState(false);
@@ -32,10 +35,12 @@ const index = () => {
 
   const scrollViewRef = useRef<ScrollView>(null);
 
-  const [postDocSnapshots, setPostDocSnapshots] = useState<any[]>([]);
+  const [postDocSnapshots, setPostDocSnapshots] = useState<
+    FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]
+  >([]);
   const [postDocPaths, setPostDocPaths] = useState<string[]>([]);
 
-  const [scrollPositionY, setScrollPositionY] = useState(0);
+  const { bottom } = useSafeAreaInsets();
 
   // Getting Initial Post Doc Paths
   useEffect(() => {
@@ -57,16 +62,10 @@ const index = () => {
   // Managing Home Button Press
   useEffect(() => {
     if (homeScreenParametersValue.isHomeButtonPressed) {
-      scrollViewRef.current?.scrollTo({ y: 0 });
-
-      if (scrollPositionY === 0)
-        handleRefresh().then(() => {
-          setHomeScreenParameters({
-            isHomeButtonPressed: false,
-          });
-        });
+      scrollViewRef.current?.scrollTo({ y: -150 });
+      setHomeScreenParameters({ isHomeButtonPressed: false });
     }
-  }, [homeScreenParametersValue, scrollPositionY]);
+  }, [homeScreenParametersValue]);
 
   async function getInitialPostDocPaths(refreshing?: boolean) {
     if (!refreshing) setLoading(true);
@@ -126,11 +125,9 @@ const index = () => {
   }
 
   const handleScroll = (event: NativeScrollEvent) => {
-    const threshold = 500;
+    const threshold = 250;
 
     const { layoutMeasurement, contentOffset, contentSize } = event;
-
-    setScrollPositionY(contentOffset.y);
 
     const isCloseToBottom =
       layoutMeasurement.height + contentOffset.y >=
@@ -158,6 +155,7 @@ const index = () => {
 
   return (
     <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
       ref={scrollViewRef}
       onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
       scrollEventThrottle={500}
@@ -165,6 +163,10 @@ const index = () => {
       refreshControl={
         <RefreshControl refreshing={refreshLoading} onRefresh={handleRefresh} />
       }
+      contentContainerStyle={{
+        paddingBottom: (bottom || 20) + 60,
+      }}
+      scrollToOverflowEnabled={true}
     >
       <FlatList
         style={{

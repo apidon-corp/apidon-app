@@ -12,7 +12,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 import { Image } from "expo-image";
 import { Stack, router, usePathname } from "expo-router";
 import { useSetAtom } from "jotai";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -233,13 +233,45 @@ const Post = React.memo(({ postDocPath }: Props) => {
   }, [authStatus]);
 
   const handleOpenRatesModal = () => {
-    setScreenParameters([{ queryId: "postDocPath", value: postDocPath }]);
-    router.push("/(modals)/rates");
+    const path = pathname;
+
+    const subScreens = path.split("/");
+
+    const currentScreen = subScreens[subScreens.length - 1];
+
+    const query = `rates?sender=${postSenderData?.username}&id=${postDocData?.id}`;
+
+    if (currentScreen === "feed") {
+      subScreens.push(query);
+      const route = subScreens.join("/");
+      return router.push(route);
+    }
+
+    subScreens[subScreens.length - 1] = query;
+
+    const route = subScreens.join("/");
+    return router.push(route);
   };
 
   const handleOpenCommentsModal = () => {
-    setScreenParameters([{ queryId: "postDocPath", value: postDocPath }]);
-    router.push("/(modals)/comments");
+    const path = pathname;
+
+    const subScreens = path.split("/");
+
+    const currentScreen = subScreens[subScreens.length - 1];
+
+    const query = `comments?sender=${postSenderData?.username}&id=${postDocData?.id}`;
+
+    if (currentScreen === "feed") {
+      subScreens.push(query);
+      const route = subScreens.join("/");
+      return router.push(route);
+    }
+
+    subScreens[subScreens.length - 1] = query;
+
+    const route = subScreens.join("/");
+    return router.push(route);
   };
 
   const handleOptionsButton = () => {
@@ -449,6 +481,16 @@ const Post = React.memo(({ postDocPath }: Props) => {
       </View>
     );
 
+  if (!postDocData || !postSenderData || postDeleted) return <></>;
+
+  if (
+    !(
+      postDocData.reviewStatus === "approved" ||
+      postDocData.reviewStatus === "pending"
+    )
+  )
+    return <></>;
+
   if (postNotFound) {
     return (
       <View
@@ -462,16 +504,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
       </View>
     );
   }
-
-  if (!postDocData || !postSenderData || postDeleted) return <></>;
-
-  if (
-    !(
-      postDocData.reviewStatus === "approved" ||
-      postDocData.reviewStatus === "pending"
-    )
-  )
-    return <></>;
 
   return (
     <>

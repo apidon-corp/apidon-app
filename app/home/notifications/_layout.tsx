@@ -25,7 +25,7 @@ const _layout = () => {
         options={{
           headerShown: true,
           headerTitle: "",
-          headerBackTitle: "Back",
+          //   headerBackTitle: "Back",
         }}
       />
       <Stack.Screen
@@ -63,7 +63,21 @@ const _layout = () => {
         name="post"
         options={{
           title: "Post",
-          headerBackTitle: "Back",
+          //    headerBackTitle: "Back",
+        }}
+      />
+      <Stack.Screen
+        name="rates"
+        options={{
+          title: "Rates",
+          //     headerBackTitle: "Back",
+        }}
+      />
+      <Stack.Screen
+        name="comments"
+        options={{
+          title: "Comments",
+          //     headerBackTitle: "Back",
         }}
       />
     </Stack>

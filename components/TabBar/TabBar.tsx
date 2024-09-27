@@ -1,14 +1,19 @@
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Animated, View } from "react-native";
 import TabBarButton from "./TabBarButton";
 
 import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
+import { useNotification } from "@/providers/NotificationProvider";
 import { useSetAtom } from "jotai";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNotification } from "@/providers/NotificationProvider";
 
 import { BlurView } from "expo-blur";
+import { usePathname } from "expo-router";
+
+const delay = (ms: number): Promise<void> => {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+};
 
 export default function MyTabBar({ state, navigation }: BottomTabBarProps) {
   const { bottom } = useSafeAreaInsets();
@@ -18,9 +23,16 @@ export default function MyTabBar({ state, navigation }: BottomTabBarProps) {
 
   const animatedTranslateXValue = useRef(new Animated.Value(0)).current;
 
+  const animatedOpacityValue = useRef(new Animated.Value(1)).current;
+
   const setHomeScreenParameters = useSetAtom(homeScreeenParametersAtom);
 
+  // Hiding for comment section.
+  const [hideTabBar, setHideTabBar] = useState(false);
+
   const { haveUnread } = useNotification();
+
+  const pathname = usePathname();
 
   useEffect(() => {
     Animated.spring(animatedTranslateXValue, {
@@ -29,14 +41,39 @@ export default function MyTabBar({ state, navigation }: BottomTabBarProps) {
     }).start();
   }, [state]);
 
+  useEffect(() => {
+    const subScreens = pathname.split("/");
+
+    const currentScreen = subScreens[subScreens.length - 1];
+
+    if (currentScreen !== "comments") {
+      setHideTabBar(false);
+    }
+
+    Animated.timing(animatedOpacityValue, {
+      toValue:
+        currentScreen === "comments" ? 0 : subScreens.length > 3 ? 0.5 : 1,
+      duration: 250,
+      useNativeDriver: true,
+    }).start();
+
+    if (currentScreen === "comments") {
+      delay(500).then(() => {
+        setHideTabBar(true);
+      });
+    }
+  }, [pathname]);
+
   return (
-    <View
+    <Animated.View
       style={{
+        display: hideTabBar ? "none" : undefined,
         alignSelf: "center",
         bottom: bottom || 20,
         position: "absolute",
         borderRadius: 35,
         overflow: "hidden",
+        opacity: animatedOpacityValue,
       }}
     >
       <BlurView
@@ -82,7 +119,7 @@ export default function MyTabBar({ state, navigation }: BottomTabBarProps) {
             }
 
             // Home Button Refreshing Logic
-            if (route.name === "feed" && isFocused) {
+            if (route.name === "feed" && pathname === "/home/feed") {
               setHomeScreenParameters({
                 isHomeButtonPressed: true,
               });
@@ -112,6 +149,6 @@ export default function MyTabBar({ state, navigation }: BottomTabBarProps) {
           );
         })}
       </BlurView>
-    </View>
+    </Animated.View>
   );
 }

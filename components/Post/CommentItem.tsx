@@ -31,6 +31,8 @@ const CommentItem = ({
 
   const [commentDeleteLoading, setCommentDeleteLoading] = useState(false);
 
+  const [commentDeleted, setCommentDeleted] = useState(false);
+
   useEffect(() => {
     if (sender) handleGetUserData();
   }, [sender]);
@@ -119,6 +121,7 @@ const CommentItem = ({
         );
       }
 
+      setCommentDeleted(true);
       setCommentDeleteLoading(false);
       // Okay
     } catch (error) {
@@ -136,6 +139,8 @@ const CommentItem = ({
 
     router.push(finalDestination);
   };
+
+  if (commentDeleted) return <></>;
 
   if (loading || !userData)
     return (

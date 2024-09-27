@@ -59,7 +59,7 @@ const apiRoutes = {
     createVerificationSession: `${apiEndpoint}/identity-createVerificationSession`,
   },
   withdraw: {
-    requestWithdraw: `${apiEndpoint}/withdraw-requestWithdraw`,
+    requestWithdraw: `${apiEndpoint}/user-Wallet-requestWithdraw`,
   },
 };
 

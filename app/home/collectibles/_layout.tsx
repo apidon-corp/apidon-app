@@ -22,6 +22,7 @@ const _layout = () => {
       <Stack.Screen
         name="index"
         options={{
+          headerStyle: { backgroundColor: undefined },
           title: "Collectibles",
           headerRight: () => (
             <Pressable
@@ -36,7 +37,10 @@ const _layout = () => {
               <FontAwesome5 name="wallet" size={25} color="white" />
             </Pressable>
           ),
+          headerTransparent: true,
+          headerBlurEffect: "dark",
           headerLargeTitle: true,
+          headerLargeStyle: { backgroundColor: "black" },
         }}
       />
 
@@ -45,7 +49,6 @@ const _layout = () => {
         options={{
           title: "Wallet",
           headerTitle: "Wallet",
-          headerBackTitle: "Market",
         }}
       />
 
@@ -85,7 +88,7 @@ const _layout = () => {
         name="profilePage"
         options={{
           headerShown: true,
-          headerTitle: "",
+          headerTitle: "@",
         }}
       />
       <Stack.Screen
@@ -123,7 +126,18 @@ const _layout = () => {
         name="post"
         options={{
           title: "Collectible",
-          headerBackTitle: "Market",
+        }}
+      />
+      <Stack.Screen
+        name="rates"
+        options={{
+          title: "Rates",
+        }}
+      />
+      <Stack.Screen
+        name="comments"
+        options={{
+          title: "Comments",
         }}
       />
     </Stack>

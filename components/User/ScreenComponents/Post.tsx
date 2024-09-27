@@ -2,9 +2,12 @@ import Post from "@/components/Post/Post";
 import Text from "@/components/Text/Text";
 import { useLocalSearchParams } from "expo-router";
 import React from "react";
-import { FlatList, View } from "react-native";
+import { FlatList, ScrollView, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const post = () => {
+  const { bottom } = useSafeAreaInsets();
+
   const { sender, id } = useLocalSearchParams<{
     sender: string;
     id: string;
@@ -27,12 +30,20 @@ const post = () => {
   const postDocPath = `users/${sender}/posts/${id}`;
 
   return (
-    <FlatList
+    <ScrollView
       showsVerticalScrollIndicator={false}
-      data={[postDocPath]}
-      renderItem={({ item }) => <Post postDocPath={item} />}
-      keyExtractor={(item) => item}
-    />
+      contentContainerStyle={{
+        paddingBottom: (bottom || 20) + 60,
+      }}
+    >
+      <FlatList
+        scrollEnabled={false}
+        showsVerticalScrollIndicator={false}
+        data={[postDocPath]}
+        renderItem={({ item }) => <Post postDocPath={item} />}
+        keyExtractor={(item) => item}
+      />
+    </ScrollView>
   );
 };
 

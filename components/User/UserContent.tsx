@@ -25,12 +25,15 @@ import { Stack, router } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 
 import auth from "@react-native-firebase/auth";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
   username: string;
 };
 
 const UserContent = ({ username }: Props) => {
+  const { bottom } = useSafeAreaInsets();
+
   const { authStatus } = useAuth();
 
   const [screenParameters, setScreenParameters] = useAtom(screenParametersAtom);
@@ -275,6 +278,9 @@ const UserContent = ({ username }: Props) => {
         keyboardShouldPersistTaps={"handled"}
         showsVerticalScrollIndicator={false}
         onLayout={handleOnLayout}
+        contentContainerStyle={{
+          paddingBottom: (bottom || 20) + 60,
+        }}
       >
         <Header
           userData={userData}

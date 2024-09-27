@@ -12,9 +12,11 @@ import { useSetAtom } from "jotai";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
+import { Buffer } from "buffer";
+
 type Props = {
   userData: UserInServer;
-  collsCount: number,
+  collsCount: number;
 };
 
 const Header = ({ userData, collsCount }: Props) => {
@@ -33,10 +35,16 @@ const Header = ({ userData, collsCount }: Props) => {
 
     const subScreens = pathname.split("/");
 
-    subScreens[subScreens.length - 1] =
-      "editProfile" + "?" + `fullname=${userData.fullname}`;
+    const image = Buffer.from(userData.profilePhoto).toString("base64");
+
+    const query = `editProfile?fullname=${userData.fullname}&image=${image}`;
+
+    console.log(query);
+
+    subScreens[subScreens.length - 1] = query;
 
     const finalDestination = subScreens.join("/");
+    return router.push(finalDestination);
 
     setScreenParameters((prev) => [
       { queryId: "editProfileImage", value: userData.profilePhoto },

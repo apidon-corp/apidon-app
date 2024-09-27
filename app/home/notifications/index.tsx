@@ -12,8 +12,11 @@ import firestore, {
 } from "@react-native-firebase/firestore";
 
 import { ReceivedNotificationDocData } from "@/types/Notification";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const notifications = () => {
+  const { bottom } = useSafeAreaInsets();
+
   const { notificationsDocData } = useNotification();
   const pathName = usePathname();
 
@@ -85,7 +88,7 @@ const notifications = () => {
   };
 
   const handleScroll = (event: NativeScrollEvent) => {
-    const threshold = 250;
+    const threshold = 50;
 
     const { layoutMeasurement, contentOffset, contentSize } = event;
     const isCloseToBottom =
@@ -111,7 +114,7 @@ const notifications = () => {
         )
         .orderBy("timestamp", "desc")
         .startAfter(lastDoc)
-        .limit(5)
+        .limit(4)
         .get();
       const newDocs = querySnapshot.docs;
       setReceivedNotificationDocs((prev) => [...prev, ...newDocs]);
@@ -129,6 +132,9 @@ const notifications = () => {
       showsVerticalScrollIndicator={false}
       onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
       scrollEventThrottle={500}
+      contentContainerStyle={{
+        paddingBottom: (bottom || 20) + 60,
+      }}
     >
       <FlatList
         scrollEnabled={false}

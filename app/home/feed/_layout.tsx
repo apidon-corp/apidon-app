@@ -2,13 +2,11 @@ import { FontAwesome } from "@expo/vector-icons";
 import { Stack, router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Pressable } from "react-native";
-
 import { Text } from "@/components/Text/Text";
-
-import auth from "@react-native-firebase/auth";
 import { useAuth } from "@/providers/AuthProvider";
-import firestore from "@react-native-firebase/firestore";
 import { UserInServer } from "@/types/User";
+import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
 
 const _layout = () => {
@@ -54,18 +52,19 @@ const _layout = () => {
           backgroundColor: "black",
         },
         headerShadowVisible: false,
+        headerBackTitle: "Back",
+        headerBackButtonMenuEnabled: false,
       }}
     >
       <Stack.Screen
         name="index"
         options={{
-          headerTitle: "Apidon",
           headerRight: () => (
             <Pressable
               onPress={handleUserIconButtonPress}
               style={{
                 width: 35,
-                height: 25,
+                height: 32,
                 justifyContent: "center",
                 alignItems: "flex-end",
               }}
@@ -80,10 +79,22 @@ const _layout = () => {
                   }}
                 />
               ) : (
-                <FontAwesome name="user" size={25} color="white" />
+                <FontAwesome name="user" size={30} color="white" />
               )}
             </Pressable>
           ),
+          headerStyle: { backgroundColor: undefined },
+          headerTitle: "Apidon",
+          headerTitleStyle: {
+            fontFamily: "Poppins-Bold",
+          },
+          headerTransparent: true,
+          headerBlurEffect: "dark",
+          headerLargeTitle: true,
+          headerLargeStyle: { backgroundColor: "black" },
+          headerLargeTitleStyle: {
+            fontFamily: "Poppins-Bold",
+          },
         }}
       />
 
@@ -92,7 +103,6 @@ const _layout = () => {
         options={{
           headerShown: true,
           headerTitle: "",
-          headerBackTitle: "Back",
         }}
       />
       <Stack.Screen
@@ -101,7 +111,6 @@ const _layout = () => {
           headerShown: true,
           title: "Edit Profile",
           presentation: "card",
-          headerBackTitleVisible: false,
         }}
       />
       <Stack.Screen
@@ -130,7 +139,18 @@ const _layout = () => {
         name="post"
         options={{
           title: "Collectible",
-          headerBackTitle: "Back",
+        }}
+      />
+      <Stack.Screen
+        name="rates"
+        options={{
+          title: "Rates",
+        }}
+      />
+      <Stack.Screen
+        name="comments"
+        options={{
+          title: "Comments",
         }}
       />
     </Stack>
