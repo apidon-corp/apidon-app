@@ -1,9 +1,8 @@
-import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import Constants from "expo-constants";
 import { useEffect, useState } from "react";
-import useAppCheck from "./useAppCheck";
 import { Alert } from "react-native";
+import useAppCheck from "./useAppCheck";
 
 const useCheckUpdate = () => {
   const [versionStatus, setVersionStatus] = useState<
@@ -13,9 +12,6 @@ const useCheckUpdate = () => {
   const appCheckLoaded = useAppCheck();
 
   useEffect(() => {
-    const currentUser = auth().currentUser?.displayName || "";
-    if (!currentUser) return setVersionStatus("loading");
-
     if (!appCheckLoaded) return setVersionStatus("loading");
 
     setVersionStatus("loading");
@@ -43,6 +39,7 @@ const useCheckUpdate = () => {
           }
         },
         (error) => {
+          console.error("Error: ", error);
           setVersionStatus("loading");
         }
       );
