@@ -3,7 +3,7 @@ import "expo-dev-client";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack, router, usePathname } from "expo-router";
+import { Stack, router } from "expo-router";
 import {
   SetStateAction,
   useCallback,
@@ -51,10 +51,9 @@ type Props = {
       url: string;
     }>
   >;
-  onLayout: () => void;
 };
 
-function RootLayoutNav({ linking, setLinking, onLayout }: Props) {
+function RootLayoutNav({ linking, setLinking }: Props) {
   return (
     <AuthProvider linking={linking} setLinking={setLinking}>
       <NotificationProvider>
@@ -64,7 +63,6 @@ function RootLayoutNav({ linking, setLinking, onLayout }: Props) {
             style={{
               flex: 1,
             }}
-            onLayout={onLayout}
           >
             <BottomSheetModalProvider>
               <Stack>
@@ -127,10 +125,6 @@ function RootLayout() {
   const { versionStatus } = useCheckUpdate();
 
   const { connectionStatus } = useCheckInternet();
-
-  const pathname = usePathname();
-
-  const [layoutReady, setLayoutReady] = useState(false);
 
   const [linking, setLinking] = useState<{
     isInitial: boolean;
@@ -201,19 +195,10 @@ function RootLayout() {
       loaded &&
       appCheckLoaded &&
       versionStatus === "hasLatestVersion" &&
-      connectionStatus &&
-      pathname !== "/" &&
-      layoutReady;
+      connectionStatus;
 
     setAppReady(status);
-  }, [
-    loaded,
-    appCheckLoaded,
-    versionStatus,
-    connectionStatus,
-    pathname,
-    layoutReady,
-  ]);
+  }, [loaded, appCheckLoaded, versionStatus, connectionStatus]);
 
   // Handle animation...
   useEffect(() => {
@@ -223,7 +208,7 @@ function RootLayout() {
       toValue: status ? 0 : 1,
       duration: 500,
       useNativeDriver: true,
-      delay: 1000,
+      delay: status ? 1500 : 0,
     }).start();
   }, [animationReady, appReady]);
 
@@ -238,13 +223,10 @@ function RootLayout() {
 
   return (
     <>
-      <RootLayoutNav
-        linking={linking}
-        setLinking={setLinking}
-        onLayout={() => setLayoutReady(true)}
-      />
+      {appReady && <RootLayoutNav linking={linking} setLinking={setLinking} />}
+
       <Animated.View
-        pointerEvents="none"
+        pointerEvents={appReady ? "none" : undefined}
         style={{
           position: "absolute",
           opacity: opacity,

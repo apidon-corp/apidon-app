@@ -2,7 +2,7 @@ import NetInfo from "@react-native-community/netinfo";
 import { useEffect, useRef, useState } from "react";
 import { Alert } from "react-native";
 
-const MAX_RETRIES = 5;
+const MAX_RETRIES = 10;
 const RETRY_DELAY = 500;
 
 const useCheckInternet = () => {
@@ -47,13 +47,16 @@ const useCheckInternet = () => {
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
-      const oState = state.isConnected || false;
+      const isConnected = state.isConnected || false;
+      const isInternetReachable = state.isInternetReachable || false;
 
-      netInfoRef.current = oState;
+      const status = isConnected && isInternetReachable;
+
+      netInfoRef.current = status;
     });
 
     // Unsubscribe
-    unsubscribe();
+    return () => unsubscribe();
   }, []);
 
   return {
