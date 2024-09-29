@@ -3,10 +3,11 @@ import firestore from "@react-native-firebase/firestore";
 import Constants from "expo-constants";
 import { useEffect, useState } from "react";
 import useAppCheck from "./useAppCheck";
+import { Alert } from "react-native";
 
 const useCheckUpdate = () => {
   const [versionStatus, setVersionStatus] = useState<
-    "loading" | "error" | "hasLatestVersion" | "updateNeeded"
+    "loading" | "hasLatestVersion" | "updateNeeded"
   >("loading");
 
   const appCheckLoaded = useAppCheck();
@@ -23,17 +24,21 @@ const useCheckUpdate = () => {
       .doc("config/version")
       .onSnapshot(
         (snapshot) => {
-          if (!snapshot.exists) return setVersionStatus("error");
+          if (!snapshot.exists) return setVersionStatus("loading");
 
           const availableVersions = (snapshot.data() as VersionDocData)
             .availableVersions;
 
           const currentVersion = Constants.expoConfig?.version;
-          if (!currentVersion) return setVersionStatus("error");
+          if (!currentVersion) return setVersionStatus("loading");
 
           if (availableVersions.includes(currentVersion)) {
             setVersionStatus("hasLatestVersion");
           } else {
+            Alert.alert(
+              "Update Available",
+              "Please update the app to the latest version."
+            );
             setVersionStatus("updateNeeded");
           }
         },
@@ -44,7 +49,7 @@ const useCheckUpdate = () => {
     return () => {
       unsubscribe();
     };
-  }, [appCheckLoaded, auth().currentUser]);
+  }, [appCheckLoaded]);
 
   return {
     versionStatus,

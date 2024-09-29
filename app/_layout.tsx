@@ -4,18 +4,16 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack, router, usePathname } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import { SetStateAction, useEffect, useRef, useState } from "react";
+import { SetStateAction, useEffect, useState } from "react";
 import "react-native-reanimated";
 
+import { SplashScreen } from "expo-router";
+
 import AuthProvider from "@/providers/AuthProvider";
-import { Alert, Linking, StatusBar, View } from "react-native";
+import { Linking, StatusBar } from "react-native";
 
 import NotificationProvider from "@/providers/NotificationProvider";
-import {
-  BottomSheetModal,
-  BottomSheetModalProvider,
-} from "@gorhom/bottom-sheet";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export {
@@ -24,11 +22,8 @@ export {
 } from "expo-router";
 
 import useAppCheck from "@/hooks/useAppCheck";
-import useCheckUpdate from "@/hooks/useCheckUpdate";
-import { Image } from "expo-image";
 import useCheckInternet from "@/hooks/useCheckInternet";
-import CustomBottomModalSheet from "@/components/BottomSheet/CustomBottomModalSheet";
-import Text from "@/components/Text/Text";
+import useCheckUpdate from "@/hooks/useCheckUpdate";
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
@@ -49,9 +44,10 @@ type Props = {
       url: string;
     }>
   >;
+  onLayout: () => void;
 };
 
-function RootLayoutNav({ linking, setLinking }: Props) {
+function RootLayoutNav({ linking, setLinking, onLayout }: Props) {
   return (
     <AuthProvider linking={linking} setLinking={setLinking}>
       <NotificationProvider>
@@ -61,6 +57,7 @@ function RootLayoutNav({ linking, setLinking }: Props) {
             style={{
               flex: 1,
             }}
+            onLayout={onLayout}
           >
             <BottomSheetModalProvider>
               <Stack>
@@ -111,12 +108,6 @@ function RootLayoutNav({ linking, setLinking }: Props) {
   );
 }
 
-function PlaceholderForWaiting() {
-  return (
-    <Image source={require("@/assets/images/splash.png")} style={{ flex: 1 }} />
-  );
-}
-
 function RootLayout() {
   const [loaded, error] = useFonts({
     "Poppins-Regular": require("../assets/fonts/Poppins-Regular.ttf"),
@@ -128,9 +119,7 @@ function RootLayout() {
 
   const { versionStatus } = useCheckUpdate();
 
-  const { isConnected } = useCheckInternet();
-
-  const networkErrorBottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const { connectionStatus } = useCheckInternet();
 
   const [linking, setLinking] = useState<{
     isInitial: boolean;
@@ -141,6 +130,10 @@ function RootLayout() {
   });
 
   const pathname = usePathname();
+
+  const [layoutReady, setLayoutReady] = useState(false);
+
+  SplashScreen.preventAutoHideAsync();
 
   // Linking
   useEffect(() => {
@@ -187,79 +180,36 @@ function RootLayout() {
     if (error) throw error;
   }, [error]);
 
-  // Splash Screen
+  // Splash Screen && App Ready State
   useEffect(() => {
     if (
       loaded &&
       appCheckLoaded &&
       versionStatus === "hasLatestVersion" &&
-      pathname !== "/"
+      connectionStatus &&
+      pathname !== "/" &&
+      layoutReady
     ) {
       SplashScreen.hideAsync();
+    } else {
+      SplashScreen.preventAutoHideAsync();
     }
-  }, [loaded, appCheckLoaded, versionStatus, pathname]);
+  }, [
+    loaded,
+    appCheckLoaded,
+    versionStatus,
+    connectionStatus,
+    pathname,
+    layoutReady,
+  ]);
 
-  if (versionStatus === "error") {
-    Alert.alert(
-      "Error on checking updates",
-      "Please try again later",
-      [
-        {
-          text: "OK",
-          onPress: () => {},
-        },
-      ],
-      { cancelable: false }
-    );
-    return <PlaceholderForWaiting />;
-  }
-
-  if (versionStatus === "updateNeeded") {
-    Alert.alert(
-      "Update Available",
-      "Please update the app to the latest version.",
-      [
-        {
-          text: "OK",
-          onPress: () => {},
-        },
-      ],
-      { cancelable: false }
-    );
-    return <PlaceholderForWaiting />;
-  }
-
-  if (!isConnected) {
-    if (networkErrorBottomSheetModalRef.current)
-      networkErrorBottomSheetModalRef.current.present();
-
-    return (
-      <>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <BottomSheetModalProvider>
-            <CustomBottomModalSheet
-              backgroundColor="#1B1B1B"
-              locked
-              ref={networkErrorBottomSheetModalRef}
-            >
-              <View style={{ flex: 1, gap: 15, padding: 10 }}>
-                <Text fontSize={18} bold>
-                  Check Your Connection
-                </Text>
-                <Text fontSize={13}>
-                  It seems that you are not connected to the internet. Please
-                  check your internet connection and try again.
-                </Text>
-              </View>
-            </CustomBottomModalSheet>
-            <PlaceholderForWaiting />
-          </BottomSheetModalProvider>
-        </GestureHandlerRootView>
-      </>
-    );
-  }
-
-  return <RootLayoutNav linking={linking} setLinking={setLinking} />;
+  return (
+    <RootLayoutNav
+      linking={linking}
+      setLinking={setLinking}
+      onLayout={() => setLayoutReady(true)}
+    />
+  );
 }
 
 export default RootLayout;

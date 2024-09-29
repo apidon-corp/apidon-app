@@ -7,7 +7,7 @@ import { Alert } from "react-native";
 import crashlytics from "@react-native-firebase/crashlytics";
 
 const MAX_RETRIES = 5;
-const RETRY_DELAY = 1500;
+const RETRY_DELAY = 1000;
 
 const useAppCheck = () => {
   const [appCheckLoaded, setAppCheckLoaded] = useState(false);
