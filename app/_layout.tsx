@@ -146,7 +146,7 @@ function RootLayout() {
 
   const opacity = useRef(new Animated.Value(1)).current;
 
-  const { width, height } = Dimensions.get("screen");
+  const { width, height } = Dimensions.get("window");
 
   SplashScreen.preventAutoHideAsync();
 
@@ -255,7 +255,10 @@ function RootLayout() {
         }}
       >
         <Image
-          style={{ flex: 1 }}
+          contentFit="contain"
+          style={{
+            flex: 1,
+          }}
           source={require("@/assets/images/splash.png")}
           onLoadEnd={onImageLoaded}
         />
