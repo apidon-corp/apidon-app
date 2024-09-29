@@ -4,13 +4,19 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack, router, usePathname } from "expo-router";
-import { SetStateAction, useEffect, useState } from "react";
+import {
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import "react-native-reanimated";
 
 import { SplashScreen } from "expo-router";
 
 import AuthProvider from "@/providers/AuthProvider";
-import { Linking, StatusBar } from "react-native";
+import { Animated, Dimensions, Linking, StatusBar } from "react-native";
 
 import NotificationProvider from "@/providers/NotificationProvider";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
@@ -24,6 +30,7 @@ export {
 import useAppCheck from "@/hooks/useAppCheck";
 import useCheckInternet from "@/hooks/useCheckInternet";
 import useCheckUpdate from "@/hooks/useCheckUpdate";
+import { Image } from "expo-image";
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
@@ -121,6 +128,10 @@ function RootLayout() {
 
   const { connectionStatus } = useCheckInternet();
 
+  const pathname = usePathname();
+
+  const [layoutReady, setLayoutReady] = useState(false);
+
   const [linking, setLinking] = useState<{
     isInitial: boolean;
     url: string;
@@ -129,9 +140,13 @@ function RootLayout() {
     url: "",
   });
 
-  const pathname = usePathname();
+  const [appReady, setAppReady] = useState(false);
 
-  const [layoutReady, setLayoutReady] = useState(false);
+  const [animationReady, setAnimationReady] = useState(false);
+
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  const { width, height } = Dimensions.get("screen");
 
   SplashScreen.preventAutoHideAsync();
 
@@ -180,20 +195,17 @@ function RootLayout() {
     if (error) throw error;
   }, [error]);
 
-  // Splash Screen && App Ready State
+  // Handle App Ready State
   useEffect(() => {
-    if (
+    const status =
       loaded &&
       appCheckLoaded &&
       versionStatus === "hasLatestVersion" &&
       connectionStatus &&
       pathname !== "/" &&
-      layoutReady
-    ) {
-      SplashScreen.hideAsync();
-    } else {
-      SplashScreen.preventAutoHideAsync();
-    }
+      layoutReady;
+
+    setAppReady(status);
   }, [
     loaded,
     appCheckLoaded,
@@ -203,12 +215,52 @@ function RootLayout() {
     layoutReady,
   ]);
 
+  // Handle animation...
+  useEffect(() => {
+    const status = animationReady && appReady;
+
+    Animated.timing(opacity, {
+      toValue: status ? 0 : 1,
+      duration: 500,
+      useNativeDriver: true,
+      delay: 1000,
+    }).start();
+  }, [animationReady, appReady]);
+
+  // Fires animation signal after image loading.
+  const onImageLoaded = useCallback(async () => {
+    setTimeout(() => {
+      SplashScreen.hideAsync().then(() => {
+        setAnimationReady(true);
+      });
+    }, 250);
+  }, []);
+
   return (
-    <RootLayoutNav
-      linking={linking}
-      setLinking={setLinking}
-      onLayout={() => setLayoutReady(true)}
-    />
+    <>
+      <RootLayoutNav
+        linking={linking}
+        setLinking={setLinking}
+        onLayout={() => setLayoutReady(true)}
+      />
+      <Animated.View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          opacity: opacity,
+          width,
+          height,
+          backgroundColor: "black",
+          zIndex: 1,
+        }}
+      >
+        <Image
+          style={{ flex: 1 }}
+          source={require("@/assets/images/splash.png")}
+          onLoadEnd={onImageLoaded}
+        />
+      </Animated.View>
+    </>
   );
 }
 

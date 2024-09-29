@@ -1,9 +1,9 @@
-import NetInfo, { useNetInfo } from "@react-native-community/netinfo";
+import NetInfo from "@react-native-community/netinfo";
 import { useEffect, useRef, useState } from "react";
 import { Alert } from "react-native";
 
 const MAX_RETRIES = 5;
-const RETRY_DELAY = 1500;
+const RETRY_DELAY = 500;
 
 const useCheckInternet = () => {
   const [connectionStatus, setConnectionStatus] = useState(false);
