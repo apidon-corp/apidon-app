@@ -22,8 +22,6 @@ const index = () => {
     FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]
   >([]);
 
-  const scrollViewRef = useRef<ScrollView>(null);
-
   const [refreshLoading, setRefreshLoading] = useState(false);
 
   const [displayPrefrence, setDisplayPreference] = useState<
@@ -96,7 +94,6 @@ const index = () => {
 
   return (
     <ScrollView
-      ref={scrollViewRef}
       onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
       showsVerticalScrollIndicator={false}
       contentInsetAdjustmentBehavior="automatic"

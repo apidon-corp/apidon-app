@@ -20,8 +20,6 @@ const notifications = () => {
   const { notificationsDocData } = useNotification();
   const pathName = usePathname();
 
-  const scrollViewRef = useRef<ScrollView>(null);
-
   const [receivedNotificationDocs, setReceivedNotificationDocs] = useState<
     FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]
   >([]);
@@ -127,7 +125,6 @@ const notifications = () => {
 
   return (
     <ScrollView
-      ref={scrollViewRef}
       contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator={false}
       onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
