@@ -19,6 +19,8 @@ import firestore, {
 } from "@react-native-firebase/firestore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useHeaderHeight } from "@react-navigation/elements";
+
 const index = () => {
   const [loading, setLoading] = useState(false);
 
@@ -42,6 +44,8 @@ const index = () => {
 
   const { bottom } = useSafeAreaInsets();
 
+  const headerHeight = useHeaderHeight();
+
   // Getting Initial Post Doc Paths
   useEffect(() => {
     getInitialPostDocPaths();
@@ -54,15 +58,13 @@ const index = () => {
 
     setPostDocPaths((prev) => [createdPostDocPath, ...prev]);
 
-    if (scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({ y: 0 });
-    }
+    scrollViewRef.current?.scrollTo({ y: -headerHeight });
   }, [createdPostDocPath]);
 
   // Managing Home Button Press
   useEffect(() => {
     if (homeScreenParametersValue.isHomeButtonPressed) {
-      scrollViewRef.current?.scrollTo({ y: -150 });
+      scrollViewRef.current?.scrollTo({ y: -headerHeight });
       setHomeScreenParameters({ isHomeButtonPressed: false });
     }
   }, [homeScreenParametersValue]);
@@ -166,7 +168,7 @@ const index = () => {
       contentContainerStyle={{
         paddingBottom: (bottom || 20) + 60,
       }}
-      scrollToOverflowEnabled={true}
+      scrollToOverflowEnabled
     >
       <FlatList
         style={{

@@ -1,28 +1,66 @@
-import NetInfo, { NetInfoState } from "@react-native-community/netinfo";
-import { useEffect, useState } from "react";
+import NetInfo from "@react-native-community/netinfo";
+import { useEffect, useRef, useState } from "react";
+import { Alert } from "react-native";
+
+const MAX_RETRIES = 10;
+const RETRY_DELAY = 500;
 
 const useCheckInternet = () => {
-  const [isConnected, setIsConnected] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState(false);
 
-  const checkConnection = (state: NetInfoState) => {
-    const isConnected = state.isConnected || false;
-    const isReachable = state.isInternetReachable || false;
+  const netInfoRef = useRef(false);
 
-    setIsConnected(isConnected && isReachable);
+  const retryCountRef = useRef(0);
+
+  const checkConnection = (
+    retryCountRef: React.MutableRefObject<number>,
+    netInfoRef: React.MutableRefObject<boolean>
+  ) => {
+    if (connectionStatus) return;
+
+    const status = netInfoRef.current;
+
+    setConnectionStatus(status);
+
+    if (!status) {
+      if (retryCountRef.current < MAX_RETRIES) {
+        retryCountRef.current++;
+        setTimeout(() => {
+          checkConnection(retryCountRef, netInfoRef);
+        }, RETRY_DELAY);
+      } else {
+        Alert.alert(
+          "Check Your Connection",
+          "Please check your internet connection and try again."
+        );
+      }
+    } else {
+      retryCountRef.current = 0;
+    }
   };
 
   useEffect(() => {
+    if (!connectionStatus) {
+      checkConnection(retryCountRef, netInfoRef);
+    }
+  }, [connectionStatus, retryCountRef, netInfoRef]);
+
+  useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
-      checkConnection(state);
+      const isConnected = state.isConnected || false;
+      const isInternetReachable = state.isInternetReachable || false;
+
+      const status = isConnected && isInternetReachable;
+
+      netInfoRef.current = status;
     });
 
-    return () => {
-      unsubscribe();
-    };
+    // Unsubscribe
+    return () => unsubscribe();
   }, []);
 
   return {
-    isConnected,
+    connectionStatus,
   };
 };
 

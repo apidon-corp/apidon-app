@@ -3,19 +3,23 @@ import "expo-dev-client";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack, router, usePathname } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import { SetStateAction, useEffect, useRef, useState } from "react";
+import { Stack, router } from "expo-router";
+import {
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import "react-native-reanimated";
 
+import { SplashScreen } from "expo-router";
+
 import AuthProvider from "@/providers/AuthProvider";
-import { Alert, Linking, StatusBar, View } from "react-native";
+import { Animated, Dimensions, Linking, StatusBar } from "react-native";
 
 import NotificationProvider from "@/providers/NotificationProvider";
-import {
-  BottomSheetModal,
-  BottomSheetModalProvider,
-} from "@gorhom/bottom-sheet";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export {
@@ -24,11 +28,9 @@ export {
 } from "expo-router";
 
 import useAppCheck from "@/hooks/useAppCheck";
+import useCheckInternet from "@/hooks/useCheckInternet";
 import useCheckUpdate from "@/hooks/useCheckUpdate";
 import { Image } from "expo-image";
-import useCheckInternet from "@/hooks/useCheckInternet";
-import CustomBottomModalSheet from "@/components/BottomSheet/CustomBottomModalSheet";
-import Text from "@/components/Text/Text";
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
@@ -111,12 +113,6 @@ function RootLayoutNav({ linking, setLinking }: Props) {
   );
 }
 
-function PlaceholderForWaiting() {
-  return (
-    <Image source={require("@/assets/images/splash.png")} style={{ flex: 1 }} />
-  );
-}
-
 function RootLayout() {
   const [loaded, error] = useFonts({
     "Poppins-Regular": require("../assets/fonts/Poppins-Regular.ttf"),
@@ -128,9 +124,7 @@ function RootLayout() {
 
   const { versionStatus } = useCheckUpdate();
 
-  const { isConnected } = useCheckInternet();
-
-  const networkErrorBottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const { connectionStatus } = useCheckInternet();
 
   const [linking, setLinking] = useState<{
     isInitial: boolean;
@@ -140,7 +134,15 @@ function RootLayout() {
     url: "",
   });
 
-  const pathname = usePathname();
+  const [appReady, setAppReady] = useState(false);
+
+  const [animationReady, setAnimationReady] = useState(false);
+
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  const { width, height } = Dimensions.get("window");
+
+  SplashScreen.preventAutoHideAsync();
 
   // Linking
   useEffect(() => {
@@ -187,79 +189,64 @@ function RootLayout() {
     if (error) throw error;
   }, [error]);
 
-  // Splash Screen
+  // Handle App Ready State
   useEffect(() => {
-    if (
+    const status =
       loaded &&
       appCheckLoaded &&
       versionStatus === "hasLatestVersion" &&
-      pathname !== "/"
-    ) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded, appCheckLoaded, versionStatus, pathname]);
+      connectionStatus;
 
-  if (versionStatus === "error") {
-    Alert.alert(
-      "Error on checking updates",
-      "Please try again later",
-      [
-        {
-          text: "OK",
-          onPress: () => {},
-        },
-      ],
-      { cancelable: false }
-    );
-    return <PlaceholderForWaiting />;
-  }
+    setAppReady(status);
+  }, [loaded, appCheckLoaded, versionStatus, connectionStatus]);
 
-  if (versionStatus === "updateNeeded") {
-    Alert.alert(
-      "Update Available",
-      "Please update the app to the latest version.",
-      [
-        {
-          text: "OK",
-          onPress: () => {},
-        },
-      ],
-      { cancelable: false }
-    );
-    return <PlaceholderForWaiting />;
-  }
+  // Handle animation...
+  useEffect(() => {
+    const status = animationReady && appReady;
 
-  if (!isConnected) {
-    if (networkErrorBottomSheetModalRef.current)
-      networkErrorBottomSheetModalRef.current.present();
+    Animated.timing(opacity, {
+      toValue: status ? 0 : 1,
+      duration: 500,
+      useNativeDriver: true,
+      delay: status ? 1500 : 0,
+    }).start();
+  }, [animationReady, appReady]);
 
-    return (
-      <>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <BottomSheetModalProvider>
-            <CustomBottomModalSheet
-              backgroundColor="#1B1B1B"
-              locked
-              ref={networkErrorBottomSheetModalRef}
-            >
-              <View style={{ flex: 1, gap: 15, padding: 10 }}>
-                <Text fontSize={18} bold>
-                  Check Your Connection
-                </Text>
-                <Text fontSize={13}>
-                  It seems that you are not connected to the internet. Please
-                  check your internet connection and try again.
-                </Text>
-              </View>
-            </CustomBottomModalSheet>
-            <PlaceholderForWaiting />
-          </BottomSheetModalProvider>
-        </GestureHandlerRootView>
-      </>
-    );
-  }
+  // Fires animation signal after image loading.
+  const onImageLoaded = useCallback(async () => {
+    setTimeout(() => {
+      SplashScreen.hideAsync().then(() => {
+        setAnimationReady(true);
+      });
+    }, 250);
+  }, []);
 
-  return <RootLayoutNav linking={linking} setLinking={setLinking} />;
+  return (
+    <>
+      {appReady && <RootLayoutNav linking={linking} setLinking={setLinking} />}
+
+      <Animated.View
+        pointerEvents={appReady ? "none" : undefined}
+        style={{
+          position: "absolute",
+          opacity: opacity,
+          width,
+          height,
+          backgroundColor: "black",
+          zIndex: 1,
+        }}
+      >
+        <Image
+          contentFit="contain"
+          style={{
+            flex: 1,
+          }}
+          source={require("@/assets/images/splash.png")}
+          onLoadEnd={onImageLoaded}
+        />
+      </Animated.View>
+    </>
+  );
 }
 
 export default RootLayout;
