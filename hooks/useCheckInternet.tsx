@@ -16,8 +16,6 @@ const useCheckInternet = () => {
     retryCountRef: React.MutableRefObject<number>,
     netInfoRef: React.MutableRefObject<boolean>
   ) => {
-    if (connectionStatus) return;
-
     const status = netInfoRef.current;
 
     setConnectionStatus(status);
@@ -39,11 +37,19 @@ const useCheckInternet = () => {
     }
   };
 
+  // Initial
   useEffect(() => {
     if (!connectionStatus) {
       checkConnection(retryCountRef, netInfoRef);
     }
   }, [connectionStatus, retryCountRef, netInfoRef]);
+
+  // Runtime
+  useEffect(() => {
+    if (netInfoRef.current !== connectionStatus) {
+      setConnectionStatus(netInfoRef.current);
+    }
+  }, [connectionStatus, netInfoRef.current]);
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
