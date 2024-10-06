@@ -44,10 +44,10 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
 
   const handleAuthentication = async (
     user: FirebaseAuthTypes.User | null,
-    authStatusRef: React.MutableRefObject<AuthStatus>,
-    linkingRef: React.MutableRefObject<LinkingValue>
+    authStatusRefParam: React.MutableRefObject<AuthStatus>,
+    linkingRefParam: React.MutableRefObject<LinkingValue>
   ) => {
-    if (authStatusRef.current === "dontMess") return;
+    if (authStatusRefParam.current === "dontMess") return;
 
     resetNavigationHistory();
 
@@ -95,7 +95,7 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
 
     setAuthStatus("authenticated");
 
-    if (!linkingRef.current.url) return router.replace("/home");
+    if (!linkingRefParam.current.url) return router.replace("/home");
   };
 
   useEffect(() => {
