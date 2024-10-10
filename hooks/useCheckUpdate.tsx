@@ -43,9 +43,7 @@ const useCheckUpdate = () => {
           setVersionStatus("loading");
         }
       );
-    return () => {
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, [appCheckLoaded]);
 
   return {

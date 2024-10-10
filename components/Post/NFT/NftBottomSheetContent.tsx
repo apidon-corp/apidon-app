@@ -72,7 +72,7 @@ const NftBottomSheetContent = ({
           return setCollectibleDocData(null);
         }
       );
-    () => unsubscribe();
+    return () => unsubscribe();
   }, [authStatus]);
 
   useEffect(() => {

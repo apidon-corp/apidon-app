@@ -39,9 +39,7 @@ const WithdrawRequest = () => {
           setWithdrawRequestData(null);
         }
       );
-    return () => {
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, [authStatus]);
 
   if (!withdrawRequestId) {

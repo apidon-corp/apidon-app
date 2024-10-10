@@ -20,7 +20,7 @@ export const useBalance = () => {
 
     setBalance("getting-balance");
 
-    const subscribe = firestore()
+    const unsubscribe = firestore()
       .doc(`users/${currentUserDisplayName}/wallet/balance`)
       .onSnapshot(
         (snapshot) => {
@@ -44,7 +44,7 @@ export const useBalance = () => {
         }
       );
 
-    return () => subscribe();
+    return () => unsubscribe();
   }, [authStatus]);
 
   return {

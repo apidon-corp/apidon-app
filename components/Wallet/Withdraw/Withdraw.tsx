@@ -49,9 +49,7 @@ const Withdraw = () => {
         }
       );
 
-    return () => {
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, [authStatus]);
 
   const handlePressRequestWithdrawButton = () => {

@@ -109,7 +109,7 @@ const IdentityPanel = () => {
         }
       );
 
-    () => unsubscribe();
+    return () => unsubscribe();
   }, [authStatus]);
 
   if (!identityDocData) {
@@ -294,16 +294,6 @@ const IdentityPanel = () => {
           <FontAwesome name="address-card-o" size={100} color="white" />
           <Text fontSize={24} bold>
             Identity Verified
-          </Text>
-          <Text
-            fontSize={12}
-            style={{
-              color: "green",
-              textAlign: "center",
-            }}
-          >
-            Your identity has been verified, and you now have full access to all
-            the features of our app.
           </Text>
         </View>
       )}
