@@ -1,5 +1,6 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { Text } from "@/components/Text/Text";
+
 import { apidonPink } from "@/constants/Colors";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { useAuth } from "@/providers/AuthProvider";
@@ -19,6 +20,7 @@ import {
   Animated,
   Pressable,
   View,
+  Text as ReactNativeText,
 } from "react-native";
 import CustomBottomModalSheet from "../BottomSheet/CustomBottomModalSheet";
 import RateStar from "./Rating/RateStar";
@@ -728,7 +730,10 @@ const Post = React.memo(({ postDocPath }: Props) => {
             </Pressable>
           </View>
 
-          <Pressable onPress={handleOpenCommentsModal} style={{ height: 50 }}>
+          <Pressable
+            onPress={handleOpenCommentsModal}
+            style={{ maxHeight: 100 }}
+          >
             <View
               id="comments-preview"
               style={{
@@ -738,14 +743,30 @@ const Post = React.memo(({ postDocPath }: Props) => {
               <View
                 id="description"
                 style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 5,
-                  flexWrap: "wrap",
+                  justifyContent: "center",
                 }}
               >
-                <Text bold>{postSenderData.username}</Text>
-                <Text numberOfLines={1}>{postDocData.description}</Text>
+                <ReactNativeText
+                  style={{
+                    color: "white",
+                    fontSize: 12,
+                    fontFamily: "Poppins-Regular",
+                  }}
+                  numberOfLines={3}
+                >
+                  <ReactNativeText
+                    style={{
+                      fontFamily: "Poppins-Bold",
+                    }}
+                  >
+                    {postSenderData.username}
+                  </ReactNativeText>
+
+                  <ReactNativeText> </ReactNativeText>
+                  <ReactNativeText> </ReactNativeText>
+
+                  {postDocData.description}
+                </ReactNativeText>
               </View>
               <View
                 id="comment-count"
