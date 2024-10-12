@@ -1,6 +1,6 @@
 import resetNavigationHistory from "@/helpers/Router";
 import { AuthStatus } from "@/types/AuthType";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
@@ -42,10 +42,14 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
 
   const linkingRef = useRef<LinkingValue>(linking);
 
+  const pathnameRef = useRef<string>("");
+  const pathname = usePathname();
+
   const handleAuthentication = async (
     user: FirebaseAuthTypes.User | null,
     authStatusRefParam: React.MutableRefObject<AuthStatus>,
-    linkingRefParam: React.MutableRefObject<LinkingValue>
+    linkingRefParam: React.MutableRefObject<LinkingValue>,
+    pathnameRefParam: React.MutableRefObject<string>
   ) => {
     if (authStatusRefParam.current === "dontMess") return;
 
@@ -95,16 +99,19 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
 
     setAuthStatus("authenticated");
 
-    if (!linkingRefParam.current.url) return router.replace("/home");
+    if (!linkingRefParam.current.url) {
+      if (pathnameRefParam.current !== "/home/feed")
+        return router.replace("/home/feed");
+    }
   };
 
   useEffect(() => {
     const unsubscribe = auth().onAuthStateChanged((user) => {
-      handleAuthentication(user, authStatusRef, linkingRef);
+      handleAuthentication(user, authStatusRef, linkingRef, pathnameRef);
     });
 
     return () => unsubscribe();
-  }, [authStatusRef, linkingRef]);
+  }, [authStatusRef, linkingRef, pathnameRef]);
 
   useEffect(() => {
     authStatusRef.current = authStatus;
@@ -120,6 +127,11 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
 
     handleLinking(linking.url, linking.isInitial);
   }, [linking.url, linking.isInitial, authStatus]);
+
+  // Handling pathname ref
+  useEffect(() => {
+    pathnameRef.current = pathname;
+  }, [pathname]);
 
   function delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
