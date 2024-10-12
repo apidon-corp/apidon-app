@@ -66,8 +66,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
   const pathname = usePathname();
 
-  const [isVerified, setIsVerified] = useState(false);
-
   const [ratingOfCurrentUser, setRatingOfCurrentUser] = useState<
     undefined | number
   >(undefined);
@@ -170,40 +168,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
     return () => unsubscribe();
   }, [authStatus, postDocData]);
-
-  // Dynamic Data Fetching - Current User Status
-  useEffect(() => {
-    if (authStatus !== "authenticated") return;
-
-    const displayName = auth().currentUser?.displayName || "";
-    if (!displayName) return;
-
-    const unsubscribe = firestore()
-      .doc(`users/${displayName}`)
-      .onSnapshot(
-        (snapshot) => {
-          if (!snapshot.exists) {
-            console.error("User data is not found.");
-            return setIsVerified(false);
-          }
-
-          const data = snapshot.data() as UserInServer;
-
-          if (!data) {
-            console.error("User data is undefined.");
-            return setIsVerified(false);
-          }
-
-          setIsVerified(data.verified);
-        },
-        (error) => {
-          console.error("Error on getting realtime data  ", error);
-          setIsVerified(false);
-        }
-      );
-
-    return () => unsubscribe();
-  }, [authStatus]);
 
   // Dynamic Data Fetching - Current Rating
   useEffect(() => {
@@ -813,8 +777,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
         >
           {postDocData.image &&
             !postDocData.collectibleStatus.isCollectible &&
-            doesOwnPost &&
-            isVerified && (
+            doesOwnPost && (
               <Pressable
                 onPress={handleCreateNFTButton}
                 style={{
@@ -826,7 +789,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
                 }}
               >
                 <Text bold style={{ fontSize: 16 }}>
-                  Make Collectible
+                  Create Collectible
                 </Text>
               </Pressable>
             )}

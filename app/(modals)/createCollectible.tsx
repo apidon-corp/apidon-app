@@ -30,6 +30,7 @@ import {
   BottomSheetModal,
   BottomSheetModalProvider,
 } from "@gorhom/bottom-sheet";
+import { UserInServer } from "@/types/User";
 
 const STOCK_LIMIT = 100;
 
@@ -55,9 +56,11 @@ const listNFT = () => {
 
   const screenParameters = useAtomValue(screenParametersAtom);
 
-  const postDocPath = screenParameters.find(
-    (q) => q.queryId === "postDocPath"
-  )?.value;
+  // const postDocPath = screenParameters.find(
+  //   (q) => q.queryId === "postDocPath"
+  // )?.value;
+
+  const postDocPath = "users/yunuskorkmaz/posts/1728725592843";
 
   const [postData, setPostData] = useState<PostServerData | null>(null);
 
@@ -79,6 +82,8 @@ const listNFT = () => {
   const [bottomModalType, setBottomModalType] = useState<
     "stock" | "price" | "createWarning"
   >("stock");
+
+  const [isVerified, setIsVerified] = useState(false);
 
   // Getting inital post data.
   useEffect(() => {
@@ -140,10 +145,42 @@ const listNFT = () => {
   useEffect(() => {
     handleChangeOpactiy(
       createButtonOpacityValue,
-      price && stock && !loading ? 1 : 0.5,
+      isVerified && price && stock && !loading ? 1 : 0.5,
       250
     );
-  }, [price, stock, loading]);
+  }, [price, stock, loading, isVerified]);
+
+  // Dynamic Data Fetching - Current User Status (verified)
+  useEffect(() => {
+    const displayName = auth().currentUser?.displayName || "";
+    if (!displayName) return setIsVerified(false);
+
+    const unsubscribe = firestore()
+      .doc(`users/${displayName}`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.error("User data is not found.");
+            return setIsVerified(false);
+          }
+
+          const data = snapshot.data() as UserInServer;
+
+          if (!data) {
+            console.error("User data is undefined.");
+            return setIsVerified(false);
+          }
+
+          setIsVerified(data.verified);
+        },
+        (error) => {
+          console.error("Error on getting realtime data  ", error);
+          setIsVerified(false);
+        }
+      );
+
+    return () => unsubscribe();
+  }, []);
 
   const handleChangeOpactiy = (
     animatedObject: Animated.Value,
@@ -251,7 +288,7 @@ const listNFT = () => {
   };
 
   const handleCreateButton = () => {
-    if (!stock || !price || loading) return;
+    if (!stock || !price || loading || !isVerified) return;
 
     Keyboard.dismiss();
 
@@ -326,6 +363,10 @@ const listNFT = () => {
       setBottomModalType("price");
       informationModalRef.current.present();
     }
+  };
+
+  const handlePinkTickInformationPanelButton = () => {
+    router.push("/(modals)/getPinkTick");
   };
 
   if (!postDocPath) {
@@ -560,6 +601,34 @@ const listNFT = () => {
             />
           </View>
 
+          {!isVerified && (
+            <Pressable
+              onPress={handlePinkTickInformationPanelButton}
+              id="verification-info"
+              style={{
+                backgroundColor: "rgba(255,255,255,0.075)",
+                width: "100%",
+                justifyContent: "space-between",
+                alignItems: "center",
+                borderRadius: 20,
+                padding: 15,
+                flexDirection: "row",
+              }}
+            >
+              <AntDesign name="arrowright" size={18} color="yellow" />
+              <Text
+                fontSize={12}
+                style={{
+                  color: "yellow",
+                  textDecorationLine: "underline",
+                }}
+              >
+                You need to have Pink Tick to create collectibles.
+              </Text>
+              <AntDesign name="arrowleft" size={18} color="yellow" />
+            </Pressable>
+          )}
+
           <Animated.View
             id="create"
             style={{
@@ -570,7 +639,7 @@ const listNFT = () => {
             }}
           >
             <Pressable
-              disabled={loading || !price || !stock}
+              disabled={loading || !price || !stock || !isVerified}
               onPress={handleCreateButton}
               style={{
                 width: "25%",
