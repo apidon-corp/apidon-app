@@ -25,14 +25,13 @@ import { router } from "expo-router";
 
 import CustomBottomModalSheet from "@/components/BottomSheet/CustomBottomModalSheet";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
+import { CollectibleConfigDocData } from "@/types/Config";
+import { UserInServer } from "@/types/User";
 import { AntDesign } from "@expo/vector-icons";
 import {
   BottomSheetModal,
   BottomSheetModalProvider,
 } from "@gorhom/bottom-sheet";
-import { UserInServer } from "@/types/User";
-
-const STOCK_LIMIT = 100;
 
 const listNFT = () => {
   // Trigger In-App-Purchase Store Notifications
@@ -56,11 +55,9 @@ const listNFT = () => {
 
   const screenParameters = useAtomValue(screenParametersAtom);
 
-  // const postDocPath = screenParameters.find(
-  //   (q) => q.queryId === "postDocPath"
-  // )?.value;
-
-  const postDocPath = "users/yunuskorkmaz/posts/1728725592843";
+  const postDocPath = screenParameters.find(
+    (q) => q.queryId === "postDocPath"
+  )?.value;
 
   const [postData, setPostData] = useState<PostServerData | null>(null);
 
@@ -84,6 +81,8 @@ const listNFT = () => {
   >("stock");
 
   const [isVerified, setIsVerified] = useState(false);
+
+  const [stockLimit, setStockLimit] = useState<null | number>(null);
 
   // Getting inital post data.
   useEffect(() => {
@@ -182,6 +181,35 @@ const listNFT = () => {
     return () => unsubscribe();
   }, []);
 
+  // Dynamic Data Fetching - Stock Limit
+  useEffect(() => {
+    const unsubscribe = firestore()
+      .doc(`config/collectible`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.error("Stock limit data is not found.");
+            return setStockLimit(null);
+          }
+
+          const data = snapshot.data() as CollectibleConfigDocData;
+
+          if (!data) {
+            console.error("Stock limit data is undefined.");
+            return setStockLimit(null);
+          }
+
+          setStockLimit(data.stockLimit);
+        },
+        (error) => {
+          console.error("Error on getting realtime data  ", error);
+          setStockLimit(null);
+        }
+      );
+
+    return () => unsubscribe();
+  }, []);
+
   const handleChangeOpactiy = (
     animatedObject: Animated.Value,
     toValue: number,
@@ -266,6 +294,8 @@ const listNFT = () => {
   };
 
   const handleStockChange = (input: string) => {
+    if (stockLimit === null) return;
+
     if (input.length === 0) {
       setStockInput("");
       return setStock(0);
@@ -276,9 +306,9 @@ const listNFT = () => {
       return;
     }
 
-    if (numberVersion > STOCK_LIMIT) {
-      setStockInput(STOCK_LIMIT.toString());
-      return setStock(STOCK_LIMIT);
+    if (numberVersion > stockLimit) {
+      setStockInput(stockLimit.toString());
+      return setStock(stockLimit);
     }
 
     const validInput = numberVersion.toString();
@@ -297,12 +327,14 @@ const listNFT = () => {
   };
 
   const handleConfirmButton = async () => {
+    if (!stockLimit) return;
+
     const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("No user");
 
     if (!price || !stock) return;
 
-    if (stock > STOCK_LIMIT) return;
+    if (stock > stockLimit) return;
 
     if (loading) return;
 
@@ -377,7 +409,7 @@ const listNFT = () => {
     );
   }
 
-  if (!postData) {
+  if (!postData || stockLimit === null) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator color="white" />
@@ -588,7 +620,7 @@ const listNFT = () => {
             <TextInput
               value={stockInput === "" ? "" : stock.toString()}
               onChangeText={handleStockChange}
-              placeholder={`Maximum ${STOCK_LIMIT}`}
+              placeholder={`Maximum ${stockLimit}`}
               placeholderTextColor="#808080"
               style={{
                 width: "100%",
@@ -680,7 +712,7 @@ const listNFT = () => {
                   Maximum Stock Limit
                 </Text>
                 <Text fontSize={13}>
-                  You can set a maximum of {STOCK_LIMIT} stock for each
+                  You can set a maximum of {stockLimit} stock for each
                   collectible.
                 </Text>
               </>
