@@ -130,14 +130,18 @@ const followers = () => {
     >
       <FlatList
         scrollEnabled={false}
-        data={followerDocs.map((fd) => {
-          const followerData: FollowerData = {
-            follower: fd.id,
-            followTime: (fd.data() as FollowerDocData).followTime,
-          };
+        data={Array.from(
+          new Set(
+            followerDocs.map((fd) => {
+              const followerData: FollowerData = {
+                follower: fd.id,
+                followTime: (fd.data() as FollowerDocData).followTime,
+              };
 
-          return followerData;
-        })}
+              return followerData;
+            })
+          )
+        )}
         renderItem={({ item }) => (
           <UserCard username={item.follower} key={item.follower} />
         )}
