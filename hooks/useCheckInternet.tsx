@@ -7,33 +7,23 @@ const RETRY_DELAY = 500;
 
 const useCheckInternet = () => {
   const [connectionStatus, setConnectionStatus] = useState(false);
-
   const netInfoRef = useRef(false);
-
   const retryCountRef = useRef(0);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const checkConnection = (
-    retryCountRef: React.MutableRefObject<number>,
-    netInfoRef: React.MutableRefObject<boolean>
-  ) => {
-    if (connectionStatus) return;
-
+  const checkConnection = () => {
     const status = netInfoRef.current;
 
     setConnectionStatus(status);
 
-    if (!status) {
-      if (retryCountRef.current < MAX_RETRIES) {
-        retryCountRef.current++;
-        setTimeout(() => {
-          checkConnection(retryCountRef, netInfoRef);
-        }, RETRY_DELAY);
-      } else {
-        Alert.alert(
-          "Check Your Connection",
-          "Please check your internet connection and try again."
-        );
-      }
+    if (!status && retryCountRef.current < MAX_RETRIES) {
+      retryCountRef.current++;
+      timeoutRef.current = setTimeout(checkConnection, RETRY_DELAY);
+    } else if (!status && retryCountRef.current >= MAX_RETRIES) {
+      Alert.alert(
+        "Check Your Connection",
+        "Please check your internet connection and try again."
+      );
     } else {
       retryCountRef.current = 0;
     }
@@ -41,27 +31,34 @@ const useCheckInternet = () => {
 
   useEffect(() => {
     if (!connectionStatus) {
-      checkConnection(retryCountRef, netInfoRef);
+      checkConnection();
     }
-  }, [connectionStatus, retryCountRef, netInfoRef]);
+
+    return () => {
+      // Cleanup any ongoing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [connectionStatus]);
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
       const isConnected = state.isConnected || false;
       const isInternetReachable = state.isInternetReachable || false;
-
       const status = isConnected && isInternetReachable;
 
       netInfoRef.current = status;
+
+      // Trigger connection check immediately when network state changes
+      setConnectionStatus(status);
     });
 
-    // Unsubscribe
+    // Cleanup the subscription on unmount
     return () => unsubscribe();
   }, []);
 
-  return {
-    connectionStatus,
-  };
+  return { connectionStatus };
 };
 
 export default useCheckInternet;

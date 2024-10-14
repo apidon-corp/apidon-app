@@ -29,7 +29,6 @@ const _layout = () => {
           options={{
             headerShown: true,
             title: "Edit Profile",
-            presentation: "card",
             headerBackTitleVisible: false,
           }}
         />
@@ -38,7 +37,7 @@ const _layout = () => {
           options={{
             headerShown: true,
             title: "Followers",
-            presentation: "card",
+
             headerTitle: () => (
               <Text style={{ color: "white", fontSize: 18 }}>Followers</Text>
             ),
@@ -49,7 +48,7 @@ const _layout = () => {
           options={{
             headerShown: true,
             title: "Following",
-            presentation: "card",
+
             headerTitle: () => (
               <Text style={{ color: "white", fontSize: 18 }}>Following</Text>
             ),
@@ -67,7 +66,6 @@ const _layout = () => {
           name="rates"
           options={{
             title: "Rates",
-            //   presentation: "modal",
           }}
         />
         <Stack.Screen
@@ -85,21 +83,27 @@ const _layout = () => {
         <Stack.Screen
           name="createCollectible"
           options={{
-            presentation: "modal",
             title: "Create Collectible",
           }}
         />
+
+        <Stack.Screen
+          name="getPinkTick"
+          options={{
+            title: "Get Pink Tick",
+            headerBackTitleVisible: false,
+          }}
+        />
+
         <Stack.Screen
           name="buyCollectible"
           options={{
-            presentation: "modal",
             title: "Collect",
           }}
         />
         <Stack.Screen
           name="collectors"
           options={{
-            presentation: "modal",
             title: "Collectors",
           }}
         />

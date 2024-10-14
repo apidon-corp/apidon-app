@@ -1,5 +1,6 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { Text } from "@/components/Text/Text";
+
 import { apidonPink } from "@/constants/Colors";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { useAuth } from "@/providers/AuthProvider";
@@ -19,6 +20,7 @@ import {
   Animated,
   Pressable,
   View,
+  Text as ReactNativeText,
 } from "react-native";
 import CustomBottomModalSheet from "../BottomSheet/CustomBottomModalSheet";
 import RateStar from "./Rating/RateStar";
@@ -65,8 +67,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
   const nftOptionsModalRef = useRef<BottomSheetModal>(null);
 
   const pathname = usePathname();
-
-  const [isVerified, setIsVerified] = useState(false);
 
   const [ratingOfCurrentUser, setRatingOfCurrentUser] = useState<
     undefined | number
@@ -170,40 +170,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
     return () => unsubscribe();
   }, [authStatus, postDocData]);
-
-  // Dynamic Data Fetching - Current User Status
-  useEffect(() => {
-    if (authStatus !== "authenticated") return;
-
-    const displayName = auth().currentUser?.displayName || "";
-    if (!displayName) return;
-
-    const unsubscribe = firestore()
-      .doc(`users/${displayName}`)
-      .onSnapshot(
-        (snapshot) => {
-          if (!snapshot.exists) {
-            console.error("User data is not found.");
-            return setIsVerified(false);
-          }
-
-          const data = snapshot.data() as UserInServer;
-
-          if (!data) {
-            console.error("User data is undefined.");
-            return setIsVerified(false);
-          }
-
-          setIsVerified(data.verified);
-        },
-        (error) => {
-          console.error("Error on getting realtime data  ", error);
-          setIsVerified(false);
-        }
-      );
-
-    return () => unsubscribe();
-  }, [authStatus]);
 
   // Dynamic Data Fetching - Current Rating
   useEffect(() => {
@@ -764,7 +730,10 @@ const Post = React.memo(({ postDocPath }: Props) => {
             </Pressable>
           </View>
 
-          <Pressable onPress={handleOpenCommentsModal} style={{ height: 50 }}>
+          <Pressable
+            onPress={handleOpenCommentsModal}
+            style={{ maxHeight: 100 }}
+          >
             <View
               id="comments-preview"
               style={{
@@ -774,14 +743,30 @@ const Post = React.memo(({ postDocPath }: Props) => {
               <View
                 id="description"
                 style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 5,
-                  flexWrap: "wrap",
+                  justifyContent: "center",
                 }}
               >
-                <Text bold>{postSenderData.username}</Text>
-                <Text numberOfLines={1}>{postDocData.description}</Text>
+                <ReactNativeText
+                  style={{
+                    color: "white",
+                    fontSize: 12,
+                    fontFamily: "Poppins-Regular",
+                  }}
+                  numberOfLines={3}
+                >
+                  <ReactNativeText
+                    style={{
+                      fontFamily: "Poppins-Bold",
+                    }}
+                  >
+                    {postSenderData.username}
+                  </ReactNativeText>
+
+                  <ReactNativeText> </ReactNativeText>
+                  <ReactNativeText> </ReactNativeText>
+
+                  {postDocData.description}
+                </ReactNativeText>
               </View>
               <View
                 id="comment-count"
@@ -813,8 +798,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
         >
           {postDocData.image &&
             !postDocData.collectibleStatus.isCollectible &&
-            doesOwnPost &&
-            isVerified && (
+            doesOwnPost && (
               <Pressable
                 onPress={handleCreateNFTButton}
                 style={{
@@ -826,7 +810,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
                 }}
               >
                 <Text bold style={{ fontSize: 16 }}>
-                  Make Collectible
+                  Create Collectible
                 </Text>
               </Pressable>
             )}

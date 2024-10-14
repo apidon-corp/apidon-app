@@ -3,6 +3,7 @@ import Constants from "expo-constants";
 import { useEffect, useState } from "react";
 import { Alert } from "react-native";
 import useAppCheck from "./useAppCheck";
+import { VersionConfigDocData } from "@/types/Config";
 
 const useCheckUpdate = () => {
   const [versionStatus, setVersionStatus] = useState<
@@ -22,7 +23,7 @@ const useCheckUpdate = () => {
         (snapshot) => {
           if (!snapshot.exists) return setVersionStatus("loading");
 
-          const availableVersions = (snapshot.data() as VersionDocData)
+          const availableVersions = (snapshot.data() as VersionConfigDocData)
             .availableVersions;
 
           const currentVersion = Constants.expoConfig?.version;
@@ -43,9 +44,7 @@ const useCheckUpdate = () => {
           setVersionStatus("loading");
         }
       );
-    return () => {
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, [appCheckLoaded]);
 
   return {

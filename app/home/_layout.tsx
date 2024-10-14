@@ -1,8 +1,7 @@
+import MyTabBar from "@/components/TabBar/TabBar";
 import { Tabs } from "expo-router";
 import React from "react";
 import { StatusBar } from "react-native";
-
-import MyTabBar from "@/components/TabBar/TabBar";
 
 const _layout = () => {
   return (

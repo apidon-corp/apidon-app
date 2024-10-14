@@ -25,13 +25,13 @@ import { router } from "expo-router";
 
 import CustomBottomModalSheet from "@/components/BottomSheet/CustomBottomModalSheet";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
+import { CollectibleConfigDocData } from "@/types/Config";
+import { UserInServer } from "@/types/User";
 import { AntDesign } from "@expo/vector-icons";
 import {
   BottomSheetModal,
   BottomSheetModalProvider,
 } from "@gorhom/bottom-sheet";
-
-const STOCK_LIMIT = 100;
 
 const listNFT = () => {
   // Trigger In-App-Purchase Store Notifications
@@ -79,6 +79,10 @@ const listNFT = () => {
   const [bottomModalType, setBottomModalType] = useState<
     "stock" | "price" | "createWarning"
   >("stock");
+
+  const [isVerified, setIsVerified] = useState(false);
+
+  const [stockLimit, setStockLimit] = useState<null | number>(null);
 
   // Getting inital post data.
   useEffect(() => {
@@ -140,10 +144,71 @@ const listNFT = () => {
   useEffect(() => {
     handleChangeOpactiy(
       createButtonOpacityValue,
-      price && stock && !loading ? 1 : 0.5,
+      isVerified && price && stock && !loading ? 1 : 0.5,
       250
     );
-  }, [price, stock, loading]);
+  }, [price, stock, loading, isVerified]);
+
+  // Dynamic Data Fetching - Current User Status (verified)
+  useEffect(() => {
+    const displayName = auth().currentUser?.displayName || "";
+    if (!displayName) return setIsVerified(false);
+
+    const unsubscribe = firestore()
+      .doc(`users/${displayName}`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.error("User data is not found.");
+            return setIsVerified(false);
+          }
+
+          const data = snapshot.data() as UserInServer;
+
+          if (!data) {
+            console.error("User data is undefined.");
+            return setIsVerified(false);
+          }
+
+          setIsVerified(data.verified);
+        },
+        (error) => {
+          console.error("Error on getting realtime data  ", error);
+          setIsVerified(false);
+        }
+      );
+
+    return () => unsubscribe();
+  }, []);
+
+  // Dynamic Data Fetching - Stock Limit
+  useEffect(() => {
+    const unsubscribe = firestore()
+      .doc(`config/collectible`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.error("Stock limit data is not found.");
+            return setStockLimit(null);
+          }
+
+          const data = snapshot.data() as CollectibleConfigDocData;
+
+          if (!data) {
+            console.error("Stock limit data is undefined.");
+            return setStockLimit(null);
+          }
+
+          setStockLimit(data.stockLimit);
+        },
+        (error) => {
+          console.error("Error on getting realtime data  ", error);
+          setStockLimit(null);
+        }
+      );
+
+    return () => unsubscribe();
+  }, []);
 
   const handleChangeOpactiy = (
     animatedObject: Animated.Value,
@@ -229,6 +294,8 @@ const listNFT = () => {
   };
 
   const handleStockChange = (input: string) => {
+    if (stockLimit === null) return;
+
     if (input.length === 0) {
       setStockInput("");
       return setStock(0);
@@ -239,9 +306,9 @@ const listNFT = () => {
       return;
     }
 
-    if (numberVersion > STOCK_LIMIT) {
-      setStockInput(STOCK_LIMIT.toString());
-      return setStock(STOCK_LIMIT);
+    if (numberVersion > stockLimit) {
+      setStockInput(stockLimit.toString());
+      return setStock(stockLimit);
     }
 
     const validInput = numberVersion.toString();
@@ -251,7 +318,7 @@ const listNFT = () => {
   };
 
   const handleCreateButton = () => {
-    if (!stock || !price || loading) return;
+    if (!stock || !price || loading || !isVerified) return;
 
     Keyboard.dismiss();
 
@@ -260,12 +327,14 @@ const listNFT = () => {
   };
 
   const handleConfirmButton = async () => {
+    if (!stockLimit) return;
+
     const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("No user");
 
     if (!price || !stock) return;
 
-    if (stock > STOCK_LIMIT) return;
+    if (stock > stockLimit) return;
 
     if (loading) return;
 
@@ -328,6 +397,10 @@ const listNFT = () => {
     }
   };
 
+  const handlePinkTickInformationPanelButton = () => {
+    router.push("/(modals)/getPinkTick");
+  };
+
   if (!postDocPath) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -336,7 +409,7 @@ const listNFT = () => {
     );
   }
 
-  if (!postData) {
+  if (!postData || stockLimit === null) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator color="white" />
@@ -547,7 +620,7 @@ const listNFT = () => {
             <TextInput
               value={stockInput === "" ? "" : stock.toString()}
               onChangeText={handleStockChange}
-              placeholder={`Maximum ${STOCK_LIMIT}`}
+              placeholder={`Maximum ${stockLimit}`}
               placeholderTextColor="#808080"
               style={{
                 width: "100%",
@@ -560,6 +633,34 @@ const listNFT = () => {
             />
           </View>
 
+          {!isVerified && (
+            <Pressable
+              onPress={handlePinkTickInformationPanelButton}
+              id="verification-info"
+              style={{
+                backgroundColor: "rgba(255,255,255,0.075)",
+                width: "100%",
+                justifyContent: "space-between",
+                alignItems: "center",
+                borderRadius: 20,
+                padding: 15,
+                flexDirection: "row",
+              }}
+            >
+              <AntDesign name="arrowright" size={18} color="yellow" />
+              <Text
+                fontSize={12}
+                style={{
+                  color: "yellow",
+                  textDecorationLine: "underline",
+                }}
+              >
+                You need to have Pink Tick to create collectibles.
+              </Text>
+              <AntDesign name="arrowleft" size={18} color="yellow" />
+            </Pressable>
+          )}
+
           <Animated.View
             id="create"
             style={{
@@ -570,7 +671,7 @@ const listNFT = () => {
             }}
           >
             <Pressable
-              disabled={loading || !price || !stock}
+              disabled={loading || !price || !stock || !isVerified}
               onPress={handleCreateButton}
               style={{
                 width: "25%",
@@ -611,7 +712,7 @@ const listNFT = () => {
                   Maximum Stock Limit
                 </Text>
                 <Text fontSize={13}>
-                  You can set a maximum of {STOCK_LIMIT} stock for each
+                  You can set a maximum of {stockLimit} stock for each
                   collectible.
                 </Text>
               </>

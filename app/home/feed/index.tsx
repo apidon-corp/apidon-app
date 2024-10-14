@@ -61,7 +61,6 @@ const index = () => {
     scrollViewRef.current?.scrollTo({ y: -headerHeight });
   }, [createdPostDocPath]);
 
-  // Managing Home Button Press
   useEffect(() => {
     if (homeScreenParametersValue.isHomeButtonPressed) {
       scrollViewRef.current?.scrollTo({ y: -headerHeight });

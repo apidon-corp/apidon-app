@@ -38,14 +38,19 @@ const Rates = () => {
   const handleFetchInitialRatings = async () => {
     if (!postDocPath) return;
 
-    const ratingDocSnapshots = await firestore()
-      .doc(postDocPath)
-      .collection("ratings")
-      .orderBy("timestamp", "desc")
-      .limit(15)
-      .get();
+    try {
+      const ratingDocSnapshots = await firestore()
+        .doc(postDocPath)
+        .collection("ratings")
+        .orderBy("timestamp", "desc")
+        .limit(15)
+        .get();
 
-    setRatingDocs(ratingDocSnapshots.docs);
+      setRatingDocs(ratingDocSnapshots.docs);
+    } catch (error) {
+      console.error("Error on getting initial ratings: ", error);
+      setRatingDocs(null);
+    }
   };
 
   const serveMoreRatings = async () => {
