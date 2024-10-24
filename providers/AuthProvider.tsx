@@ -101,7 +101,7 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
 
     if (!linkingRefParam.current.url) {
       if (pathnameRefParam.current !== "/home/feed")
-        return router.replace("/home/feed");
+        return router.replace("/(modals)/createCollectible");
     }
   };
 

@@ -10,6 +10,7 @@ import {
   Keyboard,
   Pressable,
   ScrollView,
+  Switch,
   View,
 } from "react-native";
 
@@ -32,6 +33,7 @@ import {
   BottomSheetModal,
   BottomSheetModalProvider,
 } from "@gorhom/bottom-sheet";
+import { CollectibleType } from "@/types/Collectible";
 
 const listNFT = () => {
   // Trigger In-App-Purchase Store Notifications
@@ -55,9 +57,9 @@ const listNFT = () => {
 
   const screenParameters = useAtomValue(screenParametersAtom);
 
-  const postDocPath = screenParameters.find(
-    (q) => q.queryId === "postDocPath"
-  )?.value;
+  const postDocPath =
+    screenParameters.find((q) => q.queryId === "postDocPath")?.value ||
+    "users/yunuskorkmaz/posts/1729771765193";
 
   const [postData, setPostData] = useState<PostServerData | null>(null);
 
@@ -83,6 +85,9 @@ const listNFT = () => {
   const [isVerified, setIsVerified] = useState(false);
 
   const [stockLimit, setStockLimit] = useState<null | number>(null);
+
+  const [collectibleType, setCollectibleType] =
+    useState<CollectibleType>("trade");
 
   // Getting inital post data.
   useEffect(() => {
@@ -401,6 +406,10 @@ const listNFT = () => {
     router.push("/(modals)/getPinkTick");
   };
 
+  const onToggleValueChange = () => {
+    setCollectibleType(collectibleType === "trade" ? "event" : "trade");
+  };
+
   if (!postDocPath) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -450,141 +459,178 @@ const listNFT = () => {
           </View>
 
           <View
-            id="price-area"
+            id="toggle"
             style={{
-              backgroundColor: "rgba(255,255,255,0.1)",
-              borderRadius: 20,
-              padding: 15,
-              gap: 5,
+              width: "100%",
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "row",
+              gap: 10,
             }}
           >
-            <View
-              id="title-and-info-bubble"
+            <Text
+              bold
               style={{
-                width: "100%",
-                justifyContent: "space-between",
-                flexDirection: "row",
+                fontSize: 14,
               }}
             >
-              <Text
-                style={{
-                  fontSize: 20,
-                }}
-                bold
-              >
-                Price
-              </Text>
-              <Pressable onPress={handlePressPriceInformationButton}>
-                <AntDesign name="infocirlceo" size={18} color="white" />
-              </Pressable>
-            </View>
-
-            <View
+              Trade
+            </Text>
+            <Switch
+              trackColor={{ false: apidonPink, true: apidonPink }}
+              ios_backgroundColor={apidonPink}
+              thumbColor="black"
+              onValueChange={onToggleValueChange}
+              value={collectibleType === "trade" ? false : true}
+            />
+            <Text
+              bold
               style={{
-                gap: 2,
-                width: "100%",
-                flexDirection: "row",
-                justifyContent: "space-between",
+                fontSize: 14,
+              }}
+            >
+              Event
+            </Text>
+          </View>
+
+          {collectibleType === "trade" && (
+            <View
+              id="price-area"
+              style={{
+                backgroundColor: "rgba(255,255,255,0.1)",
+                borderRadius: 20,
+                padding: 15,
+                gap: 5,
               }}
             >
               <View
-                id="input-with-buttons"
+                id="title-and-info-bubble"
                 style={{
+                  width: "100%",
+                  justifyContent: "space-between",
                   flexDirection: "row",
-                  width: "45%",
-                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 20,
+                  }}
+                  bold
+                >
+                  Price
+                </Text>
+                <Pressable onPress={handlePressPriceInformationButton}>
+                  <AntDesign name="infocirlceo" size={18} color="white" />
+                </Pressable>
+              </View>
+
+              <View
+                style={{
+                  gap: 2,
+                  width: "100%",
+                  flexDirection: "row",
                   justifyContent: "space-between",
                 }}
               >
                 <View
-                  id="input"
+                  id="input-with-buttons"
                   style={{
                     flexDirection: "row",
-                    width: "70%",
-                    overflow: "hidden",
-                    justifyContent: "flex-start",
+                    width: "45%",
                     alignItems: "center",
-                    backgroundColor: "rgba(255,255,255,0.05)",
-                    padding: 15,
-                    borderRadius: 20,
+                    justifyContent: "space-between",
                   }}
                 >
-                  <Text
-                    bold
+                  <View
+                    id="input"
                     style={{
-                      fontSize: 20,
-                      color: "white",
+                      flexDirection: "row",
+                      width: "70%",
+                      overflow: "hidden",
+                      justifyContent: "flex-start",
+                      alignItems: "center",
+                      backgroundColor: "rgba(255,255,255,0.05)",
+                      padding: 15,
+                      borderRadius: 20,
                     }}
                   >
-                    $ {price}
-                  </Text>
+                    <Text
+                      bold
+                      style={{
+                        fontSize: 20,
+                        color: "white",
+                      }}
+                    >
+                      $ {price}
+                    </Text>
+                  </View>
+                  <View
+                    id="buttons"
+                    style={{
+                      width: "20%",
+                      gap: 10,
+                    }}
+                  >
+                    <Pressable onPress={handleIncreasePrice}>
+                      <AntDesign name="pluscircleo" size={24} color="white" />
+                    </Pressable>
+                    <Pressable onPress={handleDecreasePrice}>
+                      <AntDesign name="minuscircle" size={24} color="white" />
+                    </Pressable>
+                  </View>
                 </View>
-                <View
-                  id="buttons"
-                  style={{
-                    width: "20%",
-                    gap: 10,
-                  }}
-                >
-                  <Pressable onPress={handleIncreasePrice}>
-                    <AntDesign name="pluscircleo" size={24} color="white" />
-                  </Pressable>
-                  <Pressable onPress={handleDecreasePrice}>
-                    <AntDesign name="minuscircle" size={24} color="white" />
-                  </Pressable>
-                </View>
-              </View>
 
-              <View
-                id="price-detail"
-                style={{
-                  width: "50%",
-                  justifyContent: "center",
-                  alignItems: "flex-end",
-                  overflow: "hidden",
-                }}
-              >
                 <View
-                  id="apple-fee"
+                  id="price-detail"
                   style={{
-                    opacity: 0.5,
-                    flexDirection: "row",
-                    gap: 4,
-                    alignItems: "center",
+                    width: "50%",
                     justifyContent: "center",
+                    alignItems: "flex-end",
+                    overflow: "hidden",
                   }}
                 >
-                  <Text fontSize={13}>Apple Fee:</Text>
-                  <Text bold>${(price * 0.3).toFixed(2)}</Text>
-                </View>
-                <View
-                  id="apidon-fee"
-                  style={{
-                    opacity: 0.5,
-                    flexDirection: "row",
-                    gap: 4,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Text fontSize={13}>Apidon Fee:</Text>
-                  <Text bold>${(price * 0.1).toFixed(2)}</Text>
-                </View>
-                <View
-                  id="revenue"
-                  style={{
-                    flexDirection: "row",
-                    gap: 4,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Text fontSize={13}>Your Revenue:</Text>
-                  <Text bold>${(price * 0.6).toFixed(2)}</Text>
+                  <View
+                    id="apple-fee"
+                    style={{
+                      opacity: 0.5,
+                      flexDirection: "row",
+                      gap: 4,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text fontSize={13}>Apple Fee:</Text>
+                    <Text bold>${(price * 0.3).toFixed(2)}</Text>
+                  </View>
+                  <View
+                    id="apidon-fee"
+                    style={{
+                      opacity: 0.5,
+                      flexDirection: "row",
+                      gap: 4,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text fontSize={13}>Apidon Fee:</Text>
+                    <Text bold>${(price * 0.1).toFixed(2)}</Text>
+                  </View>
+                  <View
+                    id="revenue"
+                    style={{
+                      flexDirection: "row",
+                      gap: 4,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text fontSize={13}>Your Revenue:</Text>
+                    <Text bold>${(price * 0.6).toFixed(2)}</Text>
+                  </View>
                 </View>
               </View>
             </View>
-          </View>
+          )}
 
           <View
             id="stock"
