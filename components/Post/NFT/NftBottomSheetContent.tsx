@@ -305,28 +305,29 @@ const NftBottomSheetContent = ({
         </View>
       </View>
 
-      {collectibleStatus.fromCurrentUser && (
-        <Pressable
-          onPress={handleSeeCollectors}
-          style={{
-            backgroundColor: apidonPink,
-            padding: 20,
-            borderRadius: 10,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text
-            bold
+      {collectibleStatus.fromCurrentUser ||
+        (collectibleDocData.type === "event" && (
+          <Pressable
+            onPress={handleSeeCollectors}
             style={{
-              color: "white",
-              fontSize: 18,
+              backgroundColor: apidonPink,
+              padding: 20,
+              borderRadius: 10,
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            See Collectors
-          </Text>
-        </Pressable>
-      )}
+            <Text
+              bold
+              style={{
+                color: "white",
+                fontSize: 18,
+              }}
+            >
+              See Collectors
+            </Text>
+          </Pressable>
+        ))}
 
       {!collectibleStatus.fromCurrentUser &&
         collectibleStatus.alreadyBought && (
@@ -378,7 +379,8 @@ const NftBottomSheetContent = ({
 
       {!collectibleStatus.fromCurrentUser &&
         !collectibleStatus.alreadyBought &&
-        collectibleDocData.stock.remainingStock > 0 && (
+        collectibleDocData.stock.remainingStock > 0 &&
+        collectibleDocData.type == "trade" && (
           <View
             style={{
               width: "100%",

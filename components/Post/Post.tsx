@@ -665,7 +665,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
           id="footer"
           style={{
             width: "100%",
-            gap: 5,
             paddingHorizontal: 5,
           }}
         >

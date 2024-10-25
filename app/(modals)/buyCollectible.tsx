@@ -272,7 +272,10 @@ const buyNFT = () => {
   if (collectibleData.type !== "trade")
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>This collectible is not tradeable.</Text>
+        <Text fontSize={13} style={{ textAlign: "center" }}>
+          This collectible is non-tradable, meaning it can only be obtained by
+          entering a special code on the main screen.
+        </Text>
       </View>
     );
 

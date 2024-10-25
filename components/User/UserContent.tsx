@@ -186,6 +186,7 @@ const UserContent = ({ username }: Props) => {
     return () => unsubscribe();
   }, [username, authStatus]);
 
+  // Go to new collected element.
   useEffect(() => {
     if (!collectedNFTPostDocPath) return;
 

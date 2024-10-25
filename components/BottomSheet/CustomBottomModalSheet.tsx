@@ -38,9 +38,10 @@ const CustomBottomModalSheet = forwardRef<
       backgroundStyle={{ backgroundColor: backgroundColor || "#353935" }}
       handleIndicatorStyle={{ backgroundColor: "white" }}
       enableDynamicSizing={true}
-      enableContentPanningGesture={locked ? false: undefined}
-      enableHandlePanningGesture={locked ? false: undefined}
-      enablePanDownToClose={locked ? false: undefined}
+      enableContentPanningGesture={locked ? false : undefined}
+      enableHandlePanningGesture={locked ? false : undefined}
+      enablePanDownToClose={locked ? false : undefined}
+      keyboardBlurBehavior="restore"
     >
       <BottomSheetScrollView contentContainerStyle={{ padding: 10 }}>
         {children}
