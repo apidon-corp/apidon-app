@@ -259,6 +259,7 @@ const NftBottomSheetContent = ({
           >
             Price
           </Text>
+
           <Text
             bold
             style={{
@@ -266,7 +267,10 @@ const NftBottomSheetContent = ({
               color: apidonPink,
             }}
           >
-            ${collectibleDocData.price.price}
+            {collectibleDocData.type === "trade" &&
+              `$${collectibleDocData.price.price}`}
+
+            {collectibleDocData.type === "event" && "Event"}
           </Text>
         </View>
         <View

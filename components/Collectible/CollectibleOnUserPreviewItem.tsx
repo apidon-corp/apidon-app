@@ -163,31 +163,60 @@ const CollectibleOnUserPreviewItem = ({
         />
       </View>
 
-      <View
-        id="price-tag"
-        style={{
-          position: "absolute",
-          top: 25,
-          right: 25,
-          flexDirection: "row",
-          backgroundColor: "black",
-          borderRadius: 20,
-          alignItems: "center",
-          gap: 3,
-          padding: 5,
-          paddingHorizontal: 10,
-        }}
-      >
-        <Foundation name="dollar" size={19} color="white" />
-        <Text
+      {collectibleDocData.type === "trade" && (
+        <View
+          id="price-tag"
           style={{
-            fontSize: 14,
+            position: "absolute",
+            top: 25,
+            right: 25,
+            flexDirection: "row",
+            backgroundColor: "black",
+            borderRadius: 20,
+            alignItems: "center",
+            gap: 3,
+            padding: 5,
+            paddingHorizontal: 10,
           }}
-          bold
         >
-          {collectibleDocData.price.price}
-        </Text>
-      </View>
+          <Foundation name="dollar" size={19} color="white" />
+          <Text
+            style={{
+              fontSize: 14,
+            }}
+            bold
+          >
+            {collectibleDocData.price.price}
+          </Text>
+        </View>
+      )}
+
+      {collectibleDocData.type === "event" && (
+        <View
+          id="price-tag"
+          style={{
+            position: "absolute",
+            top: 25,
+            right: 25,
+            flexDirection: "row",
+            backgroundColor: "black",
+            borderRadius: 20,
+            alignItems: "center",
+            gap: 3,
+            padding: 5,
+            paddingHorizontal: 10,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 14,
+            }}
+            bold
+          >
+            Event
+          </Text>
+        </View>
+      )}
 
       <View
         id="creator-data"

@@ -1,17 +1,30 @@
-export type CollectibleDocData = {
-  id: string;
-  creator: string;
-  timestamp: number;
-  postDocPath: string;
-  price: {
-    price: number;
-    currency: "USD";
-  };
-  stock: {
-    initialStock: number;
-    remainingStock: number;
-  };
-};
+export type CollectibleDocData =
+  | {
+      id: string;
+      creator: string;
+      timestamp: number;
+      postDocPath: string;
+      price: {
+        price: number;
+        currency: "USD";
+      };
+      stock: {
+        initialStock: number;
+        remainingStock: number;
+      };
+      type: "trade";
+    }
+  | {
+      id: string;
+      creator: string;
+      timestamp: number;
+      postDocPath: string;
+      stock: {
+        initialStock: number;
+        remainingStock: number;
+      };
+      type: "event";
+    };
 
 export type CollectorDocData = {
   username: string;

@@ -129,32 +129,60 @@ const CollectibleOnMarketPreviewItem = ({
             }}
           />
         </View>
-
-        <View
-          id="price-tag"
-          style={{
-            position: "absolute",
-            top: isGrid ? 5 : 10,
-            right: isGrid ? 5 : 10,
-            flexDirection: "row",
-            backgroundColor: "black",
-            borderRadius: 20,
-            alignItems: "center",
-            gap: 3,
-            padding: 5,
-            paddingHorizontal: 10,
-          }}
-        >
-          <Foundation name="dollar" size={isGrid ? 16 : 19} color="white" />
-          <Text
+        {collectibleDocData.type === "trade" && (
+          <View
+            id="price-tag"
             style={{
-              fontSize: isGrid ? 12 : 14,
+              position: "absolute",
+              top: isGrid ? 5 : 10,
+              right: isGrid ? 5 : 10,
+              flexDirection: "row",
+              backgroundColor: "black",
+              borderRadius: 20,
+              alignItems: "center",
+              gap: 3,
+              padding: 5,
+              paddingHorizontal: 10,
             }}
-            bold
           >
-            {collectibleDocData.price.price}
-          </Text>
-        </View>
+            <Foundation name="dollar" size={isGrid ? 16 : 19} color="white" />
+            <Text
+              style={{
+                fontSize: isGrid ? 12 : 14,
+              }}
+              bold
+            >
+              {collectibleDocData.price.price}
+            </Text>
+          </View>
+        )}
+
+        {collectibleDocData.type === "event" && (
+          <View
+            id="event-tag"
+            style={{
+              position: "absolute",
+              top: isGrid ? 5 : 10,
+              right: isGrid ? 5 : 10,
+              flexDirection: "row",
+              backgroundColor: "black",
+              borderRadius: 20,
+              alignItems: "center",
+              gap: 3,
+              padding: 5,
+              paddingHorizontal: 10,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: isGrid ? 12 : 14,
+              }}
+              bold
+            >
+              Event
+            </Text>
+          </View>
+        )}
 
         <View
           style={{

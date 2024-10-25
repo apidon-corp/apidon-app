@@ -79,7 +79,7 @@ const listNFT = () => {
   const informationModalRef = useRef<BottomSheetModal>(null);
 
   const [bottomModalType, setBottomModalType] = useState<
-    "stock" | "price" | "createWarning"
+    "stock" | "price" | "createTradeWarning" | "createEventWarning"
   >("stock");
 
   const [isVerified, setIsVerified] = useState(false);
@@ -323,12 +323,19 @@ const listNFT = () => {
   };
 
   const handleCreateButton = () => {
-    if (!stock || !price || loading || !isVerified) return;
-
-    Keyboard.dismiss();
-
-    setBottomModalType("createWarning");
-    informationModalRef.current?.present();
+    if (collectibleType === "event") {
+      if (!stock || loading || !isVerified) return;
+      Keyboard.dismiss();
+      setBottomModalType("createEventWarning");
+      informationModalRef.current?.present();
+    } else if (collectibleType === "trade") {
+      if (!stock || !price || loading || !isVerified) return;
+      Keyboard.dismiss();
+      setBottomModalType("createTradeWarning");
+      informationModalRef.current?.present();
+    } else {
+      return;
+    }
   };
 
   const handleConfirmButton = async () => {
@@ -337,48 +344,94 @@ const listNFT = () => {
     const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return console.error("No user");
 
-    if (!price || !stock) return;
+    if (!stock) return;
 
     if (stock > stockLimit) return;
 
     if (loading) return;
 
-    setLoading(true);
+    if (collectibleType == "trade") {
+      if (!price) return;
 
-    try {
-      const idToken = await currentUserAuthObject.getIdToken();
-      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+      setLoading(true);
 
-      const response = await fetch(apiRoutes.collectible.createCollectible, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: `Bearer ${idToken}`,
-          appchecktoken,
-        },
-        body: JSON.stringify({
-          postDocPath: postDocPath,
-          price: price,
-          stock: stock,
-        }),
-      });
+      try {
+        const idToken = await currentUserAuthObject.getIdToken();
+        const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
-      if (!response.ok) {
-        console.error(
-          "Response from createCollectible api is not okay: \n",
-          await response.text()
-        );
+        const response = await fetch(apiRoutes.collectible.createCollectible, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            authorization: `Bearer ${idToken}`,
+            appchecktoken,
+          },
+          body: JSON.stringify({
+            postDocPath: postDocPath,
+            price: price,
+            stock: stock,
+          }),
+        });
+
+        if (!response.ok) {
+          console.error(
+            "Response from createCollectible api is not okay: \n",
+            await response.text()
+          );
+          return setLoading(false);
+        }
+
+        informationModalRef.current?.dismiss();
+
+        router.dismiss();
+
+        return setLoading(false);
+      } catch (error) {
+        console.error("Error on creating collectible: ", error);
         return setLoading(false);
       }
+    } else if (collectibleType === "event") {
+      setLoading(true);
 
-      informationModalRef.current?.dismiss();
+      try {
+        const idToken = await currentUserAuthObject.getIdToken();
+        const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
-      router.dismiss();
+        const response = await fetch(
+          apiRoutes.collectible.eventBased.createCollectible,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              authorization: `Bearer ${idToken}`,
+              appchecktoken,
+            },
+            body: JSON.stringify({
+              postDocPath: postDocPath,
+              stock: stock,
+            }),
+          }
+        );
 
-      return setLoading(false);
-    } catch (error) {
-      console.error("Error on creating collectible: ", error);
-      return setLoading(false);
+        if (!response.ok) {
+          console.error(
+            "Response from eventBasedCollectibleCreate api is not okay: \n",
+            await response.text()
+          );
+          return setLoading(false);
+        }
+
+        informationModalRef.current?.dismiss();
+
+        router.dismiss();
+
+        return setLoading(false);
+      } catch (error) {
+        console.error("Error on creating event based collectible: ", error);
+        return setLoading(false);
+      }
+    } else {
+      return console.error("Collectible type is not valid");
     }
   };
 
@@ -775,7 +828,7 @@ const listNFT = () => {
                 </Text>
               </>
             )}
-            {bottomModalType === "createWarning" && (
+            {bottomModalType === "createTradeWarning" && (
               <>
                 <Text fontSize={18} bold>
                   Confirm Creation
@@ -789,7 +842,63 @@ const listNFT = () => {
                   deleted by yourself, and you won't be able to change the stock
                   or price.
                 </Text>
-                <Text fontSize={13}>Review and confirm your purchase.</Text>
+                <Text fontSize={13} bold>
+                  Review and confirm your creation.
+                </Text>
+                <Pressable
+                  onPress={handleConfirmButton}
+                  style={{
+                    backgroundColor: "white",
+                    padding: 10,
+                    borderRadius: 10,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="black" size="small" />
+                  ) : (
+                    <Text style={{ color: "black" }}>Confirm</Text>
+                  )}
+                </Pressable>
+                <Pressable
+                  disabled={loading}
+                  onPress={handleCancelButton}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: "white",
+                    padding: 10,
+                    borderRadius: 10,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text>Cancel</Text>
+                </Pressable>
+              </>
+            )}
+            {bottomModalType === "createEventWarning" && (
+              <>
+                <Text fontSize={18} bold>
+                  Confirm Creation
+                </Text>
+                <Text fontSize={13}>
+                  You are about to create a event collectible with a stock of{" "}
+                  {stock}.
+                </Text>
+                <Text fontSize={13}>
+                  Please note that once listed, this collectible cannot be
+                  deleted by yourself, and you won't be able to change the
+                  stock.
+                </Text>
+
+                <Text fontSize={13}>
+                  Codes for event will be showed after creation..
+                </Text>
+
+                <Text fontSize={13} bold>
+                  Review and confirm your creation.
+                </Text>
                 <Pressable
                   onPress={handleConfirmButton}
                   style={{
