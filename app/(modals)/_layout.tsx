@@ -101,6 +101,14 @@ const _layout = () => {
             title: "Collect",
           }}
         />
+
+        <Stack.Screen
+          name="codes"
+          options={{
+            title: "Codes",
+          }}
+        />
+
         <Stack.Screen
           name="collectors"
           options={{

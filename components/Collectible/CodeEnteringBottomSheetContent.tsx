@@ -37,6 +37,8 @@ const CodeEnteringBottomSheetContent = ({ bottomSheetModalRef }: Props) => {
     const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return;
 
+    setError("")
+
     setLoading(true);
 
     try {
@@ -66,7 +68,7 @@ const CodeEnteringBottomSheetContent = ({ bottomSheetModalRef }: Props) => {
           message
         );
 
-        setError(message);
+        setError(message.slice(7));
 
         return setLoading(false);
       }
@@ -104,6 +106,10 @@ const CodeEnteringBottomSheetContent = ({ bottomSheetModalRef }: Props) => {
     >
       <Text fontSize={24} bold>
         Enter Your Code
+      </Text>
+      <Text fontSize={13} style={{ textAlign: "center" }}>
+        Please enter the code provided by the event organizer to collect the
+        event based collectible.
       </Text>
       <BottomSheetTextInput
         onChangeText={handleCodeChange}

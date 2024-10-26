@@ -32,3 +32,23 @@ export type CollectorDocData = {
 };
 
 export type CollectibleType = "trade" | "event";
+
+export type CodeDocData =
+  | {
+      code: string;
+      collectibleDocPath: string;
+      creationTime: number;
+      creatorUsername: string;
+      postDocPath: string;
+      isConsumed: false;
+    }
+  | {
+      code: string;
+      collectibleDocPath: string;
+      creationTime: number;
+      creatorUsername: string;
+      postDocPath: string;
+      isConsumed: true;
+      consumerUsername: string;
+      consumedTime: number;
+    };

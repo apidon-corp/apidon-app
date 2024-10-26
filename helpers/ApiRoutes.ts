@@ -37,7 +37,8 @@ const apiRoutes = {
     buyCollectible: `${apiEndpoint}/collectible-buyCollectible`,
     eventBased: {
       createCollectible: `${apiEndpoint}/collectible-eventBased-createCollectible`,
-      collectCollectible: `${apiEndpoint}/collectible-eventBased-collectCollectible`, // http://161.9.114.76:5001/apidon-dev/us-central1/collectible-eventBased-createCollectible
+      collectCollectible: `${apiEndpoint}/collectible-eventBased-collectCollectible`,
+      getCodes: `${apiEndpoint}/collectible-eventBased-getCodes`, // http://161.9.114.76:5001/apidon-dev/us-central1/collectible-eventBased-createCollectible
     },
   },
   nft: {

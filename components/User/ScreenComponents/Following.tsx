@@ -148,6 +148,7 @@ const following = () => {
           padding: 10,
           gap: 5,
         }}
+        keyExtractor={(item) => item.following}
       />
     </ScrollView>
   );

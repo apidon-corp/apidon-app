@@ -136,6 +136,17 @@ const NftBottomSheetContent = ({
     router.push("/(modals)/collectors");
   };
 
+  const handleShowCodesButton = () => {
+    setScreenParameters([
+      {
+        queryId: "postDocPath",
+        value: `users/${postSenderData.username}/posts/${postData.id}`,
+      },
+    ]);
+
+    router.push("/(modals)/codes");
+  };
+
   if (!collectibleStatus || !collectibleDocData) {
     return (
       <View
@@ -305,8 +316,8 @@ const NftBottomSheetContent = ({
         </View>
       </View>
 
-      {collectibleStatus.fromCurrentUser ||
-        (collectibleDocData.type === "event" && (
+      {collectibleDocData.type === "trade" &&
+        collectibleStatus.fromCurrentUser && (
           <Pressable
             onPress={handleSeeCollectors}
             style={{
@@ -327,9 +338,10 @@ const NftBottomSheetContent = ({
               See Collectors
             </Text>
           </Pressable>
-        ))}
+        )}
 
-      {!collectibleStatus.fromCurrentUser &&
+      {collectibleDocData.type === "trade" &&
+        !collectibleStatus.fromCurrentUser &&
         collectibleStatus.alreadyBought && (
           <View
             style={{
@@ -377,10 +389,10 @@ const NftBottomSheetContent = ({
           </View>
         )}
 
-      {!collectibleStatus.fromCurrentUser &&
+      {collectibleDocData.type === "trade" &&
+        !collectibleStatus.fromCurrentUser &&
         !collectibleStatus.alreadyBought &&
-        collectibleDocData.stock.remainingStock > 0 &&
-        collectibleDocData.type == "trade" && (
+        collectibleDocData.stock.remainingStock > 0 && (
           <View
             style={{
               width: "100%",
@@ -426,7 +438,8 @@ const NftBottomSheetContent = ({
           </View>
         )}
 
-      {!collectibleStatus.fromCurrentUser &&
+      {collectibleDocData.type === "trade" &&
+        !collectibleStatus.fromCurrentUser &&
         !collectibleStatus.alreadyBought &&
         collectibleDocData.stock.remainingStock <= 0 && (
           <View
@@ -457,6 +470,78 @@ const NftBottomSheetContent = ({
                 Out of Stock
               </Text>
             </View>
+            <Pressable
+              onPress={handleSeeCollectors}
+              id="collectors"
+              style={{
+                width: "20%",
+                backgroundColor: "#323232",
+                padding: 20,
+                borderRadius: 10,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <FontAwesome name="users" size={24} color="white" />
+            </Pressable>
+          </View>
+        )}
+
+      {collectibleDocData.type === "event" &&
+        !collectibleStatus.fromCurrentUser && (
+          <Pressable
+            onPress={handleSeeCollectors}
+            style={{
+              backgroundColor: apidonPink,
+              padding: 20,
+              borderRadius: 10,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text
+              bold
+              style={{
+                color: "white",
+                fontSize: 18,
+              }}
+            >
+              See Collectors
+            </Text>
+          </Pressable>
+        )}
+
+      {collectibleDocData.type === "event" &&
+        collectibleStatus.fromCurrentUser && (
+          <View
+            style={{
+              width: "100%",
+              flexDirection: "row",
+              justifyContent: "space-between",
+            }}
+          >
+            <Pressable
+              onPress={handleShowCodesButton}
+              id="show-codes-button"
+              style={{
+                width: "78%",
+                backgroundColor: apidonPink,
+                padding: 20,
+                borderRadius: 10,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text
+                bold
+                style={{
+                  color: "white",
+                  fontSize: 18,
+                }}
+              >
+                Show Codes
+              </Text>
+            </Pressable>
             <Pressable
               onPress={handleSeeCollectors}
               id="collectors"

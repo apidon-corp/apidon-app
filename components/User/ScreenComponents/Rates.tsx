@@ -148,6 +148,7 @@ const Rates = () => {
         renderItem={({ item }) => (
           <UserCard username={item.sender} key={item.sender} />
         )}
+        keyExtractor={(item) => item.sender}
       />
     </ScrollView>
   );
