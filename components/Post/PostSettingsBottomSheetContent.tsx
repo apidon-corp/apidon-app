@@ -1,12 +1,11 @@
-import { View, Pressable } from "react-native";
-import React from "react";
-import { PostServerData } from "@/types/Post";
-import { apidonPink } from "@/constants/Colors";
-import Text from "../Text/Text";
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
+import { PostServerData } from "@/types/Post";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
+import React from "react";
+import { Pressable, View } from "react-native";
+import Text from "../Text/Text";
 
 type Props = {
   postDocData: PostServerData;
