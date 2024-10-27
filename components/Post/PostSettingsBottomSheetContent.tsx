@@ -56,7 +56,7 @@ const PostSettingsBottomSheetContent = ({
             }}
           >
             <Text bold style={{ fontSize: 15 }}>
-              Convert Collectible
+              Create Collectible
             </Text>
           </Pressable>
         )}
