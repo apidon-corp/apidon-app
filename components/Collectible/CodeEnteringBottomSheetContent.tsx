@@ -1,6 +1,6 @@
 import { BottomSheetModal, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, View } from "react-native";
+import { ActivityIndicator, Keyboard, Pressable, View } from "react-native";
 import { Text } from "../../components/Text/Text";
 
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
@@ -26,6 +26,8 @@ const CodeEnteringBottomSheetContent = ({ bottomSheetModalRef }: Props) => {
 
   const animatedErrorHeightValue = useSharedValue(0);
 
+  const animatedOpacityValue = useSharedValue(0);
+
   const handleCodeChange = (text: string) => {
     setError("");
     setCode(text);
@@ -37,9 +39,13 @@ const CodeEnteringBottomSheetContent = ({ bottomSheetModalRef }: Props) => {
     const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return;
 
-    setError("")
+    if (error) return;
+
+    setError("");
 
     setLoading(true);
+
+    Keyboard.dismiss();
 
     try {
       const idToken = await currentUserAuthObject.getIdToken();
@@ -93,6 +99,12 @@ const CodeEnteringBottomSheetContent = ({ bottomSheetModalRef }: Props) => {
     animatedErrorHeightValue.value = withTiming(error ? 25 : 0);
   }, [error]);
 
+  useEffect(() => {
+    animatedOpacityValue.value = withTiming(
+      code.length > 0 && !error ? 1 : 0.5
+    );
+  }, [error, code.length]);
+
   return (
     <View
       style={{
@@ -100,8 +112,8 @@ const CodeEnteringBottomSheetContent = ({ bottomSheetModalRef }: Props) => {
         width: "100%",
         alignItems: "center",
         justifyContent: "center",
-        gap: 15,
         padding: 15,
+        gap: 10,
       }}
     >
       <Text fontSize={24} bold>
@@ -124,6 +136,7 @@ const CodeEnteringBottomSheetContent = ({ bottomSheetModalRef }: Props) => {
           color: "white",
           textAlign: "center",
           fontSize: 16,
+          marginTop: 5,
         }}
       />
       <Animated.View
@@ -142,31 +155,40 @@ const CodeEnteringBottomSheetContent = ({ bottomSheetModalRef }: Props) => {
         </Text>
       </Animated.View>
 
-      <Pressable
-        onPress={handlePressCollect}
+      <Animated.View
         style={{
           width: "45%",
-          backgroundColor: "white",
-          padding: 10,
-          borderRadius: 12,
           alignItems: "center",
           justifyContent: "center",
+          opacity: animatedOpacityValue,
         }}
       >
-        {loading ? (
-          <ActivityIndicator color="black" />
-        ) : (
-          <Text
-            fontSize={14}
-            bold
-            style={{
-              color: "black",
-            }}
-          >
-            Collect
-          </Text>
-        )}
-      </Pressable>
+        <Pressable
+          onPress={handlePressCollect}
+          style={{
+            width: "100%",
+            backgroundColor: "white",
+            padding: 10,
+            borderRadius: 12,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {loading ? (
+            <ActivityIndicator color="black" />
+          ) : (
+            <Text
+              fontSize={14}
+              bold
+              style={{
+                color: "black",
+              }}
+            >
+              Collect
+            </Text>
+          )}
+        </Pressable>
+      </Animated.View>
     </View>
   );
 };

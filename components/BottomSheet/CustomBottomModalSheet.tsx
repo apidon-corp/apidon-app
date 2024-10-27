@@ -43,7 +43,7 @@ const CustomBottomModalSheet = forwardRef<
       enablePanDownToClose={locked ? false : undefined}
       keyboardBlurBehavior="restore"
     >
-      <BottomSheetScrollView contentContainerStyle={{ padding: 10 }}>
+      <BottomSheetScrollView contentContainerStyle={{ padding: 10 }} keyboardShouldPersistTaps="handled">
         {children}
         <View style={{ height: bottom }} />
       </BottomSheetScrollView>
