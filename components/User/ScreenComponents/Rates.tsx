@@ -60,18 +60,22 @@ const Rates = () => {
     const lastDoc = ratingDocs[ratingDocs.length - 1];
     if (!lastDoc) return;
 
-    const query = await firestore()
-      .doc(postDocPath)
-      .collection("ratings")
-      .orderBy("timestamp", "desc")
-      .startAfter(lastDoc)
-      .limit(5)
-      .get();
+    try {
+      const query = await firestore()
+        .doc(postDocPath)
+        .collection("ratings")
+        .orderBy("timestamp", "desc")
+        .startAfter(lastDoc)
+        .limit(5)
+        .get();
 
-    setRatingDocs((prev) => [
-      ...(prev as FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]),
-      ...query.docs,
-    ]);
+      setRatingDocs((prev) => [
+        ...(prev as FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]),
+        ...query.docs,
+      ]);
+    } catch (error) {
+      console.error("Error on serving more ratings: ", error);
+    }
   };
 
   const handleScroll = (event: NativeScrollEvent) => {

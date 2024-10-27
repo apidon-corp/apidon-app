@@ -3,25 +3,29 @@ import {
   BoughtCollectibleDocData,
   CreatedCollectibleDocData,
 } from "@/types/Trade";
-import React, { useState } from "react";
+import React from "react";
 import { FlatList, Pressable, View } from "react-native";
 import CollectibleOnUserPreviewItem from "../Collectible/CollectibleOnUserPreviewItem";
+
+type CollectibleContentType = "collected" | "created";
 
 type Props = {
   createdCollectibles: CreatedCollectibleDocData[];
   boughtCollectibles: BoughtCollectibleDocData[];
+  collectibleContentTypeValue: CollectibleContentType;
+  setCollectibleContentTypeValue: React.Dispatch<
+    React.SetStateAction<CollectibleContentType>
+  >;
 };
-
-type Option = "all" | "collected" | "created";
 
 const CollectibleContent = ({
   createdCollectibles,
   boughtCollectibles,
+  collectibleContentTypeValue,
+  setCollectibleContentTypeValue,
 }: Props) => {
-  const [option, setOption] = useState<Option>("all");
-
-  const handleChangeOption = (option: Option) => {
-    setOption(option);
+  const handleChangeOption = (option: CollectibleContentType) => {
+    setCollectibleContentTypeValue(option);
   };
 
   return (
@@ -48,41 +52,22 @@ const CollectibleContent = ({
         >
           <Pressable
             onPress={() => {
-              handleChangeOption("all");
-            }}
-            style={[
-              {
-                width: "33.3%",
-                paddingVertical: 4,
-                justifyContent: "center",
-                alignItems: "center",
-              },
-              option === "all" && { backgroundColor: "#707070" },
-            ]}
-          >
-            <Text>All</Text>
-          </Pressable>
-
-          <View style={{ width: 1, backgroundColor: "black" }} />
-
-          <Pressable
-            onPress={() => {
               handleChangeOption("created");
             }}
             style={[
               {
-                width: "33.3%",
+                width: "50%",
                 paddingVertical: 4,
                 justifyContent: "center",
                 alignItems: "center",
               },
-              option === "created" && { backgroundColor: "#707070" },
+              collectibleContentTypeValue === "created" && {
+                backgroundColor: "#707070",
+              },
             ]}
           >
             <Text>Created</Text>
           </Pressable>
-
-          <View style={{ width: 1, backgroundColor: "black" }} />
 
           <Pressable
             onPress={() => {
@@ -90,12 +75,14 @@ const CollectibleContent = ({
             }}
             style={[
               {
-                width: "33.3%",
+                width: "50%",
                 paddingVertical: 4,
                 justifyContent: "center",
                 alignItems: "center",
               },
-              option === "collected" && { backgroundColor: "#707070" },
+              collectibleContentTypeValue === "collected" && {
+                backgroundColor: "#707070",
+              },
             ]}
           >
             <Text>Collected</Text>
@@ -103,28 +90,7 @@ const CollectibleContent = ({
         </View>
       </View>
 
-      {option === "all" && (
-        <FlatList
-          contentContainerStyle={{
-            gap: 10,
-          }}
-          keyExtractor={(item) => item.postDocPath}
-          numColumns={1}
-          scrollEnabled={false}
-          data={[...createdCollectibles, ...boughtCollectibles].sort(
-            (a, b) => b.ts - a.ts
-          )}
-          renderItem={({ item }) => (
-            <CollectibleOnUserPreviewItem
-              collectibleDocPath={item.collectibleDocPath}
-              postDocPath={item.postDocPath}
-              key={item.postDocPath}
-            />
-          )}
-        />
-      )}
-
-      {option === "collected" && (
+      {collectibleContentTypeValue === "collected" && (
         <FlatList
           contentContainerStyle={{
             gap: 10,
@@ -143,7 +109,7 @@ const CollectibleContent = ({
         />
       )}
 
-      {option === "created" && (
+      {collectibleContentTypeValue === "created" && (
         <FlatList
           contentContainerStyle={{
             gap: 10,

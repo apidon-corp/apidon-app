@@ -7,22 +7,26 @@ import {
   CreatedCollectibleDocData,
 } from "@/types/Trade";
 import { UserInServer } from "@/types/User";
-import firestore from "@react-native-firebase/firestore";
+import { Feather } from "@expo/vector-icons";
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
+import { Stack, router } from "expo-router";
 import { useAtom } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
+  NativeScrollEvent,
   Pressable,
+  RefreshControl,
   ScrollView,
   View,
 } from "react-native";
 import { FlatList, Switch } from "react-native-gesture-handler";
 import Post from "../Post/Post";
-import Header from "./Header";
 import CollectibleContent from "./CollectibleContent";
-import { Stack, router } from "expo-router";
-import { Feather } from "@expo/vector-icons";
+import Header from "./Header";
 
 import auth from "@react-native-firebase/auth";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -41,15 +45,6 @@ const UserContent = ({ username }: Props) => {
     (q) => q.queryId === "collectedNFTPostDocPath"
   )?.value as string;
 
-  const [postDocPathArray, setPostDocPathArray] = useState<string[]>([]);
-  const [collectibleData, setCollectibleData] = useState<{
-    createdCollectibles: CreatedCollectibleDocData[];
-    boughtCollectibles: BoughtCollectibleDocData[];
-  }>({
-    createdCollectibles: [],
-    boughtCollectibles: [],
-  });
-
   const [userData, setUserData] = useState<UserInServer | null | "not-found">(
     null
   );
@@ -58,106 +53,40 @@ const UserContent = ({ username }: Props) => {
 
   const scrollViewRef = useRef<ScrollView>(null);
 
-  const onToggleValueChange = () => {
-    setToggleValue((prev) => (prev === "posts" ? "nfts" : "posts"));
-  };
-
   const { width } = Dimensions.get("screen");
 
   const [layoutReady, setLayoutReady] = useState(false);
 
   const [isOwnPage, setIsOwnPage] = useState(false);
 
-  // Realtime Post Fetching
+  const [postDocs, setPostDocs] = useState<
+    FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]
+  >([]);
+
+  const [createdCollectibleDocs, setCreatedCollectibleDocs] = useState<
+    FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]
+  >([]);
+
+  const [collectedCollectibleDocs, setCollectedCollectibleDocs] = useState<
+    FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]
+  >([]);
+
+  const [refreshLoading, setRefreshLoading] = useState(false);
+
+  type CollectibleContentType = "created" | "collected";
+
+  const [collectibleContentTypeValue, setCollectibleContentTypeValue] =
+    useState<CollectibleContentType>("collected");
+
+  // Initial Fetchings
   useEffect(() => {
-    if (authStatus !== "authenticated") return;
-    if (!username) return;
-
-    setPostDocPathArray([]);
-
-    const unsubscribe = firestore()
-      .collection(`users/${username}/posts`)
-      .orderBy("creationTime", "desc")
-      .onSnapshot(
-        (snapshot) => {
-          snapshot.docChanges().forEach((change) => {
-            if (change.doc.data().collectibleStatus.isCollectible) return;
-
-            if (change.type === "added") {
-              setPostDocPathArray((prev) => [change.doc.ref.path, ...prev]);
-            } else if (change.type === "removed") {
-              setPostDocPathArray((prev) =>
-                prev.filter((path) => path !== change.doc.ref.path)
-              );
-            }
-          });
-        },
-        (error) => {
-          console.error("Error on getting realtime posts: ", error);
-          return setPostDocPathArray([]);
-        }
-      );
-
-    return () => unsubscribe();
-  }, [username, authStatus]);
-
-  // Realtime Created Collectible Fetching
-  useEffect(() => {
-    if (authStatus !== "authenticated") return;
-    if (!username) return;
-
-    const unsubscribe = firestore()
-      .collection(`users/${username}/collectible/trade/createdCollectibles`)
-      .orderBy("ts", "desc")
-      .onSnapshot(
-        (snapshot) => {
-          setCollectibleData((prev) => ({
-            ...prev,
-            createdCollectibles: snapshot.docs.map(
-              (doc) => doc.data() as CreatedCollectibleDocData
-            ),
-          }));
-        },
-        (error) => {
-          console.error("Error on getting realtime data: ", error);
-          return setCollectibleData((prev) => ({
-            ...prev,
-            createdCollectibles: [],
-          }));
-        }
-      );
-
-    return () => unsubscribe();
-  }, [username, authStatus]);
-
-  // Realtime Collected Collectible Fetching
-  useEffect(() => {
-    if (authStatus !== "authenticated") return;
-    if (!username) return;
-
-    const unsubscribe = firestore()
-      .collection(`users/${username}/collectible/trade/boughtCollectibles`)
-      .orderBy("ts", "desc")
-      .onSnapshot(
-        (snapshot) => {
-          setCollectibleData((prev) => ({
-            ...prev,
-            boughtCollectibles: snapshot.docs.map(
-              (doc) => doc.data() as BoughtCollectibleDocData
-            ),
-          }));
-        },
-        (error) => {
-          console.error("Error on getting realtime data: ", error);
-          return setCollectibleData((prev) => ({
-            ...prev,
-            boughtCollectibles: [],
-          }));
-        }
-      );
-
-    return () => unsubscribe();
-  }, [username, authStatus]);
+    if (toggleValue === "posts") getInitialPosts();
+    else if (collectibleContentTypeValue === "collected") {
+      getInitialCollectedCollectibles();
+    } else if (collectibleContentTypeValue === "created") {
+      getInitialCreatedCollectibles();
+    }
+  }, [username, toggleValue, collectibleContentTypeValue]);
 
   // User Data Fetching
   useEffect(() => {
@@ -224,6 +153,10 @@ const UserContent = ({ username }: Props) => {
     setIsOwnPage(displayName === pageOwner);
   }, [authStatus, userData]);
 
+  const onToggleValueChange = () => {
+    setToggleValue((prev) => (prev === "posts" ? "nfts" : "posts"));
+  };
+
   const handleOnLayout = () => {
     setLayoutReady(true);
   };
@@ -231,6 +164,177 @@ const UserContent = ({ username }: Props) => {
   const handlePressSettingsIcon = () => {
     router.push("/(modals)/settings");
   };
+
+  const getInitialPosts = async () => {
+    if (!username) return;
+
+    console.log("Getting inital posts....");
+
+    try {
+      const query = await firestore()
+        .collection(`users/${username}/posts`)
+        .orderBy("creationTime", "desc")
+        .where("collectibleStatus.isCollectible", "==", false)
+        .limit(5)
+        .get();
+
+      setPostDocs(query.docs);
+    } catch (error) {
+      console.error("Error on getting initial posts: ", error);
+      setPostDocs([]);
+    }
+  };
+
+  const getMorePosts = async () => {
+    if (!postDocs) return;
+    if (!username) return;
+
+    const lastDoc = postDocs[postDocs.length - 1];
+    if (!lastDoc) return;
+
+    console.log("Getting more posts....");
+
+    try {
+      const query = await firestore()
+        .collection(`users/${username}/posts`)
+        .orderBy("creationTime", "desc")
+        .where("collectibleStatus.isCollectible", "==", false)
+        .startAfter(lastDoc)
+        .limit(5)
+        .get();
+
+      setPostDocs((prev) => [
+        ...(prev as FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]),
+        ...query.docs,
+      ]);
+    } catch (error) {
+      console.error("Error on getting more posts: ", error);
+    }
+  };
+
+  const getInitialCreatedCollectibles = async () => {
+    if (!username) return;
+
+    console.log("Getting inital created collectibles....");
+
+    try {
+      const query = await firestore()
+        .collection(`users/${username}/collectible/trade/createdCollectibles`)
+        .orderBy("ts", "desc")
+        .limit(5)
+        .get();
+
+      setCreatedCollectibleDocs(query.docs);
+    } catch (error) {
+      console.error("Error on getting initial created collectibles: ", error);
+      setCreatedCollectibleDocs([]);
+    }
+  };
+
+  const getMoreCreatedCollectibles = async () => {
+    if (!username) return;
+    if (!createdCollectibleDocs) return;
+
+    const lastDoc = createdCollectibleDocs[createdCollectibleDocs.length - 1];
+    if (!lastDoc) return;
+
+    console.log("Getting more created collectibles....");
+
+    try {
+      const query = await firestore()
+        .collection(`users/${username}/collectible/trade/createdCollectibles`)
+        .orderBy("ts", "desc")
+        .startAfter(lastDoc)
+        .limit(5)
+        .get();
+
+      setCreatedCollectibleDocs((prev) => [
+        ...(prev as FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]),
+        ...query.docs,
+      ]);
+    } catch (error) {
+      console.error("Error on getting more created collectibles: ", error);
+    }
+  };
+
+  const getInitialCollectedCollectibles = async () => {
+    if (!username) return;
+
+    console.log("Getting inital collected collectibles....");
+
+    try {
+      const query = await firestore()
+        .collection(`users/${username}/collectible/trade/boughtCollectibles`)
+        .orderBy("ts", "desc")
+        .limit(5)
+        .get();
+
+      setCollectedCollectibleDocs(query.docs);
+    } catch (error) {
+      console.error("Error on getting initial collected collectibles: ", error);
+      setCollectedCollectibleDocs([]);
+    }
+  };
+
+  const getMoreCollectedCollectibles = async () => {
+    if (!username) return;
+    if (!collectedCollectibleDocs) return;
+
+    const lastDoc =
+      collectedCollectibleDocs[collectedCollectibleDocs.length - 1];
+    if (!lastDoc) return;
+
+    console.log("Getting more collected collectibles....");
+
+    try {
+      const query = await firestore()
+        .collection(`users/${username}/collectible/trade/boughtCollectibles`)
+        .orderBy("ts", "desc")
+        .startAfter(lastDoc)
+        .limit(5)
+        .get();
+
+      setCollectedCollectibleDocs((prev) => [
+        ...(prev as FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]),
+        ...query.docs,
+      ]);
+    } catch (error) {
+      console.error("Error on getting more collected collectibles: ", error);
+    }
+  };
+
+  const handleScroll = (event: NativeScrollEvent) => {
+    const threshold = 250;
+
+    const { layoutMeasurement, contentOffset, contentSize } = event;
+
+    const isCloseToBottom =
+      layoutMeasurement.height + contentOffset.y >=
+      contentSize.height - threshold;
+    if (isCloseToBottom) {
+      if (toggleValue === "posts") getMorePosts();
+      else if (collectibleContentTypeValue === "created") {
+        getMoreCreatedCollectibles();
+      } else if (collectibleContentTypeValue === "collected") {
+        getMoreCollectedCollectibles();
+      }
+    }
+  };
+
+  async function handleRefresh() {
+    if (refreshLoading) return;
+
+    setRefreshLoading(true);
+
+    if (toggleValue === "posts") await getInitialPosts();
+    else if (collectibleContentTypeValue === "created") {
+      await getInitialCreatedCollectibles();
+    } else if (collectibleContentTypeValue === "collected") {
+      await getInitialCollectedCollectibles();
+    }
+
+    setRefreshLoading(false);
+  }
 
   if (!userData)
     return (
@@ -282,14 +386,16 @@ const UserContent = ({ username }: Props) => {
         contentContainerStyle={{
           paddingBottom: (bottom || 20) + 60,
         }}
+        onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
+        scrollEventThrottle={500}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshLoading}
+            onRefresh={handleRefresh}
+          />
+        }
       >
-        <Header
-          userData={userData}
-          collsCount={
-            collectibleData.createdCollectibles.length +
-            collectibleData.boughtCollectibles.length
-          }
-        />
+        <Header userData={userData} collsCount={53} />
 
         <View
           id="toggle"
@@ -333,7 +439,9 @@ const UserContent = ({ username }: Props) => {
               gap: 20,
             }}
             keyExtractor={(item) => item}
-            data={postDocPathArray}
+            data={postDocs.map((p) => {
+              return p.ref.path;
+            })}
             renderItem={({ item }) => <Post postDocPath={item} key={item} />}
             showsVerticalScrollIndicator={false}
             scrollEnabled={false}
@@ -341,12 +449,16 @@ const UserContent = ({ username }: Props) => {
         )}
 
         {toggleValue === "nfts" && (
-          <>
-            <CollectibleContent
-              createdCollectibles={collectibleData.createdCollectibles}
-              boughtCollectibles={collectibleData.boughtCollectibles}
-            />
-          </>
+          <CollectibleContent
+            collectibleContentTypeValue={collectibleContentTypeValue}
+            setCollectibleContentTypeValue={setCollectibleContentTypeValue}
+            createdCollectibles={createdCollectibleDocs.map(
+              (c) => c.data() as CreatedCollectibleDocData
+            )}
+            boughtCollectibles={collectedCollectibleDocs.map(
+              (c) => c.data() as BoughtCollectibleDocData
+            )}
+          />
         )}
       </ScrollView>
     </>
