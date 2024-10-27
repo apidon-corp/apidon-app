@@ -111,6 +111,7 @@ const CollectibleContent = ({
 
       {collectibleContentTypeValue === "created" && (
         <FlatList
+        
           contentContainerStyle={{
             gap: 10,
           }}

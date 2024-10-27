@@ -55,8 +55,6 @@ const UserContent = ({ username }: Props) => {
 
   const { width } = Dimensions.get("screen");
 
-  const [layoutReady, setLayoutReady] = useState(false);
-
   const [isOwnPage, setIsOwnPage] = useState(false);
 
   const [postDocs, setPostDocs] = useState<
@@ -115,31 +113,27 @@ const UserContent = ({ username }: Props) => {
     return () => unsubscribe();
   }, [username, authStatus]);
 
-  // Go to new collected element.
+  // Go to newly collected element
   useEffect(() => {
     if (!collectedNFTPostDocPath) return;
 
-    if (!layoutReady) return;
+    setToggleValue("nfts");
+    setCollectibleContentTypeValue("collected");
 
-    if (toggleValue !== "nfts") return setToggleValue("nfts");
+    setTimeout(() => {
+      const diff = 430 - width;
+      const dest = 290 + diff;
 
-    if (!scrollViewRef.current) {
-      console.log("No Scroll View Ref");
-      return;
-    }
+      scrollViewRef.current?.scrollTo({ x: 0, y: dest, animated: true });
 
-    const diff = 430 - width;
-    const dest = 290 + diff;
-
-    scrollViewRef.current.scrollTo({ x: 0, y: dest, animated: true });
-
-    setScreenParameters([
-      {
-        queryId: "collectedNFTPostDocPath",
-        value: undefined,
-      },
-    ]);
-  }, [collectedNFTPostDocPath, layoutReady, toggleValue]);
+      setScreenParameters([
+        {
+          queryId: "collectedNFTPostDocPath",
+          value: undefined,
+        },
+      ]);
+    }, 500);
+  }, [collectedNFTPostDocPath]);
 
   useEffect(() => {
     if (authStatus !== "authenticated") return setIsOwnPage(false);
@@ -157,18 +151,12 @@ const UserContent = ({ username }: Props) => {
     setToggleValue((prev) => (prev === "posts" ? "nfts" : "posts"));
   };
 
-  const handleOnLayout = () => {
-    setLayoutReady(true);
-  };
-
   const handlePressSettingsIcon = () => {
     router.push("/(modals)/settings");
   };
 
   const getInitialPosts = async () => {
     if (!username) return;
-
-    console.log("Getting inital posts....");
 
     try {
       const query = await firestore()
@@ -192,8 +180,6 @@ const UserContent = ({ username }: Props) => {
     const lastDoc = postDocs[postDocs.length - 1];
     if (!lastDoc) return;
 
-    console.log("Getting more posts....");
-
     try {
       const query = await firestore()
         .collection(`users/${username}/posts`)
@@ -214,8 +200,6 @@ const UserContent = ({ username }: Props) => {
 
   const getInitialCreatedCollectibles = async () => {
     if (!username) return;
-
-    console.log("Getting inital created collectibles....");
 
     try {
       const query = await firestore()
@@ -238,8 +222,6 @@ const UserContent = ({ username }: Props) => {
     const lastDoc = createdCollectibleDocs[createdCollectibleDocs.length - 1];
     if (!lastDoc) return;
 
-    console.log("Getting more created collectibles....");
-
     try {
       const query = await firestore()
         .collection(`users/${username}/collectible/trade/createdCollectibles`)
@@ -259,8 +241,6 @@ const UserContent = ({ username }: Props) => {
 
   const getInitialCollectedCollectibles = async () => {
     if (!username) return;
-
-    console.log("Getting inital collected collectibles....");
 
     try {
       const query = await firestore()
@@ -283,8 +263,6 @@ const UserContent = ({ username }: Props) => {
     const lastDoc =
       collectedCollectibleDocs[collectedCollectibleDocs.length - 1];
     if (!lastDoc) return;
-
-    console.log("Getting more collected collectibles....");
 
     try {
       const query = await firestore()
@@ -382,7 +360,6 @@ const UserContent = ({ username }: Props) => {
         ref={scrollViewRef}
         keyboardShouldPersistTaps={"handled"}
         showsVerticalScrollIndicator={false}
-        onLayout={handleOnLayout}
         contentContainerStyle={{
           paddingBottom: (bottom || 20) + 60,
         }}
