@@ -145,6 +145,7 @@ const followers = () => {
         renderItem={({ item }) => (
           <UserCard username={item.follower} key={item.follower} />
         )}
+        keyExtractor={(item) => item.follower}
       />
     </ScrollView>
   );

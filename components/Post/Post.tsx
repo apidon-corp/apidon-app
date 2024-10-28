@@ -1,4 +1,3 @@
-import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { Text } from "@/components/Text/Text";
 
 import { apidonPink } from "@/constants/Colors";
@@ -12,15 +11,14 @@ import firestore from "@react-native-firebase/firestore";
 import { formatDistanceToNowStrict } from "date-fns";
 import { Image } from "expo-image";
 import { Stack, router, usePathname } from "expo-router";
-import { useSetAtom } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Animated,
   Pressable,
-  View,
   Text as ReactNativeText,
+  View,
 } from "react-native";
 import CustomBottomModalSheet from "../BottomSheet/CustomBottomModalSheet";
 import RateStar from "./Rating/RateStar";
@@ -34,6 +32,7 @@ import NftBottomSheetContent from "./NFT/NftBottomSheetContent";
 import PostImage from "./PostImage";
 
 import * as Sharing from "expo-sharing";
+import PostSettingsBottomSheetContent from "./PostSettingsBottomSheetContent";
 
 type Props = {
   postDocPath: string;
@@ -49,8 +48,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
   const [postSenderData, setPostSenderData] = useState<UserInServer | null>(
     null
   );
-
-  const setScreenParameters = useSetAtom(screenParametersAtom);
 
   const [doesOwnPost, setDoesOwnPost] = useState(false);
 
@@ -305,17 +302,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
       setPostDeleteLoading(false);
       return console.error("Error on deleting post: ", error);
     }
-  };
-
-  const handleCreateNFTButton = () => {
-    if (!postDocData) return;
-    if (!postDocData.image) return;
-
-    postOptionsModalRef.current?.close();
-
-    setScreenParameters([{ queryId: "postDocPath", value: postDocPath }]);
-
-    router.push("/(modals)/createCollectible");
   };
 
   const handleFollowButton = async () => {
@@ -665,7 +651,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
           id="footer"
           style={{
             width: "100%",
-            gap: 5,
             paddingHorizontal: 5,
           }}
         >
@@ -790,53 +775,13 @@ const Post = React.memo(({ postDocPath }: Props) => {
       </Animated.View>
 
       <CustomBottomModalSheet ref={postOptionsModalRef}>
-        <View
-          style={{
-            flex: 1,
-            gap: 10,
-          }}
-        >
-          {postDocData.image &&
-            !postDocData.collectibleStatus.isCollectible &&
-            doesOwnPost && (
-              <Pressable
-                onPress={handleCreateNFTButton}
-                style={{
-                  padding: 10,
-                  borderRadius: 10,
-                  backgroundColor: apidonPink,
-                  width: "100%",
-                  alignItems: "center",
-                }}
-              >
-                <Text bold style={{ fontSize: 16 }}>
-                  Create Collectible
-                </Text>
-              </Pressable>
-            )}
-
-          <Pressable
-            disabled={postDocData.collectibleStatus.isCollectible}
-            style={{
-              opacity: postDocData.collectibleStatus.isCollectible ? 0.5 : 1,
-              padding: 10,
-              borderRadius: 10,
-              backgroundColor: "red",
-              width: "100%",
-              alignItems: "center",
-            }}
-            onPress={handleDeleteButton}
-          >
-            <Text
-              bold
-              style={{
-                fontSize: 16,
-              }}
-            >
-              Delete
-            </Text>
-          </Pressable>
-        </View>
+        <PostSettingsBottomSheetContent
+          doesOwnPost={doesOwnPost}
+          handleDeleteButton={handleDeleteButton}
+          postDocData={postDocData}
+          postDocPath={postDocPath}
+          postOptionsModalRef={postOptionsModalRef}
+        />
       </CustomBottomModalSheet>
 
       <CustomBottomModalSheet

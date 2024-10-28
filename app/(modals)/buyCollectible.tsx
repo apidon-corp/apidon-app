@@ -62,6 +62,7 @@ const buyNFT = () => {
   // Balance Status Setting
   useEffect(() => {
     if (!collectibleData) return;
+    if (collectibleData.type !== "trade") return;
 
     const balanceStatusResult =
       balance === "error"
@@ -267,6 +268,16 @@ const buyNFT = () => {
       </View>
     );
   }
+
+  if (collectibleData.type !== "trade")
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text fontSize={13} style={{ textAlign: "center" }}>
+          This collectible is non-tradable, meaning it can only be obtained by
+          entering a special code on the main screen.
+        </Text>
+      </View>
+    );
 
   return (
     <>

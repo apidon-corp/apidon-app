@@ -5,9 +5,6 @@ if (!apiEndpoint) {
 }
 
 const apiRoutes = {
-  feed: {
-    getPersonalizedFeed: `${apiEndpoint}/feed-getPersonalizedFeed`,
-  },
   user: {
     personal: {
       fullnameUpdate: `${apiEndpoint}/user-Personal-fullnameUpdate`,
@@ -35,6 +32,10 @@ const apiRoutes = {
   collectible: {
     createCollectible: `${apiEndpoint}/collectible-createCollectible`, // http://192.168.1.3:5001/apidon-dev/us-central1/collecitble-createCollectible
     buyCollectible: `${apiEndpoint}/collectible-buyCollectible`,
+    eventBased: {
+      createCollectible: `${apiEndpoint}/collectible-eventBased-createCollectible`,
+      collectCollectible: `${apiEndpoint}/collectible-eventBased-collectCollectible`,
+    },
   },
   nft: {
     uploadNFT: `${apiEndpoint}/nft-uploadNFT`,

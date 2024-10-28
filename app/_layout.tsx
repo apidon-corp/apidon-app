@@ -208,7 +208,7 @@ function RootLayout() {
       toValue: status ? 0 : 1,
       duration: 500,
       useNativeDriver: true,
-      delay: status ? 1500 : 0,
+      delay: status ? 2000 : 0,
     }).start();
   }, [animationReady, appReady]);
 

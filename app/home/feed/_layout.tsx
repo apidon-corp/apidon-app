@@ -1,13 +1,13 @@
-import { FontAwesome } from "@expo/vector-icons";
-import { Stack, router } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { Pressable } from "react-native";
 import { Text } from "@/components/Text/Text";
 import { useAuth } from "@/providers/AuthProvider";
 import { UserInServer } from "@/types/User";
+import { FontAwesome } from "@expo/vector-icons";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
+import { Stack, router } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { Pressable } from "react-native";
 
 const _layout = () => {
   const { authStatus } = useAuth();
@@ -63,7 +63,7 @@ const _layout = () => {
             <Pressable
               onPress={handleUserIconButtonPress}
               style={{
-                width: 35,
+                width: 75,
                 height: 32,
                 justifyContent: "center",
                 alignItems: "flex-end",

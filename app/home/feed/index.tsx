@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   FlatList,
   NativeScrollEvent,
+  Pressable,
   RefreshControl,
   SafeAreaView,
   ScrollView,
@@ -20,6 +21,11 @@ import firestore, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useHeaderHeight } from "@react-navigation/elements";
+import { Stack } from "expo-router";
+import { AntDesign } from "@expo/vector-icons";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import CustomBottomModalSheet from "@/components/BottomSheet/CustomBottomModalSheet";
+import CodeEnteringBottomSheetContent from "@/components/Collectible/CodeEnteringBottomSheetContent";
 
 const index = () => {
   const [loading, setLoading] = useState(false);
@@ -45,6 +51,8 @@ const index = () => {
   const { bottom } = useSafeAreaInsets();
 
   const headerHeight = useHeaderHeight();
+
+  const codeEnteringBottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   // Getting Initial Post Doc Paths
   useEffect(() => {
@@ -138,6 +146,10 @@ const index = () => {
     }
   };
 
+  const handlePressCodeEnterButton = () => {
+    codeEnteringBottomSheetModalRef.current?.present();
+  };
+
   if (loading)
     return (
       <SafeAreaView
@@ -155,34 +167,65 @@ const index = () => {
     );
 
   return (
-    <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      ref={scrollViewRef}
-      onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
-      scrollEventThrottle={500}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl refreshing={refreshLoading} onRefresh={handleRefresh} />
-      }
-      contentContainerStyle={{
-        paddingBottom: (bottom || 20) + 60,
-      }}
-      scrollToOverflowEnabled
-    >
-      <FlatList
-        style={{
-          width: "100%",
+    <>
+      <Stack.Screen
+        options={{
+          headerLeft: () => (
+            <Pressable
+              onPress={handlePressCodeEnterButton}
+              style={{
+                justifyContent: "center",
+                alignItems: "flex-start",
+                width: 75,
+              }}
+            >
+              <AntDesign name="qrcode" size={24} color="white" />
+            </Pressable>
+          ),
         }}
-        contentContainerStyle={{
-          gap: 20,
-        }}
-        keyExtractor={(item) => item}
-        data={Array.from(new Set(postDocPaths))}
-        renderItem={({ item }) => <Post postDocPath={item} key={item} />}
-        showsVerticalScrollIndicator={false}
-        scrollEnabled={false}
       />
-    </ScrollView>
+
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        ref={scrollViewRef}
+        onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
+        scrollEventThrottle={500}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshLoading}
+            onRefresh={handleRefresh}
+          />
+        }
+        contentContainerStyle={{
+          paddingBottom: (bottom || 20) + 60,
+        }}
+        scrollToOverflowEnabled
+      >
+        <FlatList
+          style={{
+            width: "100%",
+          }}
+          contentContainerStyle={{
+            gap: 20,
+          }}
+          keyExtractor={(item) => item}
+          data={Array.from(new Set(postDocPaths))}
+          renderItem={({ item }) => <Post postDocPath={item} key={item} />}
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={false}
+        />
+      </ScrollView>
+
+      <CustomBottomModalSheet
+        ref={codeEnteringBottomSheetModalRef}
+        backgroundColor="#1B1B1B"
+      >
+        <CodeEnteringBottomSheetContent
+          bottomSheetModalRef={codeEnteringBottomSheetModalRef}
+        />
+      </CustomBottomModalSheet>
+    </>
   );
 };
 
