@@ -67,8 +67,6 @@ const _layout = () => {
                 height: 32,
                 justifyContent: "center",
                 alignItems: "flex-end",
-                borderWidth:1,
-                borderColor: "red"
               }}
             >
               {profilePhoto ? (

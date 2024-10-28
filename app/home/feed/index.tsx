@@ -176,10 +176,7 @@ const index = () => {
               style={{
                 justifyContent: "center",
                 alignItems: "flex-start",
-                borderWidth: 1,
-                borderColor: "red",
                 width: 75,
-                
               }}
             >
               <AntDesign name="qrcode" size={24} color="white" />
@@ -224,7 +221,9 @@ const index = () => {
         ref={codeEnteringBottomSheetModalRef}
         backgroundColor="#1B1B1B"
       >
-        <CodeEnteringBottomSheetContent bottomSheetModalRef={codeEnteringBottomSheetModalRef} />
+        <CodeEnteringBottomSheetContent
+          bottomSheetModalRef={codeEnteringBottomSheetModalRef}
+        />
       </CustomBottomModalSheet>
     </>
   );
