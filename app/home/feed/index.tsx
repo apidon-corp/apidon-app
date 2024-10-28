@@ -175,7 +175,11 @@ const index = () => {
               onPress={handlePressCodeEnterButton}
               style={{
                 justifyContent: "center",
-                alignItems: "flex-end",
+                alignItems: "flex-start",
+                borderWidth: 1,
+                borderColor: "red",
+                width: 75,
+                
               }}
             >
               <AntDesign name="qrcode" size={24} color="white" />

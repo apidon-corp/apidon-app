@@ -63,10 +63,12 @@ const _layout = () => {
             <Pressable
               onPress={handleUserIconButtonPress}
               style={{
-                width: 35,
+                width: 75,
                 height: 32,
                 justifyContent: "center",
                 alignItems: "flex-end",
+                borderWidth:1,
+                borderColor: "red"
               }}
             >
               {profilePhoto ? (

@@ -76,6 +76,8 @@ const UserContent = ({ username }: Props) => {
   const [collectibleContentTypeValue, setCollectibleContentTypeValue] =
     useState<CollectibleContentType>("collected");
 
+  const [collCount, setCollCount] = useState<null | number>(null);
+
   // Initial Fetchings
   useEffect(() => {
     if (toggleValue === "posts") getInitialPosts();
@@ -372,7 +374,7 @@ const UserContent = ({ username }: Props) => {
           />
         }
       >
-        <Header userData={userData} collsCount={53} />
+        <Header userData={userData} collsCount={userData.collectibleCount} />
 
         <View
           id="toggle"

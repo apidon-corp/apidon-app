@@ -279,6 +279,7 @@ const NotificationItem = ({
               style={{
                 width: 24,
                 aspectRatio: 1,
+                borderRadius: 5,
               }}
             />
           ) : (

@@ -5,14 +5,16 @@ export type UserInServer = {
 
   followingCount: number;
   followerCount: number;
-  frenScore: number;
 
-  nftCount: number;
+  collectibleCount: number;
 
   email: string;
   uid: string;
 
-  verified:boolean,
+  /**
+   * Indicated if user has purple thick.
+   */
+  verified: boolean;
 };
 
 export type FollowerDocData = {
