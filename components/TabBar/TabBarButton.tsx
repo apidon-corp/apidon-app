@@ -46,7 +46,7 @@ const TabBarButton = ({
   const [animatedColor, setAnimatedColor] = useState(color);
 
   useEffect(() => {
-    delay(300).then(() => {
+    delay(200).then(() => {
       setAnimatedColor(color);
     });
   }, [color]);
