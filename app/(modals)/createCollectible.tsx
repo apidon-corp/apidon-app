@@ -35,6 +35,7 @@ import {
 } from "@gorhom/bottom-sheet";
 import { CollectibleType } from "@/types/Collectible";
 import { UserIdentityDoc } from "@/types/Identity";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const listNFT = () => {
   // Trigger In-App-Purchase Store Notifications
@@ -92,6 +93,8 @@ const listNFT = () => {
 
   const [identityDocData, setIdentityDocData] =
     useState<UserIdentityDoc | null>(null);
+
+  const { bottom } = useSafeAreaInsets();
 
   // Getting inital post data.
   useEffect(() => {
@@ -873,6 +876,7 @@ const listNFT = () => {
             </Pressable>
           </Animated.View>
         </Animated.View>
+        <View style={{ height: bottom }} />
       </ScrollView>
 
       <BottomSheetModalProvider>
