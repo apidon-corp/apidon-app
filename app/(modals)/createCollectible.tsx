@@ -93,8 +93,7 @@ const listNFT = () => {
   const [collectibleType, setCollectibleType] =
     useState<CollectibleType>("trade");
 
-  const [identityDocData, setIdentityDocData] =
-    useState<UserIdentityDoc | null>(null);
+  const [identityStatus, setIdentityStatus] = useState<null | boolean>(null);
 
   const { bottom } = useSafeAreaInsets();
 
@@ -156,15 +155,12 @@ const listNFT = () => {
 
   // Changing opactiy of create button.
   useEffect(() => {
-    let identityStatus = false;
-    if (identityDocData) identityStatus = identityDocData.status === "verified";
-
     handleChangeOpactiy(
       createButtonOpacityValue,
       isVerified && identityStatus && price && stock && !loading ? 1 : 0.5,
       250
     );
-  }, [price, stock, loading, isVerified, identityDocData]);
+  }, [price, stock, loading, isVerified, identityStatus]);
 
   // Dynamic Data Fetching - Current User Status (verified)
   useEffect(() => {
@@ -237,14 +233,15 @@ const listNFT = () => {
       .onSnapshot(
         (snapshot) => {
           if (!snapshot.exists) {
-            console.error("Identity doc can not be fetched.");
-            return setIdentityDocData(null);
+            return setIdentityStatus(false);
           }
-          setIdentityDocData(snapshot.data() as UserIdentityDoc);
+          setIdentityStatus(
+            (snapshot.data() as UserIdentityDoc).status === "verified"
+          );
         },
         (error) => {
           console.error("Error on getting identity doc ", error);
-          setIdentityDocData(null);
+          setIdentityStatus(null);
         }
       );
 
@@ -365,14 +362,7 @@ const listNFT = () => {
       setBottomModalType("createEventWarning");
       informationModalRef.current?.present();
     } else if (collectibleType === "trade") {
-      if (
-        !stock ||
-        !price ||
-        loading ||
-        !isVerified ||
-        identityDocData?.status !== "verified"
-      )
-        return;
+      if (!stock || !price || loading || !isVerified || !identityStatus) return;
       Keyboard.dismiss();
       setBottomModalType("createTradeWarning");
       informationModalRef.current?.present();
@@ -396,7 +386,7 @@ const listNFT = () => {
     if (collectibleType == "trade") {
       if (!price) return;
 
-      if (identityDocData?.status !== "verified") return;
+      if (!identityStatus) return;
 
       setLoading(true);
 
@@ -541,7 +531,7 @@ const listNFT = () => {
     );
   }
 
-  if (!postData || stockLimit === null || identityDocData === null) {
+  if (!postData || stockLimit === null || identityStatus === null) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator color="white" />
@@ -802,34 +792,33 @@ const listNFT = () => {
             />
           </View>
 
-          {collectibleType === "trade" &&
-            identityDocData.status !== "verified" && (
-              <Pressable
-                onPress={handlePressVerifyIdentity}
-                id="verification-info"
+          {collectibleType === "trade" && !identityStatus && (
+            <Pressable
+              onPress={handlePressVerifyIdentity}
+              id="verification-info"
+              style={{
+                backgroundColor: "rgba(255,255,255,0.075)",
+                width: "100%",
+                justifyContent: "space-between",
+                alignItems: "center",
+                borderRadius: 20,
+                padding: 15,
+                flexDirection: "row",
+              }}
+            >
+              <AntDesign name="arrowright" size={18} color="yellow" />
+              <Text
+                fontSize={12}
                 style={{
-                  backgroundColor: "rgba(255,255,255,0.075)",
-                  width: "100%",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  borderRadius: 20,
-                  padding: 15,
-                  flexDirection: "row",
+                  color: "yellow",
+                  textDecorationLine: "underline",
                 }}
               >
-                <AntDesign name="arrowright" size={18} color="yellow" />
-                <Text
-                  fontSize={12}
-                  style={{
-                    color: "yellow",
-                    textDecorationLine: "underline",
-                  }}
-                >
-                  You need to verify yourself to sell collectibles.
-                </Text>
-                <AntDesign name="arrowleft" size={18} color="yellow" />
-              </Pressable>
-            )}
+                You need to verify yourself to sell collectibles.
+              </Text>
+              <AntDesign name="arrowleft" size={18} color="yellow" />
+            </Pressable>
+          )}
 
           {!isVerified && (
             <Pressable
