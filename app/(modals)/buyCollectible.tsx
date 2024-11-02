@@ -25,12 +25,13 @@ import { useBalance } from "@/hooks/useBalance";
 
 import CustomBottomModalSheet from "@/components/BottomSheet/CustomBottomModalSheet";
 import { CollectibleDocData } from "@/types/Collectible";
-import { MaterialIcons } from "@expo/vector-icons";
+import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 import {
   BottomSheetModal,
   BottomSheetModalProvider,
 } from "@gorhom/bottom-sheet";
 import { router } from "expo-router";
+import { UserIdentityDoc } from "@/types/Identity";
 
 const buyNFT = () => {
   const [screenParameters, setScreenParameters] = useAtom(screenParametersAtom);
@@ -53,6 +54,9 @@ const buyNFT = () => {
   const buyButtonOpacityValue = useRef(new Animated.Value(0.5)).current;
 
   const buyCollectilbeWarningModal = useRef<BottomSheetModal>(null);
+
+  const [identityDocData, setIdentityDocData] =
+    useState<UserIdentityDoc | null>(null);
 
   // Getting collectible data.
   useEffect(() => {
@@ -78,12 +82,40 @@ const buyNFT = () => {
 
   // Managing opacity of buy button
   useEffect(() => {
+    let identityStatus = false;
+
+    if (identityDocData) identityStatus = identityDocData.status === "verified";
+
     handleChangeOpactiy(
       buyButtonOpacityValue,
-      balanceStatus === "enough" && !loading ? 1 : 0.5,
+      balanceStatus === "enough" && identityStatus && !loading ? 1 : 0.5,
       500
     );
-  }, [balanceStatus, loading]);
+  }, [balanceStatus, loading, identityDocData]);
+
+  // Get realtime verification status of user.
+  useEffect(() => {
+    const displayName = auth().currentUser?.displayName;
+    if (!displayName) return;
+
+    const unsubscribe = firestore()
+      .doc(`users/${displayName}/personal/identity`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            console.error("Identity doc can not be fetched.");
+            return setIdentityDocData(null);
+          }
+          setIdentityDocData(snapshot.data() as UserIdentityDoc);
+        },
+        (error) => {
+          console.error("Error on getting identity doc ", error);
+          setIdentityDocData(null);
+        }
+      );
+
+    return () => unsubscribe();
+  }, []);
 
   const handleChangeOpactiy = (
     animatedObject: Animated.Value,
@@ -191,6 +223,8 @@ const buyNFT = () => {
 
     if (balanceStatus !== "enough") return;
 
+    if (!identityDocData || identityDocData.status !== "verified") return;
+
     const username = currentUserAuthObject.displayName;
     if (!username) return;
 
@@ -202,7 +236,7 @@ const buyNFT = () => {
       const idToken = await currentUserAuthObject.getIdToken();
       const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
-      const response = await fetch(apiRoutes.collectible.buyCollectible, {
+      const response = await fetch(apiRoutes.collectible.tradeBased.buyCollectible, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -253,6 +287,10 @@ const buyNFT = () => {
     router.push(`/(modals)/profilePage?username=${creatorData.username}`);
   };
 
+  const handlePressVerifyIdentity = () => {
+    router.push("/(modals)/identity");
+  };
+
   if (!postDocPath) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -261,7 +299,7 @@ const buyNFT = () => {
     );
   }
 
-  if (!postData || !collectibleData || !creatorData) {
+  if (!postData || !collectibleData || !creatorData || !identityDocData) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator color="white" />
@@ -432,6 +470,33 @@ const buyNFT = () => {
           </View>
         </Pressable>
 
+        {identityDocData.status !== "verified" && (
+          <Pressable
+            onPress={handlePressVerifyIdentity}
+            id="verification-info"
+            style={{
+              backgroundColor: "rgba(255,255,255,0.075)",
+              width: "100%",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderRadius: 20,
+              padding: 15,
+              flexDirection: "row",
+            }}
+          >
+            <Text
+              fontSize={12}
+              style={{
+                color: "yellow",
+                textDecorationLine: "underline",
+              }}
+            >
+              You need to verify yourself to purchase collectibles.
+            </Text>
+            <AntDesign name="arrowright" size={18} color="yellow" />
+          </Pressable>
+        )}
+
         <Animated.View
           id="buy-button"
           style={{
@@ -442,7 +507,11 @@ const buyNFT = () => {
           }}
         >
           <Pressable
-            disabled={balanceStatus !== "enough" || loading}
+            disabled={
+              balanceStatus !== "enough" ||
+              loading ||
+              identityDocData.status !== "verified"
+            }
             onPress={handleBuyButton}
             style={{
               width: "50%",

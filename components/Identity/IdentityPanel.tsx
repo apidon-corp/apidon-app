@@ -98,6 +98,7 @@ const IdentityPanel = () => {
         (doc) => {
           if (doc.exists) {
             const data = doc.data() as UserIdentityDoc;
+
             setIdentityDocData(data);
           } else {
             setIdentityDocData("not-created");
@@ -233,7 +234,7 @@ const IdentityPanel = () => {
               textAlign: "center",
             }}
           >
-            We're processing your request. This may take a few moments,
+            We're processing your request. This may take a few moments.
           </Text>
         </View>
       )}

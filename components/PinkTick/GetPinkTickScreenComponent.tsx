@@ -193,7 +193,6 @@ const GetPinkTickScreenComponent = () => {
               <View
                 style={{
                   flexDirection: "row",
-                  gap: 3,
                   alignItems: "center",
                 }}
               >
@@ -215,7 +214,6 @@ const GetPinkTickScreenComponent = () => {
               style={{
                 width: "100%",
                 flexDirection: "row",
-                gap: 3,
                 alignItems: "center",
                 backgroundColor: "rgba(255,255,255,0.15)",
                 borderRadius: 15,
