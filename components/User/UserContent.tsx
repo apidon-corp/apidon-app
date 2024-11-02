@@ -31,6 +31,9 @@ import Header from "./Header";
 import auth from "@react-native-firebase/auth";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import * as StoreReview from 'expo-store-review';
+
+
 type Props = {
   username: string;
 };
@@ -75,8 +78,6 @@ const UserContent = ({ username }: Props) => {
 
   const [collectibleContentTypeValue, setCollectibleContentTypeValue] =
     useState<CollectibleContentType>("collected");
-
-  const [collCount, setCollCount] = useState<null | number>(null);
 
   // Initial Fetchings
   useEffect(() => {
@@ -134,7 +135,11 @@ const UserContent = ({ username }: Props) => {
           value: undefined,
         },
       ]);
-    }, 500);
+    }, 1000);
+
+    setTimeout(() => {
+      
+    }, 2000);
   }, [collectedNFTPostDocPath]);
 
   useEffect(() => {
