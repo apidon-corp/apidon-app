@@ -66,12 +66,13 @@ const index = () => {
 
     setPostDocPaths((prev) => [createdPostDocPath, ...prev]);
 
-    scrollViewRef.current?.scrollTo({ y: -headerHeight });
+    scrollViewRef.current?.scrollTo({ y: -headerHeight + 1 });
   }, [createdPostDocPath]);
 
+  // Manage pressing home button.
   useEffect(() => {
     if (homeScreenParametersValue.isHomeButtonPressed) {
-      scrollViewRef.current?.scrollTo({ y: -headerHeight });
+      scrollViewRef.current?.scrollTo({ y: -headerHeight + 1 });
       setHomeScreenParameters({ isHomeButtonPressed: false });
     }
   }, [homeScreenParametersValue]);
@@ -134,7 +135,7 @@ const index = () => {
   }
 
   const handleScroll = (event: NativeScrollEvent) => {
-    const threshold = 250;
+    const threshold = 1000;
 
     const { layoutMeasurement, contentOffset, contentSize } = event;
 

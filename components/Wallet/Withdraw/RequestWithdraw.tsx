@@ -23,6 +23,7 @@ import { isValidBIC } from "ibantools";
 
 import appCheck from "@react-native-firebase/app-check";
 import apiRoutes from "@/helpers/ApiRoutes";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const RequestWithdraw = () => {
   const { authStatus } = useAuth();
@@ -55,6 +56,8 @@ const RequestWithdraw = () => {
   const [loading, setLoading] = useState(false);
 
   const [hasEnoughBalance, setHasEnoughBalance] = useState(false);
+
+  const { bottom } = useSafeAreaInsets();
 
   // Getting realtime identity data.
   useEffect(() => {
@@ -608,6 +611,7 @@ const RequestWithdraw = () => {
           </Pressable>
         </Animated.View>
       </ScrollView>
+      <View style={{ height: bottom + 70 }} />
     </Animated.View>
   );
 };
