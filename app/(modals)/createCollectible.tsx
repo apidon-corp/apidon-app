@@ -37,6 +37,8 @@ import { CollectibleType } from "@/types/Collectible";
 import { UserIdentityDoc } from "@/types/Identity";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import * as StoreReview from "expo-store-review";
+
 const listNFT = () => {
   // Trigger In-App-Purchase Store Notifications
   const { products } = useInAppPurchases();
@@ -431,6 +433,8 @@ const listNFT = () => {
 
         router.dismiss();
 
+        askUserForRating();
+
         return setLoading(false);
       } catch (error) {
         console.error("Error on creating collectible: ", error);
@@ -470,6 +474,8 @@ const listNFT = () => {
         informationModalRef.current?.dismiss();
 
         router.dismiss();
+
+        askUserForRating();
 
         return setLoading(false);
       } catch (error) {
@@ -511,6 +517,20 @@ const listNFT = () => {
 
   const handlePressVerifyIdentity = () => {
     router.push("/(modals)/identity");
+  };
+
+  const askUserForRating = async () => {
+    try {
+      const isAvailable = await StoreReview.isAvailableAsync();
+
+      if (!isAvailable) {
+        return console.error("Store review is not available on this device.");
+      }
+
+      await StoreReview.requestReview();
+    } catch (error) {
+      console.error("Error on asking user for rating: ", error);
+    }
   };
 
   if (!postDocPath) {

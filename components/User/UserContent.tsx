@@ -31,8 +31,7 @@ import Header from "./Header";
 import auth from "@react-native-firebase/auth";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import * as StoreReview from 'expo-store-review';
-
+import * as StoreReview from "expo-store-review";
 
 type Props = {
   username: string;
@@ -138,7 +137,7 @@ const UserContent = ({ username }: Props) => {
     }, 1000);
 
     setTimeout(() => {
-      
+      askUserForRating();
     }, 2000);
   }, [collectedNFTPostDocPath]);
 
@@ -285,6 +284,20 @@ const UserContent = ({ username }: Props) => {
       ]);
     } catch (error) {
       console.error("Error on getting more collected collectibles: ", error);
+    }
+  };
+
+  const askUserForRating = async () => {
+    try {
+      const isAvailable = await StoreReview.isAvailableAsync();
+
+      if (!isAvailable) {
+        return console.error("Store review is not available on this device.");
+      }
+
+      await StoreReview.requestReview();
+    } catch (error) {
+      console.error("Error on asking user for rating: ", error);
     }
   };
 
