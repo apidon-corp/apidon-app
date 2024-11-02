@@ -66,14 +66,16 @@ const index = () => {
 
     setPostDocPaths((prev) => [createdPostDocPath, ...prev]);
 
-    scrollViewRef.current?.scrollTo({ y: -headerHeight + 1 });
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({ y: -headerHeight + 1 });
+      setHomeScreenParameters({ isHomeButtonPressed: false });
+    }, 500);
   }, [createdPostDocPath]);
 
   // Manage pressing home button.
   useEffect(() => {
     if (homeScreenParametersValue.isHomeButtonPressed) {
       scrollViewRef.current?.scrollTo({ y: -headerHeight + 1 });
-      setHomeScreenParameters({ isHomeButtonPressed: false });
     }
   }, [homeScreenParametersValue]);
 

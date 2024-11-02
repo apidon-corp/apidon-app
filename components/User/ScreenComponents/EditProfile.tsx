@@ -394,17 +394,6 @@ const editProfile = () => {
               value={fullnameEdited}
               onChangeText={handleFullnameChange}
             />
-            {error && (
-              <Text
-                style={{
-                  fontSize: 14,
-                  color: "red",
-                  textAlign: "center",
-                }}
-              >
-                {error}
-              </Text>
-            )}
           </View>
 
           <Animated.View
