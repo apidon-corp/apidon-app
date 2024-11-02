@@ -1,12 +1,9 @@
-import { ActivityIndicator, Alert, Pressable } from "react-native";
-import React, { useState } from "react";
-import auth from "@react-native-firebase/auth";
 import { Text } from "@/components/Text/Text";
+import auth from "@react-native-firebase/auth";
+import React, { useState } from "react";
+import { ActivityIndicator, Alert, Pressable } from "react-native";
 
 import * as AppleAuthentication from "expo-apple-authentication";
-
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import { router } from "expo-router";
 
 const DeleteAccount = () => {
   const [loading, setLoading] = useState(false);
@@ -30,8 +27,6 @@ const DeleteAccount = () => {
       const providerId = providerData[0].providerId;
 
       const isApple = providerId === "apple.com";
-      const isGoogle = providerId === "google.com";
-      const isPassword = providerId === "password";
 
       if (isApple) {
         const { authorizationCode, identityToken } =
@@ -54,29 +49,6 @@ const DeleteAccount = () => {
         await auth().revokeToken(authorizationCode);
       }
 
-      if (isGoogle) {
-        GoogleSignin.configure({
-          webClientId: "",
-        });
-
-        await GoogleSignin.hasPlayServices({
-          showPlayServicesUpdateDialog: true,
-        });
-
-        const { idToken } = await GoogleSignin.signIn();
-
-        const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-
-        await currentUserAuthObject.reauthenticateWithCredential(
-          googleCredential
-        );
-      }
-
-      if (isPassword) {
-        setLoading(false);
-        return router.push("/(modals)/settings/passwordDeleteAccount");
-      }
-
       await currentUserAuthObject.delete();
 
       return setLoading(false);
@@ -88,14 +60,14 @@ const DeleteAccount = () => {
 
   const handlePressButton = () => {
     Alert.alert(
-      "Delete Account",
-      "Are you sure you want to delete your account?",
+      "Are You Sure?",
+      "\nDisconnecting your Apple account from Apidon will remove all related access.\n\n This action cannot be undone.\n\n Do you want to proceed?",
       [
         {
           text: "Cancel",
           style: "cancel",
         },
-        { text: "Delete", onPress: handleDeleteAccount, style: "destructive" },
+        { text: "Disconnect", onPress: handleDeleteAccount, style: "destructive" },
       ]
     );
   };
@@ -117,11 +89,11 @@ const DeleteAccount = () => {
         <ActivityIndicator color="red" />
       ) : (
         <>
-          <Text bold style={{ fontSize: 14, color: "red" }}>
-            Delete Account
+          <Text style={{ fontSize: 14, color: "red", fontWeight: "bold" }}>
+            Disconnect Your Account
           </Text>
-          <Text style={{ fontSize: 12, color: "gray" }} bold>
-            Delete your account to permanently remove all your data.
+          <Text style={{ fontSize: 12, color: "gray", fontWeight: "bold" }}>
+            Remove the link between your Apple account and Apidon.
           </Text>
         </>
       )}
