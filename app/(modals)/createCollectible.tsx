@@ -423,7 +423,9 @@ const listNFT = () => {
 
         router.dismiss();
 
-        askUserForRating();
+        setTimeout(() => {
+          askUserForRating();
+        }, 2500);
 
         return setLoading(false);
       } catch (error) {
@@ -465,7 +467,9 @@ const listNFT = () => {
 
         router.dismiss();
 
-        askUserForRating();
+        setTimeout(() => {
+          askUserForRating();
+        }, 2500);
 
         return setLoading(false);
       } catch (error) {
@@ -938,10 +942,10 @@ const listNFT = () => {
                   onPress={handleConfirmButton}
                   style={{
                     backgroundColor: "white",
-                    padding: 10,
                     borderRadius: 10,
                     alignItems: "center",
                     justifyContent: "center",
+                    height: 40,
                   }}
                 >
                   {loading ? (
@@ -956,7 +960,7 @@ const listNFT = () => {
                   style={{
                     borderWidth: 1,
                     borderColor: "white",
-                    padding: 10,
+                    height: 40,
                     borderRadius: 10,
                     alignItems: "center",
                     justifyContent: "center",
@@ -992,7 +996,7 @@ const listNFT = () => {
                   onPress={handleConfirmButton}
                   style={{
                     backgroundColor: "white",
-                    padding: 10,
+                    height: 40,
                     borderRadius: 10,
                     alignItems: "center",
                     justifyContent: "center",
@@ -1010,7 +1014,7 @@ const listNFT = () => {
                   style={{
                     borderWidth: 1,
                     borderColor: "white",
-                    padding: 10,
+                    height: 40,
                     borderRadius: 10,
                     alignItems: "center",
                     justifyContent: "center",

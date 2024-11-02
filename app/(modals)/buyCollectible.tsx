@@ -236,17 +236,20 @@ const buyNFT = () => {
       const idToken = await currentUserAuthObject.getIdToken();
       const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
-      const response = await fetch(apiRoutes.collectible.tradeBased.buyCollectible, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: `Bearer ${idToken}`,
-          appchecktoken,
-        },
-        body: JSON.stringify({
-          postDocPath,
-        }),
-      });
+      const response = await fetch(
+        apiRoutes.collectible.tradeBased.buyCollectible,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            authorization: `Bearer ${idToken}`,
+            appchecktoken,
+          },
+          body: JSON.stringify({
+            postDocPath,
+          }),
+        }
+      );
 
       if (!response.ok) {
         console.error(
@@ -517,20 +520,19 @@ const buyNFT = () => {
               width: "50%",
               opacity: loading ? 1 : balanceStatus !== "enough" ? 0.5 : 1,
               backgroundColor: apidonPink,
-              padding: 10,
+              height: 40,
               borderRadius: 10,
               alignItems: "center",
               justifyContent: "center",
             }}
           >
             {loading ? (
-              <ActivityIndicator color="white" />
+              <ActivityIndicator color="white" size="small" />
             ) : (
               <Text
                 bold
                 style={{
                   color: "white",
-                  fontSize: 15,
                 }}
               >
                 Buy for ${collectibleData.price.price}
@@ -563,7 +565,7 @@ const buyNFT = () => {
               onPress={handleConfirmButton}
               style={{
                 backgroundColor: "white",
-                padding: 10,
+                height: 40,
                 borderRadius: 10,
                 alignItems: "center",
                 justifyContent: "center",
@@ -581,7 +583,7 @@ const buyNFT = () => {
               style={{
                 borderWidth: 1,
                 borderColor: "white",
-                padding: 10,
+                height: 40,
                 borderRadius: 10,
                 alignItems: "center",
                 justifyContent: "center",

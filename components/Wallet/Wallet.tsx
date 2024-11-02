@@ -310,7 +310,7 @@ const wallet = () => {
               onPress={handleAcceptButton}
               style={{
                 backgroundColor: "white",
-                padding: 10,
+                height: 40,
                 borderRadius: 10,
                 alignItems: "center",
                 justifyContent: "center",
@@ -328,7 +328,7 @@ const wallet = () => {
               style={{
                 borderWidth: 1,
                 borderColor: "white",
-                padding: 10,
+                height: 40,
                 borderRadius: 10,
                 alignItems: "center",
                 justifyContent: "center",
@@ -378,7 +378,7 @@ const wallet = () => {
                 onPress={handleAcceptButton}
                 style={{
                   backgroundColor: "white",
-                  padding: 10,
+                  height: 40,
                   borderRadius: 10,
                   alignItems: "center",
                   justifyContent: "center",
@@ -396,7 +396,7 @@ const wallet = () => {
                 style={{
                   borderWidth: 1,
                   borderColor: "white",
-                  padding: 10,
+                  height: 40,
                   borderRadius: 10,
                   alignItems: "center",
                   justifyContent: "center",
