@@ -105,7 +105,7 @@ const GetPinkTickScreenComponent = () => {
 
     const length = subScreens.length;
 
-    subScreens[length - 1] = "identitySettings";
+    subScreens[length - 1] = "identity";
 
     const dest = subScreens.join("/");
 
