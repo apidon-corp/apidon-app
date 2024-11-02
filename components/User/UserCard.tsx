@@ -161,7 +161,8 @@ const UserCard = ({ username }: Props) => {
     );
 
   return (
-    <View
+    <Pressable
+      onPress={handlePressUser}
       style={{
         justifyContent: "space-between",
         alignItems: "center",
@@ -170,7 +171,7 @@ const UserCard = ({ username }: Props) => {
         width: "100%",
       }}
     >
-      <Pressable
+      <View
         style={{
           overflow: "hidden",
           width: "75%",
@@ -178,7 +179,6 @@ const UserCard = ({ username }: Props) => {
           gap: 10,
           alignItems: "center",
         }}
-        onPress={handlePressUser}
       >
         <Image
           source={userData.profilePhoto || require("@/assets/images/user.jpg")}
@@ -215,7 +215,7 @@ const UserCard = ({ username }: Props) => {
             @{userData.username}
           </Text>
         </View>
-      </Pressable>
+      </View>
 
       {!doesFollow && (
         <View
@@ -253,7 +253,7 @@ const UserCard = ({ username }: Props) => {
           </Pressable>
         </View>
       )}
-    </View>
+    </Pressable>
   );
 };
 
