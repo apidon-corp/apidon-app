@@ -30,8 +30,11 @@ const apiRoutes = {
     },
   },
   collectible: {
-    createCollectible: `${apiEndpoint}/collectible-createCollectible`, // http://192.168.1.3:5001/apidon-dev/us-central1/collecitble-createCollectible
-    buyCollectible: `${apiEndpoint}/collectible-buyCollectible`,
+    tradeBased: {
+      createCollectible: `${apiEndpoint}/collectible-tradeBased-createCollectible`, // http://192.168.1.3:5001/apidon-dev/us-central1/collecitble-createCollectible
+      buyCollectible: `${apiEndpoint}/collectible-tradeBased-buyCollectible`,
+    },
+
     eventBased: {
       createCollectible: `${apiEndpoint}/collectible-eventBased-createCollectible`,
       collectCollectible: `${apiEndpoint}/collectible-eventBased-collectCollectible`,

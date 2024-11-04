@@ -79,7 +79,7 @@ const _layout = () => {
                   }}
                 />
               ) : (
-                <FontAwesome name="user" size={30} color="white" />
+                <FontAwesome name="user" size={24} color="white" />
               )}
             </Pressable>
           ),

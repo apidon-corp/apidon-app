@@ -30,7 +30,7 @@ const _layout = () => {
         }}
       />
       <Stack.Screen
-        name="identitySettings"
+        name="identity"
         options={{
           headerTitle: "Identity",
         }}

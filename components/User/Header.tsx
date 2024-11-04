@@ -39,19 +39,10 @@ const Header = ({ userData, collsCount }: Props) => {
 
     const query = `editProfile?fullname=${userData.fullname}&image=${image}`;
 
-    console.log(query);
-
     subScreens[subScreens.length - 1] = query;
 
     const finalDestination = subScreens.join("/");
     return router.push(finalDestination);
-
-    setScreenParameters((prev) => [
-      { queryId: "editProfileImage", value: userData.profilePhoto },
-      ...prev,
-    ]);
-
-    router.push(finalDestination);
   };
 
   const checkUserOwnsPage = () => {

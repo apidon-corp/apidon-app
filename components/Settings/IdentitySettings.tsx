@@ -5,7 +5,7 @@ import { Pressable } from "react-native";
 
 const IdentitySettings = () => {
   const handlePressButton = () => {
-    router.push("/(modals)/settings/identitySettings");
+    router.push("/(modals)/settings/identity");
   };
 
   return (

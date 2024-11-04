@@ -34,6 +34,10 @@ import {
   BottomSheetModalProvider,
 } from "@gorhom/bottom-sheet";
 import { CollectibleType } from "@/types/Collectible";
+import { UserIdentityDoc } from "@/types/Identity";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import * as StoreReview from "expo-store-review";
 
 const listNFT = () => {
   // Trigger In-App-Purchase Store Notifications
@@ -88,6 +92,10 @@ const listNFT = () => {
 
   const [collectibleType, setCollectibleType] =
     useState<CollectibleType>("trade");
+
+  const [identityStatus, setIdentityStatus] = useState<null | boolean>(null);
+
+  const { bottom } = useSafeAreaInsets();
 
   // Getting inital post data.
   useEffect(() => {
@@ -149,10 +157,10 @@ const listNFT = () => {
   useEffect(() => {
     handleChangeOpactiy(
       createButtonOpacityValue,
-      isVerified && price && stock && !loading ? 1 : 0.5,
+      isVerified && identityStatus && price && stock && !loading ? 1 : 0.5,
       250
     );
-  }, [price, stock, loading, isVerified]);
+  }, [price, stock, loading, isVerified, identityStatus]);
 
   // Dynamic Data Fetching - Current User Status (verified)
   useEffect(() => {
@@ -209,6 +217,31 @@ const listNFT = () => {
         (error) => {
           console.error("Error on getting realtime data  ", error);
           setStockLimit(null);
+        }
+      );
+
+    return () => unsubscribe();
+  }, []);
+
+  // Get realtime identity verification status of user.
+  useEffect(() => {
+    const displayName = auth().currentUser?.displayName;
+    if (!displayName) return;
+
+    const unsubscribe = firestore()
+      .doc(`users/${displayName}/personal/identity`)
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot.exists) {
+            return setIdentityStatus(false);
+          }
+          setIdentityStatus(
+            (snapshot.data() as UserIdentityDoc).status === "verified"
+          );
+        },
+        (error) => {
+          console.error("Error on getting identity doc ", error);
+          setIdentityStatus(null);
         }
       );
 
@@ -329,7 +362,7 @@ const listNFT = () => {
       setBottomModalType("createEventWarning");
       informationModalRef.current?.present();
     } else if (collectibleType === "trade") {
-      if (!stock || !price || loading || !isVerified) return;
+      if (!stock || !price || loading || !isVerified || !identityStatus) return;
       Keyboard.dismiss();
       setBottomModalType("createTradeWarning");
       informationModalRef.current?.present();
@@ -353,25 +386,30 @@ const listNFT = () => {
     if (collectibleType == "trade") {
       if (!price) return;
 
+      if (!identityStatus) return;
+
       setLoading(true);
 
       try {
         const idToken = await currentUserAuthObject.getIdToken();
         const { token: appchecktoken } = await appCheck().getLimitedUseToken();
 
-        const response = await fetch(apiRoutes.collectible.createCollectible, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            authorization: `Bearer ${idToken}`,
-            appchecktoken,
-          },
-          body: JSON.stringify({
-            postDocPath: postDocPath,
-            price: price,
-            stock: stock,
-          }),
-        });
+        const response = await fetch(
+          apiRoutes.collectible.tradeBased.createCollectible,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              authorization: `Bearer ${idToken}`,
+              appchecktoken,
+            },
+            body: JSON.stringify({
+              postDocPath: postDocPath,
+              price: price,
+              stock: stock,
+            }),
+          }
+        );
 
         if (!response.ok) {
           console.error(
@@ -384,6 +422,10 @@ const listNFT = () => {
         informationModalRef.current?.dismiss();
 
         router.dismiss();
+
+        setTimeout(() => {
+          askUserForRating();
+        }, 2500);
 
         return setLoading(false);
       } catch (error) {
@@ -425,6 +467,10 @@ const listNFT = () => {
 
         router.dismiss();
 
+        setTimeout(() => {
+          askUserForRating();
+        }, 2500);
+
         return setLoading(false);
       } catch (error) {
         console.error("Error on creating event based collectible: ", error);
@@ -463,6 +509,24 @@ const listNFT = () => {
     setCollectibleType(collectibleType === "trade" ? "event" : "trade");
   };
 
+  const handlePressVerifyIdentity = () => {
+    router.push("/(modals)/identity");
+  };
+
+  const askUserForRating = async () => {
+    try {
+      const isAvailable = await StoreReview.isAvailableAsync();
+
+      if (!isAvailable) {
+        return console.error("Store review is not available on this device.");
+      }
+
+      await StoreReview.requestReview();
+    } catch (error) {
+      console.error("Error on asking user for rating: ", error);
+    }
+  };
+
   if (!postDocPath) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -471,7 +535,7 @@ const listNFT = () => {
     );
   }
 
-  if (!postData || stockLimit === null) {
+  if (!postData || stockLimit === null || identityStatus === null) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator color="white" />
@@ -732,6 +796,34 @@ const listNFT = () => {
             />
           </View>
 
+          {collectibleType === "trade" && !identityStatus && (
+            <Pressable
+              onPress={handlePressVerifyIdentity}
+              id="verification-info"
+              style={{
+                backgroundColor: "rgba(255,255,255,0.075)",
+                width: "100%",
+                justifyContent: "space-between",
+                alignItems: "center",
+                borderRadius: 20,
+                padding: 15,
+                flexDirection: "row",
+              }}
+            >
+              <AntDesign name="arrowright" size={18} color="yellow" />
+              <Text
+                fontSize={12}
+                style={{
+                  color: "yellow",
+                  textDecorationLine: "underline",
+                }}
+              >
+                You need to verify yourself to sell collectibles.
+              </Text>
+              <AntDesign name="arrowleft" size={18} color="yellow" />
+            </Pressable>
+          )}
+
           {!isVerified && (
             <Pressable
               onPress={handlePinkTickInformationPanelButton}
@@ -797,6 +889,7 @@ const listNFT = () => {
             </Pressable>
           </Animated.View>
         </Animated.View>
+        <View style={{ height: bottom }} />
       </ScrollView>
 
       <BottomSheetModalProvider>
@@ -849,10 +942,10 @@ const listNFT = () => {
                   onPress={handleConfirmButton}
                   style={{
                     backgroundColor: "white",
-                    padding: 10,
                     borderRadius: 10,
                     alignItems: "center",
                     justifyContent: "center",
+                    height: 40,
                   }}
                 >
                   {loading ? (
@@ -867,7 +960,7 @@ const listNFT = () => {
                   style={{
                     borderWidth: 1,
                     borderColor: "white",
-                    padding: 10,
+                    height: 40,
                     borderRadius: 10,
                     alignItems: "center",
                     justifyContent: "center",
@@ -903,7 +996,7 @@ const listNFT = () => {
                   onPress={handleConfirmButton}
                   style={{
                     backgroundColor: "white",
-                    padding: 10,
+                    height: 40,
                     borderRadius: 10,
                     alignItems: "center",
                     justifyContent: "center",
@@ -921,7 +1014,7 @@ const listNFT = () => {
                   style={{
                     borderWidth: 1,
                     borderColor: "white",
-                    padding: 10,
+                    height: 40,
                     borderRadius: 10,
                     alignItems: "center",
                     justifyContent: "center",

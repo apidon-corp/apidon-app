@@ -114,7 +114,15 @@ const welcome = () => {
         showPlayServicesUpdateDialog: true,
       });
 
-      const { idToken } = await GoogleSignin.signIn();
+      const data = (await GoogleSignin.signIn()).data;
+      if (!data) {
+        throw new Error("No data found in the response");
+      }
+
+      const idToken = data.idToken;
+      if (!idToken) {
+        throw new Error("No idToken found in the response");
+      }
 
       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
 

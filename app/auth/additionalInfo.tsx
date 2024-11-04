@@ -421,7 +421,18 @@ const additionalInfo = () => {
           showPlayServicesUpdateDialog: true,
         });
 
-        const { idToken } = await GoogleSignin.signIn();
+        const data = (await GoogleSignin.signIn()).data;
+
+        if (!data) {
+          console.error("No data found to revoke google user.");
+          return setDeleteAccountLoading(false);
+        }
+
+        const idToken = data.idToken;
+        if (!idToken) {
+          console.error("No idToken found to revoke google user.");
+          return setDeleteAccountLoading(false);
+        }
 
         const googleCredential = auth.GoogleAuthProvider.credential(idToken);
 

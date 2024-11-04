@@ -250,70 +250,106 @@ const NftBottomSheetContent = ({
           gap: 10,
         }}
       >
-        <View
-          id="price"
-          style={{
-            flex: 0.5,
-            flexDirection: "row",
-            backgroundColor: "#323232",
-            padding: 20,
-            gap: 5,
-            borderRadius: 10,
-            justifyContent: "space-between",
-          }}
-        >
-          <Text
-            bold
-            style={{
-              fontSize: 18,
-            }}
-          >
-            Price
-          </Text>
+        {collectibleDocData.type === "trade" && (
+          <>
+            <View
+              id="price"
+              style={{
+                flex: 0.5,
+                flexDirection: "row",
+                backgroundColor: "#323232",
+                padding: 20,
+                gap: 5,
+                borderRadius: 10,
+                justifyContent: "space-between",
+              }}
+            >
+              <Text
+                bold
+                style={{
+                  fontSize: 18,
+                }}
+              >
+                Price
+              </Text>
 
-          <Text
-            bold
-            style={{
-              fontSize: 18,
-              color: apidonPink,
-            }}
-          >
-            {collectibleDocData.type === "trade" &&
-              `$${collectibleDocData.price.price}`}
+              <Text
+                bold
+                style={{
+                  fontSize: 18,
+                  color: apidonPink,
+                }}
+              >
+                ${collectibleDocData.price.price}
+              </Text>
+            </View>
+            <View
+              id="stock"
+              style={{
+                flex: 0.5,
+                flexDirection: "row",
+                backgroundColor: "#323232",
+                padding: 20,
+                gap: 5,
+                borderRadius: 10,
+                justifyContent: "space-between",
+              }}
+            >
+              <Text
+                bold
+                style={{
+                  fontSize: 18,
+                }}
+              >
+                Stock
+              </Text>
+              <Text
+                bold
+                style={{
+                  fontSize: 18,
+                  color: apidonPink,
+                }}
+              >
+                {collectibleDocData.stock.remainingStock} Left
+              </Text>
+            </View>
+          </>
+        )}
 
-            {collectibleDocData.type === "event" && "Event"}
-          </Text>
-        </View>
-        <View
-          id="stock"
-          style={{
-            flex: 0.5,
-            flexDirection: "row",
-            backgroundColor: "#323232",
-            padding: 20,
-            gap: 5,
-            borderRadius: 10,
-            justifyContent: "space-between",
-          }}
-        >
-          <Text
-            bold
-            style={{
-              fontSize: 18,
-            }}
-          >
-            Stock
-          </Text>
-          <Text
-            bold
-            style={{
-              fontSize: 18,
-              color: apidonPink,
-            }}
-          >
-            {collectibleDocData.stock.remainingStock} Left
-          </Text>
-        </View>
+        {collectibleDocData.type === "event" && (
+          <>
+            <View
+              id="stock"
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                backgroundColor: "#323232",
+                padding: 20,
+                gap: 5,
+                borderRadius: 10,
+                justifyContent: "space-between",
+              }}
+            >
+              <Text
+                bold
+                style={{
+                  fontSize: 18,
+                }}
+              >
+                Stock
+              </Text>
+              <Text
+                bold
+                style={{
+                  fontSize: 18,
+                  color: apidonPink,
+                }}
+              >
+                {collectibleDocData.stock.remainingStock} Left
+              </Text>
+            </View>
+          </>
+        )}
       </View>
 
       {collectibleDocData.type === "trade" &&
