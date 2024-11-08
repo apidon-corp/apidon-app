@@ -23,6 +23,7 @@ import {
 } from "@gorhom/bottom-sheet";
 import Purchases, { PurchasesStoreProduct } from "react-native-purchases";
 import CustomBottomModalSheet from "../BottomSheet/CustomBottomModalSheet";
+import { Environment } from "@/types/Environment";
 
 const wallet = () => {
   const { balance } = useBalance();
@@ -39,6 +40,11 @@ const wallet = () => {
   const [loading, setLoading] = useState(false);
 
   const pathname = usePathname();
+
+  const environment = process.env.EXPO_PUBLIC_ENVIRONMENT as Environment;
+  if (!environment) {
+    throw new Error("Environment is not defined");
+  }
 
   const handleAcceptButton = async () => {
     if (!chosenProduct?.product) return;
@@ -79,6 +85,28 @@ const wallet = () => {
   const handlePressRefundButton = () => {
     Linking.openURL("https://support.apple.com/en-us/118223");
   };
+
+  if (environment === "PRODUCTION") {
+    return (
+      <View
+        style={{
+          width: "100%",
+          flex: 1,
+          alignContent: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Text
+          style={{
+            textAlign: "center",
+          }}
+          fontSize={13}
+        >
+          Wallet feature is not available, yet.
+        </Text>
+      </View>
+    );
+  }
 
   if (balance === "error" || balance === "getting-balance") {
     return (

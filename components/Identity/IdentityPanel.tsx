@@ -19,6 +19,7 @@ import { UserIdentityDoc } from "@/types/Identity";
 import appCheck from "@react-native-firebase/app-check";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
+import { Environment } from "@/types/Environment";
 
 const IdentityPanel = () => {
   const getIdentityVerificationSheetOptions = async () => {
@@ -112,6 +113,26 @@ const IdentityPanel = () => {
 
     return () => unsubscribe();
   }, [authStatus]);
+
+  const environment = process.env.EXPO_PUBLIC_ENVIRONMENT as Environment;
+
+  if (!environment) {
+    throw new Error("Environment is not defined");
+  }
+
+  if (environment == "PRODUCTION") {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Text>Identity verification is not available right now.</Text>
+      </View>
+    );
+  }
 
   if (!identityDocData) {
     return (
