@@ -1,4 +1,3 @@
-import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import FollowButton from "@/components/Follow/FollowButton";
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
@@ -8,7 +7,6 @@ import auth from "@react-native-firebase/auth";
 import { Image } from "expo-image";
 import { router, usePathname } from "expo-router";
 import * as Sharing from "expo-sharing";
-import { useSetAtom } from "jotai";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
@@ -23,8 +21,6 @@ const Header = ({ userData, collsCount }: Props) => {
   const pathname = usePathname();
 
   const [userOwnsPage, setUserOwnsPage] = useState(false);
-
-  const setScreenParameters = useSetAtom(screenParametersAtom);
 
   useEffect(() => {
     if (userData.username) checkUserOwnsPage();
@@ -85,7 +81,7 @@ const Header = ({ userData, collsCount }: Props) => {
       const baseURL = process.env.EXPO_PUBLIC_APP_LINK_BASE_URL || "";
       if (!baseURL) return;
 
-      const url = baseURL + "/" + "profile" + "/" + userData.username;
+      const url = baseURL + "/" + userData.username;
 
       await Sharing.shareAsync(url, {
         dialogTitle: `Share ${userData.fullname} with your friends!`,

@@ -4,8 +4,12 @@ import React from "react";
 import { Pressable } from "react-native";
 
 import { Text } from "@/components/Text/Text";
+import { Environment } from "@/types/Environment";
 
 const _layout = () => {
+  const environment =
+    (process.env.EXPO_PUBLIC_ENVIRONMENT as Environment) || "";
+
   const handlePressWalletIcon = () => {
     router.push("/home/collectibles/wallet");
   };
@@ -32,6 +36,8 @@ const _layout = () => {
                 height: 25,
                 justifyContent: "center",
                 alignItems: "flex-end",
+                display:
+                  environment && environment !== "PRODUCTION" ? "flex" : "none",
               }}
             >
               <FontAwesome5 name="wallet" size={25} color="white" />

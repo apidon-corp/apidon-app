@@ -25,9 +25,6 @@ const delay = (ms: number): Promise<void> => {
 
 const GetPinkTickScreenComponent = () => {
   const [userData, setUserData] = useState<UserInServer | null>(null);
-  const [identityDocData, setIdentityDocData] = useState<
-    UserIdentityDoc | "not-created" | null
-  >(null);
 
   const pathname = usePathname();
 
@@ -56,42 +53,7 @@ const GetPinkTickScreenComponent = () => {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const currentUserDisplayname = auth().currentUser?.displayName || "";
-    if (!currentUserDisplayname) return;
-
-    const unsubscribe = firestore()
-      .doc(`users/${currentUserDisplayname}/personal/identity`)
-      .onSnapshot(
-        (doc) => {
-          if (doc.exists) {
-            const data = doc.data() as UserIdentityDoc;
-            setIdentityDocData(data);
-          } else {
-            setIdentityDocData("not-created");
-          }
-        },
-        (error) => {
-          console.error("Error fetching identity data:", error);
-          setIdentityDocData(null);
-        }
-      );
-
-    return () => unsubscribe();
-  }, []);
-
   const handleCopyButton = async () => {
-    if (
-      !identityDocData ||
-      identityDocData === "not-created" ||
-      identityDocData.status !== "verified"
-    ) {
-      return Alert.alert(
-        "Verification Required",
-        "Please verify your identity to copy your UID."
-      );
-    }
-
     const uid = auth().currentUser?.uid || "";
     Clipboard.setStringAsync(uid);
     setCopied(true);
@@ -112,7 +74,7 @@ const GetPinkTickScreenComponent = () => {
     router.push(dest);
   };
 
-  if (!userData || !identityDocData) {
+  if (!userData) {
     return (
       <SafeAreaView
         style={{
@@ -177,38 +139,6 @@ const GetPinkTickScreenComponent = () => {
               width: "100%",
             }}
           >
-            <Pressable
-              onPress={handlePressIdentityVerification}
-              id="identity-step-area"
-              style={{
-                width: "100%",
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: "rgba(255,255,255,0.15)",
-                borderRadius: 15,
-                padding: 10,
-                justifyContent: "space-between",
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                }}
-              >
-                <Entypo name="dot-single" size={24} color="white" />
-                <Text fontSize={13}>Identity Verification: </Text>
-
-                {identityDocData === "not-created" ||
-                identityDocData.status !== "verified" ? (
-                  <Entypo name="cross" size={24} color="red" />
-                ) : (
-                  <Ionicons name="checkmark-circle" size={24} color="green" />
-                )}
-              </View>
-              <AntDesign name="arrowright" size={24} color="white" />
-            </Pressable>
-
             <View
               id="ig-step-area"
               style={{
@@ -220,12 +150,31 @@ const GetPinkTickScreenComponent = () => {
                 padding: 10,
               }}
             >
-              <Entypo name="dot-single" size={24} color="white" />
-              <Text fontSize={13}>
-                Direct message to Apidon's official Instagram account
-                (@apidon_com) with your unique UID. You can easily copy your UID
-                using the button below.
-              </Text>
+              <View
+                style={{
+                  width: "5%",
+                }}
+              >
+                <Entypo name="dot-single" size={24} color="white" />
+              </View>
+
+              <View
+                style={{
+                  width: "5%",
+                }}
+              />
+
+              <View
+                style={{
+                  width: "85%",
+                }}
+              >
+                <Text fontSize={13}>
+                  Direct message to Apidon's official Instagram account
+                  (@apidon_com) with your unique UID. You can easily copy your
+                  UID using the button below.
+                </Text>
+              </View>
             </View>
           </View>
         </View>

@@ -140,27 +140,13 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
   const handleLinking = async (linking: string, isInitial: boolean) => {
     if (!linking) return;
 
+    const subParts = linking.split("/");
+    const content = subParts[3];
+
+    if (!content) return router.replace("/home/feed");
+
     if (isInitial) {
-      const subParts = linking.split("/");
-
-      const content = subParts[3];
-
-      if (content === "profile") {
-        const username = subParts[4];
-        if (username) {
-          router.replace("/home");
-
-          await delay(1);
-
-          router.navigate(`/home/feed/profilePage?username=${username}`);
-
-          await delay(500);
-
-          return setLinking({ isInitial: false, url: "" });
-        }
-      }
-
-      if (content === "post") {
+      if (content === "p") {
         const postIdentifier = subParts[4];
 
         const postIdentifierContents = postIdentifier.split("-");
@@ -171,32 +157,24 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
         if (postSender && postId) {
           router.replace("/home");
 
-          await delay(1);
+          await delay(500);
 
           router.navigate(`/home/feed/post?sender=${postSender}&id=${postId}`);
 
           await delay(500);
-
-          return setLinking({ isInitial: false, url: "" });
         }
+      } else {
+        const username = content;
+        router.replace("/home");
+        await delay(500);
+        router.navigate(`/home/feed/profilePage?username=${username}`);
+        await delay(500);
       }
 
-      router.replace("/home");
+      return setLinking({ isInitial: false, url: "" });
     } else {
-      const subParts = linking.split("/");
-
-      const content = subParts[3];
-
-      if (content === "profile") {
-        const username = subParts[4];
-        if (username) {
-          router.navigate(`/home/feed/profilePage?username=${username}`);
-          await delay(500);
-          return setLinking({ isInitial: false, url: "" });
-        }
-      }
-
-      if (content === "post") {
+      // That means we need to open post page.
+      if (content === "p") {
         const postIdentifier = subParts[4];
 
         const postIdentifierContents = postIdentifier.split("-");
@@ -207,11 +185,14 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
         if (postSender && postId) {
           router.navigate(`/home/feed/post?sender=${postSender}&id=${postId}`);
           await delay(500);
-          return setLinking({ isInitial: false, url: "" });
         }
+      } else {
+        const username = content;
+        router.navigate(`/home/feed/profilePage?username=${username}`);
+        await delay(500);
       }
 
-      router.replace("/home");
+      return setLinking({ isInitial: false, url: "" });
     }
   };
 

@@ -149,8 +149,10 @@ function RootLayout() {
     // Handle the initial URL if the app is opened via a Universal Link
     const handleInitialURL = async () => {
       const initialUrl = await Linking.getInitialURL();
-
       if (!initialUrl) return;
+
+      const baseURL = process.env.EXPO_PUBLIC_APP_LINK_BASE_URL || "";
+      if (initialUrl === baseURL || initialUrl == `${baseURL}/`) return;
 
       const timeStampedURL = initialUrl + "/" + Date.now().toString();
 
@@ -165,8 +167,11 @@ function RootLayout() {
     // Listen for incoming URLs when the app is already open
     const subscription = Linking.addListener("url", (event) => {
       const url = event.url;
-
       if (!url) return;
+
+      const baseURL = process.env.EXPO_PUBLIC_APP_LINK_BASE_URL || "";
+      if (url === baseURL || url == `${baseURL}/`) return;
+
       const timeStampedURL = url + "/" + Date.now().toString();
 
       // To prevent "auto" redirecting....

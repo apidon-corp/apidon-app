@@ -391,7 +391,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
       const url =
         baseURL +
         "/" +
-        "post" +
+        "p" +
         "/" +
         postDocData.senderUsername +
         "-" +

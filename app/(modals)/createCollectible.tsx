@@ -38,6 +38,7 @@ import { UserIdentityDoc } from "@/types/Identity";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import * as StoreReview from "expo-store-review";
+import { Environment } from "@/types/Environment";
 
 const listNFT = () => {
   // Trigger In-App-Purchase Store Notifications
@@ -91,11 +92,14 @@ const listNFT = () => {
   const [stockLimit, setStockLimit] = useState<null | number>(null);
 
   const [collectibleType, setCollectibleType] =
-    useState<CollectibleType>("trade");
+    useState<CollectibleType>("event");
 
   const [identityStatus, setIdentityStatus] = useState<null | boolean>(null);
 
   const { bottom } = useSafeAreaInsets();
+
+  const environment =
+    (process.env.EXPO_PUBLIC_ENVIRONMENT as Environment) || "";
 
   // Getting inital post data.
   useEffect(() => {
@@ -575,40 +579,42 @@ const listNFT = () => {
             />
           </View>
 
-          <View
-            id="toggle"
-            style={{
-              width: "100%",
-              alignItems: "center",
-              justifyContent: "center",
-              flexDirection: "row",
-              gap: 10,
-            }}
-          >
-            <Text
-              bold
+          {environment && environment != "PRODUCTION" && (
+            <View
+              id="toggle"
               style={{
-                fontSize: 14,
+                width: "100%",
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "row",
+                gap: 10,
               }}
             >
-              Trade
-            </Text>
-            <Switch
-              trackColor={{ false: apidonPink, true: apidonPink }}
-              ios_backgroundColor={apidonPink}
-              thumbColor="black"
-              onValueChange={onToggleValueChange}
-              value={collectibleType === "trade" ? false : true}
-            />
-            <Text
-              bold
-              style={{
-                fontSize: 14,
-              }}
-            >
-              Event
-            </Text>
-          </View>
+              <Text
+                bold
+                style={{
+                  fontSize: 14,
+                }}
+              >
+                Trade
+              </Text>
+              <Switch
+                trackColor={{ false: apidonPink, true: apidonPink }}
+                ios_backgroundColor={apidonPink}
+                thumbColor="black"
+                onValueChange={onToggleValueChange}
+                value={collectibleType === "trade" ? false : true}
+              />
+              <Text
+                bold
+                style={{
+                  fontSize: 14,
+                }}
+              >
+                Event
+              </Text>
+            </View>
+          )}
 
           {collectibleType === "trade" && (
             <View
