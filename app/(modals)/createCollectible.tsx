@@ -159,11 +159,18 @@ const listNFT = () => {
 
   // Changing opactiy of create button.
   useEffect(() => {
-    handleChangeOpactiy(
-      createButtonOpacityValue,
-      isVerified && identityStatus && price && stock && !loading ? 1 : 0.5,
-      250
-    );
+    let status = false;
+
+    if (collectibleType === "event") {
+      status = isVerified && stock && !loading ? true : false;
+    } else {
+      status =
+        isVerified && identityStatus && price && stock && !loading
+          ? true
+          : false;
+    }
+
+    handleChangeOpactiy(createButtonOpacityValue, status ? 1 : 0.5, 250);
   }, [price, stock, loading, isVerified, identityStatus]);
 
   // Dynamic Data Fetching - Current User Status (verified)
