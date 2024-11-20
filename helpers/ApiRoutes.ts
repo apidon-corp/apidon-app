@@ -29,6 +29,7 @@ const apiRoutes = {
       getFollowStatus: `${apiEndpoint}/user-Social-getFollowStatus`,
       block: `${apiEndpoint}/user-Social-block`,
       unBlock: `${apiEndpoint}/user-Social-unBlock`,
+      reportUser: `${apiEndpoint}/user-Social-reportUser`,
     },
   },
   collectible: {

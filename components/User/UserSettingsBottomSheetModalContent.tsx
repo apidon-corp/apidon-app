@@ -27,6 +27,10 @@ const UserSettingsBottomSheetModalContent = ({
 
   const [blocked, setBlocked] = useState<null | boolean>(null);
 
+  const [reported, setReported] = useState<null | boolean>(false);
+  const [reportLoading, setReportLoading] = useState(false);
+
+  // Block Checking
   useEffect(() => {
     if (isOwnPage) return setBlocked(false);
 
@@ -42,6 +46,28 @@ const UserSettingsBottomSheetModalContent = ({
         (error) => {
           console.error("Error on getting realtime data  ", error);
           setBlocked(null);
+        }
+      );
+
+    return () => unsubscribe();
+  }, []);
+
+  // Report Checking
+  useEffect(() => {
+    if (isOwnPage) return setReported(false);
+
+    const displayName = auth().currentUser?.displayName || "";
+    if (!displayName) return;
+
+    const unsubscribe = firestore()
+      .doc(`users/${userData.username}/reportedBys/${displayName}`)
+      .onSnapshot(
+        (snapshot) => {
+          setReported(snapshot.exists);
+        },
+        (error) => {
+          console.error("Error on getting realtime data  ", error);
+          setReported(null);
         }
       );
 
@@ -220,7 +246,96 @@ const UserSettingsBottomSheetModalContent = ({
     }
   };
 
-  if (blocked === null) {
+  const handleReportButton = () => {
+    if (reportLoading) return;
+
+    if (reported)
+      return Alert.alert(
+        "Already Reported",
+        `You have already reported @${userData.username}.\n\n Our team is investigating profile. \n\n Thank you for your patience.`,
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              modalRef.current?.dismiss();
+            },
+          },
+        ]
+      );
+
+    Alert.alert(
+      "Report User",
+      `Are you sure you want to report @${userData.username}?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Report",
+          style: "destructive",
+          onPress: () => {
+            handleReport();
+          },
+        },
+      ]
+    );
+  };
+
+  const handleReport = async () => {
+    if (reportLoading) return;
+
+    const currentUserAuthObject = auth().currentUser;
+    if (!currentUserAuthObject) return;
+
+    setReportLoading(true);
+
+    try {
+      const idToken = await currentUserAuthObject.getIdToken();
+      const { token: appchecktoken } = await appCheck().getLimitedUseToken();
+
+      const response = await fetch(apiRoutes.user.social.reportUser, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${idToken}`,
+          appchecktoken,
+        },
+        body: JSON.stringify({
+          reportedUser: userData.username,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error(
+          "Response from report user api is not okay: ",
+          await response.text()
+        );
+        return setReportLoading(false);
+      }
+
+      // Good to go.
+      setReportLoading(false);
+
+      Alert.alert(
+        "User Reported",
+        `@${userData.username} has been reported successfully.\n\n Our team is investigating profile. \n\n Thank you for your patience.`,
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              modalRef.current?.dismiss();
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      console.error("Error on reporting user: ", error);
+      return setReportLoading(false);
+    }
+  };
+
+  if (blocked === null || reported === null) {
     return (
       <View
         style={{
@@ -294,6 +409,7 @@ const UserSettingsBottomSheetModalContent = ({
           )}
 
           <Pressable
+            onPress={handleReportButton}
             style={{
               padding: 10,
               borderRadius: 10,
@@ -302,9 +418,17 @@ const UserSettingsBottomSheetModalContent = ({
               alignItems: "center",
             }}
           >
-            <Text bold style={{ fontSize: 15 }}>
-              Report
-            </Text>
+            {reportLoading ? (
+              <ActivityIndicator color="white" />
+            ) : reported ? (
+              <Text bold style={{ fontSize: 15 }}>
+                Reported (Investigating)
+              </Text>
+            ) : (
+              <Text bold style={{ fontSize: 15 }}>
+                Report
+              </Text>
+            )}
           </Pressable>
         </>
       )}
