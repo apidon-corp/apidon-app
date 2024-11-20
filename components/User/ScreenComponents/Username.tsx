@@ -18,7 +18,7 @@ const profile = () => {
             alignItems: "center",
           }}
         >
-          <Text>Username not found</Text>
+          <Text>User not found.</Text>
         </View>
       </SafeAreaView>
     );

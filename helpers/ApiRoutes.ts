@@ -27,6 +27,8 @@ const apiRoutes = {
     social: {
       follow: `${apiEndpoint}/user-Social-follow`,
       getFollowStatus: `${apiEndpoint}/user-Social-getFollowStatus`,
+      block: `${apiEndpoint}/user-Social-block`,
+      unBlock: `${apiEndpoint}/user-Social-unBlock`,
     },
   },
   collectible: {
@@ -55,7 +57,7 @@ const apiRoutes = {
       postRate: `${apiEndpoint}/post-postRate`,
     },
     postUpload: `${apiEndpoint}/post-postUpload`,
-    postReport: `${apiEndpoint}/post-postReport`
+    postReport: `${apiEndpoint}/post-postReport`,
   },
   payment: {
     createPayment: `${apiEndpoint}/payment-createPayment`,

@@ -80,6 +80,8 @@ const PostSettingsBottomSheetContent = ({
   };
 
   const handleReportPost = async () => {
+    if (reportLoading) return;
+
     const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return;
 

@@ -69,6 +69,10 @@ const Post = React.memo(({ postDocPath }: Props) => {
     undefined | number
   >(undefined);
 
+  const [currentUserBlockedBySender, setCurrentUserBlockedBySender] = useState<
+    null | boolean
+  >(null);
+
   // Dynamic Data Fetching / Post Object
   useEffect(() => {
     if (authStatus !== "authenticated") return;
@@ -194,6 +198,30 @@ const Post = React.memo(({ postDocPath }: Props) => {
       );
     return () => unsubscribe();
   }, [authStatus]);
+
+  // Realtime Block Checking
+  useEffect(() => {
+    if (doesOwnPost) return setCurrentUserBlockedBySender(false);
+
+    const displayName = auth().currentUser?.displayName || "";
+    if (!displayName) return;
+
+    if (!postSenderData) return;
+
+    const unsubscribe = firestore()
+      .doc(`users/${postSenderData.username}/blocks/${displayName}`)
+      .onSnapshot(
+        (snapshot) => {
+          setCurrentUserBlockedBySender(snapshot.exists);
+        },
+        (error) => {
+          console.error("Error on getting realtime data  ", error);
+          setCurrentUserBlockedBySender(null);
+        }
+      );
+
+    return () => unsubscribe();
+  }, [doesOwnPost, postSenderData]);
 
   const handleOpenRatesModal = () => {
     const path = pathname;
@@ -419,7 +447,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
     );
   }
 
-  if (loading)
+  if (loading || currentUserBlockedBySender === null)
     return (
       <View
         style={{
@@ -433,7 +461,13 @@ const Post = React.memo(({ postDocPath }: Props) => {
       </View>
     );
 
-  if (!postDocData || !postSenderData || postDeleted) return <></>;
+  if (
+    !postDocData ||
+    !postSenderData ||
+    postDeleted ||
+    currentUserBlockedBySender
+  )
+    return <></>;
 
   if (
     !(

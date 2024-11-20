@@ -33,6 +33,32 @@ const CommentItem = ({
 
   const [commentDeleted, setCommentDeleted] = useState(false);
 
+  const [currentUserBlockedBySender, setCurrentUserBlockedBySender] = useState<
+    null | boolean
+  >(null);
+
+  // Realtime Block Checking
+  useEffect(() => {
+    const displayName = auth().currentUser?.displayName || "";
+    if (!displayName) return;
+
+    if (sender === displayName) return setCurrentUserBlockedBySender(false);
+
+    const unsubscribe = firestore()
+      .doc(`users/${sender}/blocks/${displayName}`)
+      .onSnapshot(
+        (snapshot) => {
+          setCurrentUserBlockedBySender(snapshot.exists);
+        },
+        (error) => {
+          console.error("Error on getting realtime data  ", error);
+          setCurrentUserBlockedBySender(null);
+        }
+      );
+
+    return () => unsubscribe();
+  }, [sender]);
+
   useEffect(() => {
     if (sender) handleGetUserData();
   }, [sender]);
@@ -142,7 +168,7 @@ const CommentItem = ({
 
   if (commentDeleted) return <></>;
 
-  if (loading || !userData)
+  if (loading || !userData || currentUserBlockedBySender === null)
     return (
       <View
         style={{
@@ -155,6 +181,8 @@ const CommentItem = ({
         <ActivityIndicator color="white" />
       </View>
     );
+
+  if (currentUserBlockedBySender) return <></>;
 
   return (
     <View
