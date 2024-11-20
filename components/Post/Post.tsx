@@ -488,7 +488,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
           <View
             id="sender-information"
             style={{
-              width: "55%",
+              width: "50%",
               overflow: "hidden",
             }}
           >
@@ -537,7 +537,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
                     <Text
                       bold
                       style={{
-                        fontSize: 11,
+                        fontSize: 10,
                       }}
                     >
                       {postSenderData.fullname}
@@ -561,7 +561,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
                   >
                     <Text
                       style={{
-                        fontSize: 11,
+                        fontSize: 10,
                       }}
                     >
                       @{postSenderData.username}
@@ -569,7 +569,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
                     <Entypo name="dot-single" size={15} color="gray" />
 
-                    <Text style={{ fontSize: 10, color: "gray" }}>
+                    <Text style={{ fontSize: 9, color: "gray" }}>
                       {formatDistanceToNowStrict(
                         new Date(postDocData.creationTime)
                       )}
@@ -580,69 +580,52 @@ const Post = React.memo(({ postDocPath }: Props) => {
             </Pressable>
           </View>
 
-          <View
-            style={{
-              width: "5%",
-            }}
-          />
-
-          {postDocData.collectibleStatus.isCollectible && (
-            <View id="collectible-tag" style={{ width: "30%" }}>
+          <View id="collectible-tag" style={{ width: "30%" }}>
+            {postDocData.collectibleStatus.isCollectible && (
               <NFTTag
                 nftOptionsModalRef={nftOptionsModalRef}
                 username={postSenderData.username}
               />
-            </View>
-          )}
+            )}
+          </View>
 
-          {(doesOwnPost || !doesFollow) && (
+          {!doesFollow && !doesOwnPost && (
             <View
               style={{
-                width: "5%",
-              }}
-            />
-          )}
-
-          {doesOwnPost ? (
-            <View
-              id="settings-button"
-              style={{
-                width: "5%",
+                width: "7%",
                 alignItems: "flex-end",
-                overflow: "hidden",
+                justifyContent: "center",
               }}
             >
-              <Pressable
-                onPress={handleOptionsButton}
-                disabled={postDeleteLoading}
-              >
-                {postDeleteLoading ? (
-                  <ActivityIndicator color="red" />
+              <Pressable onPress={handleFollowButton} disabled={followLoading}>
+                {followLoading ? (
+                  <ActivityIndicator color="white" size="small" />
                 ) : (
-                  <Entypo name="dots-three-vertical" size={18} color="white" />
+                  <Feather name="user-plus" size={18} color="white" />
                 )}
               </Pressable>
             </View>
-          ) : (
-            !doesFollow && (
-              <View
-                style={{
-                  width: "5%",
-                }}
-              >
-                <Pressable
-                  onPress={handleFollowButton}
-                  disabled={followLoading}
-                >
-                  {followLoading ? (
-                    <ActivityIndicator color="white" size="small" />
-                  ) : (
-                    <Feather name="user-plus" size={18} color="white" />
-                  )}
-                </Pressable>
-              </View>
-            )
           )}
+
+          <View
+            id="settings-button"
+            style={{
+              width: "5%",
+              alignItems: "flex-end",
+              overflow: "hidden",
+            }}
+          >
+            <Pressable
+              onPress={handleOptionsButton}
+              disabled={postDeleteLoading}
+            >
+              {postDeleteLoading ? (
+                <ActivityIndicator color="red" />
+              ) : (
+                <Entypo name="dots-three-vertical" size={18} color="white" />
+              )}
+            </Pressable>
+          </View>
         </View>
 
         {postDocData.image && <PostImage source={postDocData.image} />}

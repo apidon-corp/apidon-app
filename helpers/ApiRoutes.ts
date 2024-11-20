@@ -55,6 +55,7 @@ const apiRoutes = {
       postRate: `${apiEndpoint}/post-postRate`,
     },
     postUpload: `${apiEndpoint}/post-postUpload`,
+    postReport: `${apiEndpoint}/post-postReport`
   },
   payment: {
     createPayment: `${apiEndpoint}/payment-createPayment`,

@@ -63,3 +63,8 @@ export type PostDataOnMainPostsCollection = {
   sender: string;
   timestamp: number;
 };
+
+export type ReportDocData = {
+  ts: number;
+  username: string;
+};
