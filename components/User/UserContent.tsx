@@ -375,7 +375,11 @@ const UserContent = ({ username }: Props) => {
       </View>
     );
 
-  if (userData === "not-found" || currentUserBlockedBySender) {
+  if (
+    userData === "not-found" ||
+    currentUserBlockedBySender ||
+    userData.isScheduledToDelete
+  ) {
     return (
       <View
         style={{

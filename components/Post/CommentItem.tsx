@@ -182,7 +182,7 @@ const CommentItem = ({
       </View>
     );
 
-  if (currentUserBlockedBySender) return <></>;
+  if (currentUserBlockedBySender || userData.isScheduledToDelete) return <></>;
 
   return (
     <View

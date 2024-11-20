@@ -24,9 +24,9 @@ const _layout = () => {
         }}
       />
       <Stack.Screen
-        name="passwordDeleteAccount"
+        name="deleteAccount"
         options={{
-          headerTitle: "",
+          headerTitle: "Delete Account",
         }}
       />
       <Stack.Screen

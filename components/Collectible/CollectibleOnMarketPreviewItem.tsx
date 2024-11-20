@@ -117,7 +117,7 @@ const CollectibleOnMarketPreviewItem = ({
     );
   };
 
-  if (!postDocData || currentUserBlockedBySender === null) {
+  if (!postDocData || currentUserBlockedBySender === null || !postSenderData) {
     return (
       <View style={{ width: "48%", marginVertical: 8 }}>
         <View
@@ -135,7 +135,11 @@ const CollectibleOnMarketPreviewItem = ({
     );
   }
 
-  if (!collectibleDocData || currentUserBlockedBySender) {
+  if (
+    !collectibleDocData ||
+    currentUserBlockedBySender ||
+    postSenderData.isScheduledToDelete
+  ) {
     return false;
   }
 

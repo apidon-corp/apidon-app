@@ -15,6 +15,7 @@ import {
   ScrollView,
   TextInput,
   View,
+  Text as NativeText,
 } from "react-native";
 import crashlytics from "@react-native-firebase/crashlytics";
 
@@ -187,16 +188,14 @@ const verifyEmail = () => {
           <Text fontSize={32} bold>
             Please Check Your Email
           </Text>
-          <Text
+          <NativeText
             style={{
               color: "gray",
             }}
           >
-            We've sent a code to
-            <Text style={{ textDecorationLine: "underline", color: "cyan" }}>
-              {email}
-            </Text>
-          </Text>
+            We've sent a code to{" "}
+            <NativeText style={{ color: "cyan" }}>{email}</NativeText>
+          </NativeText>
         </View>
         <View
           id="code-inputs"

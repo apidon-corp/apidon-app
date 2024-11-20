@@ -9,6 +9,7 @@ const apiRoutes = {
     personal: {
       fullnameUpdate: `${apiEndpoint}/user-Personal-fullnameUpdate`,
       updateProfileImage: `${apiEndpoint}/user-Personal-updateProfileImage`,
+      deleteAccount: `${apiEndpoint}/user-Personal-deleteAccount`,
     },
     authentication: {
       login: {

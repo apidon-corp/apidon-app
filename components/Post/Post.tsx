@@ -465,7 +465,8 @@ const Post = React.memo(({ postDocPath }: Props) => {
     !postDocData ||
     !postSenderData ||
     postDeleted ||
-    currentUserBlockedBySender
+    currentUserBlockedBySender ||
+    postSenderData.isScheduledToDelete
   )
     return <></>;
 

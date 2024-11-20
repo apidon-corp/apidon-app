@@ -188,7 +188,7 @@ const UserCard = ({ username }: Props) => {
       </View>
     );
 
-  if (currentUserBlockedBySender) {
+  if (currentUserBlockedBySender || userData.isScheduledToDelete) {
     return <></>;
   }
 
