@@ -75,7 +75,7 @@ const UserSettingsBottomSheetModalContent = ({
 
     Alert.alert(
       "Block User",
-      `Are you sure you want to block ${userData.fullname}?`,
+      `Are you sure you want to block @${userData.username}?`,
       [
         {
           text: "Cancel",
@@ -129,7 +129,7 @@ const UserSettingsBottomSheetModalContent = ({
 
       Alert.alert(
         "User Blocked",
-        `${userData.fullname} has been blocked successfully. Your profile, posts, collectibles, ratings, and comments are now hidden from ${userData.fullname}.`,
+        `${userData.username} has been blocked successfully. Your profile, posts, collectibles, ratings, and comments are now hidden from @${userData.username}.`,
         [
           {
             text: "OK",
@@ -150,7 +150,7 @@ const UserSettingsBottomSheetModalContent = ({
 
     Alert.alert(
       "Cancel Block",
-      `Are you sure you want to cancel block of ${userData.fullname}?`,
+      `Are you sure you want to cancel block of @${userData.username}?`,
       [
         {
           text: "Cancel",
@@ -204,7 +204,7 @@ const UserSettingsBottomSheetModalContent = ({
 
       Alert.alert(
         "User Unblocked",
-        `${userData.fullname} has been unblocked successfully.\n Your profile, posts, collectibles, ratings, and comments are now visible to ${userData.fullname}.`,
+        `@${userData.username} has been unblocked successfully.\n Your profile, posts, collectibles, ratings, and comments are now visible to @${userData.username}.`,
         [
           {
             text: "OK",
