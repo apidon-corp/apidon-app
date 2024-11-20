@@ -28,7 +28,6 @@ export {
 } from "expo-router";
 
 import useAppCheck from "@/hooks/useAppCheck";
-import useCheckInternet from "@/hooks/useCheckInternet";
 import useCheckUpdate from "@/hooks/useCheckUpdate";
 import { Image } from "expo-image";
 
@@ -124,8 +123,6 @@ function RootLayout() {
 
   const { versionStatus } = useCheckUpdate();
 
-  const { connectionStatus } = useCheckInternet();
-
   const [linking, setLinking] = useState<{
     isInitial: boolean;
     url: string;
@@ -197,13 +194,10 @@ function RootLayout() {
   // Handle App Ready State
   useEffect(() => {
     const status =
-      loaded &&
-      appCheckLoaded &&
-      versionStatus === "hasLatestVersion" &&
-      connectionStatus;
+      loaded && appCheckLoaded && versionStatus === "hasLatestVersion";
 
     setAppReady(status);
-  }, [loaded, appCheckLoaded, versionStatus, connectionStatus]);
+  }, [loaded, appCheckLoaded, versionStatus]);
 
   // Handle animation...
   useEffect(() => {
