@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Alert } from "react-native";
 
 import crashlytics from "@react-native-firebase/crashlytics";
+import { Environment } from "@/types/Environment";
 
 const MAX_RETRIES = 10;
 const RETRY_DELAY = 500;
@@ -25,9 +26,20 @@ const useAppCheck = () => {
         console.error("Debug token is not defined from environment variables.");
       }
 
+      const environment = process.env.EXPO_PUBLIC_ENVIRONMENT as Environment;
+      if (!environment)
+        return console.error(
+          "Environment is not defined from environment variables."
+        );
+
       provider.configure({
         apple: {
-          provider: Device.isDevice ? "deviceCheck" : "debug",
+          provider:
+            environment === "DEVELOPMENT" || environment === "LOCALPREVIEW"
+              ? "debug"
+              : Device.isDevice
+              ? "deviceCheck"
+              : "debug",
           debugToken: debugToken,
         },
       });
