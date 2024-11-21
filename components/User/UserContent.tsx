@@ -78,6 +78,34 @@ const UserContent = ({ username }: Props) => {
   const [collectibleContentTypeValue, setCollectibleContentTypeValue] =
     useState<CollectibleContentType>("collected");
 
+  const [currentUserBlockedBySender, setCurrentUserBlockedBySender] = useState<
+    null | boolean
+  >(false);
+
+  //Realtime Block Checking
+  useEffect(() => {
+    if (!username) return;
+
+    const displayName = auth().currentUser?.displayName || "";
+    if (!displayName) return;
+
+    if (username === displayName) return setCurrentUserBlockedBySender(false);
+
+    const unsubscribe = firestore()
+      .doc(`users/${username}/blocks/${displayName}`)
+      .onSnapshot(
+        (snapshot) => {
+          setCurrentUserBlockedBySender(snapshot.exists);
+        },
+        (error) => {
+          console.error("Error on getting realtime data  ", error);
+          setCurrentUserBlockedBySender(null);
+        }
+      );
+
+    return () => unsubscribe();
+  }, [username]);
+
   // Initial Fetchings
   useEffect(() => {
     if (toggleValue === "posts") getInitialPosts();
@@ -334,7 +362,7 @@ const UserContent = ({ username }: Props) => {
     setRefreshLoading(false);
   }
 
-  if (!userData)
+  if (!userData || currentUserBlockedBySender === null)
     return (
       <View
         style={{
@@ -347,7 +375,11 @@ const UserContent = ({ username }: Props) => {
       </View>
     );
 
-  if (userData === "not-found") {
+  if (
+    userData === "not-found" ||
+    currentUserBlockedBySender ||
+    userData.isScheduledToDelete
+  ) {
     return (
       <View
         style={{

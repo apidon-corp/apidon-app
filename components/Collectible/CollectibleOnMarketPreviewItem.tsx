@@ -10,6 +10,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Animated, Pressable, View } from "react-native";
 import Text from "../Text/Text";
 
+import auth from "@react-native-firebase/auth";
+
 type Props = {
   postDocPath: string;
   collectibleDocData: CollectibleDocData;
@@ -28,6 +30,10 @@ const CollectibleOnMarketPreviewItem = ({
 
   const animatedWidth = useRef(new Animated.Value(48)).current;
 
+  const [currentUserBlockedBySender, setCurrentUserBlockedBySender] = useState<
+    null | boolean
+  >(null);
+
   // Getting post data
   useEffect(() => {
     handleGetPostData();
@@ -41,6 +47,31 @@ const CollectibleOnMarketPreviewItem = ({
       useNativeDriver: false,
     }).start();
   }, [isGrid]);
+
+  // Realtime Block Checking
+  useEffect(() => {
+    if (!postDocData) return;
+
+    const displayName = auth().currentUser?.displayName || "";
+    if (!displayName) return;
+
+    if (postDocData.senderUsername === displayName)
+      return setCurrentUserBlockedBySender(false);
+
+    const unsubscribe = firestore()
+      .doc(`users/${postDocData.senderUsername}/blocks/${displayName}`)
+      .onSnapshot(
+        (snapshot) => {
+          setCurrentUserBlockedBySender(snapshot.exists);
+        },
+        (error) => {
+          console.error("Error on getting realtime data  ", error);
+          setCurrentUserBlockedBySender(null);
+        }
+      );
+
+    return () => unsubscribe();
+  }, [postDocData]);
 
   const handleGetPostData = async () => {
     if (!postDocPath) return setPostDocData(null);
@@ -86,7 +117,7 @@ const CollectibleOnMarketPreviewItem = ({
     );
   };
 
-  if (!postDocData) {
+  if (!postDocData || currentUserBlockedBySender === null || !postSenderData) {
     return (
       <View style={{ width: "48%", marginVertical: 8 }}>
         <View
@@ -104,8 +135,12 @@ const CollectibleOnMarketPreviewItem = ({
     );
   }
 
-  if (!collectibleDocData) {
-    return null;
+  if (
+    !collectibleDocData ||
+    currentUserBlockedBySender ||
+    postSenderData.isScheduledToDelete
+  ) {
+    return false;
   }
 
   return (

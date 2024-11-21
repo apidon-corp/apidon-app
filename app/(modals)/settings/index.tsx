@@ -4,8 +4,10 @@ import IdentitySettings from "@/components/Settings/IdentitySettings";
 import NotificationSettings from "@/components/Settings/NotificationSettings";
 import SignOut from "@/components/User/SignOut";
 import React, { useEffect, useState } from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import auth from "@react-native-firebase/auth";
+import Text from "@/components/Text/Text";
+import { router } from "expo-router";
 
 const settings = () => {
   const [isSignedWithApple, setSignedWithApple] = useState(false);
@@ -37,19 +39,37 @@ const settings = () => {
       <GetPinkTick />
       <SignOut />
 
-      {isSignedWithApple && (
-        <>
-          <View
-            style={{
-              height: 1,
-              backgroundColor: "gray",
-              width: "85%",
-              marginVertical: 20,
-            }}
-          />
-          <DeleteAccount />
-        </>
-      )}
+      <View
+        style={{
+          width: "75%",
+          height: 1,
+          borderWidth: 1,
+          borderColor: "gray",
+          alignSelf: "center",
+          marginVertical: 10,
+        }}
+      />
+      <Pressable
+        onPress={() => {
+          router.push("/settings/deleteAccount");
+        }}
+        style={{
+          padding: 15,
+          borderWidth: 1,
+          borderColor: "red",
+          borderRadius: 10,
+          width: "100%",
+          gap: 5,
+        }}
+      >
+        <Text bold style={{ fontSize: 14, color: "red" }}>
+          Delete Account
+        </Text>
+        <Text style={{ fontSize: 12, color: "gray" }} bold>
+          Permanently delete your account and all of your data from Apidon. This
+          action is irreversible.
+        </Text>
+      </Pressable>
     </View>
   );
 };

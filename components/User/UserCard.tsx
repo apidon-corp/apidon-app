@@ -29,6 +29,34 @@ const UserCard = ({ username }: Props) => {
 
   const pathname = usePathname();
 
+  const [currentUserBlockedBySender, setCurrentUserBlockedBySender] = useState<
+    null | boolean
+  >(null);
+
+  // Realtime Block Checking
+  useEffect(() => {
+    if (!username) return;
+
+    const displayName = auth().currentUser?.displayName || "";
+    if (!displayName) return;
+
+    if (username === displayName) return setCurrentUserBlockedBySender(false);
+
+    const unsubscribe = firestore()
+      .doc(`users/${username}/blocks/${displayName}`)
+      .onSnapshot(
+        (snapshot) => {
+          setCurrentUserBlockedBySender(snapshot.exists);
+        },
+        (error) => {
+          console.error("Error on getting realtime data  ", error);
+          setCurrentUserBlockedBySender(null);
+        }
+      );
+
+    return () => unsubscribe();
+  }, [username]);
+
   useEffect(() => {
     handleGetUserData();
   }, [username]);
@@ -146,7 +174,7 @@ const UserCard = ({ username }: Props) => {
     console.error("Hmm");
   };
 
-  if (loading || !userData)
+  if (loading || !userData || currentUserBlockedBySender === null)
     return (
       <View
         style={{
@@ -159,6 +187,10 @@ const UserCard = ({ username }: Props) => {
         <ActivityIndicator color="white" />
       </View>
     );
+
+  if (currentUserBlockedBySender || userData.isScheduledToDelete) {
+    return <></>;
+  }
 
   return (
     <Pressable

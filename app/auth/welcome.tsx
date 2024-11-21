@@ -1,6 +1,7 @@
 import { Text } from "@/components/Text/Text";
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 import * as AppleAuthentication from "expo-apple-authentication";
+import { Alert, Text as NativeText } from "react-native";
 
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Pressable, SafeAreaView, View } from "react-native";
@@ -17,12 +18,16 @@ import { router } from "expo-router";
 
 import crashlytics from "@react-native-firebase/crashlytics";
 
+import * as Linking from "expo-linking";
+
 const welcome = () => {
   const { setAuthStatus } = useAuth();
 
   const [loading, setLoading] = useState(false);
 
   const opacity = useRef(new Animated.Value(1)).current;
+
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   useEffect(() => {
     if (loading) {
@@ -40,7 +45,13 @@ const welcome = () => {
     }).start();
   };
 
+  const handleAcceptEulaButton = () => {
+    setTermsAccepted((prev) => !prev);
+  };
+
   async function handleContinueWithAppleButton() {
+    if (!termsAccepted) return showEulaAlert();
+
     if (loading) return;
 
     setLoading(true);
@@ -99,6 +110,9 @@ const welcome = () => {
   }
 
   async function handleContinueWithGoogleButton() {
+    if (!termsAccepted) return showEulaAlert();
+    if (loading) return;
+
     setLoading(true);
 
     try {
@@ -161,8 +175,23 @@ const welcome = () => {
   }
 
   function handleContinueWithEmailButon() {
+    if (!termsAccepted) return showEulaAlert();
+    if (loading) return;
     router.push("/auth/emailPasswordSignUp");
   }
+
+  const showEulaAlert = () => {
+    Alert.alert(
+      "EULA Agreement",
+      "You need to accept the End User License Agreement (EULA) to continue using the app.",
+      [
+        {
+          text: "OK",
+          style: "cancel",
+        },
+      ]
+    );
+  };
 
   return (
     <SafeAreaView
@@ -322,6 +351,70 @@ const welcome = () => {
           </Pressable>
         </View>
       </Animated.View>
+
+      <View
+        id="eula-root"
+        style={{
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 20,
+        }}
+      >
+        <View
+          id="eula"
+          style={{
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 15,
+            gap: 5,
+          }}
+        >
+          <Pressable onPress={handleAcceptEulaButton}>
+            {termsAccepted ? (
+              <MaterialIcons name="check-box" size={30} color="white" />
+            ) : (
+              <MaterialIcons
+                name="check-box-outline-blank"
+                size={30}
+                color="red"
+              />
+            )}
+          </Pressable>
+
+          <NativeText
+            style={{
+              fontWeight: 700,
+              fontSize: 12,
+              color: "gray",
+              textAlign: "left",
+            }}
+          >
+            I confirm that I have read and accepted the terms of{" "}
+            <Pressable
+              onPress={() => {
+                Linking.openURL("https://support.apidon.com/eula");
+              }}
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontWeight: 700,
+                  fontSize: 13,
+                  color: "cyan",
+                  textAlign: "left",
+                  textDecorationLine: "underline",
+                }}
+              >
+                Apidon's End-User License Agreement (EULA).
+              </Text>
+            </Pressable>
+          </NativeText>
+        </View>
+      </View>
     </SafeAreaView>
   );
 };

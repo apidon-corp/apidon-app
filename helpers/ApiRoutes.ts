@@ -9,6 +9,7 @@ const apiRoutes = {
     personal: {
       fullnameUpdate: `${apiEndpoint}/user-Personal-fullnameUpdate`,
       updateProfileImage: `${apiEndpoint}/user-Personal-updateProfileImage`,
+      deleteAccount: `${apiEndpoint}/user-Personal-deleteAccount`,
     },
     authentication: {
       login: {
@@ -27,6 +28,9 @@ const apiRoutes = {
     social: {
       follow: `${apiEndpoint}/user-Social-follow`,
       getFollowStatus: `${apiEndpoint}/user-Social-getFollowStatus`,
+      block: `${apiEndpoint}/user-Social-block`,
+      unBlock: `${apiEndpoint}/user-Social-unBlock`,
+      reportUser: `${apiEndpoint}/user-Social-reportUser`,
     },
   },
   collectible: {
@@ -55,6 +59,7 @@ const apiRoutes = {
       postRate: `${apiEndpoint}/post-postRate`,
     },
     postUpload: `${apiEndpoint}/post-postUpload`,
+    postReport: `${apiEndpoint}/post-postReport`,
   },
   payment: {
     createPayment: `${apiEndpoint}/payment-createPayment`,

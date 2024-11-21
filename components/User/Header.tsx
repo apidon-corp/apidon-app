@@ -1,18 +1,18 @@
-import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import FollowButton from "@/components/Follow/FollowButton";
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
 import { UserInServer } from "@/types/User";
-import { Feather, MaterialIcons } from "@expo/vector-icons";
+import { Entypo, MaterialIcons } from "@expo/vector-icons";
 import auth from "@react-native-firebase/auth";
 import { Image } from "expo-image";
 import { router, usePathname } from "expo-router";
-import * as Sharing from "expo-sharing";
-import { useSetAtom } from "jotai";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { Buffer } from "buffer";
+import CustomBottomModalSheet from "../BottomSheet/CustomBottomModalSheet";
+import UserSettingsBottomSheetModalContent from "./UserSettingsBottomSheetModalContent";
 
 type Props = {
   userData: UserInServer;
@@ -24,7 +24,7 @@ const Header = ({ userData, collsCount }: Props) => {
 
   const [userOwnsPage, setUserOwnsPage] = useState(false);
 
-  const setScreenParameters = useSetAtom(screenParametersAtom);
+  const userSettingsBottomModalRef = useRef<BottomSheetModal>(null);
 
   useEffect(() => {
     if (userData.username) checkUserOwnsPage();
@@ -77,220 +77,217 @@ const Header = ({ userData, collsCount }: Props) => {
     router.push(finalDestination);
   };
 
-  const handleShareButton = async () => {
-    try {
-      const isSharingAvailable = await Sharing.isAvailableAsync();
-      if (!isSharingAvailable) return;
-
-      const baseURL = process.env.EXPO_PUBLIC_APP_LINK_BASE_URL || "";
-      if (!baseURL) return;
-
-      const url = baseURL + "/" + "profile" + "/" + userData.username;
-
-      await Sharing.shareAsync(url, {
-        dialogTitle: `Share ${userData.fullname} with your friends!`,
-        mimeType: "text/plain",
-        UTI: "public.plain-text",
-      });
-    } catch (error) {
-      console.error(error);
-    }
+  const handlePressSettingsButton = () => {
+    userSettingsBottomModalRef.current?.present();
   };
 
   if (!userData) return <ActivityIndicator size="large" color="white" />;
 
   return (
-    <View
-      id="header"
-      style={{
-        padding: 10,
-        alignItems: "center",
-        gap: 5,
-      }}
-    >
+    <>
       <View
-        id="share-part"
+        id="header"
         style={{
-          width: "100%",
+          padding: 10,
+          alignItems: "center",
+          gap: 5,
         }}
       >
         <View
+          id="share-part"
           style={{
             width: "100%",
-            alignItems: "flex-end",
-            paddingHorizontal: 5,
           }}
         >
-          <Pressable onPress={handleShareButton}>
-            <Feather name="share-2" size={21} color="white" />
-          </Pressable>
+          <View
+            style={{
+              width: "100%",
+              alignItems: "flex-end",
+              paddingHorizontal: 5,
+            }}
+          >
+            <Pressable onPress={handlePressSettingsButton}>
+              <Entypo name="dots-three-vertical" size={21} color="white" />
+            </Pressable>
+          </View>
         </View>
-      </View>
 
-      <Image
-        source={userData.profilePhoto || require("@/assets/images/user.jpg")}
-        style={{
-          height: 150,
-          width: 150,
-          borderRadius: 75,
-        }}
-        transition={100}
-      />
-      <View
-        id="fullname-verified"
-        style={{
-          marginTop: 5,
-          flexDirection: "row",
-          gap: 5,
-          alignItems: "center",
-          width: "100%",
-          justifyContent: "center",
-        }}
-      >
-        <Text
-          bold
+        <Image
+          source={userData.profilePhoto || require("@/assets/images/user.jpg")}
           style={{
-            fontSize: 25,
-            textAlign: "center",
+            height: 150,
+            width: 150,
+            borderRadius: 75,
           }}
-        >
-          {userData.fullname}
-        </Text>
-        {userData.verified && (
-          <MaterialIcons name="verified" size={25} color={apidonPink} />
-        )}
-      </View>
-
-      <View
-        style={{
-          flexDirection: "row",
-          gap: 20,
-          justifyContent: "center",
-          alignItems: "center",
-          width: "100%",
-          marginTop: 10,
-        }}
-      >
+          transition={100}
+        />
         <View
+          id="fullname-verified"
           style={{
-            gap: 4,
-            width: "25%",
+            marginTop: 5,
+            flexDirection: "row",
+            gap: 5,
+            alignItems: "center",
+            width: "100%",
+            justifyContent: "center",
           }}
         >
           <Text
-            style={{
-              fontSize: 15,
-              textAlign: "center",
-              color: "white",
-            }}
             bold
-          >
-            {collsCount}
-          </Text>
-          <Text
             style={{
-              color: "white",
-              fontSize: 15,
+              fontSize: 25,
               textAlign: "center",
             }}
           >
-            Colls
+            {userData.fullname}
           </Text>
+          {userData.verified && (
+            <MaterialIcons name="verified" size={25} color={apidonPink} />
+          )}
         </View>
 
         <View
           style={{
-            width: "25%",
-          }}
-        >
-          <Pressable
-            onPress={handlePressFollowers}
-            style={{
-              gap: 4,
-            }}
-          >
-            <Text
-              style={{
-                color: "white",
-                fontSize: 15,
-                textAlign: "center",
-              }}
-              bold
-            >
-              {userData.followerCount}
-            </Text>
-            <Text
-              style={{
-                color: "white",
-                fontSize: 15,
-                textAlign: "center",
-              }}
-            >
-              Followers
-            </Text>
-          </Pressable>
-        </View>
-
-        <View
-          style={{
-            gap: 4,
-            width: "25%",
-          }}
-        >
-          <Pressable
-            style={{
-              gap: 4,
-            }}
-            onPress={handlePressFollowing}
-          >
-            <Text
-              style={{
-                color: "white",
-                fontSize: 15,
-                textAlign: "center",
-              }}
-              bold
-            >
-              {userData.followingCount}
-            </Text>
-            <Text
-              style={{
-                fontSize: 15,
-                textAlign: "center",
-              }}
-            >
-              Following
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-
-      {userOwnsPage ? (
-        <Pressable
-          onPress={handleEditProfileButton}
-          style={{
-            borderColor: apidonPink,
-            borderWidth: 1,
-            borderRadius: 10,
-            paddingHorizontal: 15,
-            paddingVertical: 5,
+            flexDirection: "row",
+            gap: 20,
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
             marginTop: 10,
           }}
         >
-          <Text
+          <View
             style={{
-              fontSize: 14,
-              textAlign: "center",
+              gap: 4,
+              width: "25%",
             }}
-            bold
           >
-            Edit Profile
-          </Text>
-        </Pressable>
-      ) : (
-        <FollowButton username={userData.username} />
-      )}
-    </View>
+            <Text
+              style={{
+                fontSize: 15,
+                textAlign: "center",
+                color: "white",
+              }}
+              bold
+            >
+              {collsCount}
+            </Text>
+            <Text
+              style={{
+                color: "white",
+                fontSize: 15,
+                textAlign: "center",
+              }}
+            >
+              Colls
+            </Text>
+          </View>
+
+          <View
+            style={{
+              width: "25%",
+            }}
+          >
+            <Pressable
+              onPress={handlePressFollowers}
+              style={{
+                gap: 4,
+              }}
+            >
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 15,
+                  textAlign: "center",
+                }}
+                bold
+              >
+                {userData.followerCount}
+              </Text>
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 15,
+                  textAlign: "center",
+                }}
+              >
+                Followers
+              </Text>
+            </Pressable>
+          </View>
+
+          <View
+            style={{
+              gap: 4,
+              width: "25%",
+            }}
+          >
+            <Pressable
+              style={{
+                gap: 4,
+              }}
+              onPress={handlePressFollowing}
+            >
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 15,
+                  textAlign: "center",
+                }}
+                bold
+              >
+                {userData.followingCount}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 15,
+                  textAlign: "center",
+                }}
+              >
+                Following
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {userOwnsPage ? (
+          <Pressable
+            onPress={handleEditProfileButton}
+            style={{
+              borderColor: apidonPink,
+              borderWidth: 1,
+              borderRadius: 10,
+              paddingHorizontal: 15,
+              paddingVertical: 5,
+              marginTop: 10,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 14,
+                textAlign: "center",
+              }}
+              bold
+            >
+              Edit Profile
+            </Text>
+          </Pressable>
+        ) : (
+          <FollowButton username={userData.username} />
+        )}
+      </View>
+
+      <CustomBottomModalSheet
+        ref={userSettingsBottomModalRef}
+        backgroundColor="#1B1B1B"
+      >
+        <UserSettingsBottomSheetModalContent
+          modalRef={userSettingsBottomModalRef}
+          userData={userData}
+          isOwnPage={userOwnsPage}
+        />
+      </CustomBottomModalSheet>
+    </>
   );
 };
 

@@ -28,7 +28,6 @@ export {
 } from "expo-router";
 
 import useAppCheck from "@/hooks/useAppCheck";
-import useCheckInternet from "@/hooks/useCheckInternet";
 import useCheckUpdate from "@/hooks/useCheckUpdate";
 import { Image } from "expo-image";
 
@@ -124,8 +123,6 @@ function RootLayout() {
 
   const { versionStatus } = useCheckUpdate();
 
-  const { connectionStatus } = useCheckInternet();
-
   const [linking, setLinking] = useState<{
     isInitial: boolean;
     url: string;
@@ -149,8 +146,10 @@ function RootLayout() {
     // Handle the initial URL if the app is opened via a Universal Link
     const handleInitialURL = async () => {
       const initialUrl = await Linking.getInitialURL();
-
       if (!initialUrl) return;
+
+      const baseURL = process.env.EXPO_PUBLIC_APP_LINK_BASE_URL || "";
+      if (initialUrl === baseURL || initialUrl == `${baseURL}/`) return;
 
       const timeStampedURL = initialUrl + "/" + Date.now().toString();
 
@@ -165,8 +164,11 @@ function RootLayout() {
     // Listen for incoming URLs when the app is already open
     const subscription = Linking.addListener("url", (event) => {
       const url = event.url;
-
       if (!url) return;
+
+      const baseURL = process.env.EXPO_PUBLIC_APP_LINK_BASE_URL || "";
+      if (url === baseURL || url == `${baseURL}/`) return;
+
       const timeStampedURL = url + "/" + Date.now().toString();
 
       // To prevent "auto" redirecting....
@@ -192,13 +194,10 @@ function RootLayout() {
   // Handle App Ready State
   useEffect(() => {
     const status =
-      loaded &&
-      appCheckLoaded &&
-      versionStatus === "hasLatestVersion" &&
-      connectionStatus;
+      loaded && appCheckLoaded && versionStatus === "hasLatestVersion";
 
     setAppReady(status);
-  }, [loaded, appCheckLoaded, versionStatus, connectionStatus]);
+  }, [loaded, appCheckLoaded, versionStatus]);
 
   // Handle animation...
   useEffect(() => {
