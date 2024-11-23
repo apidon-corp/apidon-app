@@ -7,7 +7,6 @@ import {
   NativeScrollEvent,
   Pressable,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
 } from "react-native";
 
@@ -20,16 +19,17 @@ import firestore, {
 } from "@react-native-firebase/firestore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useHeaderHeight } from "@react-navigation/elements";
-import { Stack } from "expo-router";
-import { AntDesign } from "@expo/vector-icons";
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import CustomBottomModalSheet from "@/components/BottomSheet/CustomBottomModalSheet";
 import CodeEnteringBottomSheetContent from "@/components/Collectible/CodeEnteringBottomSheetContent";
+import Pagination from "@/components/Feed/Pagination";
+import { AntDesign } from "@expo/vector-icons";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { useHeaderHeight } from "@react-navigation/elements";
+import { Stack } from "expo-router";
+
+import { useFollowingPosts } from "@/components/Feed/useFollowingPosts";
 
 const index = () => {
-  const [loading, setLoading] = useState(false);
-
   const screenParameters = useAtomValue(screenParametersAtom);
 
   const createdPostDocPath = screenParameters.find(
@@ -54,15 +54,20 @@ const index = () => {
 
   const codeEnteringBottomSheetModalRef = useRef<BottomSheetModal>(null);
 
-  // Getting Initial Post Doc Paths
-  useEffect(() => {
-    getInitialPostDocPaths();
-  }, []);
+  const [panelName, setPanelName] = useState<"all" | "following">("all");
+
+  const {
+    followingPostDocPaths,
+    getInitialFollowingPosts,
+    getMoreFollowingPosts,
+  } = useFollowingPosts();
 
   // Managing created post.
   useEffect(() => {
     if (!createdPostDocPath) return;
     if (postDocPaths.includes(createdPostDocPath)) return;
+
+    setPanelName("all");
 
     setPostDocPaths((prev) => [createdPostDocPath, ...prev]);
 
@@ -79,9 +84,21 @@ const index = () => {
     }
   }, [homeScreenParametersValue]);
 
-  async function getInitialPostDocPaths(refreshing?: boolean) {
-    if (!refreshing) setLoading(true);
+  /**
+   * Gets initial posts for both all and followings.
+   * Also, this useEffect behaves like a switchcase for panelName.
+   * If panelName is all, it gets initial posts for all.
+   * If panelName is following, it gets initial posts for followings.
+   */
+  useEffect(() => {
+    if (panelName === "all") {
+      getInitialPostDocPaths();
+    } else if (panelName === "following") {
+      getInitialFollowingPosts();
+    }
+  }, [panelName]);
 
+  async function getInitialPostDocPaths() {
     try {
       const query = await firestore()
         .collection("posts")
@@ -99,8 +116,6 @@ const index = () => {
       console.error("Error while fetching getInitialPostDocPaths: ", error);
       setPostDocPaths([]);
     }
-
-    setLoading(false);
   }
 
   async function getMorePostDocPaths() {
@@ -132,7 +147,13 @@ const index = () => {
     if (refreshLoading) return;
 
     setRefreshLoading(true);
-    await getInitialPostDocPaths(true);
+
+    if (panelName === "all") {
+      await getInitialPostDocPaths();
+    } else {
+      console.log("refreshing following");
+    }
+
     setRefreshLoading(false);
   }
 
@@ -145,29 +166,14 @@ const index = () => {
       layoutMeasurement.height + contentOffset.y >=
       contentSize.height - threshold;
     if (isCloseToBottom) {
-      getMorePostDocPaths();
+      if (panelName === "all") getMorePostDocPaths();
+      else if (panelName === "following") getMoreFollowingPosts();
     }
   };
 
   const handlePressCodeEnterButton = () => {
     codeEnteringBottomSheetModalRef.current?.present();
   };
-
-  if (loading)
-    return (
-      <SafeAreaView
-        style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-      >
-        <FlatList
-          data={[1, 2]}
-          renderItem={({ item }) => <PostSkeleton key={item} />}
-          contentContainerStyle={{
-            width: "100%",
-            gap: 20,
-          }}
-        />
-      </SafeAreaView>
-    );
 
   return (
     <>
@@ -205,19 +211,40 @@ const index = () => {
         }}
         scrollToOverflowEnabled
       >
-        <FlatList
-          style={{
-            width: "100%",
-          }}
-          contentContainerStyle={{
-            gap: 20,
-          }}
-          keyExtractor={(item) => item}
-          data={Array.from(new Set(postDocPaths))}
-          renderItem={({ item }) => <Post postDocPath={item} key={item} />}
-          showsVerticalScrollIndicator={false}
-          scrollEnabled={false}
-        />
+        <Pagination panelName={panelName} setPanelName={setPanelName} />
+
+        {postDocPaths.length === 0 ? (
+          <FlatList
+            scrollEnabled={false}
+            showsVerticalScrollIndicator={false}
+            data={[1, 2]}
+            renderItem={({ item }) => <PostSkeleton key={item} />}
+            contentContainerStyle={{
+              width: "100%",
+              gap: 10,
+            }}
+          />
+        ) : (
+          <>
+            <FlatList
+              style={{
+                width: "100%",
+              }}
+              contentContainerStyle={{
+                gap: 20,
+              }}
+              keyExtractor={(item) => item}
+              data={Array.from(
+                new Set(
+                  panelName === "all" ? postDocPaths : followingPostDocPaths
+                )
+              )}
+              renderItem={({ item }) => <Post postDocPath={item} key={item} />}
+              showsVerticalScrollIndicator={false}
+              scrollEnabled={false}
+            />
+          </>
+        )}
       </ScrollView>
 
       <CustomBottomModalSheet
