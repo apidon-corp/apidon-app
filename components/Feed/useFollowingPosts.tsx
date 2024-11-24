@@ -6,11 +6,11 @@ import firestore, {
 import auth from "@react-native-firebase/auth";
 import { PostDataOnMainPostsCollection } from "@/types/Post";
 
-const initialFollowingCount = 5;
-const moreFollowingCount = 3;
+const initialFollowingCount = 3;
+const moreFollowingCount = 5;
 
-const initialPostCount = 8;
-const morePostCount = 5;
+const initialPostCount = 5;
+const morePostCount = 3;
 
 export function useFollowingPosts() {
   const [followingDocs, setFollowingDocs] = useState<
@@ -47,7 +47,7 @@ export function useFollowingPosts() {
         .get();
 
       // Reset the hasMore flag when starting fresh
-      hasMoreFollowings.current = query.size === 1;
+      hasMoreFollowings.current = query.size === initialFollowingCount;
 
       setFollowingDocs(query.docs);
       setFollowingList(query.docs.map((d) => d.id));
@@ -79,7 +79,6 @@ export function useFollowingPosts() {
   }
 
   async function getMoreFollowingPosts() {
-    // Prevent multiple simultaneous calls
     if (isLoadingMore.current || isUpdatingList.current) return;
 
     if (followingList.length === 0) return;
@@ -118,7 +117,6 @@ export function useFollowingPosts() {
   }
 
   async function updateFollowingList() {
-    // Prevent multiple simultaneous calls
     if (isUpdatingList.current) return;
 
     const displayName = auth().currentUser?.displayName || "";
@@ -139,7 +137,7 @@ export function useFollowingPosts() {
         .get();
 
       // Update hasMore flag based on query results
-      hasMoreFollowings.current = query.size === 1;
+      hasMoreFollowings.current = query.size === initialFollowingCount;
 
       if (query.size === 0) {
         isUpdatingList.current = false;
