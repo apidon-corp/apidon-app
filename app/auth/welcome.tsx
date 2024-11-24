@@ -1,5 +1,5 @@
 import { Text } from "@/components/Text/Text";
-import { AntDesign, MaterialIcons } from "@expo/vector-icons";
+import { AntDesign, Ionicons } from "@expo/vector-icons";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { Alert, Text as NativeText } from "react-native";
 
@@ -28,6 +28,8 @@ const welcome = () => {
   const opacity = useRef(new Animated.Value(1)).current;
 
   const [termsAccepted, setTermsAccepted] = useState(false);
+
+  const translateX = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (loading) {
@@ -188,9 +190,36 @@ const welcome = () => {
         {
           text: "OK",
           style: "cancel",
+          onPress: () => {
+            startBounceAnimation();
+          },
         },
       ]
     );
+  };
+
+  const startBounceAnimation = () => {
+    const amplitude = 20;
+
+    const sequence = Animated.sequence([
+      Animated.timing(translateX, {
+        useNativeDriver: true,
+        toValue: amplitude,
+        duration: 150,
+      }),
+      Animated.timing(translateX, {
+        useNativeDriver: true,
+        toValue: -amplitude,
+        duration: 150,
+      }),
+      Animated.timing(translateX, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]);
+
+    sequence.start();
   };
 
   return (
@@ -352,42 +381,61 @@ const welcome = () => {
         </View>
       </Animated.View>
 
-      <View
+      <Animated.View
         id="eula-root"
         style={{
+          width: "100%",
           justifyContent: "center",
           alignItems: "center",
-          padding: 20,
+          paddingVertical: 30,
+          gap: 10,
+          transform: [{ translateX }],
         }}
       >
         <View
-          id="eula"
+          id="agreement-divider"
           style={{
+            width: "100%",
             flexDirection: "row",
             justifyContent: "center",
             alignItems: "center",
-            padding: 15,
             gap: 5,
           }}
         >
-          <Pressable onPress={handleAcceptEulaButton}>
-            {termsAccepted ? (
-              <MaterialIcons name="check-box" size={30} color="white" />
-            ) : (
-              <MaterialIcons
-                name="check-box-outline-blank"
-                size={30}
-                color="red"
-              />
-            )}
-          </Pressable>
+          <View
+            style={{
+              height: 1,
+              borderWidth: 1,
+              borderColor: "gray",
+              width: "25%",
+            }}
+          />
+          <Ionicons name="documents" size={24} color="white" />
+          <View
+            style={{
+              height: 1,
+              borderWidth: 1,
+              borderColor: "gray",
+              width: "25%",
+            }}
+          />
+        </View>
 
+        <View
+          id="eula"
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            gap: 10,
+          }}
+        >
           <NativeText
             style={{
               fontWeight: 700,
               fontSize: 12,
               color: "gray",
-              textAlign: "left",
+              textAlign: "center",
             }}
           >
             I confirm that I have read and accepted the terms of{" "}
@@ -400,21 +448,42 @@ const welcome = () => {
                 alignItems: "center",
               }}
             >
-              <Text
+              <NativeText
                 style={{
                   fontWeight: 700,
-                  fontSize: 13,
-                  color: "cyan",
-                  textAlign: "left",
+                  fontSize: 12,
+                  color: "gray",
+                  textAlign: "center",
                   textDecorationLine: "underline",
                 }}
               >
                 Apidon's End-User License Agreement (EULA).
-              </Text>
+              </NativeText>
             </Pressable>
           </NativeText>
+          <Pressable
+            onPress={handleAcceptEulaButton}
+            style={{
+              borderWidth: 1,
+              borderColor: termsAccepted ? "green" : "red",
+              padding: 5,
+              paddingHorizontal: 8,
+              borderRadius: 10,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Text
+              style={{
+                color: termsAccepted ? "green" : "red",
+              }}
+              fontSize={11}
+            >
+              {termsAccepted ? "Accepted" : "Not Accepted"}
+            </Text>
+          </Pressable>
         </View>
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 };
