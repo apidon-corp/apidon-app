@@ -1,9 +1,4 @@
-import {
-  AntDesign,
-  Entypo,
-  Ionicons,
-  MaterialCommunityIcons,
-} from "@expo/vector-icons";
+import { AntDesign, Entypo, Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
@@ -25,9 +20,7 @@ const icon: {
   search: (props: any) => <AntDesign name="search1" {...props} />,
   create: (props: any) => <Entypo name="circle-with-plus" {...props} />,
   notifications: (props: any) => <Ionicons name="notifications" {...props} />,
-  collectibles: (props: any) => (
-    <MaterialCommunityIcons name="shopping" {...props} />
-  ),
+  collectibles: (props: any) => <AntDesign name="star" {...props} />,
 };
 
 const delay = (ms: number): Promise<void> => {

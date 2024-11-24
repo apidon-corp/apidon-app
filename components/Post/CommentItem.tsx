@@ -4,7 +4,11 @@ import { CommentServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
 import { Entypo, Feather, MaterialIcons } from "@expo/vector-icons";
 import firestore from "@react-native-firebase/firestore";
-import { formatDistanceToNow } from "date-fns";
+import {
+  formatDistanceStrict,
+  formatDistanceToNow,
+  formatDistanceToNowStrict,
+} from "date-fns";
 import { Image } from "expo-image";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, View } from "react-native";
@@ -185,103 +189,123 @@ const CommentItem = ({
   if (currentUserBlockedBySender || userData.isScheduledToDelete) return <></>;
 
   return (
-    <View
+    <Pressable
+      onPress={handlePressUser}
+      id="root-comment"
       style={{
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
         width: "100%",
-        paddingVertical: 10,
+        paddingVertical: 5,
       }}
     >
-      <Pressable
-        onPress={handlePressUser}
+      <View
         style={{
-          width: "90%",
           flexDirection: "row",
-          gap: 10,
+          width: "100%",
+          justifyContent: "space-between",
         }}
       >
         <View
           style={{
-            width: "15%",
+            flexDirection: "row",
+            gap: 6,
+            flex: 1, // This allows the comment section to take available space
+            maxWidth: "90%",
           }}
+          id="image-username-comment"
         >
           <Image
             source={
               userData.profilePhoto || require("@/assets/images/user.jpg")
             }
             style={{
-              width: "85%",
+              width: 40,
               aspectRatio: 1,
               borderRadius: 25,
             }}
             transition={500}
           />
-        </View>
 
-        <View
-          style={{
-            gap: 4,
-            width: "85%",
-          }}
-        >
           <View
-            id="username-time-verified"
+            id="username-comment"
             style={{
-              flexDirection: "row",
-              alignItems: "center",
-              flexWrap: "wrap",
+              flexDirection: "column",
+              gap: 3,
+              flex: 1, // This ensures the text container takes remaining space
             }}
           >
             <View
-              id="username-verified"
-              style={{ flexDirection: "row", gap: 3, alignItems: "center" }}
+              id="username-verified-ts"
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                flexWrap: "wrap", // Allows username section to wrap if needed
+                gap: 3,
+              }}
             >
-              <Text bold>{userData.username}</Text>
+              <Text fontSize={11} bold>
+                {userData.username}
+              </Text>
               {userData.verified && (
                 <MaterialIcons name="verified" size={16} color={apidonPink} />
               )}
-            </View>
 
-            <Entypo name="dot-single" size={20} color="gray" />
-            <Text
+              <Entypo name="dot-single" size={12} color="gray" />
+              <Text
+                style={{
+                  fontSize: 9,
+                  color: "gray",
+                }}
+              >
+                {formatDistanceToNowStrict(new Date(ts))}
+              </Text>
+            </View>
+            <View
+              id="comment"
               style={{
-                fontSize: 10,
-                color: "gray",
+                flex: 1, // Takes remaining vertical space
               }}
             >
-              {formatDistanceToNow(new Date(ts))}
-            </Text>
+              <Text
+                fontSize={12}
+                style={{
+                  flexWrap: "wrap", // Ensures text wraps
+                }}
+              >
+                {message}
+                {message}
+                {message}
+                {message}
+                {message}
+                {message}
+                {message}
+                {message}
+                {message}
+                {message}
+                {message}
+                {message}
+              </Text>
+            </View>
           </View>
-
-          <Text>{message}</Text>
         </View>
-      </Pressable>
 
-      <View
-        style={{
-          width: "2%",
-        }}
-      />
-
-      {doesOwnComment && (
-        <Pressable
-          onPress={handleDeleteButton}
-          style={{
-            width: "8%",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          {commentDeleteLoading ? (
-            <ActivityIndicator color="red" />
-          ) : (
-            <Feather name="delete" size={24} color="red" />
-          )}
-        </Pressable>
-      )}
-    </View>
+        {doesOwnComment && (
+          <Pressable
+            onPress={handleDeleteButton}
+            style={{
+              height: 45,
+              justifyContent: "center",
+              paddingLeft: 8, // Add some spacing between text and delete button
+            }}
+          >
+            {commentDeleteLoading ? (
+              <ActivityIndicator color="red" />
+            ) : (
+              <Feather name="delete" size={18} color="red" />
+            )}
+          </Pressable>
+        )}
+      </View>
+    </Pressable>
   );
 };
 

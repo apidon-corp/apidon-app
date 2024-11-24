@@ -406,7 +406,7 @@ const Comments = () => {
               (d) => d.data() as CommentServerData
             )}
             contentContainerStyle={{
-              gap: 5,
+              gap: 10,
               paddingHorizontal: 10,
               paddingVertical: 5,
             }}
