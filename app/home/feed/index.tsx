@@ -28,6 +28,7 @@ import { useHeaderHeight } from "@react-navigation/elements";
 import { Stack } from "expo-router";
 
 import { useFollowingPosts } from "@/components/Feed/useFollowingPosts";
+import { collectCollectibleAtom } from "@/atoms/collectCollectibleAtom";
 
 const index = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
@@ -55,6 +56,12 @@ const index = () => {
   const codeEnteringBottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   const [panelName, setPanelName] = useState<"all" | "following">("all");
+
+  const [collectCollectible, setCollectCollectible] = useAtom(
+    collectCollectibleAtom
+  );
+
+  const [collectibleCodeParamter, setCollectibleCodeParamter] = useState("");
 
   const {
     followingPostDocPaths,
@@ -97,6 +104,23 @@ const index = () => {
       getInitialFollowingPosts();
     }
   }, [panelName]);
+
+  /**
+   * Manage collecting collectible with linking
+   */
+  useEffect(() => {
+    if (!collectCollectible) return;
+
+    const code = collectCollectible.code;
+    if (!code) return setCollectCollectible(undefined);
+
+    setCollectibleCodeParamter(code);
+
+    codeEnteringBottomSheetModalRef.current?.present();
+
+    // Clear Atom
+    setCollectCollectible(undefined);
+  }, [collectCollectible]);
 
   async function getInitialPostDocPaths() {
     try {
@@ -253,6 +277,8 @@ const index = () => {
       >
         <CodeEnteringBottomSheetContent
           bottomSheetModalRef={codeEnteringBottomSheetModalRef}
+          collectibleCodeParamter={collectibleCodeParamter}
+          setCollectibleCodeParameter={setCollectibleCodeParamter}
         />
       </CustomBottomModalSheet>
     </>

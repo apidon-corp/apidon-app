@@ -13,6 +13,8 @@ import {
   useRef,
   useState,
 } from "react";
+import { useSetAtom } from "jotai";
+import { collectCollectibleAtom } from "@/atoms/collectCollectibleAtom";
 
 type LinkingValue = {
   isInitial: boolean;
@@ -44,6 +46,8 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
 
   const pathnameRef = useRef<string>("");
   const pathname = usePathname();
+
+  const setCollectCollectible = useSetAtom(collectCollectibleAtom);
 
   const handleAuthentication = async (
     user: FirebaseAuthTypes.User | null,
@@ -146,7 +150,17 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
     if (!content) return router.replace("/home/feed");
 
     if (isInitial) {
-      if (content === "p") {
+      if (content === "cc") {
+        const code = subParts[4];
+
+        // We open main page
+        if (pathname !== "/home/feed") router.replace("/home/feed");
+
+        await delay(500);
+
+        // Then set given code to "atom"
+        setCollectCollectible({ code: code });
+      } else if (content === "p") {
         const postIdentifier = subParts[4];
 
         const postIdentifierContents = postIdentifier.split("-");
@@ -173,8 +187,21 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
 
       return setLinking({ isInitial: false, url: "" });
     } else {
+      // That means we need to open code entering screen with given code.
+      if (content === "cc") {
+        const code = subParts[4];
+
+        // We open main page
+        if (pathname !== "/home/feed") router.navigate("/home/feed");
+
+        await delay(500);
+
+        // Then set given code to "atom"
+        setCollectCollectible({ code: code });
+      }
+
       // That means we need to open post page.
-      if (content === "p") {
+      else if (content === "p") {
         const postIdentifier = subParts[4];
 
         const postIdentifierContents = postIdentifier.split("-");
