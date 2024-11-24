@@ -1,7 +1,7 @@
 import { Text } from "@/components/Text/Text";
-import { AntDesign, Ionicons } from "@expo/vector-icons";
+import { AntDesign, Fontisto, Ionicons } from "@expo/vector-icons";
 import * as AppleAuthentication from "expo-apple-authentication";
-import { Alert, Text as NativeText } from "react-native";
+import { Text as NativeText } from "react-native";
 
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Pressable, SafeAreaView, View } from "react-native";
@@ -52,7 +52,7 @@ const welcome = () => {
   };
 
   async function handleContinueWithAppleButton() {
-    if (!termsAccepted) return showEulaAlert();
+    if (!termsAccepted) return startBounceAnimation();
 
     if (loading) return;
 
@@ -112,7 +112,7 @@ const welcome = () => {
   }
 
   async function handleContinueWithGoogleButton() {
-    if (!termsAccepted) return showEulaAlert();
+    if (!termsAccepted) return startBounceAnimation();
     if (loading) return;
 
     setLoading(true);
@@ -177,29 +177,13 @@ const welcome = () => {
   }
 
   function handleContinueWithEmailButon() {
-    if (!termsAccepted) return showEulaAlert();
+    if (!termsAccepted) return startBounceAnimation();
     if (loading) return;
     router.push("/auth/emailPasswordSignUp");
   }
 
-  const showEulaAlert = () => {
-    Alert.alert(
-      "EULA Agreement",
-      "You need to accept the End User License Agreement (EULA) to continue using the app.",
-      [
-        {
-          text: "OK",
-          style: "cancel",
-          onPress: () => {
-            startBounceAnimation();
-          },
-        },
-      ]
-    );
-  };
-
   const startBounceAnimation = () => {
-    const amplitude = 20;
+    const amplitude = 25;
 
     const sequence = Animated.sequence([
       Animated.timing(translateX, {
@@ -471,15 +455,23 @@ const welcome = () => {
               borderRadius: 10,
               justifyContent: "center",
               alignItems: "center",
+              flexDirection: "row",
+              gap: 5,
             }}
           >
+            {termsAccepted ? (
+              <Fontisto name="checkbox-active" size={14} color="green" />
+            ) : (
+              <Fontisto name="checkbox-passive" size={14} color="red" />
+            )}
+
             <Text
               style={{
                 color: termsAccepted ? "green" : "red",
               }}
               fontSize={11}
             >
-              {termsAccepted ? "Accepted" : "Not Accepted"}
+              {termsAccepted ? "Accepted" : "Accept"}
             </Text>
           </Pressable>
         </View>
