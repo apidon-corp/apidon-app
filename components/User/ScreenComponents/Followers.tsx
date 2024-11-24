@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -21,44 +21,47 @@ type FollowerData = {
   followTime: number;
 };
 
-const followers = () => {
+const Followers = () => {
   const { username } = useLocalSearchParams() as { username: string };
-
-  const [followerDocs, setFollowerDocs] = useState<
-    | FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]
-    | null
-  >(null);
-
   const { bottom } = useSafeAreaInsets();
 
-  useEffect(() => {
-    handleGetInitialData();
-  }, []);
+  const [followersList, setFollowersList] = useState<FollowerData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [lastDoc, setLastDoc] =
+    useState<FirebaseFirestoreTypes.QueryDocumentSnapshot | null>(null);
+  const [hasMore, setHasMore] = useState(true);
 
-  const handleGetInitialData = async () => {
+  const handleGetInitialData = useCallback(async () => {
     if (!username) return;
+    setIsLoading(true);
 
     try {
-      const followerDocsSnapshots = await firestore()
+      const query = await firestore()
         .collection(`users/${username}/followers`)
         .orderBy("followTime", "desc")
         .limit(15)
         .get();
 
-      setFollowerDocs(followerDocsSnapshots.docs);
+      const followers = query.docs.map((doc) => ({
+        follower: doc.id,
+        followTime: (doc.data() as FollowerDocData).followTime,
+      }));
+
+      setFollowersList(followers);
+      setLastDoc(query.docs[query.docs.length - 1] || null);
+      setHasMore(query.docs.length === 15);
     } catch (error) {
       console.error("Error on getting initial followers: ", error);
-      setFollowerDocs(null);
+      setFollowersList([]);
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [username]);
 
   const serveMoreFollowers = async () => {
-    if (!username) return setFollowerDocs(null);
+    if (!username || !hasMore || !lastDoc || isLoading) return;
 
-    if (!followerDocs) return setFollowerDocs(null);
-
-    const lastDoc = followerDocs[followerDocs.length - 1];
-    if (!lastDoc) return setFollowerDocs(null);
+    setIsLoading(true);
 
     try {
       const query = await firestore()
@@ -68,50 +71,53 @@ const followers = () => {
         .limit(5)
         .get();
 
-      setFollowerDocs((prev) => [
-        ...(prev as FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]),
-        ...query.docs,
-      ]);
+      const newFollowers = query.docs.map((doc) => ({
+        follower: doc.id,
+        followTime: (doc.data() as FollowerDocData).followTime,
+      }));
+
+      setFollowersList((prev) => [...prev, ...newFollowers]);
+      setLastDoc(query.docs[query.docs.length - 1] || lastDoc);
+      setHasMore(query.docs.length === 5);
     } catch (error) {
       console.error("Error on serving more followers: ", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleScroll = (event: NativeScrollEvent) => {
-    const threshold = 50;
+  const handleScroll = useCallback(
+    ({ layoutMeasurement, contentOffset, contentSize }: NativeScrollEvent) => {
+      const threshold = 50;
+      const isCloseToBottom =
+        layoutMeasurement.height + contentOffset.y >=
+        contentSize.height - threshold;
 
-    const { layoutMeasurement, contentOffset, contentSize } = event;
+      if (isCloseToBottom && !isLoading && hasMore) {
+        serveMoreFollowers();
+      }
+    },
+    [isLoading, hasMore]
+  );
 
-    const isCloseToBottom =
-      layoutMeasurement.height + contentOffset.y >=
-      contentSize.height - threshold;
-    if (isCloseToBottom) {
-      serveMoreFollowers();
-    }
-  };
+  useEffect(() => {
+    handleGetInitialData();
+  }, [handleGetInitialData]);
 
-  if (!followerDocs) {
+  if (isLoading && followersList.length === 0) {
     return (
       <SafeAreaView
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+        style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
       >
         <ActivityIndicator size="small" />
       </SafeAreaView>
     );
   }
 
-  if (followerDocs.length === 0) {
+  if (followersList.length === 0) {
     return (
       <SafeAreaView
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+        style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
       >
         <Text>{username} is not being followed by anyone.</Text>
       </SafeAreaView>
@@ -130,25 +136,20 @@ const followers = () => {
     >
       <FlatList
         scrollEnabled={false}
-        data={Array.from(
-          new Set(
-            followerDocs.map((fd) => {
-              const followerData: FollowerData = {
-                follower: fd.id,
-                followTime: (fd.data() as FollowerDocData).followTime,
-              };
-
-              return followerData;
-            })
-          )
-        )}
+        data={followersList}
         renderItem={({ item }) => (
           <UserCard username={item.follower} key={item.follower} />
         )}
         keyExtractor={(item) => item.follower}
+        ListFooterComponent={
+          isLoading ? (
+            <ActivityIndicator size="small" style={{ marginTop: 10 }} />
+          ) : null
+        }
+        showsVerticalScrollIndicator={false}
       />
     </ScrollView>
   );
 };
 
-export default followers;
+export default Followers;
