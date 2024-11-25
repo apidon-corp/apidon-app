@@ -13,10 +13,16 @@ import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 
 type Props = {
   bottomSheetModalRef: React.RefObject<BottomSheetModal>;
+  collectibleCodeParamter: string;
+  setCollectibleCodeParameter: React.Dispatch<React.SetStateAction<string>>;
 };
 
-const CodeEnteringBottomSheetContent = ({ bottomSheetModalRef }: Props) => {
-  const [code, setCode] = useState("");
+const CodeEnteringBottomSheetContent = ({
+  bottomSheetModalRef,
+  collectibleCodeParamter,
+  setCollectibleCodeParameter,
+}: Props) => {
+  const [code, setCode] = useState(collectibleCodeParamter || "");
 
   const [loading, setLoading] = useState(false);
 
@@ -104,6 +110,10 @@ const CodeEnteringBottomSheetContent = ({ bottomSheetModalRef }: Props) => {
       code.length > 0 && !error ? 1 : 0.5
     );
   }, [error, code.length]);
+
+  useEffect(() => {
+    if (collectibleCodeParamter) setCollectibleCodeParameter("");
+  }, [collectibleCodeParamter]);
 
   return (
     <View

@@ -13,7 +13,9 @@ import apiRoutes from "@/helpers/ApiRoutes";
 
 import auth from "@react-native-firebase/auth";
 
+import Text from "@/components/Text/Text";
 import appCheck from "@react-native-firebase/app-check";
+import { apidonPink } from "@/constants/Colors";
 
 type Props = {
   previousValue: number | undefined;
@@ -212,7 +214,35 @@ const RateStar = ({ previousValue, postDocPath }: Props) => {
       ) : (
         <GestureDetector gesture={pan}>
           <Animated.View style={animatedPanStyle}>
-            <MaterialCommunityIcons name="star-plus" size={45} color="white" />
+            <View
+              style={{
+                position: "relative",
+              }}
+            >
+              <MaterialCommunityIcons
+                name="star-plus"
+                size={45}
+                color="white"
+              />
+              <View
+                style={{
+                  position: "absolute",
+                  bottom: 2,
+                  right: 2,
+                  backgroundColor: apidonPink,
+                  borderRadius: 25,
+                  width: 18,
+                  aspectRatio: 1,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  display: previousValue ? "flex" : "none",
+                }}
+              >
+                <Text bold fontSize={12} style={{ color: "white" }}>
+                  {previousValue}
+                </Text>
+              </View>
+            </View>
           </Animated.View>
         </GestureDetector>
       )}

@@ -625,42 +625,39 @@ const Post = React.memo(({ postDocPath }: Props) => {
           </View>
 
           {!doesFollow && !doesOwnPost && (
-            <View
+            <Pressable
+              onPress={handleFollowButton}
+              disabled={followLoading}
               style={{
                 width: "7%",
                 alignItems: "flex-end",
                 justifyContent: "center",
               }}
             >
-              <Pressable onPress={handleFollowButton} disabled={followLoading}>
-                {followLoading ? (
-                  <ActivityIndicator color="white" size="small" />
-                ) : (
-                  <Feather name="user-plus" size={18} color="white" />
-                )}
-              </Pressable>
-            </View>
+              {followLoading ? (
+                <ActivityIndicator color="white" size="small" />
+              ) : (
+                <Feather name="user-plus" size={18} color="white" />
+              )}
+            </Pressable>
           )}
 
-          <View
+          <Pressable
             id="settings-button"
+            onPress={handleOptionsButton}
+            disabled={postDeleteLoading}
             style={{
-              width: "5%",
+              width: "7%",
               alignItems: "flex-end",
               overflow: "hidden",
             }}
           >
-            <Pressable
-              onPress={handleOptionsButton}
-              disabled={postDeleteLoading}
-            >
-              {postDeleteLoading ? (
-                <ActivityIndicator color="red" />
-              ) : (
-                <Entypo name="dots-three-vertical" size={18} color="white" />
-              )}
-            </Pressable>
-          </View>
+            {postDeleteLoading ? (
+              <ActivityIndicator color="red" />
+            ) : (
+              <Entypo name="dots-three-vertical" size={18} color="white" />
+            )}
+          </Pressable>
         </View>
 
         {postDocData.image && <PostImage source={postDocData.image} />}
