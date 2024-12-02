@@ -1,6 +1,6 @@
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useEffect, useRef, useState } from "react";
-import { Animated, View } from "react-native";
+import { Animated, Platform, View } from "react-native";
 import TabBarButton from "./TabBarButton";
 
 import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
@@ -33,6 +33,8 @@ export default function MyTabBar({ state, navigation }: BottomTabBarProps) {
   const { haveUnread } = useNotification();
 
   const pathname = usePathname();
+
+  const isIOS = Platform.OS === "ios";
 
   useEffect(() => {
     Animated.spring(animatedTranslateXValue, {
@@ -83,6 +85,7 @@ export default function MyTabBar({ state, navigation }: BottomTabBarProps) {
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
+          backgroundColor: isIOS ? undefined : "black",
         }}
       >
         <Animated.View

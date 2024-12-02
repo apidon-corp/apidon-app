@@ -1,12 +1,14 @@
 import Text from "@/components/Text/Text";
 import UserCard from "@/components/User/UserCard";
 import { UserInServer } from "@/types/User";
+import { AntDesign } from "@expo/vector-icons";
 import firestore from "@react-native-firebase/firestore";
 import { Stack, usePathname } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, View } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
+import React, { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, FlatList, View, Platform } from "react-native";
+import { ScrollView, TextInput } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SearchBarCommands } from "react-native-screens";
 
 const search = () => {
   const pathname = usePathname();
@@ -16,6 +18,8 @@ const search = () => {
   const [popularPeople, setPopularPeople] = useState<string[]>([]);
 
   const { bottom } = useSafeAreaInsets();
+
+  const isIOS = Platform.OS === "ios";
 
   const handleGetQueryResult = async (input: string) => {
     try {
@@ -89,15 +93,57 @@ const search = () => {
     <>
       <Stack.Screen
         options={{
-          headerLargeTitle: true,
-          headerSearchBarOptions: {
-            placeholder: "Search",
-            inputType: "text",
-            onChangeText: (event) => handleInputChange(event.nativeEvent.text),
-            hideWhenScrolling: false,
-          },
+          headerLargeTitle: isIOS ? true : undefined,
+          title: "Search",
+          headerTitleStyle: isIOS
+            ? undefined
+            : {
+                fontSize: 28,
+                fontWeight: "bold",
+                color: "white",
+              },
+          headerSearchBarOptions: isIOS
+            ? {
+                placeholder: "Search",
+                inputType: "text",
+                onChangeText: (event) =>
+                  handleInputChange(event.nativeEvent.text),
+                hideWhenScrolling: false,
+              }
+            : undefined,
         }}
       />
+
+      <View style={{ paddingHorizontal: 15, display: isIOS ? "none" : "flex" }}>
+        <View
+          style={{
+            width: "100%",
+            height: 35,
+            backgroundColor: "rgba(255,255,255,0.1)",
+            borderRadius: 10,
+            paddingHorizontal: 10,
+            flexDirection: "row",
+            alignItems: "center",
+          }}
+        >
+          <View style={{ width: "7%" }}>
+            <AntDesign name="search1" size={16} color="gray" />
+          </View>
+
+          <TextInput
+            style={{
+              width: "90%",
+              height: 35,
+              color: "white",
+            }}
+            placeholder="Search"
+            placeholderTextColor="gray"
+            onChangeText={(text) => {
+              handleInputChange(text);
+            }}
+          />
+        </View>
+      </View>
 
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"

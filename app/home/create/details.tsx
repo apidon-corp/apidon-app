@@ -1,26 +1,28 @@
 import {
   ActivityIndicator,
-  Animated,
   Dimensions,
   Keyboard,
+  Platform,
   Pressable,
   ScrollView,
   TextInput,
   View,
 } from "react-native";
 
-import React, { useEffect, useRef, useState } from "react";
+import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
+
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
-import { useAtomValue, useSetAtom } from "jotai";
 import Text from "@/components/Text/Text";
 import { Image } from "expo-image";
+import { useAtomValue, useSetAtom } from "jotai";
+import React, { useEffect, useRef, useState } from "react";
 
-import auth from "@react-native-firebase/auth";
 import appCheck from "@react-native-firebase/app-check";
+import auth from "@react-native-firebase/auth";
 import crashlytics from "@react-native-firebase/crashlytics";
 
 import apiRoutes from "@/helpers/ApiRoutes";
-import { router, usePathname } from "expo-router";
+import { router } from "expo-router";
 
 const CHARACTER_LIMIT = 125;
 
@@ -36,20 +38,22 @@ const details = () => {
 
   const containerRef = useRef<null | View>(null);
   const screenHeight = Dimensions.get("window").height;
-  const animatedTranslateValue = useRef(new Animated.Value(0)).current;
+  const animatedTranslateValue = useSharedValue(0);
 
   const [loading, setLoading] = useState(false);
 
   const setScreenParameters = useSetAtom(screenParametersAtom);
 
-  const shareButtonOpacityValue = useRef(new Animated.Value(0.5)).current;
+  const shareButtonOpacityValue = useSharedValue(0.5);
 
   // Keyboard-Layout Change
   useEffect(() => {
+    const isIOS = Platform.OS === "ios";
+
     const keyboardWillShowListener = Keyboard.addListener(
-      "keyboardWillShow",
+      isIOS ? "keyboardWillShow" : "keyboardDidShow",
       (event) => {
-        if (Keyboard.isVisible()) return;
+        if (isIOS && Keyboard.isVisible()) return;
 
         const keyboardHeight = event.endCoordinates.height;
 
@@ -66,26 +70,20 @@ const details = () => {
               toValue += 40;
             }
 
-            Animated.timing(animatedTranslateValue, {
-              toValue: -toValue,
+            animatedTranslateValue.value = withTiming(-toValue, {
               duration: 250,
-              useNativeDriver: true,
-            }).start();
+            });
           });
         }
       }
     );
 
     const keyboardWillHideListener = Keyboard.addListener(
-      "keyboardWillHide",
+      isIOS ? "keyboardWillHide" : "keyboardDidHide",
       (event) => {
-        let toValue = 0;
-
-        Animated.timing(animatedTranslateValue, {
-          toValue: toValue,
+        animatedTranslateValue.value = withTiming(0, {
           duration: 250,
-          useNativeDriver: true,
-        }).start();
+        });
       }
     );
 
@@ -96,7 +94,7 @@ const details = () => {
   }, [containerRef]);
 
   useEffect(() => {
-    handleChangeOpactiy(shareButtonOpacityValue, loading ? 0.5 : 1, 250);
+    handleChangeOpactiy(loading ? 0.5 : 1);
   }, [loading]);
 
   const handleDescriptionChange = (text: string) => {
@@ -161,16 +159,10 @@ const details = () => {
     }
   };
 
-  const handleChangeOpactiy = (
-    animatedObject: Animated.Value,
-    toValue: number,
-    duration: number
-  ) => {
-    Animated.timing(animatedObject, {
-      toValue,
-      duration,
-      useNativeDriver: true,
-    }).start();
+  const handleChangeOpactiy = (toValue: number) => {
+    shareButtonOpacityValue.value = withTiming(toValue, {
+      duration: 250,
+    });
   };
 
   if (!pickedImageURI || !uploadedImageLocation)

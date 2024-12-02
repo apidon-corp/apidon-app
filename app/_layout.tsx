@@ -31,6 +31,8 @@ import useAppCheck from "@/hooks/useAppCheck";
 import useCheckUpdate from "@/hooks/useCheckUpdate";
 import { Image } from "expo-image";
 
+import * as NavigationBar from "expo-navigation-bar";
+
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
   initialRouteName: "index",
@@ -118,6 +120,13 @@ function RootLayout() {
     "Poppins-Bold": require("../assets/fonts/Poppins-Bold.ttf"),
     ...FontAwesome.font,
   });
+
+  // enables edge-to-edge mode
+  NavigationBar.setPositionAsync("absolute");
+  // transparent backgrounds to see through
+  NavigationBar.setBackgroundColorAsync("#ffffff00");
+  // changes the color of the button icons "dark||light"
+  NavigationBar.setButtonStyleAsync("dark");
 
   const appCheckLoaded = useAppCheck();
 

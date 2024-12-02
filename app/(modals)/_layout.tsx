@@ -1,11 +1,13 @@
 import { Stack } from "expo-router";
 
 import React from "react";
-import { StatusBar } from "react-native";
+import { Platform, StatusBar } from "react-native";
 
 import { Text } from "@/components/Text/Text";
 
 const _layout = () => {
+  const isIOS = Platform.OS === "ios";
+
   return (
     <>
       <StatusBar barStyle="light-content" />
@@ -77,7 +79,9 @@ const _layout = () => {
         <Stack.Screen
           name="settings"
           options={{
-            headerShown: false,
+            headerShown: isIOS ? false : undefined,
+            headerTitle: "Settings",
+ 
           }}
         />
         <Stack.Screen

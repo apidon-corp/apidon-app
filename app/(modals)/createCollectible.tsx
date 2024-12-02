@@ -5,14 +5,16 @@ import { useAtomValue } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
   Dimensions,
   Keyboard,
+  Platform,
   Pressable,
   ScrollView,
   Switch,
   View,
 } from "react-native";
+
+import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 
 import { apidonPink } from "@/constants/Colors";
 import firestore from "@react-native-firebase/firestore";
@@ -74,12 +76,12 @@ const listNFT = () => {
   const [stock, setStock] = useState(0);
 
   const screenHeight = Dimensions.get("window").height;
-  const animatedTranslateValue = useRef(new Animated.Value(0)).current;
+  const animatedTranslateValue = useSharedValue(0);
   const containerRef = useRef<null | View>(null);
 
   const [loading, setLoading] = useState(false);
 
-  const createButtonOpacityValue = useRef(new Animated.Value(0.5)).current;
+  const createButtonOpacityValue = useSharedValue(0.5);
 
   const informationModalRef = useRef<BottomSheetModal>(null);
 
@@ -108,10 +110,12 @@ const listNFT = () => {
 
   // Keyboard-Layout Change
   useEffect(() => {
+    const isIOS = Platform.OS === "ios";
+
     const keyboardWillShowListener = Keyboard.addListener(
-      "keyboardWillShow",
+      isIOS ? "keyboardWillShow" : "keyboardDidShow",
       (event) => {
-        if (Keyboard.isVisible()) return;
+        if (isIOS && Keyboard.isVisible()) return;
 
         const keyboardHeight = event.endCoordinates.height;
 
@@ -128,26 +132,18 @@ const listNFT = () => {
               toValue += 20;
             }
 
-            Animated.timing(animatedTranslateValue, {
-              toValue: -toValue,
+            animatedTranslateValue.value = withTiming(-toValue, {
               duration: 250,
-              useNativeDriver: true,
-            }).start();
+            });
           });
         }
       }
     );
 
     const keyboardWillHideListener = Keyboard.addListener(
-      "keyboardWillHide",
+      isIOS ? "keyboardWillHide" : "keyboardDidHide",
       (event) => {
-        let toValue = 0;
-
-        Animated.timing(animatedTranslateValue, {
-          toValue: toValue,
-          duration: 250,
-          useNativeDriver: true,
-        }).start();
+        animatedTranslateValue.value = withTiming(0, { duration: 250 });
       }
     );
 
@@ -170,7 +166,7 @@ const listNFT = () => {
           : false;
     }
 
-    handleChangeOpactiy(createButtonOpacityValue, status ? 1 : 0.5, 250);
+    handleChangeOpactiy(status ? 1 : 0.5);
   }, [price, stock, loading, isVerified, identityStatus]);
 
   // Dynamic Data Fetching - Current User Status (verified)
@@ -259,16 +255,8 @@ const listNFT = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleChangeOpactiy = (
-    animatedObject: Animated.Value,
-    toValue: number,
-    duration: number
-  ) => {
-    Animated.timing(animatedObject, {
-      toValue,
-      duration,
-      useNativeDriver: true,
-    }).start();
+  const handleChangeOpactiy = (toValue: number) => {
+    createButtonOpacityValue.value = withTiming(toValue, { duration: 250 });
   };
 
   const getInitialData = async () => {

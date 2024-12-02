@@ -21,11 +21,6 @@ const useAppCheck = () => {
     try {
       const provider = appCheck().newReactNativeFirebaseAppCheckProvider();
 
-      const debugToken = process.env.EXPO_PUBLIC_DEBUG_TOKEN || "";
-      if (!debugToken) {
-        console.error("Debug token is not defined from environment variables.");
-      }
-
       const environment = process.env.EXPO_PUBLIC_ENVIRONMENT as Environment;
       if (!environment)
         return console.error(
@@ -40,7 +35,11 @@ const useAppCheck = () => {
               : Device.isDevice
               ? "deviceCheck"
               : "debug",
-          debugToken: debugToken,
+          debugToken: process.env.EXPO_PUBLIC_DEBUG_TOKEN,
+        },
+        android: {
+          provider: environment === "DEVELOPMENT" ? "debug" : "playIntegrity",
+          debugToken: process.env.EXPO_PUBLIC_ANDROID_DEBUG_TOKEN,
         },
       });
 

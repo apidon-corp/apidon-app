@@ -7,12 +7,14 @@ import firestore from "@react-native-firebase/firestore";
 import { Image } from "expo-image";
 import { Stack, router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Pressable } from "react-native";
+import { Pressable, Platform } from "react-native";
 
 const _layout = () => {
   const { authStatus } = useAuth();
 
   const [profilePhoto, setProfilePhoto] = useState("");
+
+  const isIOS = Platform.OS === "ios";
 
   // Dynamic Data Fetching / Follow Status
   useEffect(() => {
@@ -54,6 +56,7 @@ const _layout = () => {
         headerShadowVisible: false,
         headerBackTitle: "Back",
         headerBackButtonMenuEnabled: false,
+        navigationBarColor: "transparent",
       }}
     >
       <Stack.Screen
@@ -83,18 +86,23 @@ const _layout = () => {
               )}
             </Pressable>
           ),
-          headerStyle: { backgroundColor: undefined },
+
+          headerStyle: isIOS
+            ? { backgroundColor: undefined }
+            : { backgroundColor: "black" },
           headerTitle: "Apidon",
           headerTitleStyle: {
             fontFamily: "Poppins-Bold",
           },
-          headerTransparent: true,
-          headerBlurEffect: "dark",
-          headerLargeTitle: true,
-          headerLargeStyle: { backgroundColor: "black" },
-          headerLargeTitleStyle: {
-            fontFamily: "Poppins-Bold",
-          },
+          headerTransparent: isIOS ? true : undefined,
+          headerBlurEffect: isIOS ? "dark" : undefined,
+          headerLargeTitle: isIOS ? true : undefined,
+          headerLargeStyle: isIOS ? { backgroundColor: "black" } : undefined,
+          headerLargeTitleStyle: isIOS
+            ? {
+                fontFamily: "Poppins-Bold",
+              }
+            : undefined,
         }}
       />
 

@@ -209,7 +209,7 @@ const index = () => {
               style={{
                 justifyContent: "center",
                 alignItems: "flex-start",
-                width: 75,
+                width: 45,
               }}
             >
               <AntDesign name="qrcode" size={24} color="white" />

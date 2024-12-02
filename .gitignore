@@ -37,6 +37,8 @@ yarn-error.*
 ios
 *.ipa
 
+android
+
 # Private
 .env.local
 eas.json
@@ -44,3 +46,4 @@ eas.json
 # Comment below when locally building
 *.plist
 app.config.ts
+Development-google-services.json
