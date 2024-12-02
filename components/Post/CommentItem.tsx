@@ -1,21 +1,17 @@
 import { Text } from "@/components/Text/Text";
+import { apidonPink } from "@/constants/Colors";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { CommentServerData } from "@/types/Post";
 import { UserInServer } from "@/types/User";
 import { Entypo, Feather, MaterialIcons } from "@expo/vector-icons";
+import appCheck from "@react-native-firebase/app-check";
+import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
-import {
-  formatDistanceStrict,
-  formatDistanceToNow,
-  formatDistanceToNowStrict,
-} from "date-fns";
+import { formatDistanceToNowStrict } from "date-fns";
 import { Image } from "expo-image";
+import { router, usePathname } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, View } from "react-native";
-import auth from "@react-native-firebase/auth";
-import appCheck from "@react-native-firebase/app-check";
-import { router, usePathname } from "expo-router";
-import { apidonPink } from "@/constants/Colors";
 
 type Props = {
   commentServerData: CommentServerData;
@@ -271,17 +267,6 @@ const CommentItem = ({
                   flexWrap: "wrap", // Ensures text wraps
                 }}
               >
-                {message}
-                {message}
-                {message}
-                {message}
-                {message}
-                {message}
-                {message}
-                {message}
-                {message}
-                {message}
-                {message}
                 {message}
               </Text>
             </View>
