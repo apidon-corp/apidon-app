@@ -28,7 +28,9 @@ const _layout = () => {
       <Stack.Screen
         name="index"
         options={{
-          headerStyle: isIOS ? { backgroundColor: undefined } : {backgroundColor : "black"},
+          headerStyle: isIOS
+            ? { backgroundColor: undefined }
+            : { backgroundColor: "black" },
           title: "Collectibles",
           headerRight: () => (
             <Pressable
@@ -38,8 +40,11 @@ const _layout = () => {
                 height: 25,
                 justifyContent: "center",
                 alignItems: "flex-end",
-                display:
-                  environment && environment !== "PRODUCTION" ? "flex" : "none",
+                display: !isIOS
+                  ? "none"
+                  : environment && environment !== "PRODUCTION"
+                  ? "flex"
+                  : "none",
               }}
             >
               <FontAwesome5 name="wallet" size={25} color="white" />
