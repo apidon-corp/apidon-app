@@ -1,8 +1,8 @@
 import {
-  View,
   Text as DefaultTextComponent,
   StyleSheet,
   TextProps,
+  Platform,
 } from "react-native";
 import React, { ReactNode } from "react";
 
@@ -20,19 +20,25 @@ export const Text: React.FC<CustomTextProps> = ({
   ...props
 }) => {
   return (
-    <View>
-      <DefaultTextComponent
-        style={[
-          styles.defaultStyle,
-          style,
-          bold ? [{ fontFamily: "Poppins-Bold" }] : undefined,
-          fontSize ? [{ fontSize: fontSize }] : undefined,
-        ]}
-        {...props}
-      >
-        {children}
-      </DefaultTextComponent>
-    </View>
+    <DefaultTextComponent
+      style={[
+        styles.defaultStyle,
+        // Android-specific text alignment fix
+        Platform.select({
+          android: {
+            includeFontPadding: false,
+            textAlignVertical: "center",
+            lineHeight: undefined, // Remove any existing lineHeight
+          },
+        }),
+        style,
+        bold ? { fontFamily: "Poppins-Bold" } : undefined,
+        fontSize ? { fontSize: fontSize } : undefined,
+      ]}
+      {...props}
+    >
+      {children}
+    </DefaultTextComponent>
   );
 };
 
