@@ -31,7 +31,8 @@ import NFTTag from "./NFT/NFTTag";
 import NftBottomSheetContent from "./NFT/NftBottomSheetContent";
 import PostImage from "./PostImage";
 
-import * as Sharing from "expo-sharing";
+import { Share } from "react-native"; // Replace Sharing with Share
+
 import PostSettingsBottomSheetContent from "./PostSettingsBottomSheetContent";
 
 type Props = {
@@ -410,9 +411,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
     if (!postDocData) return;
 
     try {
-      const isSharingAvailable = await Sharing.isAvailableAsync();
-      if (!isSharingAvailable) return;
-
       const baseURL = process.env.EXPO_PUBLIC_APP_LINK_BASE_URL || "";
       if (!baseURL) return;
 
@@ -425,10 +423,9 @@ const Post = React.memo(({ postDocPath }: Props) => {
         "-" +
         postDocData.id;
 
-      await Sharing.shareAsync(url, {
-        dialogTitle: `Share this post with your friends!`,
-        mimeType: "text/plain",
-        UTI: "public.plain-text",
+      await Share.share({
+        message: url,
+        title: `Share this post with your friends!`,
       });
     } catch (error) {
       console.error(error);

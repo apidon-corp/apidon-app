@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import Text from "../Text/Text";
 
-import * as Sharing from "expo-sharing";
+import { Share } from "react-native";
 
 type Props = {
   code: string;
@@ -17,18 +17,15 @@ const CodeItem = ({ code, isUsed }: Props) => {
     setCopyLoading(true);
 
     try {
-      const isSharingAvailable = await Sharing.isAvailableAsync();
-      if (!isSharingAvailable) return setCopyLoading(false);
-
       const baseURL = process.env.EXPO_PUBLIC_APP_LINK_BASE_URL || "";
       if (!baseURL) return setCopyLoading(false);
 
       const url = baseURL + "/" + "cc" + "/" + code;
 
-      await Sharing.shareAsync(url, {
-        dialogTitle: `Share this link with your participants so they can collect your event's unique collectible.`,
-        mimeType: "text/plain",
-        UTI: "public.plain-text",
+      await Share.share({
+        title:
+          "Share this link with your participants so they can collect your event's unique collectible.",
+        message: url,
       });
 
       return setCopyLoading(false);

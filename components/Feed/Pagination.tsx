@@ -23,102 +23,86 @@ const Pagination = ({ panelName, setPanelName }: Props) => {
   }, [panelName]);
 
   return (
-    <>
-      <Pressable
-        style={{
-          width: buttonWidth,
-          height: buttonHeight,
-          borderRadius: borderRadius,
-          justifyContent: "center",
-          alignItems: "center",
-          borderWidth : 1,
-          borderColor: "red"
-        }}
-      >
-        <NativeText style={{color: "white"}}>Hello</NativeText>
-      </Pressable>
-
+    <View
+      id="root-pagination"
+      style={{
+        flex: 1,
+        width: "100%",
+        alignItems: "center",
+        justifyContent: "center",
+        marginVertical: 5,
+      }}
+    >
       <View
-        id="root-pagination"
         style={{
-          flex: 1,
-          width: "100%",
-          alignItems: "center",
-          justifyContent: "center",
-          marginVertical: 5,
+          flexDirection: "row",
+          borderRadius: borderRadius,
+          borderWidth: 1,
+          borderColor: "gray",
         }}
       >
-        <View
+        <Animated.View
+          id="moving-dot"
           style={{
-            flexDirection: "row",
-            borderRadius: borderRadius,
-            borderWidth: 1,
-            borderColor: "gray",
+            position: "absolute",
+            width: buttonWidth,
+            height: buttonHeight,
+            transform: [{ translateX: animatedTranslateXValue }],
+            justifyContent: "center",
+            alignItems: "center",
           }}
         >
-          <Animated.View
-            id="moving-dot"
+          <View
             style={{
-              position: "absolute",
-              width: buttonWidth,
-              height: buttonHeight,
-              transform: [{ translateX: animatedTranslateXValue }],
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <View
-              style={{
-                backgroundColor: "white",
-                height: "100%",
-                width: "100%",
-                borderRadius: borderRadius,
-              }}
-            />
-          </Animated.View>
-          <Pressable
-            onPress={() => {
-              setPanelName("all");
-            }}
-            style={{
-              width: buttonWidth,
-              height: buttonHeight,
+              backgroundColor: "white",
+              height: "100%",
+              width: "100%",
               borderRadius: borderRadius,
-              justifyContent: "center",
-              alignItems: "center",
             }}
+          />
+        </Animated.View>
+        <Pressable
+          onPress={() => {
+            setPanelName("all");
+          }}
+          style={{
+            width: buttonWidth,
+            height: buttonHeight,
+            borderRadius: borderRadius,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Text
+            fontSize={fontSize}
+            bold
+            style={{ color: panelName === "all" ? "black" : "white" }}
           >
-            <Text
-              fontSize={fontSize}
-              bold
-              style={{ color: panelName === "all" ? "black" : "white" }}
-            >
-              All
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              setPanelName("following");
-            }}
-            style={{
-              width: buttonWidth,
-              height: buttonHeight,
-              borderRadius: borderRadius,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
+            All
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => {
+            setPanelName("following");
+          }}
+          style={{
+            width: buttonWidth,
+            height: buttonHeight,
+            borderRadius: borderRadius,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Text
+            fontSize={fontSize}
+            bold
+            style={{ color: panelName === "following" ? "black" : "white" }}
           >
-            <Text
-              fontSize={fontSize}
-              bold
-              style={{ color: panelName === "following" ? "black" : "white" }}
-            >
-              Following
-            </Text>
-          </Pressable>
-        </View>
+            Following
+          </Text>
+        </Pressable>
       </View>
-    </>
+    </View>
   );
 };
 
