@@ -37,6 +37,8 @@ yarn-error.*
 ios
 *.ipa
 
+*.apk
+
 android
 
 # Private
@@ -47,3 +49,4 @@ eas.json
 *.plist
 app.config.ts
 Development-google-services.json
+Prod-google-services.json
