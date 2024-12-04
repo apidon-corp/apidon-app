@@ -54,7 +54,7 @@ async function registerForPushNotifications() {
 
   const isRealDevice = Device.isDevice;
 
-  if (!isRealDevice) return false;
+  if (!isRealDevice && Platform.OS === "ios") return false;
 
   try {
     const currentNotificationStatus = await Notifications.getPermissionsAsync();
