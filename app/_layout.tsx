@@ -16,7 +16,13 @@ import "react-native-reanimated";
 import { SplashScreen } from "expo-router";
 
 import AuthProvider from "@/providers/AuthProvider";
-import { Animated, Dimensions, Linking, StatusBar } from "react-native";
+import {
+  Animated,
+  Dimensions,
+  Linking,
+  Platform,
+  StatusBar,
+} from "react-native";
 
 import NotificationProvider from "@/providers/NotificationProvider";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
@@ -121,12 +127,16 @@ function RootLayout() {
     ...FontAwesome.font,
   });
 
-  // enables edge-to-edge mode
-  NavigationBar.setPositionAsync("absolute");
-  // transparent backgrounds to see through
-  NavigationBar.setBackgroundColorAsync("#ffffff00");
-  // changes the color of the button icons "dark||light"
-  NavigationBar.setButtonStyleAsync("dark");
+  const isAndroid = Platform.OS === "android";
+
+  if (isAndroid) {
+    // enables edge-to-edge mode
+    NavigationBar.setPositionAsync("absolute");
+    // transparent backgrounds to see through
+    NavigationBar.setBackgroundColorAsync("#ffffff00");
+    // changes the color of the button icons "dark||light"
+    NavigationBar.setButtonStyleAsync("dark");
+  }
 
   const appCheckLoaded = useAppCheck();
 
