@@ -38,6 +38,7 @@ ios
 *.ipa
 
 *.apk
+*.aab
 
 android
 

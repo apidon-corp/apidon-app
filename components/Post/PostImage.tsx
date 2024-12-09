@@ -29,7 +29,6 @@ const PostImage = ({ source }: Props) => {
           width: "100%",
           aspectRatio: 1,
         }}
-        transition={50}
       />
     </Zoomable>
   );
