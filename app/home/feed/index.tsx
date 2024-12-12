@@ -65,11 +65,9 @@ const index = () => {
 
   const [panelName, setPanelName] = useState<"all" | "following">("all");
 
-  const [collectCollectible, setCollectCollectible] = useAtom(
+  const [collectCollectibleAtomValue, setCollectCollectibleAtom] = useAtom(
     collectCollectibleAtom
   );
-
-  const [collectibleCodeParamter, setCollectibleCodeParamter] = useState("");
 
   const [viewablePostDocPaths, setViewablePostDocPaths] = useState<string[]>(
     []
@@ -128,18 +126,13 @@ const index = () => {
    * Manage collecting collectible with linking
    */
   useEffect(() => {
-    if (!collectCollectible) return;
+    if (!collectCollectibleAtomValue) return;
 
-    const code = collectCollectible.code;
-    if (!code) return setCollectCollectible(undefined);
-
-    setCollectibleCodeParamter(code);
+    const code = collectCollectibleAtomValue.code;
+    if (!code) return setCollectCollectibleAtom(undefined);
 
     codeEnteringBottomSheetModalRef.current?.present();
-
-    // Clear Atom
-    setCollectCollectible(undefined);
-  }, [collectCollectible]);
+  }, [collectCollectibleAtomValue]);
 
   async function getInitialPostDocPaths() {
     try {
@@ -370,8 +363,7 @@ const index = () => {
       >
         <CodeEnteringBottomSheetContent
           bottomSheetModalRef={codeEnteringBottomSheetModalRef}
-          collectibleCodeParamter={collectibleCodeParamter}
-          setCollectibleCodeParameter={setCollectibleCodeParamter}
+          collectibleCodeParamter={collectCollectibleAtomValue?.code || ""}
         />
       </CustomBottomModalSheet>
     </>

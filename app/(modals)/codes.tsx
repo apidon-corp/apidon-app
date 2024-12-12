@@ -61,7 +61,15 @@ const codes = () => {
         { cancelable: false }
       );
 
-    const unusedCode = unusedCodes[0];
+    let randomValue = Math.floor(Math.random() * unusedCodes.length);
+
+    const unusedCode = unusedCodes[randomValue];
+    if (!unusedCode) return;
+
+    if (unusedCodes.length !== 1 && unusedCode.code === codeToShowQrCode) {
+      handleGetAvailableQRCodeButton();
+      return;
+    }
 
     setCodeToShowQrCode(unusedCode.code);
     qrCodeBottomSheetModalRef.current?.present();
@@ -207,6 +215,27 @@ const codes = () => {
                 This code has already been used.
               </Text>
             )}
+
+            <Pressable
+              onPress={handleGetAvailableQRCodeButton}
+              style={{
+                borderRadius: 10,
+                padding: 10,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "white",
+                margin: 5,
+              }}
+            >
+              <Text
+                fontSize={13}
+                style={{
+                  color: "black",
+                }}
+              >
+                Get Another QR Code
+              </Text>
+            </Pressable>
           </View>
         </CustomBottomModalSheet>
       </BottomSheetModalProvider>

@@ -103,8 +103,6 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
 
     setAuthStatus("authenticated");
 
-   // return router.replace("/(modals)/codes");
-
     if (!linkingRefParam.current.url) {
       if (pathnameRefParam.current !== "/home/feed")
         return router.replace("/home/feed");

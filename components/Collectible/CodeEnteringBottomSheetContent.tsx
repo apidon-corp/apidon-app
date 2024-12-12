@@ -10,19 +10,18 @@ import auth from "@react-native-firebase/auth";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
 import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
+import { collectCollectibleAtom } from "@/atoms/collectCollectibleAtom";
 
 type Props = {
   bottomSheetModalRef: React.RefObject<BottomSheetModal>;
   collectibleCodeParamter: string;
-  setCollectibleCodeParameter: React.Dispatch<React.SetStateAction<string>>;
 };
 
 const CodeEnteringBottomSheetContent = ({
   bottomSheetModalRef,
   collectibleCodeParamter,
-  setCollectibleCodeParameter,
 }: Props) => {
-  const [code, setCode] = useState(collectibleCodeParamter || "");
+  const [code, setCode] = useState("");
 
   const [loading, setLoading] = useState(false);
 
@@ -33,6 +32,8 @@ const CodeEnteringBottomSheetContent = ({
   const animatedErrorHeightValue = useSharedValue(0);
 
   const animatedOpacityValue = useSharedValue(0);
+
+  const setCollectibleCodeAtom = useSetAtom(collectCollectibleAtom);
 
   const handleCodeChange = (text: string) => {
     setError("");
@@ -112,7 +113,10 @@ const CodeEnteringBottomSheetContent = ({
   }, [error, code.length]);
 
   useEffect(() => {
-    if (collectibleCodeParamter) setCollectibleCodeParameter("");
+    if (collectibleCodeParamter) {
+      setCode(collectibleCodeParamter);
+      setCollectibleCodeAtom(undefined);
+    }
   }, [collectibleCodeParamter]);
 
   return (

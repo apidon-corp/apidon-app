@@ -1,6 +1,6 @@
 import { atom } from "jotai";
 
-interface CollectCollectibleInterface {
+export interface CollectCollectibleInterface {
   code: string;
 }
 
