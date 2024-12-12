@@ -194,7 +194,7 @@ const index = () => {
     if (panelName === "all") {
       await getInitialPostDocPaths();
     } else {
-      console.log("refreshing following");
+      await getInitialFollowingPosts();
     }
 
     setRefreshLoading(false);

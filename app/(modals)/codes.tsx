@@ -27,10 +27,8 @@ import QRCode from "react-native-qrcode-svg";
 
 const codes = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
-  const postDocPath =
-    (screenParameters.find((q) => q.queryId === "postDocPath")?.value as
-      | string
-      | undefined) || "users/yunuskorkmaz/posts/1730576774672";
+  const postDocPath = screenParameters.find((q) => q.queryId === "postDocPath")
+    ?.value as string | undefined;
 
   const [codes, setCodes] = useState<CodeDocData[] | null>(null);
 
