@@ -8,9 +8,10 @@ import { Share } from "react-native";
 type Props = {
   code: string;
   isUsed: boolean;
+  handleQRCodeButton: (qrLink: string) => void;
 };
 
-const CodeItem = ({ code, isUsed }: Props) => {
+const CodeItem = ({ code, isUsed, handleQRCodeButton }: Props) => {
   const [copyLoading, setCopyLoading] = useState(false);
 
   const handleCopyCodeButton = async () => {
@@ -66,7 +67,7 @@ const CodeItem = ({ code, isUsed }: Props) => {
 
       <View
         style={{
-          width: "25%",
+          width: "20%",
           alignItems: "center",
         }}
       >
@@ -85,7 +86,7 @@ const CodeItem = ({ code, isUsed }: Props) => {
         disabled={copyLoading}
         onPress={handleCopyCodeButton}
         style={{
-          width: "25%",
+          width: "15%",
           alignItems: "flex-end",
         }}
       >
@@ -94,6 +95,19 @@ const CodeItem = ({ code, isUsed }: Props) => {
         ) : (
           <AntDesign name="sharealt" size={20} color="white" />
         )}
+      </Pressable>
+
+      <Pressable
+        id="qr"
+        onPress={() => {
+          handleQRCodeButton(code);
+        }}
+        style={{
+          width: "15%",
+          alignItems: "flex-end",
+        }}
+      >
+        <AntDesign name="qrcode" size={20} color="white" />
       </Pressable>
     </View>
   );
