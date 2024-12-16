@@ -4,9 +4,9 @@ import { Image } from "expo-image";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
   Dimensions,
   Keyboard,
+  Platform,
   Pressable,
   ScrollView,
   TextInput,
@@ -15,12 +15,18 @@ import {
 
 import appCheck from "@react-native-firebase/app-check";
 
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import apiRoutes from "@/helpers/ApiRoutes";
-import { useSetAtom } from "jotai";
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
-import { router } from "expo-router";
+import apiRoutes from "@/helpers/ApiRoutes";
 import crashlytics from "@react-native-firebase/crashlytics";
+import { router } from "expo-router";
+import { useSetAtom } from "jotai";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming
+} from "react-native-reanimated";
 
 const emailPasswordSignUp = () => {
   const [isEmailValid, setIsEmailValid] = useState(false);
@@ -33,8 +39,8 @@ const emailPasswordSignUp = () => {
 
   const [error, setError] = useState("");
 
-  const errorOpacity = useRef(new Animated.Value(1)).current;
-  const buttonOpactiy = useRef(new Animated.Value(1)).current;
+  const errorOpacity = useSharedValue(1);
+  const buttonOpacity = useSharedValue(1);
 
   const [loading, setLoading] = useState(false);
   const [buttonActiveStatus, setButtonActiveStatus] = useState(false);
@@ -42,7 +48,20 @@ const emailPasswordSignUp = () => {
   const bodyContainerRef = useRef<null | View>(null);
   const containerRef = useRef<null | View>(null);
   const screenHeight = Dimensions.get("window").height;
-  const animatedTranslateValue = useRef(new Animated.Value(0)).current;
+
+  const translateY = useSharedValue(0);
+
+  const containerAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  const errorAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: errorOpacity.value,
+  }));
+
+  const buttonAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: buttonOpacity.value,
+  }));
 
   const { bottom } = useSafeAreaInsets();
 
@@ -57,11 +76,9 @@ const emailPasswordSignUp = () => {
 
   // Error Opacity Handling
   useEffect(() => {
-    if (error.length === 0) {
-      changeErrorOpacity(0);
-    } else {
-      changeErrorOpacity(1);
-    }
+    errorOpacity.value = withTiming(error.length === 0 ? 0 : 1, {
+      duration: 400,
+    });
   }, [error]);
 
   // Continue Button Status Handling
@@ -74,19 +91,19 @@ const emailPasswordSignUp = () => {
 
   // Continue Button Opacity Handling
   useEffect(() => {
-    if (buttonActiveStatus) {
-      changeButtonOpacity(1);
-    } else {
-      changeButtonOpacity(0.5);
-    }
+    buttonOpacity.value = withTiming(buttonActiveStatus ? 1 : 0.5, {
+      duration: 400,
+    });
   }, [buttonActiveStatus]);
 
   // Keyboard-Layout Change
   useEffect(() => {
+    const isIOS = Platform.OS === "ios";
+
     const keyboardWillShowListener = Keyboard.addListener(
-      "keyboardWillShow",
+      isIOS ? "keyboardWillShow" : "keyboardDidShow",
       (event) => {
-        if (Keyboard.isVisible()) return;
+        if (isIOS && Keyboard.isVisible()) return;
 
         const keyboardHeight = event.endCoordinates.height;
 
@@ -103,11 +120,9 @@ const emailPasswordSignUp = () => {
                 toValue = keyboardHeight - distanceFromBottom;
               }
 
-              Animated.timing(animatedTranslateValue, {
-                toValue: -toValue,
+              translateY.value = withTiming(-toValue, {
                 duration: 250,
-                useNativeDriver: true,
-              }).start();
+              });
             }
           );
         }
@@ -115,15 +130,11 @@ const emailPasswordSignUp = () => {
     );
 
     const keyboardWillHideListener = Keyboard.addListener(
-      "keyboardWillHide",
+      isIOS ? "keyboardWillHide" : "keyboardDidHide",
       (event) => {
-        let toValue = 0;
-
-        Animated.timing(animatedTranslateValue, {
-          toValue: toValue,
+        translateY.value = withTiming(0, {
           duration: 250,
-          useNativeDriver: true,
-        }).start();
+        });
       }
     );
 
@@ -243,22 +254,6 @@ const emailPasswordSignUp = () => {
     }
   };
 
-  const changeErrorOpacity = (toValue: number) => {
-    Animated.timing(errorOpacity, {
-      toValue: toValue,
-      duration: 400,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const changeButtonOpacity = (toValue: number) => {
-    Animated.timing(buttonOpactiy, {
-      toValue: toValue,
-      duration: 400,
-      useNativeDriver: true,
-    }).start();
-  };
-
   const handleSignInButton = () => {
     router.replace("/auth/emailPasswordSignIn");
   };
@@ -274,12 +269,14 @@ const emailPasswordSignUp = () => {
       <Animated.View
         ref={containerRef}
         id="root"
-        style={{
-          justifyContent: "center",
-          alignItems: "center",
-          flex: 1,
-          transform: [{ translateY: animatedTranslateValue }],
-        }}
+        style={[
+          {
+            justifyContent: "center",
+            alignItems: "center",
+            flex: 1,
+          },
+          containerAnimatedStyle,
+        ]}
       >
         <View
           id="set-account-header"
@@ -432,11 +429,13 @@ const emailPasswordSignUp = () => {
             </View>
 
             <Animated.View
-              style={{
-                width: "100%",
-                alignItems: "center",
-                opacity: buttonOpactiy,
-              }}
+              style={[
+                {
+                  width: "100%",
+                  alignItems: "center",
+                },
+                buttonAnimatedStyle,
+              ]}
             >
               <Pressable
                 disabled={!buttonActiveStatus}
@@ -466,12 +465,14 @@ const emailPasswordSignUp = () => {
 
             <Animated.View
               id="error"
-              style={{
-                alignItems: "center",
-                justifyContent: "center",
-                height: 50,
-                opacity: errorOpacity,
-              }}
+              style={[
+                {
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: 50,
+                },
+                errorAnimatedStyle,
+              ]}
             >
               <Text
                 style={{

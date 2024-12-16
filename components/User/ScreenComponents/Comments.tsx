@@ -11,17 +11,19 @@ import { Image } from "expo-image";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
   Dimensions,
   FlatList,
   Keyboard,
   NativeScrollEvent,
+  Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
   TextInput,
   View,
 } from "react-native";
+
+import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 
 import auth from "@react-native-firebase/auth";
 
@@ -51,10 +53,10 @@ const Comments = () => {
   const [comment, setComment] = useState("");
   const [sendCommentLoading, setSendCommentLoading] = useState(false);
 
-  const animatedOpacityValue = useRef(new Animated.Value(1)).current;
+  const animatedOpacityValue = useSharedValue(1);
 
   const screenHeight = Dimensions.get("window").height;
-  const animatedTranslateValue = useRef(new Animated.Value(0)).current;
+  const animatedTranslateValue = useSharedValue(0);
   const containerRef = useRef<null | View>(null);
 
   const { bottom } = useSafeAreaInsets();
@@ -77,19 +79,19 @@ const Comments = () => {
    * Handling opacity of "send" button.
    */
   useEffect(() => {
-    Animated.timing(animatedOpacityValue, {
-      toValue: comment.length > 0 ? 1 : 0.5,
+    animatedOpacityValue.value = withTiming(comment.length > 0 ? 1 : 0.5, {
       duration: 500,
-      useNativeDriver: true,
-    }).start();
+    });
   }, [comment.length]);
 
   // Keyboard-Layout Change
   useEffect(() => {
+    const isIOS = Platform.OS === "ios";
+
     const keyboardWillShowListener = Keyboard.addListener(
-      "keyboardWillShow",
+      isIOS ? "keyboardWillShow" : "keyboardDidShow",
       (event) => {
-        if (Keyboard.isVisible()) return;
+        if (isIOS && Keyboard.isVisible()) return;
 
         const keyboardHeight = event.endCoordinates.height;
 
@@ -103,29 +105,23 @@ const Comments = () => {
               toValue = 0;
             } else {
               toValue = keyboardHeight - distanceFromBottom;
-              toValue += 20;
+              toValue += 40;
             }
 
-            Animated.timing(animatedTranslateValue, {
-              toValue: -toValue,
+            animatedTranslateValue.value = withTiming(-toValue, {
               duration: 250,
-              useNativeDriver: true,
-            }).start();
+            });
           });
         }
       }
     );
 
     const keyboardWillHideListener = Keyboard.addListener(
-      "keyboardWillHide",
+      isIOS ? "keyboardWillHide" : "keyboardDidHide",
       (event) => {
-        let toValue = 0;
-
-        Animated.timing(animatedTranslateValue, {
-          toValue: toValue,
+        animatedTranslateValue.value = withTiming(0, {
           duration: 250,
-          useNativeDriver: true,
-        }).start();
+        });
       }
     );
 

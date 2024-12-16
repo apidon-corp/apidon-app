@@ -132,7 +132,7 @@ const notificationSettings = () => {
 
     const isRealDevice = Device.isDevice;
 
-    if (!isRealDevice) {
+    if (!isRealDevice && Platform.OS === "ios") {
       console.log("Only real devices can subscribe to push notifications.");
       return false;
     }

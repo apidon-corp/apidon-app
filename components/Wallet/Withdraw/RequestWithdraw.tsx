@@ -4,14 +4,16 @@ import { WithdrawRequestInput } from "@/types/Withdraw";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
   Dimensions,
   Keyboard,
+  Platform,
   Pressable,
   ScrollView,
   TextInput,
   View,
 } from "react-native";
+
+import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 
 import { useAuth } from "@/providers/AuthProvider";
 import { UserIdentityDoc } from "@/types/Identity";
@@ -47,11 +49,11 @@ const RequestWithdraw = () => {
 
   const containerRef = useRef<null | View>(null);
   const screenHeight = Dimensions.get("window").height;
-  const animatedTranslateValue = useRef(new Animated.Value(0)).current;
+  const animatedTranslateValue = useSharedValue(0);
 
   const [hasValidSwift, setHasValidSwift] = useState(false);
 
-  const requestButtonOpacityValue = useRef(new Animated.Value(0.5)).current;
+  const requestButtonOpacityValue = useSharedValue(0.5);
 
   const [loading, setLoading] = useState(false);
 
@@ -88,10 +90,12 @@ const RequestWithdraw = () => {
 
   // Keyboard-Layout Change
   useEffect(() => {
+    const isIOS = Platform.OS === "ios";
+
     const keyboardWillShowListener = Keyboard.addListener(
-      "keyboardWillShow",
+      isIOS ? "keyboardWillShow" : "keyboardDidShow",
       (event) => {
-        if (Keyboard.isVisible()) return;
+        if (isIOS && Keyboard.isVisible()) return;
 
         const keyboardHeight = event.endCoordinates.height;
 
@@ -107,26 +111,20 @@ const RequestWithdraw = () => {
               toValue = keyboardHeight - distanceFromBottom;
             }
 
-            Animated.timing(animatedTranslateValue, {
-              toValue: -toValue,
+            animatedTranslateValue.value = withTiming(-toValue, {
               duration: 250,
-              useNativeDriver: true,
-            }).start();
+            });
           });
         }
       }
     );
 
     const keyboardWillHideListener = Keyboard.addListener(
-      "keyboardWillHide",
+      isIOS ? "keyboardWillHide" : "keyboardDidHide",
       (event) => {
-        let toValue = 0;
-
-        Animated.timing(animatedTranslateValue, {
-          toValue: toValue,
+        animatedTranslateValue.value = withTiming(0, {
           duration: 250,
-          useNativeDriver: true,
-        }).start();
+        });
       }
     );
 
@@ -156,7 +154,7 @@ const RequestWithdraw = () => {
       !loading &&
       hasEnoughBalance;
 
-    handleChangeOpactiy(requestButtonOpacityValue, status ? 1 : 0.5, 250);
+    handleChangeOpactiy(status ? 1 : 0.5);
   }, [hasValidSwift, requestInputData, loading, hasEnoughBalance]);
 
   const handlePressVerifyButton = () => {
@@ -187,16 +185,10 @@ const RequestWithdraw = () => {
     }));
   };
 
-  const handleChangeOpactiy = (
-    animatedObject: Animated.Value,
-    toValue: number,
-    duration: number
-  ) => {
-    Animated.timing(animatedObject, {
-      toValue,
-      duration,
-      useNativeDriver: true,
-    }).start();
+  const handleChangeOpactiy = (toValue: number) => {
+    requestButtonOpacityValue.value = withTiming(toValue, {
+      duration: 250,
+    });
   };
 
   const handleCreateRequestButton = async () => {

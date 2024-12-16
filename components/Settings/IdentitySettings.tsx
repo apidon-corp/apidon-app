@@ -2,7 +2,7 @@ import { Text } from "@/components/Text/Text";
 import { Environment } from "@/types/Environment";
 import { router } from "expo-router";
 import React from "react";
-import { Pressable } from "react-native";
+import { Platform, Pressable } from "react-native";
 
 const IdentitySettings = () => {
   const environment =
@@ -12,7 +12,9 @@ const IdentitySettings = () => {
     router.push("/(modals)/settings/identity");
   };
 
-  if (environment && environment === "PRODUCTION") return <></>;
+  const isIOS = Platform.OS === "ios";
+
+  if ((environment && environment === "PRODUCTION") || !isIOS) return <></>;
 
   return (
     <Pressable

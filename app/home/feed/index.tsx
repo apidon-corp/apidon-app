@@ -1,13 +1,21 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import Post from "@/components/Post/Post";
 import { useAtom, useAtomValue } from "jotai";
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   FlatList,
   NativeScrollEvent,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
+  ViewToken,
 } from "react-native";
 
 import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
@@ -57,11 +65,17 @@ const index = () => {
 
   const [panelName, setPanelName] = useState<"all" | "following">("all");
 
-  const [collectCollectible, setCollectCollectible] = useAtom(
+  const [collectCollectibleAtomValue, setCollectCollectibleAtom] = useAtom(
     collectCollectibleAtom
   );
 
-  const [collectibleCodeParamter, setCollectibleCodeParamter] = useState("");
+  const [viewablePostDocPaths, setViewablePostDocPaths] = useState<string[]>(
+    []
+  );
+
+  const flatListRef = useRef<FlatList>(null);
+
+  const isIOS = Platform.OS === "ios";
 
   const {
     followingPostDocPaths,
@@ -88,6 +102,9 @@ const index = () => {
   useEffect(() => {
     if (homeScreenParametersValue.isHomeButtonPressed) {
       scrollViewRef.current?.scrollTo({ y: -headerHeight + 1 });
+
+      if (viewablePostDocPaths.length !== 0)
+        flatListRef.current?.scrollToIndex({ index: 0, animated: true });
     }
   }, [homeScreenParametersValue]);
 
@@ -109,18 +126,13 @@ const index = () => {
    * Manage collecting collectible with linking
    */
   useEffect(() => {
-    if (!collectCollectible) return;
+    if (!collectCollectibleAtomValue) return;
 
-    const code = collectCollectible.code;
-    if (!code) return setCollectCollectible(undefined);
-
-    setCollectibleCodeParamter(code);
+    const code = collectCollectibleAtomValue.code;
+    if (!code) return setCollectCollectibleAtom(undefined);
 
     codeEnteringBottomSheetModalRef.current?.present();
-
-    // Clear Atom
-    setCollectCollectible(undefined);
-  }, [collectCollectible]);
+  }, [collectCollectibleAtomValue]);
 
   async function getInitialPostDocPaths() {
     try {
@@ -175,7 +187,7 @@ const index = () => {
     if (panelName === "all") {
       await getInitialPostDocPaths();
     } else {
-      console.log("refreshing following");
+      await getInitialFollowingPosts();
     }
 
     setRefreshLoading(false);
@@ -199,6 +211,37 @@ const index = () => {
     codeEnteringBottomSheetModalRef.current?.present();
   };
 
+  const onViewableItemsChanged = ({
+    viewableItems,
+    changed,
+  }: {
+    viewableItems: ViewToken[];
+    changed: ViewToken[];
+  }) => {
+    // console.log("Viewable Items: ", viewableItems);
+    //console.log("---------");
+    // for (const changeditem of viewableItems) {
+    //   console.log("Vieable Items: ", changeditem);
+    // }
+    setViewablePostDocPaths(viewableItems.map((item) => item.key));
+    // console.log("---------");
+  };
+
+  const renderItem = useCallback(
+    ({ item }: any) => (
+      <Post postDocPath={item} viewablePostDocPaths={viewablePostDocPaths} />
+    ),
+    [viewablePostDocPaths]
+  );
+
+  const listData = useMemo(
+    () =>
+      Array.from(
+        new Set(panelName === "all" ? postDocPaths : followingPostDocPaths)
+      ),
+    [panelName, postDocPaths, followingPostDocPaths]
+  );
+
   return (
     <>
       <Stack.Screen
@@ -209,7 +252,7 @@ const index = () => {
               style={{
                 justifyContent: "center",
                 alignItems: "flex-start",
-                width: 75,
+                width: 45,
               }}
             >
               <AntDesign name="qrcode" size={24} color="white" />
@@ -218,58 +261,101 @@ const index = () => {
         }}
       />
 
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        ref={scrollViewRef}
-        onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
-        scrollEventThrottle={500}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshLoading}
-            onRefresh={handleRefresh}
-          />
-        }
-        contentContainerStyle={{
-          paddingBottom: (bottom || 20) + 60,
-        }}
-        scrollToOverflowEnabled
-      >
-        <Pagination panelName={panelName} setPanelName={setPanelName} />
-
-        {postDocPaths.length === 0 ? (
-          <FlatList
-            scrollEnabled={false}
-            showsVerticalScrollIndicator={false}
-            data={[1, 2]}
-            renderItem={({ item }) => <PostSkeleton key={item} />}
-            contentContainerStyle={{
-              width: "100%",
-              gap: 10,
-            }}
-          />
-        ) : (
-          <>
-            <FlatList
-              style={{
-                width: "100%",
-              }}
-              contentContainerStyle={{
-                gap: 20,
-              }}
-              keyExtractor={(item) => item}
-              data={Array.from(
-                new Set(
-                  panelName === "all" ? postDocPaths : followingPostDocPaths
-                )
-              )}
-              renderItem={({ item }) => <Post postDocPath={item} key={item} />}
-              showsVerticalScrollIndicator={false}
-              scrollEnabled={false}
+      {isIOS ? (
+        <ScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          ref={scrollViewRef}
+          onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
+          scrollEventThrottle={500}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshLoading}
+              onRefresh={handleRefresh}
             />
-          </>
-        )}
-      </ScrollView>
+          }
+          contentContainerStyle={{
+            paddingBottom: (bottom || 20) + 60,
+          }}
+          scrollToOverflowEnabled
+        >
+          <Pagination panelName={panelName} setPanelName={setPanelName} />
+
+          {postDocPaths.length === 0 ? (
+            <FlatList
+              scrollEnabled={false}
+              showsVerticalScrollIndicator={false}
+              data={[1, 2]}
+              renderItem={({ item }) => <PostSkeleton key={item} />}
+              contentContainerStyle={{
+                width: "100%",
+                gap: 10,
+              }}
+            />
+          ) : (
+            <>
+              <FlatList
+                style={{
+                  width: "100%",
+                }}
+                contentContainerStyle={{
+                  gap: 20,
+                }}
+                keyExtractor={(item) => item}
+                data={Array.from(
+                  new Set(
+                    panelName === "all" ? postDocPaths : followingPostDocPaths
+                  )
+                )}
+                renderItem={({ item }) => (
+                  <Post postDocPath={item} key={item} />
+                )}
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={false}
+                viewabilityConfig={{
+                  waitForInteraction: false,
+                  minimumViewTime: 0,
+                  itemVisiblePercentThreshold: 50,
+                }}
+                onViewableItemsChanged={onViewableItemsChanged}
+              />
+            </>
+          )}
+        </ScrollView>
+      ) : (
+        <FlatList
+          ref={flatListRef}
+          contentInsetAdjustmentBehavior="automatic"
+          style={{
+            width: "100%",
+          }}
+          contentContainerStyle={{
+            gap: 20,
+            paddingBottom: (bottom || 20) + 60,
+          }}
+          onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
+          keyExtractor={(item) => item}
+          data={listData}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+          viewabilityConfig={{
+            waitForInteraction: false,
+            minimumViewTime: 0,
+            viewAreaCoveragePercentThreshold: 0,
+          }}
+          onViewableItemsChanged={onViewableItemsChanged}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshLoading}
+              onRefresh={handleRefresh}
+            />
+          }
+          scrollToOverflowEnabled
+          ListHeaderComponent={
+            <Pagination panelName={panelName} setPanelName={setPanelName} />
+          }
+        />
+      )}
 
       <CustomBottomModalSheet
         ref={codeEnteringBottomSheetModalRef}
@@ -277,8 +363,7 @@ const index = () => {
       >
         <CodeEnteringBottomSheetContent
           bottomSheetModalRef={codeEnteringBottomSheetModalRef}
-          collectibleCodeParamter={collectibleCodeParamter}
-          setCollectibleCodeParameter={setCollectibleCodeParamter}
+          collectibleCodeParamter={collectCollectibleAtomValue?.code || ""}
         />
       </CustomBottomModalSheet>
     </>

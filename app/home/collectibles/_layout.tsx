@@ -1,7 +1,7 @@
 import { FontAwesome5 } from "@expo/vector-icons";
 import { Stack, router } from "expo-router";
 import React from "react";
-import { Pressable } from "react-native";
+import { Pressable, Platform } from "react-native";
 
 import { Text } from "@/components/Text/Text";
 import { Environment } from "@/types/Environment";
@@ -13,6 +13,8 @@ const _layout = () => {
   const handlePressWalletIcon = () => {
     router.push("/home/collectibles/wallet");
   };
+
+  const isIOS = Platform.OS === "ios";
 
   return (
     <Stack
@@ -26,7 +28,9 @@ const _layout = () => {
       <Stack.Screen
         name="index"
         options={{
-          headerStyle: { backgroundColor: undefined },
+          headerStyle: isIOS
+            ? { backgroundColor: undefined }
+            : { backgroundColor: "black" },
           title: "Collectibles",
           headerRight: () => (
             <Pressable
@@ -36,17 +40,23 @@ const _layout = () => {
                 height: 25,
                 justifyContent: "center",
                 alignItems: "flex-end",
-                display:
-                  environment && environment !== "PRODUCTION" ? "flex" : "none",
+                display: !isIOS
+                  ? "none"
+                  : environment && environment !== "PRODUCTION"
+                  ? "flex"
+                  : "none",
               }}
             >
               <FontAwesome5 name="wallet" size={25} color="white" />
             </Pressable>
           ),
-          headerTransparent: true,
-          headerBlurEffect: "dark",
-          headerLargeTitle: true,
-          headerLargeStyle: { backgroundColor: "black" },
+          headerTransparent: isIOS ? true : undefined,
+          headerBlurEffect: isIOS ? "dark" : undefined,
+          headerLargeTitle: isIOS ? true : undefined,
+          headerLargeStyle: isIOS ? { backgroundColor: "black" } : undefined,
+          headerTitleStyle: isIOS
+            ? undefined
+            : { color: "white", fontWeight: "bold", fontSize: 28 },
         }}
       />
 

@@ -3,32 +3,30 @@ import React, { useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import Text from "../Text/Text";
 
-import * as Sharing from "expo-sharing";
+import { Share } from "react-native";
 
 type Props = {
   code: string;
   isUsed: boolean;
+  handleQRCodeButton: (qrLink: string) => void;
 };
 
-const CodeItem = ({ code, isUsed }: Props) => {
+const CodeItem = ({ code, isUsed, handleQRCodeButton }: Props) => {
   const [copyLoading, setCopyLoading] = useState(false);
 
   const handleCopyCodeButton = async () => {
     setCopyLoading(true);
 
     try {
-      const isSharingAvailable = await Sharing.isAvailableAsync();
-      if (!isSharingAvailable) return setCopyLoading(false);
-
       const baseURL = process.env.EXPO_PUBLIC_APP_LINK_BASE_URL || "";
       if (!baseURL) return setCopyLoading(false);
 
       const url = baseURL + "/" + "cc" + "/" + code;
 
-      await Sharing.shareAsync(url, {
-        dialogTitle: `Share this link with your participants so they can collect your event's unique collectible.`,
-        mimeType: "text/plain",
-        UTI: "public.plain-text",
+      await Share.share({
+        title:
+          "Share this link with your participants so they can collect your event's unique collectible.",
+        message: url,
       });
 
       return setCopyLoading(false);
@@ -69,7 +67,7 @@ const CodeItem = ({ code, isUsed }: Props) => {
 
       <View
         style={{
-          width: "25%",
+          width: "20%",
           alignItems: "center",
         }}
       >
@@ -88,7 +86,7 @@ const CodeItem = ({ code, isUsed }: Props) => {
         disabled={copyLoading}
         onPress={handleCopyCodeButton}
         style={{
-          width: "25%",
+          width: "15%",
           alignItems: "flex-end",
         }}
       >
@@ -97,6 +95,19 @@ const CodeItem = ({ code, isUsed }: Props) => {
         ) : (
           <AntDesign name="sharealt" size={20} color="white" />
         )}
+      </Pressable>
+
+      <Pressable
+        id="qr"
+        onPress={() => {
+          handleQRCodeButton(code);
+        }}
+        style={{
+          width: "15%",
+          alignItems: "flex-end",
+        }}
+      >
+        <AntDesign name="qrcode" size={20} color="white" />
       </Pressable>
     </View>
   );

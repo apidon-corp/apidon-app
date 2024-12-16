@@ -1,4 +1,4 @@
-import { View, Animated, Pressable } from "react-native";
+import { View, Animated, Pressable, Text as NativeText } from "react-native";
 import React, { useEffect, useRef } from "react";
 import Text from "../Text/Text";
 

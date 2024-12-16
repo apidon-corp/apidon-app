@@ -1,6 +1,5 @@
 import { UserInServer } from "@/types/User";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import * as Sharing from "expo-sharing";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, View } from "react-native";
 import Text from "../Text/Text";
@@ -10,6 +9,8 @@ import appCheck from "@react-native-firebase/app-check";
 import apiRoutes from "@/helpers/ApiRoutes";
 
 import firestore from "@react-native-firebase/firestore";
+
+import { Share } from "react-native";
 
 type Props = {
   userData: UserInServer;
@@ -76,18 +77,14 @@ const UserSettingsBottomSheetModalContent = ({
 
   const handleShareButton = async () => {
     try {
-      const isSharingAvailable = await Sharing.isAvailableAsync();
-      if (!isSharingAvailable) return;
-
       const baseURL = process.env.EXPO_PUBLIC_APP_LINK_BASE_URL || "";
       if (!baseURL) return;
 
       const url = baseURL + "/" + userData.username;
 
-      await Sharing.shareAsync(url, {
-        dialogTitle: `Share ${userData.fullname} with your friends!`,
-        mimeType: "text/plain",
-        UTI: "public.plain-text",
+      await Share.share({
+        title: `Share ${userData.fullname} with your friends!`,
+        message : url,
       });
 
       modalRef.current?.dismiss();

@@ -6,11 +6,11 @@ import firestore, {
 import auth from "@react-native-firebase/auth";
 import { PostDataOnMainPostsCollection } from "@/types/Post";
 
-const initialFollowingCount = 5;
-const moreFollowingCount = 5;
+const initialFollowingCount = 30;
+const moreFollowingCount = 30;
 
-const initialPostCount = 5;
-const morePostCount = 3;
+const initialPostCount = 8;
+const morePostCount = 8;
 
 export function useFollowingPosts() {
   const [followingDocs, setFollowingDocs] = useState<

@@ -1,7 +1,6 @@
 import {
   View,
   ScrollView,
-  Animated,
   TextInput,
   Text as NativeText,
   Pressable,
@@ -9,9 +8,12 @@ import {
   Keyboard,
   Alert,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
 import Text from "@/components/Text/Text";
+
+import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
@@ -21,19 +23,29 @@ import appCheck from "@react-native-firebase/app-check";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { router } from "expo-router";
 
+import { appleAuthAndroid } from "@invertase/react-native-apple-authentication";
+import { v4 as uuid } from "uuid";
+import "react-native-get-random-values";
+
+import Dialog from "react-native-dialog";
+
 const deleteAccount = () => {
   const [confirmText, setConfirmText] = useState("");
   const [readyToDelete, setReadyToDelete] = useState(false);
 
-  const animatedButtonValue = useRef(new Animated.Value(0.5)).current;
+  const animatedButtonValue = useSharedValue(0.5);
 
   const bodyContainerRef = useRef<null | View>(null);
   const screenHeight = Dimensions.get("window").height;
-  const animatedTranslateValue = useRef(new Animated.Value(0)).current;
+  const animatedTranslateValue = useSharedValue(0);
 
   const [deleting, setDeleting] = useState(false);
 
   const [error, setError] = useState("");
+
+  const [androidPasswordDialogVisible, setAndroidPasswordDialogVisible] =
+    useState(false);
+  const [androidPassword, setAndroidPassword] = useState("");
 
   const handleDeleteMyAccountButton = async () => {
     if (deleting) return;
@@ -53,41 +65,100 @@ const deleteAccount = () => {
     const isGoogle = providerId === "google.com";
     const isPassword = providerId === "password";
 
+    const isIOS = Platform.OS === "ios";
+
     // Revoking Apple Token and Reload Auth Token
     if (isApple) {
-      const { authorizationCode, identityToken } =
-        await AppleAuthentication.refreshAsync({
-          user: currentUserAuthObject.uid,
+      if (isIOS) {
+        const { authorizationCode, identityToken } =
+          await AppleAuthentication.refreshAsync({
+            user: currentUserAuthObject.uid,
+          });
+
+        if (!authorizationCode) {
+          console.error("No authorization code found to revoke apple user.");
+          return setDeleting(false);
+        }
+
+        const appleCredential =
+          auth.AppleAuthProvider.credential(identityToken);
+
+        try {
+          await currentUserAuthObject.reauthenticateWithCredential(
+            appleCredential
+          );
+        } catch (error) {
+          console.error("Error on re-authenticating with apple: ", error);
+          return setDeleting(false);
+        }
+
+        try {
+          await auth().revokeToken(authorizationCode);
+        } catch (error) {
+          console.error("Error on revoking apple token: ", error);
+          return setDeleting(false);
+        }
+      } else {
+        const rawNonce = uuid();
+        const state = uuid();
+
+        // Configure the request
+        appleAuthAndroid.configure({
+          // The Service ID you registered with Apple
+          clientId: process.env.EXPO_PUBLIC_APPLE_AUTH_ANDROID_CLIENT_KEY || "",
+
+          // Return URL added to your Apple dev console. We intercept this redirect, but it must still match
+          // the URL you provided to Apple. It can be an empty route on your backend as it's never called.
+          redirectUri: process.env.EXPO_PUBLIC_APPLE_AUTH_REDIRECT_URI || "",
+
+          // The type of response requested - code, id_token, or both.
+          responseType: appleAuthAndroid.ResponseType.ALL,
+
+          // The amount of user information requested from Apple.
+          scope: appleAuthAndroid.Scope.ALL,
+
+          // Random nonce value that will be SHA256 hashed before sending to Apple.
+          nonce: rawNonce,
+
+          // Unique state value used to prevent CSRF attacks. A UUID will be generated if nothing is provided.
+          state,
         });
 
-      if (!authorizationCode) {
-        console.error("No authorization code found to revoke apple user.");
-        return setDeleting(false);
-      }
+        try {
+          const {
+            id_token: identityToken,
+            nonce,
+            code: authenticationCode,
+          } = await appleAuthAndroid.signIn();
 
-      const appleCredential = auth.AppleAuthProvider.credential(identityToken);
+          if (!identityToken || !nonce) {
+            setDeleting(false);
+            return console.error(
+              "No identity token or nonce found in the response"
+            );
+          }
 
-      try {
-        await currentUserAuthObject.reauthenticateWithCredential(
-          appleCredential
-        );
-      } catch (error) {
-        console.error("Error on re-authenticating with apple: ", error);
-        return setDeleting(false);
-      }
+          const appleCredential = auth.AppleAuthProvider.credential(
+            identityToken,
+            nonce
+          );
 
-      try {
-        await auth().revokeToken(authorizationCode);
-      } catch (error) {
-        console.error("Error on revoking apple token: ", error);
-        return setDeleting(false);
+          await currentUserAuthObject.reauthenticateWithCredential(
+            appleCredential
+          );
+
+          await auth().revokeToken(authenticationCode);
+        } catch (error) {
+          console.error("Error on Apple Sign In: ", error);
+          return setDeleting(false);
+        }
       }
     }
 
     // Reload Auth Token
     if (isGoogle) {
       GoogleSignin.configure({
-        webClientId: "",
+        webClientId: process.env.EXPO_PUBLIC_GOOGLE_AUTH_ANDROID_WEB_CLIENT_KEY,
       });
 
       await GoogleSignin.hasPlayServices({
@@ -135,30 +206,37 @@ const deleteAccount = () => {
   const handlePasswordTypeAccountDeletion = async (
     currentUserAuthObject: FirebaseAuthTypes.User
   ) => {
+    const isIOS = Platform.OS === "ios";
+
+    if (isIOS) {
+      Alert.prompt(
+        "Enter your password",
+        "Please enter your password to confirm account deletion.",
+        [
+          {
+            text: "Cancel",
+            onPress: () => {
+              setDeleting(false);
+            },
+            style: "cancel",
+          },
+          {
+            text: "OK",
+            onPress: (text) => {
+              handleFinishEmailTypeAccountDeletion(
+                text || "",
+                currentUserAuthObject
+              );
+            },
+          },
+        ],
+        "secure-text"
+      );
+    } else {
+      setAndroidPasswordDialogVisible(true);
+    }
+
     // Getting Password from user.
-    Alert.prompt(
-      "Enter your password",
-      "Please enter your password to confirm account deletion.",
-      [
-        {
-          text: "Cancel",
-          onPress: () => {
-            setDeleting(false);
-          },
-          style: "cancel",
-        },
-        {
-          text: "OK",
-          onPress: (text) => {
-            handleFinishEmailTypeAccountDeletion(
-              text || "",
-              currentUserAuthObject
-            );
-          },
-        },
-      ],
-      "secure-text"
-    );
   };
 
   const handleFinishEmailTypeAccountDeletion = async (
@@ -230,6 +308,27 @@ const deleteAccount = () => {
     }
   };
 
+  const handleAndroidPasswordDialogCancel = () => {
+    setAndroidPasswordDialogVisible(false);
+    setAndroidPassword("");
+
+    setDeleting(false);
+  };
+
+  const handleAndroidPasswordDialogConfirm = () => {
+    setAndroidPasswordDialogVisible(false);
+
+    const currentUserAuthObject = auth().currentUser;
+    if (!currentUserAuthObject) return setDeleting(false);
+
+    handleFinishEmailTypeAccountDeletion(
+      androidPassword,
+      currentUserAuthObject
+    );
+
+    setAndroidPassword("");
+  };
+
   useEffect(() => {
     const displayName = auth().currentUser?.displayName;
     if (!displayName) return;
@@ -242,26 +341,20 @@ const deleteAccount = () => {
     const status = readyToDelete && !deleting;
 
     if (status) {
-      Animated.timing(animatedButtonValue, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }).start();
+      animatedButtonValue.value = withTiming(1, { duration: 400 });
     } else {
-      Animated.timing(animatedButtonValue, {
-        toValue: 0.5,
-        duration: 400,
-        useNativeDriver: true,
-      }).start();
+      animatedButtonValue.value = withTiming(0.5, { duration: 400 });
     }
   }, [readyToDelete, deleting]);
 
   // Keyboard-Layout Change
   useEffect(() => {
+    const isIOS = Platform.OS === "ios";
+
     const keyboardWillShowListener = Keyboard.addListener(
-      "keyboardWillShow",
+      isIOS ? "keyboardWillShow" : "keyboardDidShow",
       (event) => {
-        if (Keyboard.isVisible()) return;
+        if (isIOS && Keyboard.isVisible()) return;
 
         const keyboardHeight = event.endCoordinates.height;
 
@@ -278,11 +371,9 @@ const deleteAccount = () => {
                 toValue = keyboardHeight - distanceFromBottom;
               }
 
-              Animated.timing(animatedTranslateValue, {
-                toValue: -toValue,
+              animatedTranslateValue.value = withTiming(-toValue, {
                 duration: 250,
-                useNativeDriver: true,
-              }).start();
+              });
             }
           );
         }
@@ -290,15 +381,9 @@ const deleteAccount = () => {
     );
 
     const keyboardWillHideListener = Keyboard.addListener(
-      "keyboardWillHide",
+      isIOS ? "keyboardWillHide" : "keyboardDidHide",
       (event) => {
-        let toValue = 0;
-
-        Animated.timing(animatedTranslateValue, {
-          toValue: toValue,
-          duration: 250,
-          useNativeDriver: true,
-        }).start();
+        animatedTranslateValue.value = withTiming(0, { duration: 250 });
       }
     );
 
@@ -309,119 +394,150 @@ const deleteAccount = () => {
   }, []);
 
   return (
-    <ScrollView
-      contentContainerStyle={{
-        padding: 20,
-      }}
-    >
-      <Animated.View
-        ref={bodyContainerRef}
-        style={{
-          transform: [
-            {
-              translateY: animatedTranslateValue,
-            },
-          ],
+    <>
+      <Dialog.Container
+        contentStyle={{
+          backgroundColor: "#1a1a1a",
+          borderRadius: 10,
+          padding: 20,
+          width: "90%",
+        }}
+        visible={androidPasswordDialogVisible}
+      >
+        <Dialog.Title>Enter Password</Dialog.Title>
+        <Dialog.Description style={{ fontSize: 14 }}>
+          Please enter your password to confirm account deletion.
+        </Dialog.Description>
+        <Dialog.Input
+          secureTextEntry
+          placeholder="Password"
+          value={androidPassword}
+          onChangeText={setAndroidPassword}
+        />
+        <Dialog.Button
+          label="Cancel"
+          onPress={handleAndroidPasswordDialogCancel}
+        />
+        <Dialog.Button
+          label="Confirm"
+          onPress={handleAndroidPasswordDialogConfirm}
+        />
+      </Dialog.Container>
+
+      <ScrollView
+        contentContainerStyle={{
+          padding: 20,
         }}
       >
-        <View
+        <Animated.View
+          ref={bodyContainerRef}
           style={{
-            gap: 15,
+            transform: [
+              {
+                translateY: animatedTranslateValue,
+              },
+            ],
           }}
         >
-          <Text fontSize={16} bold>
-            Are you sure you want to delete your account?
-          </Text>
-          <Text fontSize={12}>
-            Deleting your account is permanent and cannot be undone. You will
-            lose access to all your data, including your event collectibles and
-            profile information.
-          </Text>
           <View
             style={{
-              width: "100%",
-              gap: 3,
+              gap: 15,
             }}
           >
-            <NativeText
+            <Text fontSize={16} bold>
+              Are you sure you want to delete your account?
+            </Text>
+            <Text fontSize={12}>
+              Deleting your account is permanent and cannot be undone. You will
+              lose access to all your data, including your event collectibles
+              and profile information.
+            </Text>
+            <View
               style={{
-                color: "gray",
-                fontSize: 12,
+                width: "100%",
+                gap: 3,
               }}
             >
-              Please type{" '"}
               <NativeText
                 style={{
-                  color: "red",
+                  color: "gray",
                   fontSize: 12,
                 }}
               >
-                Delete my account @{auth().currentUser?.displayName}
-              </NativeText>
-              {"' below to confirm."}
-            </NativeText>
-            <TextInput
-              value={confirmText}
-              onChangeText={setConfirmText}
-              style={{
-                borderWidth: 1,
-                borderColor: "gray",
-                borderRadius: 10,
-                padding: 10,
-                marginTop: 10,
-                color: "white",
-              }}
-            />
-          </View>
-
-          <Animated.View
-            style={{
-              opacity: animatedButtonValue,
-              width: "100%",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Pressable
-              onPress={handleDeleteMyAccountButton}
-              style={{
-                backgroundColor: "red",
-                padding: 8,
-                borderRadius: 10,
-                width: "75%",
-                alignItems: "center",
-                marginTop: 10,
-              }}
-            >
-              {deleting ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text
+                Please type{" '"}
+                <NativeText
                   style={{
-                    color: "white",
-                    fontSize: 14,
+                    color: "red",
+                    fontSize: 12,
                   }}
                 >
-                  Delete My Account
-                </Text>
-              )}
-            </Pressable>
-          </Animated.View>
+                  Delete my account @{auth().currentUser?.displayName}
+                </NativeText>
+                {"' below to confirm."}
+              </NativeText>
+              <TextInput
+                value={confirmText}
+                onChangeText={setConfirmText}
+                style={{
+                  borderWidth: 1,
+                  borderColor: "gray",
+                  borderRadius: 10,
+                  padding: 10,
+                  marginTop: 10,
+                  color: "white",
+                }}
+              />
+            </View>
 
-          {error && (
-            <Text
+            <Animated.View
               style={{
-                color: "red",
-                textAlign: "center",
+                opacity: animatedButtonValue,
+                width: "100%",
+                justifyContent: "center",
+                alignItems: "center",
               }}
-              fontSize={12}
             >
-              {error}
-            </Text>
-          )}
-        </View>
-      </Animated.View>
-    </ScrollView>
+              <Pressable
+                onPress={handleDeleteMyAccountButton}
+                style={{
+                  backgroundColor: "red",
+                  padding: 8,
+                  borderRadius: 10,
+                  width: "75%",
+                  alignItems: "center",
+                  marginTop: 10,
+                }}
+              >
+                {deleting ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text
+                    style={{
+                      color: "white",
+                      fontSize: 14,
+                    }}
+                  >
+                    Delete My Account
+                  </Text>
+                )}
+              </Pressable>
+            </Animated.View>
+
+            {error && (
+              <Text
+                style={{
+                  color: "red",
+                  textAlign: "center",
+                }}
+                fontSize={12}
+              >
+                {error}
+              </Text>
+            )}
+          </View>
+        </Animated.View>
+      </ScrollView>
+    </>
   );
 };
 

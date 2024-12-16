@@ -1,7 +1,12 @@
 import { Stack } from "expo-router";
 import React from "react";
 
+import { Platform } from "react-native";
+
 const _layout = () => {
+
+  const isIOS = Platform.OS === "ios"
+
   return (
     <Stack
       initialRouteName="index"
@@ -14,13 +19,15 @@ const _layout = () => {
       <Stack.Screen
         name="index"
         options={{
+          headerShown : isIOS ? undefined : false,
           title: "Settings",
+          
         }}
       />
       <Stack.Screen
         name="notificationSettings"
         options={{
-          headerTitle: "",
+          headerTitle: "Notifications",
         }}
       />
       <Stack.Screen

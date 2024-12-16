@@ -4,9 +4,9 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Animated,
   Dimensions,
   Keyboard,
+  Platform,
   Pressable,
   TextInput,
   View,
@@ -23,6 +23,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/providers/AuthProvider";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import crashlytics from "@react-native-firebase/crashlytics";
+
+import { appleAuthAndroid } from "@invertase/react-native-apple-authentication";
+import { v4 as uuid } from "uuid";
+import "react-native-get-random-values";
+
+import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 
 const additionalInfo = () => {
   const { setAuthStatus } = useAuth();
@@ -48,10 +54,10 @@ const additionalInfo = () => {
   const bodyContainerRef = useRef<null | View>(null);
   const containerRef = useRef<null | View>(null);
   const screenHeight = Dimensions.get("window").height;
-  const animatedTranslateValue = useRef(new Animated.Value(0)).current;
 
-  const errorOpacity = useRef(new Animated.Value(1)).current;
-  const buttonOpactiy = useRef(new Animated.Value(1)).current;
+  const translateValue = useSharedValue(0);
+  const errorOpacity = useSharedValue(0);
+  const buttonOpactiy = useSharedValue(1);
 
   const timeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -102,10 +108,12 @@ const additionalInfo = () => {
 
   // Keyboard-Layout Change
   useEffect(() => {
+    const isIOS = Platform.OS === "ios";
+
     const keyboardWillShowListener = Keyboard.addListener(
-      "keyboardWillShow",
+      isIOS ? "keyboardWillShow" : "keyboardDidShow",
       (event) => {
-        if (Keyboard.isVisible()) return;
+        if (isIOS && Keyboard.isVisible()) return;
 
         const keyboardHeight = event.endCoordinates.height;
 
@@ -122,11 +130,7 @@ const additionalInfo = () => {
                 toValue = keyboardHeight - distanceFromBottom;
               }
 
-              Animated.timing(animatedTranslateValue, {
-                toValue: -toValue,
-                duration: 250,
-                useNativeDriver: true,
-              }).start();
+              translateValue.value = withTiming(-toValue, { duration: 250 });
             }
           );
         }
@@ -134,15 +138,9 @@ const additionalInfo = () => {
     );
 
     const keyboardWillHideListener = Keyboard.addListener(
-      "keyboardWillHide",
+      isIOS ? "keyboardWillHide" : "keyboardDidHide",
       (event) => {
-        let toValue = 0;
-
-        Animated.timing(animatedTranslateValue, {
-          toValue: toValue,
-          duration: 250,
-          useNativeDriver: true,
-        }).start();
+        translateValue.value = withTiming(0, { duration: 250 });
       }
     );
 
@@ -153,19 +151,11 @@ const additionalInfo = () => {
   }, []);
 
   const changeErrorOpacity = (toValue: number) => {
-    Animated.timing(errorOpacity, {
-      toValue: toValue,
-      duration: 400,
-      useNativeDriver: true,
-    }).start();
+    errorOpacity.value = withTiming(toValue, { duration: 400 });
   };
 
   const changeButtonOpacity = (toValue: number) => {
-    Animated.timing(buttonOpactiy, {
-      toValue: toValue,
-      duration: 400,
-      useNativeDriver: true,
-    }).start();
+    buttonOpactiy.value = withTiming(toValue, { duration: 400 });
   };
 
   const handleUsernameChange = async (input: string) => {
@@ -391,30 +381,85 @@ const additionalInfo = () => {
       const isGoogle = providerId === "google.com";
       const isPassword = providerId === "password";
 
+      const isIOS = Platform.OS === "ios";
+
       if (isApple) {
-        const { authorizationCode, identityToken } =
-          await AppleAuthentication.refreshAsync({
-            user: currentUserAuthObject.uid,
+        if (isIOS) {
+          const { authorizationCode, identityToken } =
+            await AppleAuthentication.refreshAsync({
+              user: currentUserAuthObject.uid,
+            });
+
+          if (!authorizationCode) {
+            console.error("No authorization code found to revoke apple user.");
+            return setDeleteAccountLoading(false);
+          }
+
+          const appleCredential =
+            auth.AppleAuthProvider.credential(identityToken);
+
+          await currentUserAuthObject.reauthenticateWithCredential(
+            appleCredential
+          );
+
+          await auth().revokeToken(authorizationCode);
+        } else {
+          const rawNonce = uuid();
+          const state = uuid();
+
+          // Configure the request
+          appleAuthAndroid.configure({
+            // The Service ID you registered with Apple
+            clientId:
+              process.env.EXPO_PUBLIC_APPLE_AUTH_ANDROID_CLIENT_KEY || "",
+
+            // Return URL added to your Apple dev console. We intercept this redirect, but it must still match
+            // the URL you provided to Apple. It can be an empty route on your backend as it's never called.
+            redirectUri: process.env.EXPO_PUBLIC_APPLE_AUTH_REDIRECT_URI || "",
+
+            // The type of response requested - code, id_token, or both.
+            responseType: appleAuthAndroid.ResponseType.ALL,
+
+            // The amount of user information requested from Apple.
+            scope: appleAuthAndroid.Scope.ALL,
+
+            // Random nonce value that will be SHA256 hashed before sending to Apple.
+            nonce: rawNonce,
+
+            // Unique state value used to prevent CSRF attacks. A UUID will be generated if nothing is provided.
+            state,
           });
 
-        if (!authorizationCode) {
-          console.error("No authorization code found to revoke apple user.");
-          return setDeleteAccountLoading(false);
+          const {
+            id_token: identityToken,
+            nonce,
+            code: authenticationCode,
+          } = await appleAuthAndroid.signIn();
+
+          if (!identityToken || !nonce) {
+            setLoading(false);
+            return console.error(
+              "No identity token or nonce found in the response"
+            );
+          }
+
+          const appleCredential = auth.AppleAuthProvider.credential(
+            identityToken,
+            nonce
+          );
+
+          await currentUserAuthObject.reauthenticateWithCredential(
+            appleCredential
+          );
+
+          await auth().revokeToken(authenticationCode);
         }
-
-        const appleCredential =
-          auth.AppleAuthProvider.credential(identityToken);
-
-        await currentUserAuthObject.reauthenticateWithCredential(
-          appleCredential
-        );
-
-        await auth().revokeToken(authorizationCode);
       }
 
       if (isGoogle) {
         GoogleSignin.configure({
-          webClientId: "",
+          webClientId:
+            process.env.EXPO_PUBLIC_GOOGLE_AUTH_ANDROID_WEB_CLIENT_KEY,
         });
 
         await GoogleSignin.hasPlayServices({
@@ -478,7 +523,7 @@ const additionalInfo = () => {
           width: "100%",
           justifyContent: "center",
           alignItems: "center",
-          transform: [{ translateY: animatedTranslateValue }],
+          transform: [{ translateY: translateValue }],
         }}
       >
         <View

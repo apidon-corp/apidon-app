@@ -1,7 +1,7 @@
 import { Text } from "@/components/Text/Text";
 import { AntDesign, Fontisto, Ionicons } from "@expo/vector-icons";
 import * as AppleAuthentication from "expo-apple-authentication";
-import { Text as NativeText } from "react-native";
+import { Text as NativeText, Platform } from "react-native";
 
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Pressable, SafeAreaView, View } from "react-native";
@@ -16,9 +16,14 @@ import {
 import { Image } from "expo-image";
 import { router } from "expo-router";
 
+import "react-native-get-random-values";
 import crashlytics from "@react-native-firebase/crashlytics";
 
 import * as Linking from "expo-linking";
+
+import { v4 as uuid } from "uuid";
+
+import { appleAuthAndroid } from "@invertase/react-native-apple-authentication";
 
 const welcome = () => {
   const { setAuthStatus } = useAuth();
@@ -111,6 +116,90 @@ const welcome = () => {
     }
   }
 
+  async function handleContinueWithAppleOnAndroidButton() {
+    if (!termsAccepted) return startBounceAnimation();
+
+    if (loading) return;
+
+    setLoading(true);
+
+    try {
+      if (auth().currentUser) await auth().signOut();
+      setAuthStatus("dontMess");
+
+      const rawNonce = uuid();
+      const state = uuid();
+
+      // Configure the request
+      appleAuthAndroid.configure({
+        // The Service ID you registered with Apple
+        clientId: process.env.EXPO_PUBLIC_APPLE_AUTH_ANDROID_CLIENT_KEY || "",
+
+        // Return URL added to your Apple dev console. We intercept this redirect, but it must still match
+        // the URL you provided to Apple. It can be an empty route on your backend as it's never called.
+        redirectUri: process.env.EXPO_PUBLIC_APPLE_AUTH_REDIRECT_URI || "",
+
+        // The type of response requested - code, id_token, or both.
+        responseType: appleAuthAndroid.ResponseType.ALL,
+
+        // The amount of user information requested from Apple.
+        scope: appleAuthAndroid.Scope.ALL,
+
+        // Random nonce value that will be SHA256 hashed before sending to Apple.
+        nonce: rawNonce,
+
+        // Unique state value used to prevent CSRF attacks. A UUID will be generated if nothing is provided.
+        state,
+      });
+
+      const { id_token: identityToken, nonce } =
+        await appleAuthAndroid.signIn();
+
+      if (!identityToken || !nonce) {
+        setLoading(false);
+        return console.error(
+          "No identity token or nonce found in the response"
+        );
+      }
+
+      const appleCredential = auth.AppleAuthProvider.credential(
+        identityToken,
+        nonce
+      );
+
+      const user = (await auth().signInWithCredential(appleCredential)).user;
+
+      const idTokenResult = await user.getIdTokenResult(true);
+
+      const isValidAuthObject = idTokenResult.claims.isValidAuthObject;
+
+      if (!isValidAuthObject) {
+        setLoading(false);
+        return router.push("/auth/additionalInfo");
+      }
+
+      setAuthStatus("authenticated");
+
+      router.replace("/home");
+
+      return setLoading(false);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes("canceled")) {
+          setAuthStatus("unauthenticated");
+          return setLoading(false);
+        }
+      }
+
+      setAuthStatus("unauthenticated");
+      setLoading(false);
+      crashlytics().recordError(
+        new Error(`Error on Apple Sign In at welcome screen: \n: ${error}`)
+      );
+      return console.log("Error on Apple Sign In: ", error);
+    }
+  }
+
   async function handleContinueWithGoogleButton() {
     if (!termsAccepted) return startBounceAnimation();
     if (loading) return;
@@ -123,7 +212,7 @@ const welcome = () => {
       setAuthStatus("dontMess");
 
       GoogleSignin.configure({
-        webClientId: "",
+        webClientId: process.env.EXPO_PUBLIC_GOOGLE_AUTH_ANDROID_WEB_CLIENT_KEY,
       });
 
       await GoogleSignin.hasPlayServices({
@@ -262,25 +351,50 @@ const welcome = () => {
             padding: 20,
           }}
         >
-          <Pressable
-            disabled={loading}
-            onPress={handleContinueWithAppleButton}
-            id="apple-continue"
-            style={{
-              borderRadius: 10,
-              padding: 10,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 10,
-              backgroundColor: "white",
-            }}
-          >
-            <AntDesign name="apple1" size={24} color="black" />
-            <Text style={{ color: "black" }} fontSize={16} bold>
-              Continue with Apple
-            </Text>
-          </Pressable>
+          {Platform.OS === "ios" ? (
+            <Pressable
+              disabled={loading}
+              onPress={handleContinueWithAppleButton}
+              id="apple-continue"
+              style={{
+                borderRadius: 10,
+                padding: 10,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+                backgroundColor: "white",
+              }}
+            >
+              <AntDesign name="apple1" size={24} color="black" />
+              <Text style={{ color: "black" }} fontSize={16} bold>
+                Continue with Apple
+              </Text>
+            </Pressable>
+          ) : appleAuthAndroid.isSupported ? (
+            <Pressable
+              disabled={loading}
+              onPress={handleContinueWithAppleOnAndroidButton}
+              id="apple-continue"
+              style={{
+                borderRadius: 10,
+                padding: 10,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+                backgroundColor: "white",
+              }}
+            >
+              <AntDesign name="apple1" size={24} color="black" />
+              <Text style={{ color: "black" }} fontSize={16} bold>
+                Continue with Apple
+              </Text>
+            </Pressable>
+          ) : (
+            <></>
+          )}
+
           <Pressable
             onPress={handleContinueWithGoogleButton}
             id="google-continue"

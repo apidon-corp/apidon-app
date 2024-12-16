@@ -31,17 +31,17 @@ import NFTTag from "./NFT/NFTTag";
 import NftBottomSheetContent from "./NFT/NftBottomSheetContent";
 import PostImage from "./PostImage";
 
-import * as Sharing from "expo-sharing";
+import { Share } from "react-native"; // Replace Sharing with Share
+
 import PostSettingsBottomSheetContent from "./PostSettingsBottomSheetContent";
 
 type Props = {
   postDocPath: string;
+  viewablePostDocPaths?: string[];
 };
 
-const Post = React.memo(({ postDocPath }: Props) => {
+const Post = React.memo(({ postDocPath, viewablePostDocPaths }: Props) => {
   const { authStatus } = useAuth();
-
-  const [loading, setLoading] = useState(false);
 
   const [postDocData, setPostDocData] = useState<PostServerData | null>(null);
   const [postNotFound, setPostNotFound] = useState(false);
@@ -73,13 +73,20 @@ const Post = React.memo(({ postDocPath }: Props) => {
     null | boolean
   >(null);
 
+  const isThisPostViewable = viewablePostDocPaths
+    ? viewablePostDocPaths.includes(postDocPath)
+    : true;
+
   // Dynamic Data Fetching / Post Object
   useEffect(() => {
-    if (authStatus !== "authenticated") return;
-    if (postDeleted) return;
-    if (!postDocPath) return;
-
-    setLoading(true);
+    if (
+      authStatus !== "authenticated" ||
+      postDeleted ||
+      !postDocPath ||
+      !isThisPostViewable
+    ) {
+      return;
+    }
 
     const unsubscribe = firestore()
       .doc(postDocPath)
@@ -88,7 +95,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
           if (!snapshot.exists) {
             console.log("Post is not found.");
             setPostNotFound(true);
-            return setLoading(false);
           }
           const postDocData = snapshot.data() as PostServerData;
           setPostDocData(postDocData);
@@ -96,8 +102,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
           setDoesOwnPost(
             postDocData.senderUsername === auth().currentUser?.displayName
           );
-
-          return setLoading(false);
         },
         (error) => {
           console.error(
@@ -106,12 +110,11 @@ const Post = React.memo(({ postDocPath }: Props) => {
             "\n",
             error
           );
-          return setLoading(false);
         }
       );
 
     return () => unsubscribe();
-  }, [postDocPath, authStatus, postDeleted]);
+  }, [postDocPath, authStatus, postDeleted, isThisPostViewable]);
 
   // Dynamic Data Fetching / Follow Status
   useEffect(() => {
@@ -121,6 +124,8 @@ const Post = React.memo(({ postDocPath }: Props) => {
     if (!displayName) return;
 
     if (!postDocData) return;
+
+    if (!isThisPostViewable) return;
 
     const unsubscribe = firestore()
       .doc(`users/${postDocData.senderUsername}/followers/${displayName}`)
@@ -138,7 +143,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
       );
 
     return () => unsubscribe();
-  }, [authStatus, postDocData]);
+  }, [authStatus, postDocData, isThisPostViewable]);
 
   // Dynamic Data Fetching - Post Sender Data
   useEffect(() => {
@@ -148,6 +153,8 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
     if (!displayName) return;
     if (!postDocData) return;
+
+    if (!isThisPostViewable) return;
 
     const unsubscribe = firestore()
       .doc(`users/${postDocData.senderUsername}`)
@@ -170,7 +177,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
       );
 
     return () => unsubscribe();
-  }, [authStatus, postDocData]);
+  }, [authStatus, postDocData, isThisPostViewable]);
 
   // Dynamic Data Fetching - Current Rating
   useEffect(() => {
@@ -178,6 +185,8 @@ const Post = React.memo(({ postDocPath }: Props) => {
 
     const displayName = auth().currentUser?.displayName || "";
     if (!displayName) return;
+
+    if (!isThisPostViewable) return;
 
     const unsubscribe = firestore()
       .doc(postDocPath)
@@ -197,7 +206,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
         }
       );
     return () => unsubscribe();
-  }, [authStatus]);
+  }, [authStatus, isThisPostViewable]);
 
   // Realtime Block Checking
   useEffect(() => {
@@ -207,6 +216,8 @@ const Post = React.memo(({ postDocPath }: Props) => {
     if (!displayName) return;
 
     if (!postSenderData) return;
+
+    if (!isThisPostViewable) return;
 
     const unsubscribe = firestore()
       .doc(`users/${postSenderData.username}/blocks/${displayName}`)
@@ -221,7 +232,7 @@ const Post = React.memo(({ postDocPath }: Props) => {
       );
 
     return () => unsubscribe();
-  }, [doesOwnPost, postSenderData]);
+  }, [doesOwnPost, postSenderData, isThisPostViewable]);
 
   const handleOpenRatesModal = () => {
     const path = pathname;
@@ -410,9 +421,6 @@ const Post = React.memo(({ postDocPath }: Props) => {
     if (!postDocData) return;
 
     try {
-      const isSharingAvailable = await Sharing.isAvailableAsync();
-      if (!isSharingAvailable) return;
-
       const baseURL = process.env.EXPO_PUBLIC_APP_LINK_BASE_URL || "";
       if (!baseURL) return;
 
@@ -425,10 +433,9 @@ const Post = React.memo(({ postDocPath }: Props) => {
         "-" +
         postDocData.id;
 
-      await Sharing.shareAsync(url, {
-        dialogTitle: `Share this post with your friends!`,
-        mimeType: "text/plain",
-        UTI: "public.plain-text",
+      await Share.share({
+        message: url,
+        title: `Share this post with your friends!`,
       });
     } catch (error) {
       console.error(error);
@@ -447,26 +454,13 @@ const Post = React.memo(({ postDocPath }: Props) => {
     );
   }
 
-  if (loading || currentUserBlockedBySender === null)
-    return (
-      <View
-        style={{
-          width: "100%",
-          height: 500,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <ActivityIndicator color="white" />
-      </View>
-    );
-
   if (
     !postDocData ||
     !postSenderData ||
     postDeleted ||
     currentUserBlockedBySender ||
-    postSenderData.isScheduledToDelete
+    postSenderData.isScheduledToDelete ||
+    currentUserBlockedBySender
   )
     return <></>;
 
@@ -660,7 +654,13 @@ const Post = React.memo(({ postDocPath }: Props) => {
           </Pressable>
         </View>
 
-        {postDocData.image && <PostImage source={postDocData.image} />}
+        {isThisPostViewable ? (
+          <PostImage source={postDocData.image} />
+        ) : (
+          // <View style={{ width: "100%", aspectRatio: 1 }} />
+          //<PostImage source={postDocData.image} />
+          <View style={{ width: "100%", aspectRatio: 1 }} />
+        )}
 
         <View
           id="footer"
@@ -789,26 +789,30 @@ const Post = React.memo(({ postDocPath }: Props) => {
         </View>
       </Animated.View>
 
-      <CustomBottomModalSheet ref={postOptionsModalRef}>
-        <PostSettingsBottomSheetContent
-          doesOwnPost={doesOwnPost}
-          handleDeleteButton={handleDeleteButton}
-          postDocData={postDocData}
-          postDocPath={postDocPath}
-          postOptionsModalRef={postOptionsModalRef}
-        />
-      </CustomBottomModalSheet>
+      {isThisPostViewable && (
+        <>
+          <CustomBottomModalSheet ref={postOptionsModalRef}>
+            <PostSettingsBottomSheetContent
+              doesOwnPost={doesOwnPost}
+              handleDeleteButton={handleDeleteButton}
+              postDocData={postDocData}
+              postDocPath={postDocPath}
+              postOptionsModalRef={postOptionsModalRef}
+            />
+          </CustomBottomModalSheet>
 
-      <CustomBottomModalSheet
-        ref={nftOptionsModalRef}
-        backgroundColor="#1B1B1B"
-      >
-        <NftBottomSheetContent
-          postData={postDocData}
-          postSenderData={postSenderData}
-          closeNFTBottomSheet={closeNFTBottomSheet}
-        />
-      </CustomBottomModalSheet>
+          <CustomBottomModalSheet
+            ref={nftOptionsModalRef}
+            backgroundColor="#1B1B1B"
+          >
+            <NftBottomSheetContent
+              postData={postDocData}
+              postSenderData={postSenderData}
+              closeNFTBottomSheet={closeNFTBottomSheet}
+            />
+          </CustomBottomModalSheet>
+        </>
+      )}
     </>
   );
 });

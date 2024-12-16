@@ -4,15 +4,17 @@ import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
   Dimensions,
   Keyboard,
+  Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
   TextInput,
   View,
 } from "react-native";
+
+import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 
 import storage from "@react-native-firebase/storage";
 import * as ImagePicker from "expo-image-picker";
@@ -45,18 +47,20 @@ const editProfile = () => {
 
   const containerRef = useRef<null | View>(null);
   const screenHeight = Dimensions.get("window").height;
-  const animatedTranslateValue = useRef(new Animated.Value(0)).current;
+  const animatedTranslateValue = useSharedValue(0);
 
-  const animatedOpacityValue = useRef(new Animated.Value(0.5)).current;
+  const animatedOpacityValue = useSharedValue(0.5);
 
   const [loading, setLoading] = useState(false);
 
   // Keyboard-Layout Change
   useEffect(() => {
+    const isIOS = Platform.OS === "ios";
+
     const keyboardWillShowListener = Keyboard.addListener(
-      "keyboardWillShow",
+      isIOS ? "keyboardWillShow" : "keyboardDidShow",
       (event) => {
-        if (Keyboard.isVisible()) return;
+        if (isIOS && Keyboard.isVisible()) return;
 
         const keyboardHeight = event.endCoordinates.height;
 
@@ -73,26 +77,20 @@ const editProfile = () => {
               toValue += 40;
             }
 
-            Animated.timing(animatedTranslateValue, {
-              toValue: -toValue,
+            animatedTranslateValue.value = withTiming(-toValue, {
               duration: 250,
-              useNativeDriver: true,
-            }).start();
+            });
           });
         }
       }
     );
 
     const keyboardWillHideListener = Keyboard.addListener(
-      "keyboardWillHide",
+      isIOS ? "keyboardWillHide" : "keyboardDidHide",
       (event) => {
-        let toValue = 0;
-
-        Animated.timing(animatedTranslateValue, {
-          toValue: toValue,
+        animatedTranslateValue.value = withTiming(0, {
           duration: 250,
-          useNativeDriver: true,
-        }).start();
+        });
       }
     );
 
@@ -107,17 +105,9 @@ const editProfile = () => {
     const forwardStatus = isFullnameValid && editStatus;
 
     if (forwardStatus) {
-      Animated.timing(animatedOpacityValue, {
-        toValue: 1,
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
+      animatedOpacityValue.value = withTiming(1, { duration: 250 });
     } else {
-      Animated.timing(animatedOpacityValue, {
-        toValue: 0.5,
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
+      animatedOpacityValue.value = withTiming(0.5, { duration: 250 });
     }
   }, [isFullnameValid, isFullnameChanged, imageEdited]);
 

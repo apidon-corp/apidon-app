@@ -3,7 +3,11 @@ import React from "react";
 
 import { Text } from "@/components/Text/Text";
 
+import { Platform } from "react-native";
+
 const _layout = () => {
+  const isIOS = Platform.OS === "ios";
+
   return (
     <Stack
       screenOptions={{
@@ -17,7 +21,10 @@ const _layout = () => {
         name="index"
         options={{
           headerTitle: "Notifications",
-          headerLargeTitle: true,
+          headerLargeTitle: isIOS ? true : false,
+          headerTitleStyle: isIOS
+            ? undefined
+            : { color: "white", fontWeight: "bold", fontSize: 28 },
         }}
       />
       <Stack.Screen

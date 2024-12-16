@@ -145,6 +145,8 @@ const NftBottomSheetContent = ({
     ]);
 
     router.push("/(modals)/codes");
+
+    closeNFTBottomSheet();
   };
 
   if (!collectibleStatus || !collectibleDocData) {

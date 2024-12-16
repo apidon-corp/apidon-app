@@ -12,6 +12,7 @@ const _layout = () => {
           name="feed"
           options={{
             headerShown: false,
+            
           }}
         />
         <Tabs.Screen

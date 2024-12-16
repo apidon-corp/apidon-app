@@ -3,9 +3,9 @@ import { Image } from "expo-image";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
   Dimensions,
   Keyboard,
+  Platform,
   Pressable,
   ScrollView,
   TextInput,
@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "@/providers/AuthProvider";
 import auth from "@react-native-firebase/auth";
+import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 
 const emailPasswordSignIn = () => {
   const { setAuthStatus } = useAuth();
@@ -26,8 +27,8 @@ const emailPasswordSignIn = () => {
 
   const [error, setError] = useState("");
 
-  const errorOpacity = useRef(new Animated.Value(1)).current;
-  const buttonOpactiy = useRef(new Animated.Value(1)).current;
+  const errorOpacity = useSharedValue(1);
+  const buttonOpactiy = useSharedValue(1);
 
   const [loading, setLoading] = useState(false);
   const [buttonActiveStatus, setButtonActiveStatus] = useState(false);
@@ -35,7 +36,7 @@ const emailPasswordSignIn = () => {
   const bodyContainerRef = useRef<null | View>(null);
   const containerRef = useRef<null | View>(null);
   const screenHeight = Dimensions.get("window").height;
-  const animatedTranslateValue = useRef(new Animated.Value(0)).current;
+  const animatedTranslateValue = useSharedValue(0);
 
   const { bottom } = useSafeAreaInsets();
 
@@ -67,10 +68,12 @@ const emailPasswordSignIn = () => {
 
   // Keyboard-Layout Change
   useEffect(() => {
+    const isIOS = Platform.OS === "ios";
+
     const keyboardWillShowListener = Keyboard.addListener(
-      "keyboardWillShow",
+      isIOS ? "keyboardWillShow" : "keyboardDidShow",
       (event) => {
-        if (Keyboard.isVisible()) return;
+        if (isIOS && Keyboard.isVisible()) return;
 
         const keyboardHeight = event.endCoordinates.height;
 
@@ -87,11 +90,9 @@ const emailPasswordSignIn = () => {
                 toValue = keyboardHeight - distanceFromBottom;
               }
 
-              Animated.timing(animatedTranslateValue, {
-                toValue: -toValue,
+              animatedTranslateValue.value = withTiming(-toValue, {
                 duration: 250,
-                useNativeDriver: true,
-              }).start();
+              });
             }
           );
         }
@@ -99,15 +100,9 @@ const emailPasswordSignIn = () => {
     );
 
     const keyboardWillHideListener = Keyboard.addListener(
-      "keyboardWillHide",
+      isIOS ? "keyboardWillHide" : "keyboardDidHide",
       (event) => {
-        let toValue = 0;
-
-        Animated.timing(animatedTranslateValue, {
-          toValue: toValue,
-          duration: 250,
-          useNativeDriver: true,
-        }).start();
+        animatedTranslateValue.value = withTiming(0, { duration: 250 });
       }
     );
 
@@ -174,19 +169,11 @@ const emailPasswordSignIn = () => {
   };
 
   const changeErrorOpacity = (toValue: number) => {
-    Animated.timing(errorOpacity, {
-      toValue: toValue,
-      duration: 400,
-      useNativeDriver: true,
-    }).start();
+    errorOpacity.value = withTiming(toValue, { duration: 400 });
   };
 
   const changeButtonOpacity = (toValue: number) => {
-    Animated.timing(buttonOpactiy, {
-      toValue: toValue,
-      duration: 400,
-      useNativeDriver: true,
-    }).start();
+    buttonOpactiy.value = withTiming(toValue, { duration: 400 });
   };
 
   const handleDontHaveAccount = () => {

@@ -5,19 +5,20 @@ import { useAuth } from "@/providers/AuthProvider";
 import { Entypo, Ionicons } from "@expo/vector-icons";
 import appCheck from "@react-native-firebase/app-check";
 import auth from "@react-native-firebase/auth";
+import crashlytics from "@react-native-firebase/crashlytics";
 import { router } from "expo-router";
 import { useAtomValue } from "jotai";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
+  Text as NativeText,
   Pressable,
   ScrollView,
   TextInput,
   View,
-  Text as NativeText,
 } from "react-native";
-import crashlytics from "@react-native-firebase/crashlytics";
+
+import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 
 const verifyEmail = () => {
   const { setAuthStatus } = useAuth();
@@ -35,8 +36,8 @@ const verifyEmail = () => {
 
   const [loading, setLoading] = useState(false);
 
-  const errorOpacity = useRef(new Animated.Value(1)).current;
-  const buttonOpactiy = useRef(new Animated.Value(1)).current;
+  const animatedErrorOpactiy = useSharedValue(0);
+  const animatedButtonOpacity = useSharedValue(0);
 
   const [buttonActiveStatus, setButtonActiveStatus] = useState(false);
 
@@ -57,12 +58,15 @@ const verifyEmail = () => {
     }
   }, [buttonActiveStatus]);
 
-  const changeButtonOpacity = (toValue: number) => {
-    Animated.timing(buttonOpactiy, {
-      toValue: toValue,
+  // Error opacity handling
+  useEffect(() => {
+    animatedErrorOpactiy.value = withTiming(error.length === 0 ? 0 : 1, {
       duration: 400,
-      useNativeDriver: true,
-    }).start();
+    });
+  }, [error]);
+
+  const changeButtonOpacity = (toValue: number) => {
+    animatedButtonOpacity.value = withTiming(toValue, { duration: 250 });
   };
 
   const handleCodeChange = (input: string) => {
@@ -229,7 +233,7 @@ const verifyEmail = () => {
                   autoCapitalize="none"
                   keyboardType="number-pad"
                   value={code}
-                  onChangeText={handleCodeChange}
+                  onChangeText={(text) => handleCodeChange(text)}
                 />
               </View>
 
@@ -256,7 +260,7 @@ const verifyEmail = () => {
           style={{
             width: "100%",
             alignItems: "center",
-            opacity: buttonOpactiy,
+            opacity: animatedButtonOpacity,
           }}
         >
           <Pressable
@@ -291,7 +295,7 @@ const verifyEmail = () => {
             alignItems: "center",
             justifyContent: "center",
             height: 50,
-            opacity: errorOpacity,
+            opacity: animatedErrorOpactiy,
           }}
         >
           <Text

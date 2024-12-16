@@ -18,6 +18,7 @@ import {
   ActivityIndicator,
   Dimensions,
   NativeScrollEvent,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -448,7 +449,7 @@ const UserContent = ({ username }: Props) => {
           <Switch
             trackColor={{ false: apidonPink, true: apidonPink }}
             ios_backgroundColor={apidonPink}
-            thumbColor="black"
+            thumbColor={Platform.OS === "ios" ? "black" : "gray"}
             onValueChange={onToggleValueChange}
             value={toggleValue === "posts" ? false : true}
           />
