@@ -218,19 +218,24 @@ const index = () => {
     viewableItems: ViewToken[];
     changed: ViewToken[];
   }) => {
-    // console.log("Viewable Items: ", viewableItems);
-    //console.log("---------");
-    // for (const changeditem of viewableItems) {
-    //   console.log("Vieable Items: ", changeditem);
-    // }
     setViewablePostDocPaths(viewableItems.map((item) => item.key));
-    // console.log("---------");
   };
 
   const renderItem = useCallback(
-    ({ item }: any) => (
-      <Post postDocPath={item} viewablePostDocPaths={viewablePostDocPaths} />
-    ),
+    ({ item }: any) =>
+      isIOS ? (
+        <Post
+          postDocPath={item}
+          key={item}
+          deletePostDocPathFromArray={deletePostDocPathFromArray}
+        />
+      ) : (
+        <Post
+          postDocPath={item}
+          viewablePostDocPaths={viewablePostDocPaths}
+          deletePostDocPathFromArray={deletePostDocPathFromArray}
+        />
+      ),
     [viewablePostDocPaths]
   );
 
@@ -241,6 +246,13 @@ const index = () => {
       ),
     [panelName, postDocPaths, followingPostDocPaths]
   );
+
+  const deletePostDocPathFromArray = (postDocPath: string) => {
+    setPostDocPaths((prev) => prev.filter((q) => q !== postDocPath));
+    setPostDocSnapshots((prev) =>
+      prev.filter((q) => q.data().postDocPath !== postDocPath)
+    );
+  };
 
   return (
     <>
@@ -302,22 +314,10 @@ const index = () => {
                   gap: 20,
                 }}
                 keyExtractor={(item) => item}
-                data={Array.from(
-                  new Set(
-                    panelName === "all" ? postDocPaths : followingPostDocPaths
-                  )
-                )}
-                renderItem={({ item }) => (
-                  <Post postDocPath={item} key={item} />
-                )}
+                data={listData}
+                renderItem={renderItem}
                 showsVerticalScrollIndicator={false}
                 scrollEnabled={false}
-                viewabilityConfig={{
-                  waitForInteraction: false,
-                  minimumViewTime: 0,
-                  itemVisiblePercentThreshold: 50,
-                }}
-                onViewableItemsChanged={onViewableItemsChanged}
               />
             </>
           )}
