@@ -9,6 +9,7 @@ import React, {
   useState,
 } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   NativeScrollEvent,
   Platform,
@@ -37,6 +38,8 @@ import { Stack } from "expo-router";
 
 import { useFollowingPosts } from "@/components/Feed/useFollowingPosts";
 import { collectCollectibleAtom } from "@/atoms/collectCollectibleAtom";
+import { useFollowing } from "@/components/Feed/useFollowing";
+import { View } from "@/components/Themed";
 
 const index = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
@@ -78,10 +81,13 @@ const index = () => {
   const isIOS = Platform.OS === "ios";
 
   const {
-    followingPostDocPaths,
-    getInitialFollowingPosts,
-    getMoreFollowingPosts,
+    // followingPostDocPaths,
+    // getInitialFollowingPosts,
+    // getMoreFollowingPosts,
   } = useFollowingPosts();
+
+  const { followingPostDocPaths, getFollowingPosts, isLoading } =
+    useFollowing();
 
   // Managing created post.
   useEffect(() => {
@@ -118,7 +124,7 @@ const index = () => {
     if (panelName === "all") {
       getInitialPostDocPaths();
     } else if (panelName === "following") {
-      getInitialFollowingPosts();
+      getFollowingPosts();
     }
   }, [panelName]);
 
@@ -187,7 +193,7 @@ const index = () => {
     if (panelName === "all") {
       await getInitialPostDocPaths();
     } else {
-      await getInitialFollowingPosts();
+      await getFollowingPosts();
     }
 
     setRefreshLoading(false);
@@ -203,7 +209,7 @@ const index = () => {
       contentSize.height - threshold;
     if (isCloseToBottom) {
       if (panelName === "all") getMorePostDocPaths();
-      else if (panelName === "following") getMoreFollowingPosts();
+      else if (panelName === "following") getFollowingPosts();
     }
   };
 
@@ -321,6 +327,17 @@ const index = () => {
               />
             </>
           )}
+
+          <View
+            style={{
+              width: "100%",
+              height: 50,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <ActivityIndicator size={32} color="gray" />
+          </View>
         </ScrollView>
       ) : (
         <FlatList
