@@ -8,16 +8,26 @@ import firestore, {
 type FirestoreDocType =
   FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>;
 
-const FOLLOWINGS_QUERY_LIMIT = 1;
-const POSTS_QUERY_LIMIT = 3;
+const FOLLOWINGS_QUERY_LIMIT = 10;
+const POSTS_QUERY_LIMIT = 8;
 
 const ONE_DAY_IN_EPOCH = 24 * 60 * 60 * 1000;
 const ONE_YEAR_IN_EPOCH = ONE_DAY_IN_EPOCH * 365;
 
 const INITIAL_TIME_INTERVAL = 1;
-const TIME_INTERVAL_INCREAMENT = 30;
+const TIME_INTERVAL_INCREAMENT = 1;
 
-export function useFollowing() {
+/**
+ * Creates a promise that resolves after a specified delay
+ * @param ms The delay duration in milliseconds
+ * @param value Optional value to pass through the promise
+ * @returns Promise that resolves after the specified delay
+ */
+function delay<T = void>(ms: number, value?: T): Promise<T> {
+  return new Promise<T>((resolve) => setTimeout(() => resolve(value as T), ms));
+}
+
+export function useFollowingPosts() {
   const [timeInterval, setTimeInterval] = useState(INITIAL_TIME_INTERVAL);
 
   const [followingDocs, setFollowingDocs] = useState<FirestoreDocType[]>([]);
@@ -85,15 +95,6 @@ export function useFollowing() {
     // Ref Update
     isGettingPosts.current = true;
 
-    console.log(
-      "Getting Posts for the day: ",
-      new Date(timestamp).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-    );
-
     try {
       let postsQuery = firestore()
         .collection("posts")
@@ -142,8 +143,6 @@ export function useFollowing() {
     if (isGettingFollowingPosts.current) return false;
     isGettingFollowingPosts.current = true;
 
-    console.log("--------");
-
     if (isCurrentQueryHasMorePosts.current) {
       const currentTimestamp = Date.now() - timeInterval * ONE_DAY_IN_EPOCH;
       const currentLastDoc = postDocs[postDocs.length - 1];
@@ -156,26 +155,14 @@ export function useFollowing() {
       );
 
       if (!newPostsFromCurrentQuery) {
-        console.log(
-          "Error on fetching posts on getFollowingPosts function. See other logs."
-        );
-
         isGettingFollowingPosts.current = false;
         return false;
       }
 
       if (newPostsFromCurrentQuery.length === 0) {
-        console.log(
-          "No new posts from current query found on getFollowingPosts function."
-        );
-        console.log("We need to go while loop.");
-
         // It should go directly, to the below.
         // return false;
       } else {
-        console.log(
-          "We have posts to show on current query!, updating state variables."
-        );
         setPostDocs((prev) => [...prev, ...newPostsFromCurrentQuery]);
 
         isGettingFollowingPosts.current = false;
@@ -202,19 +189,11 @@ export function useFollowing() {
 
       newFollowings = await getFollowings(followingStartAfterDoc);
       if (!newFollowings) {
-        console.log(
-          "Error on fetching followings on getFollowingPosts function. See other logs."
-        );
         isGettingFollowingPosts.current = false;
         return false;
       }
 
       if (newFollowings.length === 0) {
-        console.log("No new followings found on getFollowingPosts function.");
-        console.log(
-          "We need to increase time interval and fetch followings again."
-        );
-
         const newTimeInterval = timeIntervalL + TIME_INTERVAL_INCREAMENT;
 
         //  State Updates
@@ -227,7 +206,6 @@ export function useFollowing() {
         timestamp = Date.now() - newTimeInterval * ONE_DAY_IN_EPOCH;
 
         if (timestamp < Date.now() - ONE_YEAR_IN_EPOCH) {
-          console.log("We have reached the end of the year. We need to stop.");
           isGettingFollowingPosts.current = false;
           return false;
         }
@@ -249,22 +227,13 @@ export function useFollowing() {
 
       const newPosts = await getPosts(userList, timestamp, postStartAfterDoc);
       if (!newPosts) {
-        console.log(
-          "Error on fetching posts on getFollowingPosts function. See other logs."
-        );
         isGettingFollowingPosts.current = false;
         return false;
       }
 
       if (newPosts.length === 0) {
-        console.log("No new posts found on getFollowingPosts on a new query.");
-        console.log("We need to go while loop, AGAIN.");
         continue;
       }
-
-      console.log(
-        "We have posts to show, after new query, updating state variables."
-      );
 
       // State Updates
       setFollowingDocs(newFollowings);
@@ -278,8 +247,21 @@ export function useFollowing() {
     isGettingFollowingPosts.current = false;
   };
 
+  const refreshFollowingPosts = async () => {
+    setTimeInterval(INITIAL_TIME_INTERVAL);
+    setFollowingDocs([]);
+    isCurrentQueryHasMorePosts.current = false;
+
+    // Waiting for state update.
+    await delay(1000);
+
+    await getFollowingPosts();
+  };
+
   return {
     getFollowingPosts,
     followingPostDocPaths,
+    refreshFollowingPosts,
+    isGettingFollowingPosts: isGettingFollowingPosts.current,
   };
 }

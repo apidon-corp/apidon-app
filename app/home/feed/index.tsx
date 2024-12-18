@@ -9,7 +9,6 @@ import React, {
   useState,
 } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   NativeScrollEvent,
   Platform,
@@ -22,10 +21,6 @@ import {
 import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
 import PostSkeleton from "@/components/Post/PostSkeleon";
 
-import { PostDataOnMainPostsCollection } from "@/types/Post";
-import firestore, {
-  FirebaseFirestoreTypes,
-} from "@react-native-firebase/firestore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import CustomBottomModalSheet from "@/components/BottomSheet/CustomBottomModalSheet";
@@ -36,11 +31,10 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Stack } from "expo-router";
 
-import { useFollowingPosts } from "@/components/Feed/useFollowingPosts";
 import { collectCollectibleAtom } from "@/atoms/collectCollectibleAtom";
 
-import { View } from "@/components/Themed";
-import { useFollowing } from "@/components/Feed/useFollowing";
+import { useFollowingPosts } from "@/hooks/useFollowingPosts";
+import { useMainPosts } from "@/hooks/useMainPosts";
 
 const index = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
@@ -55,11 +49,6 @@ const index = () => {
   );
 
   const scrollViewRef = useRef<ScrollView>(null);
-
-  const [postDocSnapshots, setPostDocSnapshots] = useState<
-    FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]
-  >([]);
-  const [postDocPaths, setPostDocPaths] = useState<string[]>([]);
 
   const { bottom } = useSafeAreaInsets();
 
@@ -82,12 +71,19 @@ const index = () => {
   const isIOS = Platform.OS === "ios";
 
   const {
-   // followingPostDocPaths,
-   // getInitialFollowingPosts,
-   // getMoreFollowingPosts,
+    followingPostDocPaths,
+    getFollowingPosts,
+    refreshFollowingPosts,
+    isGettingFollowingPosts,
   } = useFollowingPosts();
 
-  const {followingPostDocPaths, getFollowingPosts} = useFollowing()
+  const {
+    getMainPosts,
+    isGettingMainPosts,
+    postDocPaths,
+    addUploadedPostToFeed,
+    refreshMainPosts,
+  } = useMainPosts();
 
   // Managing created post.
   useEffect(() => {
@@ -96,7 +92,7 @@ const index = () => {
 
     setPanelName("all");
 
-    setPostDocPaths((prev) => [createdPostDocPath, ...prev]);
+    addUploadedPostToFeed(createdPostDocPath);
 
     setTimeout(() => {
       scrollViewRef.current?.scrollTo({ y: -headerHeight + 1 });
@@ -122,7 +118,7 @@ const index = () => {
    */
   useEffect(() => {
     if (panelName === "all") {
-      getInitialPostDocPaths();
+      getMainPosts();
     } else if (panelName === "following") {
       getFollowingPosts();
     }
@@ -140,60 +136,15 @@ const index = () => {
     codeEnteringBottomSheetModalRef.current?.present();
   }, [collectCollectibleAtomValue]);
 
-  async function getInitialPostDocPaths() {
-    try {
-      const query = await firestore()
-        .collection("posts")
-        .orderBy("timestamp", "desc")
-        .limit(8)
-        .get();
-
-      setPostDocSnapshots(query.docs);
-      setPostDocPaths(
-        query.docs.map(
-          (d) => (d.data() as PostDataOnMainPostsCollection).postDocPath
-        )
-      );
-    } catch (error) {
-      console.error("Error while fetching getInitialPostDocPaths: ", error);
-      setPostDocPaths([]);
-    }
-  }
-
-  async function getMorePostDocPaths() {
-    const lastDoc = postDocSnapshots[postDocSnapshots.length - 1];
-    if (!lastDoc) return;
-
-    try {
-      const query = await firestore()
-        .collection("posts")
-        .orderBy("timestamp", "desc")
-        .startAfter(lastDoc)
-        .limit(8)
-        .get();
-
-      setPostDocSnapshots((prev) => [...prev, ...query.docs]);
-
-      setPostDocPaths((prev) => [
-        ...prev,
-        ...query.docs.map(
-          (d) => (d.data() as PostDataOnMainPostsCollection).postDocPath
-        ),
-      ]);
-    } catch (error) {
-      console.error("Error while fetching getMorePostDocPaths: ", error);
-    }
-  }
-
   async function handleRefresh() {
     if (refreshLoading) return;
 
     setRefreshLoading(true);
 
     if (panelName === "all") {
-      await getInitialPostDocPaths();
+      await refreshMainPosts();
     } else {
-      await getFollowingPosts();
+      await refreshFollowingPosts();
     }
 
     setRefreshLoading(false);
@@ -208,7 +159,7 @@ const index = () => {
       layoutMeasurement.height + contentOffset.y >=
       contentSize.height - threshold;
     if (isCloseToBottom) {
-      if (panelName === "all") getMorePostDocPaths();
+      if (panelName === "all") getMainPosts();
       else if (panelName === "following") getFollowingPosts();
     }
   };
@@ -254,10 +205,7 @@ const index = () => {
   );
 
   const deletePostDocPathFromArray = (postDocPath: string) => {
-    setPostDocPaths((prev) => prev.filter((q) => q !== postDocPath));
-    setPostDocSnapshots((prev) =>
-      prev.filter((q) => q.data().postDocPath !== postDocPath)
-    );
+    deletePostDocPathFromArray(postDocPath);
   };
 
   return (
@@ -299,7 +247,8 @@ const index = () => {
         >
           <Pagination panelName={panelName} setPanelName={setPanelName} />
 
-          {postDocPaths.length === 0 ? (
+          {(panelName === "all" && postDocPaths.length === 0) ||
+          (panelName === "following" && followingPostDocPaths.length === 0) ? (
             <FlatList
               scrollEnabled={false}
               showsVerticalScrollIndicator={false}
@@ -327,17 +276,6 @@ const index = () => {
               />
             </>
           )}
-
-          <View
-            style={{
-              width: "100%",
-              height: 50,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <ActivityIndicator size={32} color="gray" />
-          </View>
         </ScrollView>
       ) : (
         <FlatList
