@@ -104,5 +104,6 @@ export function useMainPosts() {
     isGettingMainPosts: isGettingMainPosts.current,
     addUploadedPostToFeed,
     refreshMainPosts,
+    deletePostFromMainFeed
   };
 }

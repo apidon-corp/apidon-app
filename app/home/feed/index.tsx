@@ -83,6 +83,7 @@ const index = () => {
     postDocPaths,
     addUploadedPostToFeed,
     refreshMainPosts,
+    deletePostFromMainFeed,
   } = useMainPosts();
 
   // Managing created post.
@@ -205,7 +206,7 @@ const index = () => {
   );
 
   const deletePostDocPathFromArray = (postDocPath: string) => {
-    deletePostDocPathFromArray(postDocPath);
+    deletePostFromMainFeed(postDocPath);
   };
 
   return (
