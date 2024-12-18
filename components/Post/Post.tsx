@@ -14,6 +14,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   Pressable,
   Text as ReactNativeText,
   View,
@@ -42,16 +43,12 @@ import PostSkeleton from "./PostSkeleon";
 
 type Props = {
   postDocPath: string;
-  viewablePostDocPaths?: string[];
+  isThisPostViewable?: boolean;
   deletePostDocPathFromArray?: (postDocPath: string) => void;
 };
 
 const Post = React.memo(
-  ({
-    postDocPath,
-    viewablePostDocPaths,
-    deletePostDocPathFromArray,
-  }: Props) => {
+  ({ postDocPath, isThisPostViewable, deletePostDocPathFromArray }: Props) => {
     const { authStatus } = useAuth();
 
     const [postDocData, setPostDocData] = useState<PostServerData | null>(null);
@@ -85,9 +82,15 @@ const Post = React.memo(
     const [currentUserBlockedBySender, setCurrentUserBlockedBySender] =
       useState<null | boolean>(null);
 
-    const isThisPostViewable = viewablePostDocPaths
-      ? viewablePostDocPaths.includes(postDocPath)
-      : true;
+    /**
+     * Main Handler of viewability of post.
+     */
+    const postViewable =
+      Platform.OS === "ios"
+        ? true
+        : isThisPostViewable === undefined
+        ? true
+        : isThisPostViewable;
 
     // Dynamic Data Fetching / Post Object
     useEffect(() => {
@@ -192,7 +195,7 @@ const Post = React.memo(
           }
         );
       return () => unsubscribe();
-    }, [authStatus, isThisPostViewable]);
+    }, [authStatus]);
 
     // Realtime Block Checking
     useEffect(() => {
@@ -216,7 +219,7 @@ const Post = React.memo(
         );
 
       return () => unsubscribe();
-    }, [doesOwnPost, postSenderData, isThisPostViewable]);
+    }, [doesOwnPost, postSenderData]);
 
     /**
      * Checking post availability...
@@ -688,7 +691,7 @@ const Post = React.memo(
             </Pressable>
           </View>
 
-          {isThisPostViewable ? (
+          {postViewable ? (
             <PostImage source={postDocData.image} />
           ) : (
             <View style={{ width: "100%", aspectRatio: 1 }} />
@@ -821,7 +824,7 @@ const Post = React.memo(
           </View>
         </Animated.View>
 
-        {isThisPostViewable && (
+        {postViewable && (
           <>
             <CustomBottomModalSheet ref={postOptionsModalRef}>
               <PostSettingsBottomSheetContent

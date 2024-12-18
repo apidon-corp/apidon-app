@@ -181,30 +181,52 @@ const index = () => {
     setViewablePostDocPaths(viewableItems.map((item) => item.key));
   };
 
-  const renderItem = useCallback(
-    ({ item }: any) =>
-      isIOS ? (
-        <Post
-          postDocPath={item}
-          key={item}
-          deletePostDocPathFromArray={deletePostDocPathFromArray}
-        />
-      ) : (
-        <Post
-          postDocPath={item}
-          viewablePostDocPaths={viewablePostDocPaths}
-          deletePostDocPathFromArray={deletePostDocPathFromArray}
-        />
-      ),
-    [viewablePostDocPaths]
-  );
-
   const listData = useMemo(
     () =>
       Array.from(
         new Set(panelName === "all" ? mainPostDocPaths : followingPostDocPaths)
       ),
     [panelName, mainPostDocPaths, followingPostDocPaths]
+  );
+
+  const renderItem = useCallback(
+    ({ item, index }: any) => {
+      if (isIOS)
+        return (
+          <Post
+            postDocPath={item}
+            key={item}
+            deletePostDocPathFromArray={deletePostDocPathFromArray}
+          />
+        );
+
+      const itemIndex = index;
+
+      let viewableItem: undefined | string = undefined;
+      if (viewablePostDocPaths.length > 0)
+        viewableItem = viewablePostDocPaths[0];
+
+      let viewableIndex = 0;
+      if (viewableItem)
+        viewableIndex = listData.findIndex((q) => q === viewableItem);
+
+      const distanceToViewableItemOfCurrentItem = Math.abs(
+        itemIndex - viewableIndex
+      );
+
+      let isThisPostViewable = false;
+
+      if (distanceToViewableItemOfCurrentItem < 8) isThisPostViewable = true;
+
+      return (
+        <Post
+          postDocPath={item}
+          deletePostDocPathFromArray={deletePostDocPathFromArray}
+          isThisPostViewable={isThisPostViewable}
+        />
+      );
+    },
+    [viewablePostDocPaths, listData]
   );
 
   const deletePostDocPathFromArray = (postDocPath: string) => {
@@ -300,6 +322,7 @@ const index = () => {
         <>
           {listData.length === 0 ? (
             <FlatList
+              key="android-unvalid-flatlist"
               scrollEnabled={false}
               showsVerticalScrollIndicator={false}
               data={[1, 2]}
@@ -311,6 +334,7 @@ const index = () => {
             />
           ) : (
             <FlatList
+              key="android-valid-flatlist"
               ref={flatListRef}
               contentInsetAdjustmentBehavior="automatic"
               style={{
