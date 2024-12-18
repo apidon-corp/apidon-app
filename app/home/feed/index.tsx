@@ -40,6 +40,7 @@ import { useFollowingPosts } from "@/components/Feed/useFollowingPosts";
 import { collectCollectibleAtom } from "@/atoms/collectCollectibleAtom";
 
 import { View } from "@/components/Themed";
+import { useFollowing } from "@/components/Feed/useFollowing";
 
 const index = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
@@ -81,10 +82,12 @@ const index = () => {
   const isIOS = Platform.OS === "ios";
 
   const {
-    followingPostDocPaths,
-    getInitialFollowingPosts,
-    getMoreFollowingPosts,
+   // followingPostDocPaths,
+   // getInitialFollowingPosts,
+   // getMoreFollowingPosts,
   } = useFollowingPosts();
+
+  const {followingPostDocPaths, getFollowingPosts} = useFollowing()
 
   // Managing created post.
   useEffect(() => {
@@ -121,7 +124,7 @@ const index = () => {
     if (panelName === "all") {
       getInitialPostDocPaths();
     } else if (panelName === "following") {
-      getInitialFollowingPosts();
+      getFollowingPosts();
     }
   }, [panelName]);
 
@@ -190,7 +193,7 @@ const index = () => {
     if (panelName === "all") {
       await getInitialPostDocPaths();
     } else {
-      await getInitialFollowingPosts();
+      await getFollowingPosts();
     }
 
     setRefreshLoading(false);
@@ -206,7 +209,7 @@ const index = () => {
       contentSize.height - threshold;
     if (isCloseToBottom) {
       if (panelName === "all") getMorePostDocPaths();
-      else if (panelName === "following") getMoreFollowingPosts();
+      else if (panelName === "following") getFollowingPosts();
     }
   };
 
