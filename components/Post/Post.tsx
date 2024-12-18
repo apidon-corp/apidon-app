@@ -95,7 +95,6 @@ const Post = React.memo(
         authStatus !== "authenticated" ||
         postDeleted ||
         !postDocPath ||
-        !isThisPostViewable ||
         postNotFound ||
         postNotFound === null
       ) {
@@ -128,13 +127,7 @@ const Post = React.memo(
         );
 
       return () => unsubscribe();
-    }, [
-      postDocPath,
-      authStatus,
-      postDeleted,
-      isThisPostViewable,
-      postNotFound,
-    ]);
+    }, [postDocPath, authStatus, postDeleted, postNotFound]);
 
     // Dynamic Data Fetching / Follow Status
     useEffect(() => {
@@ -144,8 +137,6 @@ const Post = React.memo(
       if (!displayName) return;
 
       if (!postDocData) return;
-
-      if (!isThisPostViewable) return;
 
       const unsubscribe = firestore()
         .doc(`users/${postDocData.senderUsername}/followers/${displayName}`)
@@ -163,7 +154,7 @@ const Post = React.memo(
         );
 
       return () => unsubscribe();
-    }, [authStatus, postDocData, isThisPostViewable]);
+    }, [authStatus, postDocData]);
 
     // Getting Post Sender Data.
     useEffect(() => {
@@ -171,11 +162,10 @@ const Post = React.memo(
 
       if (!postDocData) return;
 
-      if (!isThisPostViewable) return;
       if (postSenderData) return;
 
       handleGetSenderData();
-    }, [authStatus, postDocData, isThisPostViewable]);
+    }, [authStatus, postDocData]);
 
     // Dynamic Data Fetching - Current Rating
     useEffect(() => {
@@ -183,8 +173,6 @@ const Post = React.memo(
 
       const displayName = auth().currentUser?.displayName || "";
       if (!displayName) return;
-
-      if (!isThisPostViewable) return;
 
       const unsubscribe = firestore()
         .doc(postDocPath)
@@ -215,8 +203,6 @@ const Post = React.memo(
 
       if (!postSenderData) return;
 
-      if (!isThisPostViewable) return;
-
       const unsubscribe = firestore()
         .doc(`users/${postSenderData.username}/blocks/${displayName}`)
         .onSnapshot(
@@ -240,10 +226,8 @@ const Post = React.memo(
 
       if (!postDocPath) return;
 
-      if (!isThisPostViewable) return;
-
       handleCheckPostAvailability();
-    }, [postDocPath, authStatus, isThisPostViewable]);
+    }, [postDocPath, authStatus]);
 
     const handleGetSenderData = async () => {
       if (!postDocData) return setPostSenderData(null);
@@ -707,8 +691,6 @@ const Post = React.memo(
           {isThisPostViewable ? (
             <PostImage source={postDocData.image} />
           ) : (
-            // <View style={{ width: "100%", aspectRatio: 1 }} />
-            //<PostImage source={postDocData.image} />
             <View style={{ width: "100%", aspectRatio: 1 }} />
           )}
 

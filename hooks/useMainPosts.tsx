@@ -15,10 +15,10 @@ export function useMainPosts() {
 
   const [postDocs, setPostDocs] = useState<FirestoreDocType[]>([]);
 
-  const [postDocPaths, setPostDocPaths] = useState<string[]>([]);
+  const [mainPostDocPaths, setMainPostDocPaths] = useState<string[]>([]);
 
   useEffect(() => {
-    setPostDocPaths(
+    setMainPostDocPaths(
       postDocs.map(
         (doc) => (doc.data() as PostDataOnMainPostsCollection).postDocPath
       )
@@ -85,7 +85,7 @@ export function useMainPosts() {
   }
 
   function addUploadedPostToFeed(postDocPath: string) {
-    setPostDocPaths((prev) => [postDocPath, ...prev]);
+    setMainPostDocPaths((prev) => [postDocPath, ...prev]);
   }
 
   function deletePostFromMainFeed(postDocPath: string) {
@@ -99,7 +99,7 @@ export function useMainPosts() {
   }
 
   return {
-    postDocPaths,
+    mainPostDocPaths,
     getMainPosts,
     isGettingMainPosts: isGettingMainPosts.current,
     addUploadedPostToFeed,

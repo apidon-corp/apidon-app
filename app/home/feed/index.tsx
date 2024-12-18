@@ -9,12 +9,14 @@ import React, {
   useState,
 } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   NativeScrollEvent,
   Platform,
   Pressable,
   RefreshControl,
   ScrollView,
+  View,
   ViewToken,
 } from "react-native";
 
@@ -80,7 +82,7 @@ const index = () => {
   const {
     getMainPosts,
     isGettingMainPosts,
-    postDocPaths,
+    mainPostDocPaths,
     addUploadedPostToFeed,
     refreshMainPosts,
     deletePostFromMainFeed,
@@ -89,7 +91,7 @@ const index = () => {
   // Managing created post.
   useEffect(() => {
     if (!createdPostDocPath) return;
-    if (postDocPaths.includes(createdPostDocPath)) return;
+    if (mainPostDocPaths.includes(createdPostDocPath)) return;
 
     setPanelName("all");
 
@@ -200,9 +202,9 @@ const index = () => {
   const listData = useMemo(
     () =>
       Array.from(
-        new Set(panelName === "all" ? postDocPaths : followingPostDocPaths)
+        new Set(panelName === "all" ? mainPostDocPaths : followingPostDocPaths)
       ),
-    [panelName, postDocPaths, followingPostDocPaths]
+    [panelName, mainPostDocPaths, followingPostDocPaths]
   );
 
   const deletePostDocPathFromArray = (postDocPath: string) => {
@@ -248,8 +250,7 @@ const index = () => {
         >
           <Pagination panelName={panelName} setPanelName={setPanelName} />
 
-          {(panelName === "all" && postDocPaths.length === 0) ||
-          (panelName === "following" && followingPostDocPaths.length === 0) ? (
+          {listData.length === 0 ? (
             <FlatList
               scrollEnabled={false}
               showsVerticalScrollIndicator={false}
@@ -274,43 +275,92 @@ const index = () => {
                 renderItem={renderItem}
                 showsVerticalScrollIndicator={false}
                 scrollEnabled={false}
+                ListFooterComponent={
+                  <View
+                    style={{
+                      display:
+                        (panelName === "all" && isGettingMainPosts) ||
+                        (panelName === "following" && isGettingFollowingPosts)
+                          ? "flex"
+                          : "none",
+                      width: "100%",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: 50,
+                    }}
+                  >
+                    <ActivityIndicator color="gray" size={32} />
+                  </View>
+                }
               />
             </>
           )}
         </ScrollView>
       ) : (
-        <FlatList
-          ref={flatListRef}
-          contentInsetAdjustmentBehavior="automatic"
-          style={{
-            width: "100%",
-          }}
-          contentContainerStyle={{
-            gap: 20,
-            paddingBottom: (bottom || 20) + 60,
-          }}
-          onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
-          keyExtractor={(item) => item}
-          data={listData}
-          renderItem={renderItem}
-          showsVerticalScrollIndicator={false}
-          viewabilityConfig={{
-            waitForInteraction: false,
-            minimumViewTime: 0,
-            viewAreaCoveragePercentThreshold: 0,
-          }}
-          onViewableItemsChanged={onViewableItemsChanged}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshLoading}
-              onRefresh={handleRefresh}
+        <>
+          {listData.length === 0 ? (
+            <FlatList
+              scrollEnabled={false}
+              showsVerticalScrollIndicator={false}
+              data={[1, 2]}
+              renderItem={({ item }) => <PostSkeleton key={item} />}
+              contentContainerStyle={{
+                width: "100%",
+                gap: 10,
+              }}
             />
-          }
-          scrollToOverflowEnabled
-          ListHeaderComponent={
-            <Pagination panelName={panelName} setPanelName={setPanelName} />
-          }
-        />
+          ) : (
+            <FlatList
+              ref={flatListRef}
+              contentInsetAdjustmentBehavior="automatic"
+              style={{
+                width: "100%",
+              }}
+              contentContainerStyle={{
+                gap: 20,
+                paddingBottom: (bottom || 20) + 60,
+              }}
+              onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
+              keyExtractor={(item) => item}
+              data={listData}
+              renderItem={renderItem}
+              showsVerticalScrollIndicator={false}
+              viewabilityConfig={{
+                waitForInteraction: false,
+                minimumViewTime: 0,
+                viewAreaCoveragePercentThreshold: 0,
+              }}
+              onViewableItemsChanged={onViewableItemsChanged}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshLoading}
+                  onRefresh={handleRefresh}
+                />
+              }
+              scrollToOverflowEnabled
+              ListHeaderComponent={
+                <Pagination panelName={panelName} setPanelName={setPanelName} />
+              }
+              ListFooterComponent={
+                <View
+                  style={{
+                    display:
+                      (panelName === "all" && isGettingMainPosts) ||
+                      (panelName === "following" && isGettingFollowingPosts)
+                        ? "flex"
+                        : "none",
+                    width: "100%",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: 50,
+                  }}
+                >
+                  <ActivityIndicator color="gray" size={32} />
+                </View>
+              }
+            />
+          )}
+        </>
       )}
 
       <CustomBottomModalSheet

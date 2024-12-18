@@ -250,10 +250,17 @@ export function useFollowingPosts() {
   const refreshFollowingPosts = async () => {
     setTimeInterval(INITIAL_TIME_INTERVAL);
     setFollowingDocs([]);
+
+    setPostDocs([]);
+    setFollowingPostDocPaths([]);
+
+    isGettingFollowings.current = false;
+    isGettingPosts.current = false;
     isCurrentQueryHasMorePosts.current = false;
+    isGettingFollowingPosts.current = false;
 
     // Waiting for state update.
-    await delay(1000);
+     await delay(1000);
 
     await getFollowingPosts();
   };
