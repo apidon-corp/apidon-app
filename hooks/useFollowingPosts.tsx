@@ -44,6 +44,8 @@ export function useFollowingPosts() {
 
   const isGettingFollowingPosts = useRef(false);
 
+  const isRefreshingFollowingPosts = useRef(false);
+
   // Whenever postDocs changes, followingPostDocPaths changes also.
   useEffect(() => {
     setFollowingPostDocPaths(
@@ -139,6 +141,8 @@ export function useFollowingPosts() {
      *      - Fetch posts from these new followings.
      *      - If there is no posts returned, repeat the process.
      */
+
+    if (isRefreshingFollowingPosts.current) return;
 
     if (isGettingFollowingPosts.current) return false;
     isGettingFollowingPosts.current = true;
@@ -248,6 +252,11 @@ export function useFollowingPosts() {
   };
 
   const refreshFollowingPosts = async () => {
+    if (isGettingFollowingPosts.current) return;
+
+    if (isRefreshingFollowingPosts.current) return;
+    isRefreshingFollowingPosts.current = true;
+
     setTimeInterval(INITIAL_TIME_INTERVAL);
     setFollowingDocs([]);
 
@@ -260,9 +269,11 @@ export function useFollowingPosts() {
     isGettingFollowingPosts.current = false;
 
     // Waiting for state update.
-     await delay(1000);
+    await delay(1000);
 
     await getFollowingPosts();
+
+    isRefreshingFollowingPosts.current = false;
   };
 
   return {
