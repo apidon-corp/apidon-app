@@ -153,23 +153,33 @@ const index = () => {
     setRefreshLoading(false);
   }
 
-  const handleScroll = (event: NativeScrollEvent) => {
-    const threshold = 1000;
+  const handleScroll = useCallback(
+    (event: NativeScrollEvent) => {
+      const threshold = 1000;
+      const { layoutMeasurement, contentOffset, contentSize } = event;
 
-    const { layoutMeasurement, contentOffset, contentSize } = event;
-
-    const isCloseToBottom =
-      layoutMeasurement.height + contentOffset.y >=
-      contentSize.height - threshold;
-    if (isCloseToBottom) {
-      if (panelName === "all") getMainPosts();
-      else if (panelName === "following") getFollowingPosts();
-    }
-  };
+      if (
+        layoutMeasurement.height + contentOffset.y >=
+        contentSize.height - threshold
+      ) {
+        panelName === "all" ? getMainPosts() : getFollowingPosts();
+      }
+    },
+    [panelName, getMainPosts, getFollowingPosts]
+  );
 
   const handlePressCodeEnterButton = () => {
     codeEnteringBottomSheetModalRef.current?.present();
   };
+
+  const viewabilityConfig = useMemo(
+    () => ({
+      waitForInteraction: false,
+      minimumViewTime: 0,
+      viewAreaCoveragePercentThreshold: 0,
+    }),
+    []
+  );
 
   const onViewableItemsChanged = ({
     viewableItems,
@@ -189,9 +199,13 @@ const index = () => {
     [panelName, mainPostDocPaths, followingPostDocPaths]
   );
 
+  const deletePostDocPathFromArray = (postDocPath: string) => {
+    deletePostFromMainFeed(postDocPath);
+  };
+
   const renderItem = useCallback(
     ({ item, index }: any) => {
-      if (isIOS)
+      if (isIOS) {
         return (
           <Post
             postDocPath={item}
@@ -199,24 +213,16 @@ const index = () => {
             deletePostDocPathFromArray={deletePostDocPathFromArray}
           />
         );
+      }
 
-      const itemIndex = index;
-
-      let viewableItem: undefined | string = undefined;
-      if (viewablePostDocPaths.length > 0)
-        viewableItem = viewablePostDocPaths[0];
-
-      let viewableIndex = 0;
-      if (viewableItem)
-        viewableIndex = listData.findIndex((q) => q === viewableItem);
-
-      const distanceToViewableItemOfCurrentItem = Math.abs(
-        itemIndex - viewableIndex
-      );
-
-      let isThisPostViewable = false;
-
-      if (distanceToViewableItemOfCurrentItem < 8) isThisPostViewable = true;
+      // For Android, calculate visibility without hooks
+      const isThisPostViewable = (() => {
+        if (!viewablePostDocPaths.length) return false;
+        const viewableIndex = listData.findIndex(
+          (q) => q === viewablePostDocPaths[0]
+        );
+        return Math.abs(index - viewableIndex) <= 5;
+      })();
 
       return (
         <Post
@@ -226,12 +232,8 @@ const index = () => {
         />
       );
     },
-    [viewablePostDocPaths, listData]
+    [isIOS, viewablePostDocPaths, listData, deletePostDocPathFromArray]
   );
-
-  const deletePostDocPathFromArray = (postDocPath: string) => {
-    deletePostFromMainFeed(postDocPath);
-  };
 
   return (
     <>
@@ -349,11 +351,7 @@ const index = () => {
               data={listData}
               renderItem={renderItem}
               showsVerticalScrollIndicator={false}
-              viewabilityConfig={{
-                waitForInteraction: false,
-                minimumViewTime: 0,
-                viewAreaCoveragePercentThreshold: 0,
-              }}
+              viewabilityConfig={viewabilityConfig}
               onViewableItemsChanged={onViewableItemsChanged}
               refreshControl={
                 <RefreshControl

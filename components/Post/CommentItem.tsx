@@ -214,7 +214,7 @@ const CommentItem = ({
               userData.profilePhoto || require("@/assets/images/user.jpg")
             }
             style={{
-              width: 40,
+              width: 35,
               aspectRatio: 1,
               borderRadius: 25,
             }}
