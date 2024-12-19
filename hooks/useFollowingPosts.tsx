@@ -8,14 +8,14 @@ import firestore, {
 type FirestoreDocType =
   FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>;
 
-const FOLLOWINGS_QUERY_LIMIT = 10;
+const FOLLOWINGS_QUERY_LIMIT = 30;
 const POSTS_QUERY_LIMIT = 8;
 
 const ONE_DAY_IN_EPOCH = 24 * 60 * 60 * 1000;
 const ONE_YEAR_IN_EPOCH = ONE_DAY_IN_EPOCH * 365;
 
-const INITIAL_TIME_INTERVAL = 1;
-const TIME_INTERVAL_INCREAMENT = 1;
+const INITIAL_TIME_INTERVAL = 3;
+const TIME_INTERVAL_INCREAMENT = 3;
 
 /**
  * Creates a promise that resolves after a specified delay
