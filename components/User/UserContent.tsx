@@ -233,6 +233,13 @@ const UserContent = ({ username }: Props) => {
     }
   };
 
+  const deletePostDocPathFromArray = async (postDocPath: string) => {
+    setPostDocs((prev) => {
+      const newArray = prev.filter((q) => q.ref.path !== postDocPath);
+      return newArray;
+    });
+  };
+
   const getInitialCreatedCollectibles = async () => {
     if (!username) return;
 
@@ -472,7 +479,13 @@ const UserContent = ({ username }: Props) => {
             data={postDocs.map((p) => {
               return p.ref.path;
             })}
-            renderItem={({ item }) => <Post postDocPath={item} key={item} />}
+            renderItem={({ item }) => (
+              <Post
+                postDocPath={item}
+                key={item}
+                deletePostDocPathFromArray={deletePostDocPathFromArray}
+              />
+            )}
             showsVerticalScrollIndicator={false}
             scrollEnabled={false}
           />

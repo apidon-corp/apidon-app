@@ -5,13 +5,13 @@ const PostSkeleton = () => {
   return (
     <View
       style={{
-        padding: 15,
+        marginTop: 15,
       }}
     >
       <View
         style={{
           width: "100%",
-          aspectRatio: 1,
+          aspectRatio: 0.75,
           justifyContent: "center",
           alignItems: "center",
           backgroundColor: "rgba(255,255,255,0.1)",

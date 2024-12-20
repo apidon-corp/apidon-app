@@ -9,22 +9,20 @@ import React, {
   useState,
 } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   NativeScrollEvent,
   Platform,
   Pressable,
   RefreshControl,
   ScrollView,
+  View,
   ViewToken,
 } from "react-native";
 
 import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
 import PostSkeleton from "@/components/Post/PostSkeleon";
 
-import { PostDataOnMainPostsCollection } from "@/types/Post";
-import firestore, {
-  FirebaseFirestoreTypes,
-} from "@react-native-firebase/firestore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import CustomBottomModalSheet from "@/components/BottomSheet/CustomBottomModalSheet";
@@ -35,8 +33,10 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Stack } from "expo-router";
 
-import { useFollowingPosts } from "@/components/Feed/useFollowingPosts";
 import { collectCollectibleAtom } from "@/atoms/collectCollectibleAtom";
+
+import { useFollowingPosts } from "@/hooks/useFollowingPosts";
+import { useMainPosts } from "@/hooks/useMainPosts";
 
 const index = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
@@ -51,11 +51,6 @@ const index = () => {
   );
 
   const scrollViewRef = useRef<ScrollView>(null);
-
-  const [postDocSnapshots, setPostDocSnapshots] = useState<
-    FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]
-  >([]);
-  const [postDocPaths, setPostDocPaths] = useState<string[]>([]);
 
   const { bottom } = useSafeAreaInsets();
 
@@ -79,18 +74,28 @@ const index = () => {
 
   const {
     followingPostDocPaths,
-    getInitialFollowingPosts,
-    getMoreFollowingPosts,
+    getFollowingPosts,
+    refreshFollowingPosts,
+    isGettingFollowingPosts,
   } = useFollowingPosts();
+
+  const {
+    getMainPosts,
+    isGettingMainPosts,
+    mainPostDocPaths,
+    addUploadedPostToFeed,
+    refreshMainPosts,
+    deletePostFromMainFeed,
+  } = useMainPosts();
 
   // Managing created post.
   useEffect(() => {
     if (!createdPostDocPath) return;
-    if (postDocPaths.includes(createdPostDocPath)) return;
+    if (mainPostDocPaths.includes(createdPostDocPath)) return;
 
     setPanelName("all");
 
-    setPostDocPaths((prev) => [createdPostDocPath, ...prev]);
+    addUploadedPostToFeed(createdPostDocPath);
 
     setTimeout(() => {
       scrollViewRef.current?.scrollTo({ y: -headerHeight + 1 });
@@ -116,9 +121,9 @@ const index = () => {
    */
   useEffect(() => {
     if (panelName === "all") {
-      getInitialPostDocPaths();
+      getMainPosts();
     } else if (panelName === "following") {
-      getInitialFollowingPosts();
+      getFollowingPosts();
     }
   }, [panelName]);
 
@@ -134,82 +139,47 @@ const index = () => {
     codeEnteringBottomSheetModalRef.current?.present();
   }, [collectCollectibleAtomValue]);
 
-  async function getInitialPostDocPaths() {
-    try {
-      const query = await firestore()
-        .collection("posts")
-        .orderBy("timestamp", "desc")
-        .limit(8)
-        .get();
-
-      setPostDocSnapshots(query.docs);
-      setPostDocPaths(
-        query.docs.map(
-          (d) => (d.data() as PostDataOnMainPostsCollection).postDocPath
-        )
-      );
-    } catch (error) {
-      console.error("Error while fetching getInitialPostDocPaths: ", error);
-      setPostDocPaths([]);
-    }
-  }
-
-  async function getMorePostDocPaths() {
-    const lastDoc = postDocSnapshots[postDocSnapshots.length - 1];
-    if (!lastDoc) return;
-
-    try {
-      const query = await firestore()
-        .collection("posts")
-        .orderBy("timestamp", "desc")
-        .startAfter(lastDoc)
-        .limit(8)
-        .get();
-
-      setPostDocSnapshots((prev) => [...prev, ...query.docs]);
-
-      setPostDocPaths((prev) => [
-        ...prev,
-        ...query.docs.map(
-          (d) => (d.data() as PostDataOnMainPostsCollection).postDocPath
-        ),
-      ]);
-    } catch (error) {
-      console.error("Error while fetching getMorePostDocPaths: ", error);
-    }
-  }
-
   async function handleRefresh() {
     if (refreshLoading) return;
 
     setRefreshLoading(true);
 
     if (panelName === "all") {
-      await getInitialPostDocPaths();
+      await refreshMainPosts();
     } else {
-      await getInitialFollowingPosts();
+      await refreshFollowingPosts();
     }
 
     setRefreshLoading(false);
   }
 
-  const handleScroll = (event: NativeScrollEvent) => {
-    const threshold = 1000;
+  const handleScroll = useCallback(
+    (event: NativeScrollEvent) => {
+      const threshold = 1000;
+      const { layoutMeasurement, contentOffset, contentSize } = event;
 
-    const { layoutMeasurement, contentOffset, contentSize } = event;
-
-    const isCloseToBottom =
-      layoutMeasurement.height + contentOffset.y >=
-      contentSize.height - threshold;
-    if (isCloseToBottom) {
-      if (panelName === "all") getMorePostDocPaths();
-      else if (panelName === "following") getMoreFollowingPosts();
-    }
-  };
+      if (
+        layoutMeasurement.height + contentOffset.y >=
+        contentSize.height - threshold
+      ) {
+        panelName === "all" ? getMainPosts() : getFollowingPosts();
+      }
+    },
+    [panelName, getMainPosts, getFollowingPosts]
+  );
 
   const handlePressCodeEnterButton = () => {
     codeEnteringBottomSheetModalRef.current?.present();
   };
+
+  const viewabilityConfig = useMemo(
+    () => ({
+      waitForInteraction: false,
+      minimumViewTime: 0,
+      viewAreaCoveragePercentThreshold: 0,
+    }),
+    []
+  );
 
   const onViewableItemsChanged = ({
     viewableItems,
@@ -218,28 +188,51 @@ const index = () => {
     viewableItems: ViewToken[];
     changed: ViewToken[];
   }) => {
-    // console.log("Viewable Items: ", viewableItems);
-    //console.log("---------");
-    // for (const changeditem of viewableItems) {
-    //   console.log("Vieable Items: ", changeditem);
-    // }
     setViewablePostDocPaths(viewableItems.map((item) => item.key));
-    // console.log("---------");
   };
-
-  const renderItem = useCallback(
-    ({ item }: any) => (
-      <Post postDocPath={item} viewablePostDocPaths={viewablePostDocPaths} />
-    ),
-    [viewablePostDocPaths]
-  );
 
   const listData = useMemo(
     () =>
       Array.from(
-        new Set(panelName === "all" ? postDocPaths : followingPostDocPaths)
+        new Set(panelName === "all" ? mainPostDocPaths : followingPostDocPaths)
       ),
-    [panelName, postDocPaths, followingPostDocPaths]
+    [panelName, mainPostDocPaths, followingPostDocPaths]
+  );
+
+  const deletePostDocPathFromArray = (postDocPath: string) => {
+    deletePostFromMainFeed(postDocPath);
+  };
+
+  const renderItem = useCallback(
+    ({ item, index }: any) => {
+      if (isIOS) {
+        return (
+          <Post
+            postDocPath={item}
+            key={item}
+            deletePostDocPathFromArray={deletePostDocPathFromArray}
+          />
+        );
+      }
+
+      // For Android, calculate visibility without hooks
+      const isThisPostViewable = (() => {
+        if (!viewablePostDocPaths.length) return false;
+        const viewableIndex = listData.findIndex(
+          (q) => q === viewablePostDocPaths[0]
+        );
+        return Math.abs(index - viewableIndex) <= 5;
+      })();
+
+      return (
+        <Post
+          postDocPath={item}
+          deletePostDocPathFromArray={deletePostDocPathFromArray}
+          isThisPostViewable={isThisPostViewable}
+        />
+      );
+    },
+    [isIOS, viewablePostDocPaths, listData, deletePostDocPathFromArray]
   );
 
   return (
@@ -281,7 +274,7 @@ const index = () => {
         >
           <Pagination panelName={panelName} setPanelName={setPanelName} />
 
-          {postDocPaths.length === 0 ? (
+          {listData.length === 0 ? (
             <FlatList
               scrollEnabled={false}
               showsVerticalScrollIndicator={false}
@@ -302,59 +295,94 @@ const index = () => {
                   gap: 20,
                 }}
                 keyExtractor={(item) => item}
-                data={Array.from(
-                  new Set(
-                    panelName === "all" ? postDocPaths : followingPostDocPaths
-                  )
-                )}
-                renderItem={({ item }) => (
-                  <Post postDocPath={item} key={item} />
-                )}
+                data={listData}
+                renderItem={renderItem}
                 showsVerticalScrollIndicator={false}
                 scrollEnabled={false}
-                viewabilityConfig={{
-                  waitForInteraction: false,
-                  minimumViewTime: 0,
-                  itemVisiblePercentThreshold: 50,
-                }}
-                onViewableItemsChanged={onViewableItemsChanged}
+                ListFooterComponent={
+                  <View
+                    style={{
+                      display:
+                        (panelName === "all" && isGettingMainPosts) ||
+                        (panelName === "following" && isGettingFollowingPosts)
+                          ? "flex"
+                          : "none",
+                      width: "100%",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: 50,
+                    }}
+                  >
+                    <ActivityIndicator color="gray" size={32} />
+                  </View>
+                }
               />
             </>
           )}
         </ScrollView>
       ) : (
-        <FlatList
-          ref={flatListRef}
-          contentInsetAdjustmentBehavior="automatic"
-          style={{
-            width: "100%",
-          }}
-          contentContainerStyle={{
-            gap: 20,
-            paddingBottom: (bottom || 20) + 60,
-          }}
-          onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
-          keyExtractor={(item) => item}
-          data={listData}
-          renderItem={renderItem}
-          showsVerticalScrollIndicator={false}
-          viewabilityConfig={{
-            waitForInteraction: false,
-            minimumViewTime: 0,
-            viewAreaCoveragePercentThreshold: 0,
-          }}
-          onViewableItemsChanged={onViewableItemsChanged}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshLoading}
-              onRefresh={handleRefresh}
+        <>
+          {listData.length === 0 ? (
+            <FlatList
+              key="android-unvalid-flatlist"
+              scrollEnabled={false}
+              showsVerticalScrollIndicator={false}
+              data={[1, 2]}
+              renderItem={({ item }) => <PostSkeleton key={item} />}
+              contentContainerStyle={{
+                width: "100%",
+                gap: 10,
+              }}
             />
-          }
-          scrollToOverflowEnabled
-          ListHeaderComponent={
-            <Pagination panelName={panelName} setPanelName={setPanelName} />
-          }
-        />
+          ) : (
+            <FlatList
+              key="android-valid-flatlist"
+              ref={flatListRef}
+              contentInsetAdjustmentBehavior="automatic"
+              style={{
+                width: "100%",
+              }}
+              contentContainerStyle={{
+                gap: 20,
+                paddingBottom: (bottom || 20) + 60,
+              }}
+              onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
+              keyExtractor={(item) => item}
+              data={listData}
+              renderItem={renderItem}
+              showsVerticalScrollIndicator={false}
+              viewabilityConfig={viewabilityConfig}
+              onViewableItemsChanged={onViewableItemsChanged}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshLoading}
+                  onRefresh={handleRefresh}
+                />
+              }
+              scrollToOverflowEnabled
+              ListHeaderComponent={
+                <Pagination panelName={panelName} setPanelName={setPanelName} />
+              }
+              ListFooterComponent={
+                <View
+                  style={{
+                    display:
+                      (panelName === "all" && isGettingMainPosts) ||
+                      (panelName === "following" && isGettingFollowingPosts)
+                        ? "flex"
+                        : "none",
+                    width: "100%",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: 50,
+                  }}
+                >
+                  <ActivityIndicator color="gray" size={32} />
+                </View>
+              }
+            />
+          )}
+        </>
       )}
 
       <CustomBottomModalSheet
