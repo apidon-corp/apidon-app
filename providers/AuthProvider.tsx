@@ -144,80 +144,80 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
   const handleLinking = async (linking: string, isInitial: boolean) => {
     if (!linking) return;
 
-    const subParts = linking.split("/");
-    const content = subParts[3];
+    const appSlug = process.env.EXPO_PUBLIC_APP_SLUG || "";
+    if (!appSlug) return;
 
-    if (!content) return router.replace("/home/feed");
+    let linkType: "deep" | "universal";
 
-    if (isInitial) {
-      if (content === "cc") {
-        const code = subParts[4];
+    const partsOfLink = linking.split("/");
 
-        // We open main page
+    if (partsOfLink[0] === `${appSlug}:`) linkType = "deep";
+    else linkType = "universal";
+
+    let contentType;
+
+    let baseIndex: 2 | 3 = 2;
+    if (linkType === "deep") {
+      baseIndex = 2;
+      if (partsOfLink[baseIndex] === "cc") contentType = "collectibleCode";
+      else if (partsOfLink[baseIndex] === "p") contentType = "post";
+      else contentType = partsOfLink[baseIndex]; // profile
+    } else {
+      baseIndex = 3;
+      if (partsOfLink[baseIndex] === "cc") contentType = "collectibleCode";
+      else if (partsOfLink[baseIndex] === "p") contentType = "post";
+      else contentType = partsOfLink[baseIndex]; // profile
+    }
+
+    const contentData = partsOfLink[baseIndex + 1];
+
+    if (contentType === "collectibleCode") {
+      if (isInitial) {
         if (pathname !== "/home/feed") router.replace("/home/feed");
-
-        await delay(500);
-
-        // Then set given code to "atom"
-        setCollectCollectible({ code: code });
-      } else if (content === "p") {
-        const postIdentifier = subParts[4];
-
-        const postIdentifierContents = postIdentifier.split("-");
-
-        const postSender = postIdentifierContents[0];
-        const postId = postIdentifierContents[1];
-
-        if (postSender && postId) {
-          router.replace("/home");
-
-          await delay(500);
-
-          router.navigate(`/home/feed/post?sender=${postSender}&id=${postId}`);
-
-          await delay(500);
-        }
       } else {
-        const username = content;
-        router.replace("/home");
-        await delay(500);
-        router.navigate(`/home/feed/profilePage?username=${username}`);
-        await delay(500);
+        if (pathname !== "/home/feed") router.navigate("/home/feed");
       }
+
+      await delay(500);
+      setCollectCollectible({ code: contentData });
+
+      return setLinking({ isInitial: false, url: "" });
+    } else if (contentType === "post") {
+      const postIdentifier = contentData;
+
+      const postIdentifierContents = postIdentifier.split("-");
+
+      const postSender = postIdentifierContents[0];
+      const postId = postIdentifierContents[1];
+
+      if (!postSender || !postId) {
+        console.error("Error on parsing postIdentifier: ", postIdentifier);
+        return setLinking({ isInitial: false, url: "" });
+      }
+
+      if (isInitial) {
+        router.replace("/home");
+      }
+
+      await delay(500);
+
+      router.navigate(`/home/feed/post?sender=${postSender}&id=${postId}`);
+
+      await delay(500);
 
       return setLinking({ isInitial: false, url: "" });
     } else {
-      // That means we need to open code entering screen with given code.
-      if (content === "cc") {
-        const code = subParts[4];
+      const username = contentType;
 
-        // We open main page
-        if (pathname !== "/home/feed") router.navigate("/home/feed");
+      console.log("username: ", username);
 
-        await delay(500);
-
-        // Then set given code to "atom"
-        setCollectCollectible({ code: code });
+      if (isInitial) {
+        router.replace("/home");
       }
 
-      // That means we need to open post page.
-      else if (content === "p") {
-        const postIdentifier = subParts[4];
-
-        const postIdentifierContents = postIdentifier.split("-");
-
-        const postSender = postIdentifierContents[0];
-        const postId = postIdentifierContents[1];
-
-        if (postSender && postId) {
-          router.navigate(`/home/feed/post?sender=${postSender}&id=${postId}`);
-          await delay(500);
-        }
-      } else {
-        const username = content;
-        router.navigate(`/home/feed/profilePage?username=${username}`);
-        await delay(500);
-      }
+      await delay(500);
+      router.navigate(`/home/feed/profilePage?username=${username}`);
+      await delay(500);
 
       return setLinking({ isInitial: false, url: "" });
     }
