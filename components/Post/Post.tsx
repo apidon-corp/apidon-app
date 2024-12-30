@@ -47,6 +47,8 @@ type Props = {
   deletePostDocPathFromArray?: (postDocPath: string) => void;
 };
 
+const POST_COMPONENT_HEIGHT = 636;
+
 const Post = React.memo(
   ({ postDocPath, isThisPostViewable, deletePostDocPathFromArray }: Props) => {
     const { authStatus } = useAuth();
@@ -545,6 +547,7 @@ const Post = React.memo(
           id="post-root"
           style={{
             position: "relative",
+            height: POST_COMPONENT_HEIGHT,
             transform: [
               {
                 scale: animatedScaleValue,
@@ -808,10 +811,8 @@ const Post = React.memo(
                     >
                       {postSenderData.username}
                     </ReactNativeText>
-
                     <ReactNativeText> </ReactNativeText>
                     <ReactNativeText> </ReactNativeText>
-
                     {postDocData.description}
                   </ReactNativeText>
                 </View>

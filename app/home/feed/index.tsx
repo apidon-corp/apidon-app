@@ -205,7 +205,7 @@ const index = () => {
 
   const renderItem = useCallback(
     ({ item, index }: any) => {
-      if (isIOS) {
+      if (true) {
         return (
           <Post
             postDocPath={item}
@@ -329,9 +329,12 @@ const index = () => {
               showsVerticalScrollIndicator={false}
               data={[1, 2]}
               renderItem={({ item }) => <PostSkeleton key={item} />}
-              contentContainerStyle={{
+              style={{
                 width: "100%",
-                gap: 10,
+              }}
+              contentContainerStyle={{
+                gap: 20,
+                paddingBottom: (bottom || 20) + 60,
               }}
             />
           ) : (
