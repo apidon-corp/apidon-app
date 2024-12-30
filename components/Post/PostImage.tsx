@@ -21,6 +21,8 @@ const PostImage = ({ source }: Props) => {
       }}
       style={{
         zIndex: isZooming ? 1 : 0,
+        width: "100%",
+        aspectRatio: 1,
       }}
     >
       <Image
