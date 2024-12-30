@@ -10,6 +10,7 @@ import React, {
 } from "react";
 import {
   ActivityIndicator,
+  Dimensions,
   FlatList,
   NativeScrollEvent,
   Platform,
@@ -37,8 +38,6 @@ import { collectCollectibleAtom } from "@/atoms/collectCollectibleAtom";
 import { useFollowingPosts } from "@/hooks/useFollowingPosts";
 import { useMainPosts } from "@/hooks/useMainPosts";
 import { FlashList } from "@shopify/flash-list";
-
-const POST_COMPONENT_HEIGHT = 636;
 
 const index = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
@@ -69,6 +68,15 @@ const index = () => {
   const flashListRef = useRef<FlashList<string>>(null);
 
   const isIOS = Platform.OS === "ios";
+
+  const { width } = Dimensions.get("window");
+
+  /**
+   * Header is 60px.
+   * Image is 100% width.
+   * Footer 170px;
+   */
+  const totalPostComponentHeight = width + 230;
 
   const {
     followingPostDocPaths,
@@ -189,10 +197,11 @@ const index = () => {
           postDocPath={item}
           key={item}
           deletePostDocPathFromArray={deletePostDocPathFromArray}
+          height={totalPostComponentHeight}
         />
       );
     },
-    [deletePostDocPathFromArray]
+    [deletePostDocPathFromArray, totalPostComponentHeight]
   );
 
   return (
@@ -288,7 +297,9 @@ const index = () => {
               scrollEnabled={false}
               showsVerticalScrollIndicator={false}
               data={[1, 2]}
-              renderItem={({ item }) => <PostSkeleton key={item} />}
+              renderItem={({ item }) => (
+                <PostSkeleton key={item} height={totalPostComponentHeight} />
+              )}
               style={{
                 width: "100%",
               }}
@@ -338,7 +349,7 @@ const index = () => {
                   <ActivityIndicator color="gray" size={32} />
                 </View>
               }
-              estimatedItemSize={POST_COMPONENT_HEIGHT}
+              estimatedItemSize={totalPostComponentHeight}
             />
           )}
         </>

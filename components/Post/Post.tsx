@@ -14,7 +14,6 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Platform,
   Pressable,
   Text as ReactNativeText,
   View,
@@ -43,14 +42,12 @@ import PostSkeleton from "./PostSkeleon";
 
 type Props = {
   postDocPath: string;
-  isThisPostViewable?: boolean;
   deletePostDocPathFromArray?: (postDocPath: string) => void;
+  height?: number;
 };
 
-const POST_COMPONENT_HEIGHT = 636;
-
 const Post = React.memo(
-  ({ postDocPath, isThisPostViewable, deletePostDocPathFromArray }: Props) => {
+  ({ postDocPath, deletePostDocPathFromArray, height }: Props) => {
     const { authStatus } = useAuth();
 
     const [postDocData, setPostDocData] = useState<PostServerData | null>(null);
@@ -84,20 +81,8 @@ const Post = React.memo(
     const [currentUserBlockedBySender, setCurrentUserBlockedBySender] =
       useState<null | boolean>(null);
 
-    /**
-     * Main Handler of viewability of post.
-     */
-    const postViewable =
-      Platform.OS === "ios"
-        ? true
-        : isThisPostViewable === undefined
-        ? true
-        : isThisPostViewable;
-
     // Dynamic Data Fetching / Post Object
     useEffect(() => {
-      if (!postViewable) return;
-
       if (
         authStatus !== "authenticated" ||
         postDeleted ||
@@ -134,12 +119,10 @@ const Post = React.memo(
         );
 
       return () => unsubscribe();
-    }, [postDocPath, authStatus, postDeleted, postNotFound, postViewable]);
+    }, [postDocPath, authStatus, postDeleted, postNotFound]);
 
     // Dynamic Data Fetching / Follow Status
     useEffect(() => {
-      if (!postViewable) return;
-
       if (authStatus !== "authenticated") return;
 
       const displayName = auth().currentUser?.displayName;
@@ -163,12 +146,10 @@ const Post = React.memo(
         );
 
       return () => unsubscribe();
-    }, [authStatus, postDocData, postViewable]);
+    }, [authStatus, postDocData]);
 
     // Getting Post Sender Data.
     useEffect(() => {
-      if (!postViewable) return;
-
       if (authStatus !== "authenticated") return;
 
       if (!postDocData) return;
@@ -176,12 +157,10 @@ const Post = React.memo(
       if (postSenderData) return;
 
       handleGetSenderData();
-    }, [authStatus, postDocData, postViewable]);
+    }, [authStatus, postDocData]);
 
     // Dynamic Data Fetching - Current Rating
     useEffect(() => {
-      if (!postViewable) return;
-
       if (authStatus !== "authenticated") return;
 
       const displayName = auth().currentUser?.displayName || "";
@@ -205,12 +184,10 @@ const Post = React.memo(
           }
         );
       return () => unsubscribe();
-    }, [authStatus, postViewable]);
+    }, [authStatus]);
 
     // Realtime Block Checking
     useEffect(() => {
-      if (!postViewable) return;
-
       if (doesOwnPost) return setCurrentUserBlockedBySender(false);
 
       const displayName = auth().currentUser?.displayName || "";
@@ -231,20 +208,18 @@ const Post = React.memo(
         );
 
       return () => unsubscribe();
-    }, [doesOwnPost, postSenderData, postViewable]);
+    }, [doesOwnPost, postSenderData]);
 
     /**
      * Checking post availability...
      */
     useEffect(() => {
-      if (!postViewable) return;
-
       if (authStatus !== "authenticated") return;
 
       if (!postDocPath) return;
 
       handleCheckPostAvailability();
-    }, [postDocPath, authStatus, postViewable]);
+    }, [postDocPath, authStatus]);
 
     const handleGetSenderData = async () => {
       if (!postDocData) return setPostSenderData(null);
@@ -504,7 +479,7 @@ const Post = React.memo(
     }
 
     if (postDeleted === null || !postDocData || !postSenderData) {
-      return <PostSkeleton />;
+      return <PostSkeleton height={height} />;
     }
 
     if (
@@ -547,7 +522,7 @@ const Post = React.memo(
           id="post-root"
           style={{
             position: "relative",
-            height: POST_COMPONENT_HEIGHT,
+            height: height || 630,
             transform: [
               {
                 scale: animatedScaleValue,
@@ -706,11 +681,7 @@ const Post = React.memo(
             </Pressable>
           </View>
 
-          {postViewable ? (
-            <PostImage source={postDocData.image} />
-          ) : (
-            <View style={{ width: "100%", aspectRatio: 1 }} />
-          )}
+          <PostImage source={postDocData.image} />
 
           <View
             id="footer"
@@ -813,7 +784,9 @@ const Post = React.memo(
                     </ReactNativeText>
                     <ReactNativeText> </ReactNativeText>
                     <ReactNativeText> </ReactNativeText>
-                    {postDocData.description}
+                    Lorem ipsum dolor sit amet, consectetuer adipiscing elit.
+                    Aenean commodo ligula eget dolor. Aenean massa. Cum sociis
+                    natoque.
                   </ReactNativeText>
                 </View>
                 <View
@@ -837,30 +810,28 @@ const Post = React.memo(
           </View>
         </Animated.View>
 
-        {postViewable && (
-          <>
-            <CustomBottomModalSheet ref={postOptionsModalRef}>
-              <PostSettingsBottomSheetContent
-                doesOwnPost={doesOwnPost}
-                handleDeleteButton={handleDeleteButton}
-                postDocData={postDocData}
-                postDocPath={postDocPath}
-                postOptionsModalRef={postOptionsModalRef}
-              />
-            </CustomBottomModalSheet>
+        <>
+          <CustomBottomModalSheet ref={postOptionsModalRef}>
+            <PostSettingsBottomSheetContent
+              doesOwnPost={doesOwnPost}
+              handleDeleteButton={handleDeleteButton}
+              postDocData={postDocData}
+              postDocPath={postDocPath}
+              postOptionsModalRef={postOptionsModalRef}
+            />
+          </CustomBottomModalSheet>
 
-            <CustomBottomModalSheet
-              ref={nftOptionsModalRef}
-              backgroundColor="#1B1B1B"
-            >
-              <NftBottomSheetContent
-                postData={postDocData}
-                postSenderData={postSenderData}
-                closeNFTBottomSheet={closeNFTBottomSheet}
-              />
-            </CustomBottomModalSheet>
-          </>
-        )}
+          <CustomBottomModalSheet
+            ref={nftOptionsModalRef}
+            backgroundColor="#1B1B1B"
+          >
+            <NftBottomSheetContent
+              postData={postDocData}
+              postSenderData={postSenderData}
+              closeNFTBottomSheet={closeNFTBottomSheet}
+            />
+          </CustomBottomModalSheet>
+        </>
       </>
     );
   }
