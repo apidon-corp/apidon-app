@@ -35,6 +35,7 @@ const CollectibleOnUserPreviewItem = ({
   // Dynamic Data Fetching / Post Object
   useEffect(() => {
     if (authStatus !== "authenticated") return;
+    if (!postDocPath) return;
 
     const unsubscribe = firestore()
       .doc(postDocPath)
@@ -112,7 +113,7 @@ const CollectibleOnUserPreviewItem = ({
 
     const subScreens = path.split("/");
 
-    const query = `post?sender=${postDocData?.senderUsername}&id=${postDocData?.id}`;
+    const query = `post?id=${postDocData?.id}`;
 
     subScreens[subScreens.length - 1] = query;
 

@@ -251,7 +251,7 @@ const index = () => {
               renderItem={({ item }) => <PostSkeleton key={item} />}
               contentContainerStyle={{
                 width: "100%",
-                gap: 10,
+                gap: 20,
               }}
             />
           ) : (

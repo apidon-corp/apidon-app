@@ -260,7 +260,7 @@ const Post = React.memo(
 
       const currentScreen = subScreens[subScreens.length - 1];
 
-      const query = `rates?sender=${postSenderData?.username}&id=${postDocData?.id}`;
+      const query = `rates?id=${postDocData?.id}`;
 
       if (currentScreen === "feed") {
         subScreens.push(query);
@@ -281,7 +281,7 @@ const Post = React.memo(
 
       const currentScreen = subScreens[subScreens.length - 1];
 
-      const query = `comments?sender=${postSenderData?.username}&id=${postDocData?.id}`;
+      const query = `comments?id=${postDocData?.id}`;
 
       if (currentScreen === "feed") {
         subScreens.push(query);
@@ -436,14 +436,7 @@ const Post = React.memo(
         const baseURL = process.env.EXPO_PUBLIC_APP_LINK_BASE_URL || "";
         if (!baseURL) return;
 
-        const url =
-          baseURL +
-          "/" +
-          "p" +
-          "/" +
-          postDocData.senderUsername +
-          "-" +
-          postDocData.id;
+        const url = baseURL + "/" + "p" + "/" + postDocData.id;
 
         await Share.share({
           message: url,
@@ -627,7 +620,7 @@ const Post = React.memo(
 
                       <Text style={{ fontSize: 9, color: "gray" }}>
                         {formatDistanceToNowStrict(
-                          new Date(postDocData.creationTime)
+                          new Date(postDocData.timestamp)
                         )}
                       </Text>
                     </View>
@@ -784,9 +777,7 @@ const Post = React.memo(
                     </ReactNativeText>
                     <ReactNativeText> </ReactNativeText>
                     <ReactNativeText> </ReactNativeText>
-                    Lorem ipsum dolor sit amet, consectetuer adipiscing elit.
-                    Aenean commodo ligula eget dolor. Aenean massa. Cum sociis
-                    natoque.
+                    {postDocData.description}
                   </ReactNativeText>
                 </View>
                 <View

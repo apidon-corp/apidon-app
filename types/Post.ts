@@ -18,10 +18,14 @@ export type PostServerData = {
         collectibleDocPath: string;
       };
 
-  creationTime: number;
+  timestamp: number;
   id: string;
 
   reviewStatus: ReviewStatus;
+
+  postDocPath: string;
+
+  reportCount: number;
 };
 
 export type RatingData = {
@@ -57,12 +61,6 @@ export type ReviewStatus =
       status: "rejected";
       rejectionReason: string;
     };
-
-export type PostDataOnMainPostsCollection = {
-  postDocPath: string;
-  sender: string;
-  timestamp: number;
-};
 
 export type ReportDocData = {
   ts: number;

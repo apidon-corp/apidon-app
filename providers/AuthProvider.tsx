@@ -183,15 +183,10 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
 
       return setLinking({ isInitial: false, url: "" });
     } else if (contentType === "post") {
-      const postIdentifier = contentData;
+      const postId = contentData;
 
-      const postIdentifierContents = postIdentifier.split("-");
-
-      const postSender = postIdentifierContents[0];
-      const postId = postIdentifierContents[1];
-
-      if (!postSender || !postId) {
-        console.error("Error on parsing postIdentifier: ", postIdentifier);
+      if (!postId) {
+        console.error("Error on parsing postIdentifier: ", postId);
         return setLinking({ isInitial: false, url: "" });
       }
 
@@ -201,7 +196,7 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
 
       await delay(500);
 
-      router.navigate(`/home/feed/post?sender=${postSender}&id=${postId}`);
+      router.navigate(`/home/feed/post?id=${postId}`);
 
       await delay(500);
 

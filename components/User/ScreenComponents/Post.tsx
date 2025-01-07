@@ -8,12 +8,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 const post = () => {
   const { bottom } = useSafeAreaInsets();
 
-  const { sender, id } = useLocalSearchParams<{
-    sender: string;
+  const { id } = useLocalSearchParams<{
     id: string;
   }>();
 
-  if (!sender || !id)
+  if (!id)
     return (
       <View
         style={{
@@ -27,7 +26,7 @@ const post = () => {
       </View>
     );
 
-  const postDocPath = `users/${sender}/posts/${id}`;
+  const postDocPath = `posts/${id}`;
 
   return (
     <ScrollView
