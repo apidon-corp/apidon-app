@@ -65,11 +65,6 @@ const useCheckUpdate = () => {
     } catch (error) {
       if (tryCount.current < TRY_COUNT) {
         tryCount.current++;
-        console.log(
-          "Retrying to check updates initially for the ",
-          tryCount.current,
-          ". time"
-        );
         setTimeout(checkVersionInitially, TRY_GAP_MS);
       } else {
         console.error("Error on checking updates initially:  ", error);

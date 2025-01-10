@@ -620,7 +620,9 @@ const Post = React.memo(
 
                       <Text style={{ fontSize: 9, color: "gray" }}>
                         {formatDistanceToNowStrict(
-                          new Date(postDocData.timestamp)
+                          new Date(
+                            postDocData.timestamp ? postDocData.timestamp : 0
+                          )
                         )}
                       </Text>
                     </View>
