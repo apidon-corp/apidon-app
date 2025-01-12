@@ -141,7 +141,7 @@ const details = () => {
       setScreenParameters([
         {
           queryId: "createdPostDocPath",
-          value: `users/${currentUserAuthObject.displayName}/posts/${result.newPostDocId}`,
+          value: `posts/${result.newPostDocId}`,
         },
       ]);
 

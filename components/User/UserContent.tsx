@@ -195,8 +195,9 @@ const UserContent = ({ username }: Props) => {
 
     try {
       const query = await firestore()
-        .collection(`users/${username}/posts`)
-        .orderBy("creationTime", "desc")
+        .collection(`posts`)
+        .where("senderUsername", "==", username)
+        .orderBy("timestamp", "desc")
         .where("collectibleStatus.isCollectible", "==", false)
         .limit(5)
         .get();
@@ -217,8 +218,9 @@ const UserContent = ({ username }: Props) => {
 
     try {
       const query = await firestore()
-        .collection(`users/${username}/posts`)
-        .orderBy("creationTime", "desc")
+        .collection(`posts`)
+        .where("senderUsername", "==", username)
+        .orderBy("timestamp", "desc")
         .where("collectibleStatus.isCollectible", "==", false)
         .startAfter(lastDoc)
         .limit(5)

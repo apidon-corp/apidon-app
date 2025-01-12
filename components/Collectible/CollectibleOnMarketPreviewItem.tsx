@@ -112,9 +112,7 @@ const CollectibleOnMarketPreviewItem = ({
 
   const handlePressPreview = () => {
     if (!postDocData || !postSenderData) return;
-    return router.push(
-      `/home/collectibles/post?sender=${postDocData.senderUsername}&id=${postDocData.id}`
-    );
+    return router.push(`/home/collectibles/post?id=${postDocData.id}`);
   };
 
   if (!postDocData || currentUserBlockedBySender === null || !postSenderData) {

@@ -102,7 +102,7 @@ export function useFollowingPosts() {
         .collection("posts")
         .orderBy("timestamp", "desc")
         .where("timestamp", ">=", timestamp)
-        .where("sender", "in", userList)
+        .where("senderUsername", "in", userList)
         .limit(POSTS_QUERY_LIMIT);
 
       if (startAfterDoc) postsQuery = postsQuery.startAfter(startAfterDoc);

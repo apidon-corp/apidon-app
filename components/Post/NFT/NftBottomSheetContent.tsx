@@ -129,7 +129,7 @@ const NftBottomSheetContent = ({
     setScreenParameters([
       {
         queryId: "postDocPath",
-        value: `users/${postSenderData.username}/posts/${postData.id}`,
+        value: `posts/${postData.id}`,
       },
     ]);
 
@@ -140,7 +140,7 @@ const NftBottomSheetContent = ({
     setScreenParameters([
       {
         queryId: "postDocPath",
-        value: `users/${postSenderData.username}/posts/${postData.id}`,
+        value: `posts/${postData.id}`,
       },
     ]);
 

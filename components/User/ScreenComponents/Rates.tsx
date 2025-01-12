@@ -18,13 +18,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 const Rates = () => {
   const { bottom } = useSafeAreaInsets();
 
-  const { sender, id } = useLocalSearchParams<{
-    sender: string;
+  const { id } = useLocalSearchParams<{
     id: string;
   }>();
   let postDocPath = "";
-  if (!sender || !id) postDocPath = "";
-  postDocPath = `users/${sender}/posts/${id}`;
+  if (!id) postDocPath = "";
+  postDocPath = `posts/${id}`;
 
   const [ratingDocs, setRatingDocs] = useState<
     | FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]
@@ -91,7 +90,7 @@ const Rates = () => {
     }
   };
 
-  if (!sender || !id)
+  if (!id)
     return (
       <SafeAreaView
         style={{

@@ -2,7 +2,7 @@ import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { useEffect, useRef, useState } from "react";
 
 import firestore from "@react-native-firebase/firestore";
-import { PostDataOnMainPostsCollection } from "@/types/Post";
+import { PostServerData } from "@/types/Post";
 
 type FirestoreDocType =
   FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>;
@@ -19,9 +19,7 @@ export function useMainPosts() {
 
   useEffect(() => {
     setMainPostDocPaths(
-      postDocs.map(
-        (doc) => (doc.data() as PostDataOnMainPostsCollection).postDocPath
-      )
+      postDocs.map((doc) => (doc.data() as PostServerData).postDocPath)
     );
   }, [postDocs]);
 
@@ -91,9 +89,7 @@ export function useMainPosts() {
   function deletePostFromMainFeed(postDocPath: string) {
     setPostDocs((prev) =>
       prev.filter(
-        (doc) =>
-          (doc.data() as PostDataOnMainPostsCollection).postDocPath !==
-          postDocPath
+        (doc) => (doc.data() as PostServerData).postDocPath !== postDocPath
       )
     );
   }
@@ -104,6 +100,6 @@ export function useMainPosts() {
     isGettingMainPosts: isGettingMainPosts.current,
     addUploadedPostToFeed,
     refreshMainPosts,
-    deletePostFromMainFeed
+    deletePostFromMainFeed,
   };
 }

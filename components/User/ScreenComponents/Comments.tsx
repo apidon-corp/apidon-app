@@ -32,13 +32,12 @@ import { useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Comments = () => {
-  const { sender, id } = useLocalSearchParams<{
-    sender: string;
+  const { id } = useLocalSearchParams<{
     id: string;
   }>();
   let postDocPath = "";
-  if (!sender || !id) postDocPath = "";
-  postDocPath = `users/${sender}/posts/${id}`;
+  if (!id) postDocPath = "";
+  postDocPath = `posts/${id}`;
 
   const [commentDocSnapshots, setCommentDocSnapshots] = useState<
     | FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[]

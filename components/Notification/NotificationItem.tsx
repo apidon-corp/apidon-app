@@ -98,37 +98,17 @@ const NotificationItem = ({
 
     const elements = postDocPath.split("/");
 
-    const usersIndex = elements.findIndex((element) => element === "users");
+    const postId = elements[1];
 
-    if (usersIndex === -1) {
+    if (!postId) {
       crashlytics().recordError(
-        new Error("Users index not found on notification item post doc path.")
+        new Error("Post id not found on notification item post doc path.")
       );
-      console.error(
-        "Users index not found on notification item post doc path."
-      );
+      console.error("Post id not found on notification item post doc path.");
       return false;
     }
 
-    const postSenderIndex = usersIndex + 1;
-    const postIdIndex = usersIndex + 3;
-
-    const postSender = elements[postSenderIndex];
-    const postId = elements[postIdIndex];
-
-    if (!postSender || !postId) {
-      crashlytics().recordError(
-        new Error(
-          "Post sender or post id not found on notification item post doc path."
-        )
-      );
-      console.error(
-        "Post sender or post id not found on notification item post doc path."
-      );
-      return false;
-    }
-
-    return `/home/notifications/post?sender=${postSender}&id=${postId}`;
+    return `/home/notifications/post?id=${postId}`;
   };
 
   const handleClickSenderInformation = () => {

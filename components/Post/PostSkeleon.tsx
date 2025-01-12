@@ -1,17 +1,21 @@
 import React from "react";
 import { ActivityIndicator, View } from "react-native";
 
-const PostSkeleton = () => {
+const PostSkeleton = ({ height }: { height?: number }) => {
   return (
     <View
       style={{
-        marginTop: 15,
+        width: "100%",
+        height: height || 630,
+        justifyContent: "center",
+        alignItems: "center",
+        paddingHorizontal: 5,
       }}
     >
       <View
         style={{
           width: "100%",
-          aspectRatio: 0.75,
+          height: height || 630,
           justifyContent: "center",
           alignItems: "center",
           backgroundColor: "rgba(255,255,255,0.1)",

@@ -1,25 +1,7 @@
-import Post from "@/components/Post/Post";
-import { useLocalSearchParams } from "expo-router";
-import React from "react";
-import { FlatList } from "react-native";
+import Post from "@/components/User/ScreenComponents/Post";
 
 const post = () => {
-  const { sender, id } = useLocalSearchParams<{
-    sender: string;
-    id: string;
-  }>();
-
-  if (!sender || !id) return <></>;
-
-  const postDocPath = `users/${sender}/posts/${id}`;
-
-  return (
-    <FlatList
-      data={[postDocPath]}
-      renderItem={({ item }) => <Post postDocPath={item} />}
-      showsVerticalScrollIndicator={false}
-    />
-  );
+  return <Post />;
 };
 
 export default post;

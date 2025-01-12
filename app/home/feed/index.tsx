@@ -10,6 +10,7 @@ import React, {
 } from "react";
 import {
   ActivityIndicator,
+  Dimensions,
   FlatList,
   NativeScrollEvent,
   Platform,
@@ -17,7 +18,6 @@ import {
   RefreshControl,
   ScrollView,
   View,
-  ViewToken,
 } from "react-native";
 
 import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
@@ -37,6 +37,7 @@ import { collectCollectibleAtom } from "@/atoms/collectCollectibleAtom";
 
 import { useFollowingPosts } from "@/hooks/useFollowingPosts";
 import { useMainPosts } from "@/hooks/useMainPosts";
+import { FlashList } from "@shopify/flash-list";
 
 const index = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
@@ -64,13 +65,18 @@ const index = () => {
     collectCollectibleAtom
   );
 
-  const [viewablePostDocPaths, setViewablePostDocPaths] = useState<string[]>(
-    []
-  );
-
-  const flatListRef = useRef<FlatList>(null);
+  const flashListRef = useRef<FlashList<string>>(null);
 
   const isIOS = Platform.OS === "ios";
+
+  const { width } = Dimensions.get("window");
+
+  /**
+   * Header is 60px.
+   * Image is 100% width.
+   * Footer 170px;
+   */
+  const totalPostComponentHeight = width + 230;
 
   const {
     followingPostDocPaths,
@@ -108,8 +114,8 @@ const index = () => {
     if (homeScreenParametersValue.isHomeButtonPressed) {
       scrollViewRef.current?.scrollTo({ y: -headerHeight + 1 });
 
-      if (viewablePostDocPaths.length !== 0)
-        flatListRef.current?.scrollToIndex({ index: 0, animated: true });
+      if (!isIOS)
+        flashListRef.current?.scrollToIndex({ index: 0, animated: true });
     }
   }, [homeScreenParametersValue]);
 
@@ -172,25 +178,6 @@ const index = () => {
     codeEnteringBottomSheetModalRef.current?.present();
   };
 
-  const viewabilityConfig = useMemo(
-    () => ({
-      waitForInteraction: false,
-      minimumViewTime: 0,
-      viewAreaCoveragePercentThreshold: 0,
-    }),
-    []
-  );
-
-  const onViewableItemsChanged = ({
-    viewableItems,
-    changed,
-  }: {
-    viewableItems: ViewToken[];
-    changed: ViewToken[];
-  }) => {
-    setViewablePostDocPaths(viewableItems.map((item) => item.key));
-  };
-
   const listData = useMemo(
     () =>
       Array.from(
@@ -204,35 +191,17 @@ const index = () => {
   };
 
   const renderItem = useCallback(
-    ({ item, index }: any) => {
-      if (isIOS) {
-        return (
-          <Post
-            postDocPath={item}
-            key={item}
-            deletePostDocPathFromArray={deletePostDocPathFromArray}
-          />
-        );
-      }
-
-      // For Android, calculate visibility without hooks
-      const isThisPostViewable = (() => {
-        if (!viewablePostDocPaths.length) return false;
-        const viewableIndex = listData.findIndex(
-          (q) => q === viewablePostDocPaths[0]
-        );
-        return Math.abs(index - viewableIndex) <= 5;
-      })();
-
+    ({ item }: any) => {
       return (
         <Post
           postDocPath={item}
+          key={item}
           deletePostDocPathFromArray={deletePostDocPathFromArray}
-          isThisPostViewable={isThisPostViewable}
+          height={totalPostComponentHeight}
         />
       );
     },
-    [isIOS, viewablePostDocPaths, listData, deletePostDocPathFromArray]
+    [deletePostDocPathFromArray, totalPostComponentHeight]
   );
 
   return (
@@ -282,7 +251,7 @@ const index = () => {
               renderItem={({ item }) => <PostSkeleton key={item} />}
               contentContainerStyle={{
                 width: "100%",
-                gap: 10,
+                gap: 20,
               }}
             />
           ) : (
@@ -328,17 +297,9 @@ const index = () => {
               scrollEnabled={false}
               showsVerticalScrollIndicator={false}
               data={[1, 2]}
-              renderItem={({ item }) => <PostSkeleton key={item} />}
-              contentContainerStyle={{
-                width: "100%",
-                gap: 10,
-              }}
-            />
-          ) : (
-            <FlatList
-              key="android-valid-flatlist"
-              ref={flatListRef}
-              contentInsetAdjustmentBehavior="automatic"
+              renderItem={({ item }) => (
+                <PostSkeleton key={item} height={totalPostComponentHeight} />
+              )}
               style={{
                 width: "100%",
               }}
@@ -346,13 +307,21 @@ const index = () => {
                 gap: 20,
                 paddingBottom: (bottom || 20) + 60,
               }}
+            />
+          ) : (
+            <FlashList
+              key="android-valid-flatlist"
+              ref={flashListRef}
+              contentInsetAdjustmentBehavior="automatic"
+              contentContainerStyle={{
+                paddingBottom: (bottom || 20) + 60,
+              }}
+              ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
               onScroll={({ nativeEvent }) => handleScroll(nativeEvent)}
               keyExtractor={(item) => item}
               data={listData}
               renderItem={renderItem}
               showsVerticalScrollIndicator={false}
-              viewabilityConfig={viewabilityConfig}
-              onViewableItemsChanged={onViewableItemsChanged}
               refreshControl={
                 <RefreshControl
                   refreshing={refreshLoading}
@@ -380,6 +349,7 @@ const index = () => {
                   <ActivityIndicator color="gray" size={32} />
                 </View>
               }
+              estimatedItemSize={totalPostComponentHeight}
             />
           )}
         </>
