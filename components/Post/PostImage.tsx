@@ -1,38 +1,46 @@
 import React, { useState } from "react";
-
 import { Image } from "expo-image";
-
 import { Zoomable } from "@likashefqet/react-native-image-zoom";
+import { View } from "react-native";
 
 type Props = {
   source: string;
+  height: number;
 };
 
-const PostImage = ({ source }: Props) => {
+const PostImage = ({ source, height }: Props) => {
   const [isZooming, setIsZooming] = useState(false);
 
   return (
-    <Zoomable
-      onPinchStart={() => {
-        setIsZooming(true);
-      }}
-      onPinchEnd={() => {
-        setIsZooming(false);
-      }}
+    <View
       style={{
-        zIndex: isZooming ? 1 : 0,
-        width: "100%",
+        height,
         aspectRatio: 1,
       }}
     >
-      <Image
-        source={source}
-        style={{
-          width: "100%",
-          aspectRatio: 1,
+      <Zoomable
+        onPinchStart={() => {
+          setIsZooming(true);
         }}
-      />
-    </Zoomable>
+        onPinchEnd={() => {
+          setIsZooming(false);
+        }}
+        style={{
+          zIndex: isZooming ? 1 : 0,
+          width: "100%",
+          height: "100%",
+        }}
+      >
+        <Image
+          source={source}
+          contentFit="cover"
+          style={{
+            width: "100%",
+            height: "100%",
+          }}
+        />
+      </Zoomable>
+    </View>
   );
 };
 

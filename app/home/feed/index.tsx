@@ -197,7 +197,6 @@ const index = () => {
           postDocPath={item}
           key={item}
           deletePostDocPathFromArray={deletePostDocPathFromArray}
-          height={totalPostComponentHeight}
         />
       );
     },
@@ -297,9 +296,7 @@ const index = () => {
               scrollEnabled={false}
               showsVerticalScrollIndicator={false}
               data={[1, 2]}
-              renderItem={({ item }) => (
-                <PostSkeleton key={item} height={totalPostComponentHeight} />
-              )}
+              renderItem={({ item }) => <PostSkeleton key={item} />}
               style={{
                 width: "100%",
               }}
