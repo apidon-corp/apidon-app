@@ -4,25 +4,12 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack, router } from "expo-router";
-import {
-  SetStateAction,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import "react-native-reanimated";
+import { SetStateAction, useCallback, useEffect, useState } from "react";
 
 import { SplashScreen } from "expo-router";
 
 import AuthProvider from "@/providers/AuthProvider";
-import {
-  Animated,
-  Dimensions,
-  Linking,
-  Platform,
-  StatusBar,
-} from "react-native";
+import { Dimensions, Linking, Platform, StatusBar } from "react-native";
 
 import NotificationProvider from "@/providers/NotificationProvider";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
@@ -38,6 +25,11 @@ import useCheckUpdate from "@/hooks/useCheckUpdate";
 import { Image } from "expo-image";
 
 import * as NavigationBar from "expo-navigation-bar";
+import Animated, {
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from "react-native-reanimated";
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
@@ -154,9 +146,9 @@ function RootLayout() {
 
   const [animationReady, setAnimationReady] = useState(false);
 
-  const opacity = useRef(new Animated.Value(1)).current;
+  const opacity = useSharedValue(1);
 
-  const { width, height } = Dimensions.get("window");
+  const { width, height } = Dimensions.get("screen");
 
   SplashScreen.preventAutoHideAsync();
 
@@ -222,12 +214,10 @@ function RootLayout() {
   useEffect(() => {
     const status = animationReady && appReady;
 
-    Animated.timing(opacity, {
-      toValue: status ? 0 : 1,
-      duration: 500,
-      useNativeDriver: true,
-      delay: status ? 2000 : 0,
-    }).start();
+    opacity.value = withDelay(
+      1000 * 2,
+      withTiming(status ? 0 : 1, { duration: 500 })
+    );
   }, [animationReady, appReady]);
 
   // Fires animation signal after image loading.
@@ -246,6 +236,7 @@ function RootLayout() {
       <Animated.View
         pointerEvents={appReady ? "none" : undefined}
         style={{
+          display: appReady && opacity.value === 0 ? "none" : "flex",
           position: "absolute",
           opacity: opacity,
           width,
@@ -260,7 +251,7 @@ function RootLayout() {
             flex: 1,
           }}
           source={require("@/assets/images/splash.png")}
-          onLoadEnd={onImageLoaded}
+          onLoad={onImageLoaded}
         />
       </Animated.View>
     </>
