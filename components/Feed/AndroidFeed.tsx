@@ -17,13 +17,15 @@ import CollectibleItem from "../Collectible/CollectibleItem";
 import Pagination from "./Pagination";
 import Post from "../Post/Post";
 
-type Props = {};
-
-const AndroidFeed = (props: Props) => {
+const AndroidFeed = () => {
   const screenParameters = useAtomValue(screenParametersAtom);
 
   const createdPostDocPath = screenParameters.find(
     (q) => q.queryId === "createdPostDocPath"
+  )?.value as string | undefined;
+
+  const collectedDocPath = screenParameters.find(
+    (q) => q.queryId === "collectedDocPath"
   )?.value as string | undefined;
 
   const [homeScreenParametersValue, setHomeScreenParameters] = useAtom(
@@ -44,6 +46,7 @@ const AndroidFeed = (props: Props) => {
     getMainDocs: getMainColls,
     refreshDocs: refreshMainColls,
     isGettingMainDocs,
+    addNewlyCollectedItemToFeed,
   } = useMainCollectedCollectibles();
 
   const {
@@ -83,6 +86,18 @@ const AndroidFeed = (props: Props) => {
     if (panelName === "colls") refreshMainColls();
     else getMainPosts();
   }, [panelName]);
+
+  // Handling Collected Collectible
+  useEffect(() => {
+    if (!collectedDocPath) return;
+
+    setPanelName("colls");
+    addNewlyCollectedItemToFeed(collectedDocPath);
+
+    setTimeout(() => {
+      collFlatListRef.current?.scrollToIndex({ animated: true, index: 0 });
+    }, 500);
+  }, [collectedDocPath]);
 
   // Handling created post.
   useEffect(() => {

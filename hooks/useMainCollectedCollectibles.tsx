@@ -96,10 +96,26 @@ export function useMainCollectedCollectibles() {
     setDocs(newPostDocs);
   }
 
+  async function addNewlyCollectedItemToFeed(newCollectedDocPath: string) {
+    try {
+      const newCollectedDoc = (await firestore()
+        .doc(newCollectedDocPath)
+        .get()) as FirestoreDocType;
+      if (!newCollectedDoc.exists) return false;
+
+      setDocs((prev) => [newCollectedDoc, ...prev]);
+      return true;
+    } catch (error) {
+      console.error("Error on adding newly collected item to feed: ", error);
+      return false;
+    }
+  }
+
   return {
     docDatas,
     getMainDocs,
     isGettingMainDocs: isGettingMainDocs.current,
     refreshDocs,
+    addNewlyCollectedItemToFeed
   };
 }

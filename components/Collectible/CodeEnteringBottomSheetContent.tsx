@@ -88,12 +88,11 @@ const CodeEnteringBottomSheetContent = ({
 
       bottomSheetModalRef.current?.dismiss();
 
+      const { collectedDocPath } = await response.json();
+
       setScreenParameters([
-        { queryId: "collectedNFTPostDocPath", value: "garbage_value" },
+        { queryId: "collectedDocPath", value: collectedDocPath },
       ]);
-      router.push(
-        `/home/feed/profilePage?username=${currentUserAuthObject.displayName}`
-      );
 
       return setLoading(false);
     } catch (error) {

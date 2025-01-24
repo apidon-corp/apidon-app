@@ -24,6 +24,10 @@ const IOSFeed = () => {
     (q) => q.queryId === "createdPostDocPath"
   )?.value as string | undefined;
 
+  const collectedDocPath = screenParameters.find(
+    (q) => q.queryId === "collectedDocPath"
+  )?.value as string | undefined;
+
   const [homeScreenParametersValue, setHomeScreenParameters] = useAtom(
     homeScreeenParametersAtom
   );
@@ -41,6 +45,7 @@ const IOSFeed = () => {
     docDatas,
     getMainDocs: getMainColls,
     refreshDocs: refreshMainColls,
+    addNewlyCollectedItemToFeed,
   } = useMainCollectedCollectibles();
 
   const {
@@ -91,6 +96,18 @@ const IOSFeed = () => {
       scrollViewRef.current?.scrollTo({ y: -headerHeight + 1 });
     }, 500);
   }, [createdPostDocPath]);
+
+  // Handling Collected Collectible
+  useEffect(() => {
+    if (!collectedDocPath) return;
+
+    setPanelName("colls");
+    addNewlyCollectedItemToFeed(collectedDocPath);
+
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({ y: -headerHeight + 1 });
+    }, 500);
+  }, [collectedDocPath]);
 
   // Handling Pressing Main Menu Button
   useEffect(() => {
