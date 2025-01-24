@@ -226,6 +226,9 @@ const CollectibleItem = React.memo(({ collectedCollectibleDocData }: Props) => {
         </Animated.View>
       </RainbowAnimation>
 
+      {/**
+       * Rank Part
+       */}
       <>
         <View
           id="bottom-right-empty-block"
@@ -244,6 +247,7 @@ const CollectibleItem = React.memo(({ collectedCollectibleDocData }: Props) => {
         />
 
         <View
+          id="rank-root"
           style={{
             position: "absolute",
 
@@ -271,6 +275,9 @@ const CollectibleItem = React.memo(({ collectedCollectibleDocData }: Props) => {
         </View>
       </>
 
+      {/**
+       * Collector Part
+       */}
       <>
         <View
           id="top-right-empty-block"
@@ -351,7 +358,7 @@ const CollectibleItem = React.memo(({ collectedCollectibleDocData }: Props) => {
 
           <View
             style={{
-              width: 90,
+              width: screenWidth * 0.225, // 90 for 400
               aspectRatio: 1,
               backgroundColor: "black",
               padding: 10,
@@ -359,14 +366,30 @@ const CollectibleItem = React.memo(({ collectedCollectibleDocData }: Props) => {
               borderRadius: 50,
             }}
           >
-            <Image
-              source={collectorProfileImage}
-              style={{
-                width: "100%", // screenWidth * 0.1875, // 75 for 400
-                height: "100%",
-                borderRadius: 50,
-              }}
-            />
+            {collectorProfileImage === "" && (
+              <View
+                id="pp-placeholder"
+                style={{
+                  width: "100%",
+                  aspectRatio: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <AntDesign name="user" size={48} color="white" />
+              </View>
+            )}
+
+            {collectorProfileImage && (
+              <Image
+                source={collectorProfileImage}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  borderRadius: 50,
+                }}
+              />
+            )}
           </View>
         </Pressable>
       </>
@@ -393,8 +416,8 @@ const CollectibleItem = React.memo(({ collectedCollectibleDocData }: Props) => {
             name="rick"
             backgroundColor="black"
             backgroundDarker="rgba(255,255,255,0.1)"
-            width={45} // 50 for 400
-            height={45} // 50 for 400
+            width={screenWidth * 0.1125} // 45 for 400
+            height={screenWidth * 0.1125} // 45 for 400
             paddingBottom={0}
             paddingTop={0}
             paddingHorizontal={0}
@@ -403,13 +426,13 @@ const CollectibleItem = React.memo(({ collectedCollectibleDocData }: Props) => {
           </ThemedButton>
         </View>
 
-        <View />
+        <View id="to-create-gap" />
 
         <View
           id="bottom-part"
           style={{
             width: "100%",
-            height: 45, //,screenWidth * 0.125, // 50 for 400
+            height: screenWidth * 0.1125, // 45 for 400
             borderRadius: 20,
             flexDirection: "row",
             justifyContent: "space-between",
@@ -431,14 +454,25 @@ const CollectibleItem = React.memo(({ collectedCollectibleDocData }: Props) => {
               zIndex: 1,
             }}
           >
-            {creatorData.profilePhoto ? (
+            {creatorData.profilePhoto === "" && (
+              <View
+                style={{
+                  height: "100%",
+                  aspectRatio: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <AntDesign name="user" size={24} color="white" />
+              </View>
+            )}
+
+            {creatorData.profilePhoto && (
               <Image
                 id="creator-image"
                 source={creatorData.profilePhoto}
                 style={{ height: "100%", aspectRatio: 1, borderRadius: 50 }}
               />
-            ) : (
-              <FontAwesome name="user-circle-o" size={24} color="white" />
             )}
 
             <View
