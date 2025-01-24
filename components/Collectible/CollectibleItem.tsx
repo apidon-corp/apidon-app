@@ -1,11 +1,5 @@
 import { apidonPink } from "@/constants/Colors";
-import {
-  AntDesign,
-  Entypo,
-  Feather,
-  FontAwesome,
-  MaterialIcons,
-} from "@expo/vector-icons";
+import { AntDesign, Entypo, Feather, MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Dimensions, Pressable, View } from "react-native";

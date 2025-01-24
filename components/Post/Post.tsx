@@ -634,10 +634,7 @@ const Post = React.memo(
 
             <View id="collectible-tag" style={{ width: "30%" }}>
               {postDocData.collectibleStatus.isCollectible && (
-                <NFTTag
-                  nftOptionsModalRef={nftOptionsModalRef}
-                  username={postSenderData.username}
-                />
+                <NFTTag nftOptionsModalRef={nftOptionsModalRef} />
               )}
             </View>
 

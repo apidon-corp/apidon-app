@@ -1,78 +1,51 @@
+import Text from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
 import { BottomSheetModalMethods } from "@gorhom/bottom-sheet/lib/typescript/types";
-import React from "react";
-import { Pressable, View } from "react-native";
-
-import { Text } from "@/components/Text/Text";
-
-import { Marquee } from "@animatereactnative/marquee";
+import React, { useState } from "react";
+import { View } from "react-native";
+import { ThemedButton } from "react-native-really-awesome-button";
 
 type Props = {
-  username: string;
   nftOptionsModalRef: React.RefObject<BottomSheetModalMethods>;
 };
 
-const NFTTag = ({ username, nftOptionsModalRef }: Props) => {
+const PADDING_VALUE = 5;
+
+const NFTTag = ({ nftOptionsModalRef }: Props) => {
   const handleNFTButton = () => {
     nftOptionsModalRef.current?.present();
   };
 
+  const [componentWidth, setComponentWidth] = useState(0);
+
   return (
-    <Pressable
-      onPress={handleNFTButton}
-      id="nft-tag"
+    <View
+      onLayout={(event) => {
+        const { width } = event.nativeEvent.layout;
+        setComponentWidth(width);
+      }}
       style={{
-        width: "100%",
+        padding: PADDING_VALUE,
         justifyContent: "center",
         alignItems: "center",
-        borderWidth: 2,
-        borderColor: apidonPink,
-        borderRadius: 10,
-        padding: 2,
       }}
     >
-      <Marquee
-        spacing={5}
-        speed={0.3}
-        style={{
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+      <ThemedButton
+        onPress={handleNFTButton}
+        name="rick"
+        width={componentWidth - PADDING_VALUE}
+        height={40 - PADDING_VALUE}
+        paddingBottom={0}
+        paddingHorizontal={0}
+        paddingTop={0}
+        backgroundColor={apidonPink}
+        backgroundDarker="rgba(213, 63, 140, 0.5)"
       >
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: 5,
-          }}
-        >
-          <Text
-            bold
-            style={{
-              color: apidonPink,
-              textAlign: "center",
-            }}
-            fontSize={12}
-          >
-            Collectible
-          </Text>
-
-          <Text fontSize={12}>by</Text>
-
-          <Text
-            bold
-            fontSize={12}
-            numberOfLines={1}
-            style={{
-              overflow: "hidden",
-            }}
-          >
-            {username}
-          </Text>
-        </View>
-      </Marquee>
-    </Pressable>
+        <Text fontSize={12} bold>
+          Collectible
+        </Text>
+      </ThemedButton>
+    </View>
   );
 };
 
