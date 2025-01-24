@@ -409,7 +409,7 @@ const CollectibleItem = React.memo(({ collectedCollectibleDocData }: Props) => {
             onPress={() => goToPost()}
             name="rick"
             backgroundColor="black"
-            backgroundDarker="rgba(255,255,255,0.1)"
+            backgroundDarker="rgb(40, 40, 40)"
             width={screenWidth * 0.1125} // 45 for 400
             height={screenWidth * 0.1125} // 45 for 400
             paddingBottom={0}
