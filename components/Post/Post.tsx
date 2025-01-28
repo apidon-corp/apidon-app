@@ -14,6 +14,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Dimensions,
   Pressable,
   Text as ReactNativeText,
   View,
@@ -43,11 +44,10 @@ import PostSkeleton from "./PostSkeleon";
 type Props = {
   postDocPath: string;
   deletePostDocPathFromArray?: (postDocPath: string) => void;
-  height?: number;
 };
 
 const Post = React.memo(
-  ({ postDocPath, deletePostDocPathFromArray, height }: Props) => {
+  ({ postDocPath, deletePostDocPathFromArray }: Props) => {
     const { authStatus } = useAuth();
 
     const [postDocData, setPostDocData] = useState<PostServerData | null>(null);
@@ -80,6 +80,8 @@ const Post = React.memo(
 
     const [currentUserBlockedBySender, setCurrentUserBlockedBySender] =
       useState<null | boolean>(null);
+
+    const screenWidth = Dimensions.get("window").width;
 
     // Dynamic Data Fetching / Post Object
     useEffect(() => {
@@ -472,7 +474,7 @@ const Post = React.memo(
     }
 
     if (postDeleted === null || !postDocData || !postSenderData) {
-      return <PostSkeleton height={height} />;
+      return <PostSkeleton />;
     }
 
     if (
@@ -515,7 +517,6 @@ const Post = React.memo(
           id="post-root"
           style={{
             position: "relative",
-            height: height || 630,
             transform: [
               {
                 scale: animatedScaleValue,
@@ -633,10 +634,7 @@ const Post = React.memo(
 
             <View id="collectible-tag" style={{ width: "30%" }}>
               {postDocData.collectibleStatus.isCollectible && (
-                <NFTTag
-                  nftOptionsModalRef={nftOptionsModalRef}
-                  username={postSenderData.username}
-                />
+                <NFTTag nftOptionsModalRef={nftOptionsModalRef} />
               )}
             </View>
 
@@ -676,7 +674,7 @@ const Post = React.memo(
             </Pressable>
           </View>
 
-          <PostImage source={postDocData.image} />
+          <PostImage source={postDocData.image} height={screenWidth} />
 
           <View
             id="footer"

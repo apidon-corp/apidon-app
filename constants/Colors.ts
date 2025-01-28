@@ -1,7 +1,7 @@
 const tintColorLight = "#2f95dc";
 const tintColorDark = "#fff";
 
-export const apidonPink = "rgb(213,63,140)";
+export const apidonPink = "#d53f8c";
 
 export default {
   light: {

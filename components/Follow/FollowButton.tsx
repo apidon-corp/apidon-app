@@ -1,14 +1,15 @@
 import { Text } from "@/components/Text/Text";
-import { ActivityIndicator, Pressable } from "react-native";
+import { View } from "react-native";
 
 import { apidonPink } from "@/constants/Colors";
 import apiRoutes from "@/helpers/ApiRoutes";
 import firestore from "@react-native-firebase/firestore";
 import React, { useEffect, useState } from "react";
 
-import auth from "@react-native-firebase/auth";
-import appCheck from "@react-native-firebase/app-check";
 import { useAuth } from "@/providers/AuthProvider";
+import appCheck from "@react-native-firebase/app-check";
+import auth from "@react-native-firebase/auth";
+import { ThemedButton } from "react-native-really-awesome-button";
 
 type Props = {
   username: string | undefined;
@@ -97,39 +98,35 @@ const FollowButton = ({ username }: Props) => {
   }, [authStatus, username]);
 
   return (
-    <Pressable
-      onPress={() => {
-        handleFollowButton(doesFollow ? "unfollow" : "follow");
+    <View
+      style={{
+        marginTop: 10,
+        justifyContent: "center",
+        alignItems: "center",
+        width: "100%",
       }}
-      style={[
-        {
-          justifyContent: "center",
-          alignItems: "center",
-          height: 30,
-          width: 85,
-          borderColor: apidonPink,
-          borderWidth: 1,
-          borderRadius: 10,
-          marginTop: 10,
-        },
-        !doesFollow && { backgroundColor: apidonPink },
-      ]}
-      disabled={loading || followLoading}
     >
-      {loading || followLoading ? (
-        <ActivityIndicator color="white" size="small" />
-      ) : (
-        <Text
-          fontSize={13}
-          style={{
-            textAlign: "center",
-          }}
-          bold
-        >
+      <ThemedButton
+        progress
+        onPress={async (next) => {
+          await handleFollowButton(doesFollow ? "unfollow" : "follow");
+          if (next) next();
+        }}
+        backgroundProgress="rgb(25, 25, 25)"
+        name="rick"
+        width={80}
+        height={35}
+        paddingBottom={0}
+        paddingHorizontal={0}
+        paddingTop={0}
+        backgroundColor={apidonPink}
+        backgroundDarker="rgba(213, 63, 140, 0.5)"
+      >
+        <Text fontSize={12} bold>
           {doesFollow ? "Followed" : "Follow"}
         </Text>
-      )}
-    </Pressable>
+      </ThemedButton>
+    </View>
   );
 };
 

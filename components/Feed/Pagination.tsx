@@ -1,4 +1,11 @@
-import { View, Animated, Pressable, Text as NativeText } from "react-native";
+import {
+  View,
+  Animated,
+  Pressable,
+  Text as NativeText,
+  ViewProps,
+  ViewStyle,
+} from "react-native";
 import React, { useEffect, useRef } from "react";
 import Text from "../Text/Text";
 
@@ -9,15 +16,16 @@ const fontSize = 13;
 
 type Props = {
   panelName: string;
-  setPanelName: React.Dispatch<React.SetStateAction<"all" | "following">>;
+  setPanelName: React.Dispatch<React.SetStateAction<"colls" | "posts">>;
+  style?: ViewStyle;
 };
 
-const Pagination = ({ panelName, setPanelName }: Props) => {
+const Pagination = ({ panelName, setPanelName, style }: Props) => {
   const animatedTranslateXValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.spring(animatedTranslateXValue, {
-      toValue: buttonWidth * (panelName === "all" ? 0 : 1),
+      toValue: buttonWidth * (panelName === "colls" ? 0 : 1),
       useNativeDriver: true,
     }).start();
   }, [panelName]);
@@ -25,13 +33,14 @@ const Pagination = ({ panelName, setPanelName }: Props) => {
   return (
     <View
       id="root-pagination"
-      style={{
-        flex: 1,
-        width: "100%",
-        alignItems: "center",
-        justifyContent: "center",
-        marginVertical: 5,
-      }}
+      style={[
+        {
+          width: "100%",
+          alignItems: "center",
+          justifyContent: "center",
+        },
+        style,
+      ]}
     >
       <View
         style={{
@@ -63,7 +72,7 @@ const Pagination = ({ panelName, setPanelName }: Props) => {
         </Animated.View>
         <Pressable
           onPress={() => {
-            setPanelName("all");
+            setPanelName("colls");
           }}
           style={{
             width: buttonWidth,
@@ -76,14 +85,14 @@ const Pagination = ({ panelName, setPanelName }: Props) => {
           <Text
             fontSize={fontSize}
             bold
-            style={{ color: panelName === "all" ? "black" : "white" }}
+            style={{ color: panelName === "colls" ? "black" : "white" }}
           >
-            All
+            Colls
           </Text>
         </Pressable>
         <Pressable
           onPress={() => {
-            setPanelName("following");
+            setPanelName("posts");
           }}
           style={{
             width: buttonWidth,
@@ -96,9 +105,9 @@ const Pagination = ({ panelName, setPanelName }: Props) => {
           <Text
             fontSize={fontSize}
             bold
-            style={{ color: panelName === "following" ? "black" : "white" }}
+            style={{ color: panelName === "posts" ? "black" : "white" }}
           >
-            Following
+            Posts
           </Text>
         </Pressable>
       </View>

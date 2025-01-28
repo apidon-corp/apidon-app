@@ -1,16 +1,17 @@
 import { BottomSheetModal, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Keyboard, Pressable, View } from "react-native";
+import { Keyboard, View } from "react-native";
 import { Text } from "../../components/Text/Text";
 
+import { collectCollectibleAtom } from "@/atoms/collectCollectibleAtom";
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
+import { apidonPink } from "@/constants/Colors";
 import apiRoutes from "@/helpers/ApiRoutes";
 import appCheck from "@react-native-firebase/app-check";
 import auth from "@react-native-firebase/auth";
-import { router } from "expo-router";
 import { useSetAtom } from "jotai";
+import { ThemedButton } from "react-native-really-awesome-button";
 import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
-import { collectCollectibleAtom } from "@/atoms/collectCollectibleAtom";
 
 type Props = {
   bottomSheetModalRef: React.RefObject<BottomSheetModal>;
@@ -23,17 +24,15 @@ const CodeEnteringBottomSheetContent = ({
 }: Props) => {
   const [code, setCode] = useState("");
 
-  const [loading, setLoading] = useState(false);
-
   const [error, setError] = useState("");
 
   const setScreenParameters = useSetAtom(screenParametersAtom);
 
   const animatedErrorHeightValue = useSharedValue(0);
 
-  const animatedOpacityValue = useSharedValue(0);
-
   const setCollectibleCodeAtom = useSetAtom(collectCollectibleAtom);
+
+  const [buttonWidth, setButtonWidth] = useState(0);
 
   const handleCodeChange = (text: string) => {
     setError("");
@@ -41,7 +40,7 @@ const CodeEnteringBottomSheetContent = ({
   };
 
   const handlePressCollect = async () => {
-    if (!code || loading) return;
+    if (!code) return;
 
     const currentUserAuthObject = auth().currentUser;
     if (!currentUserAuthObject) return;
@@ -49,8 +48,6 @@ const CodeEnteringBottomSheetContent = ({
     if (error) return;
 
     setError("");
-
-    setLoading(true);
 
     Keyboard.dismiss();
 
@@ -81,36 +78,27 @@ const CodeEnteringBottomSheetContent = ({
           message
         );
 
-        setError(message.slice(7));
-
-        return setLoading(false);
+        return setError(message.slice(7));
       }
 
       bottomSheetModalRef.current?.dismiss();
 
-      setScreenParameters([
-        { queryId: "collectedNFTPostDocPath", value: "garbage_value" },
-      ]);
-      router.push(
-        `/home/feed/profilePage?username=${currentUserAuthObject.displayName}`
-      );
+      const { collectedDocPath } = await response.json();
 
-      return setLoading(false);
+      return setScreenParameters([
+        { queryId: "collectedDocPath", value: collectedDocPath },
+      ]);
     } catch (error) {
-      console.error("Error on collecting event based collectible: ", error);
-      return setLoading(false);
+      return console.error(
+        "Error on collecting event based collectible: ",
+        error
+      );
     }
   };
 
   useEffect(() => {
     animatedErrorHeightValue.value = withTiming(error ? 25 : 0);
   }, [error]);
-
-  useEffect(() => {
-    animatedOpacityValue.value = withTiming(
-      code.length > 0 && !error ? 1 : 0.5
-    );
-  }, [error, code.length]);
 
   useEffect(() => {
     if (collectibleCodeParamter) {
@@ -133,7 +121,7 @@ const CodeEnteringBottomSheetContent = ({
       <Text fontSize={24} bold>
         Enter Your Code
       </Text>
-      <Text fontSize={13} style={{ textAlign: "center" }}>
+      <Text fontSize={12} style={{ textAlign: "center" }}>
         Please enter the code provided by the event organizer to collect the
         event based collectible.
       </Text>
@@ -164,20 +152,47 @@ const CodeEnteringBottomSheetContent = ({
             textAlign: "center",
             color: "red",
           }}
+          fontSize={11}
         >
           {error}
         </Text>
       </Animated.View>
 
-      <Animated.View
+      <View
+        id="button-root"
+        onLayout={(event) => {
+          const { width } = event.nativeEvent.layout;
+          setButtonWidth(width);
+        }}
         style={{
-          width: "45%",
+          width: "40%",
           alignItems: "center",
           justifyContent: "center",
-          opacity: animatedOpacityValue,
+          opacity: code && error.length === 0 ? 1 : 0.5,
+          borderRadius: 20,
         }}
       >
-        <Pressable
+        <ThemedButton
+          disabled={!code || error.length > 0}
+          borderColor="transparent"
+          progress
+          onPress={async (next) => {
+            await handlePressCollect();
+            if (next) next();
+          }}
+          backgroundProgress="rgb(50, 50, 50)"
+          name="rick"
+          width={buttonWidth}
+          height={buttonWidth * 0.3}
+          paddingBottom={0}
+          paddingHorizontal={0}
+          paddingTop={0}
+          backgroundColor={apidonPink}
+          backgroundDarker="rgba(213, 63, 140, 0.5)"
+        >
+          <Text bold>Collect</Text>
+        </ThemedButton>
+        {/* <Pressable
           onPress={handlePressCollect}
           style={{
             width: "100%",
@@ -201,8 +216,8 @@ const CodeEnteringBottomSheetContent = ({
               Collect
             </Text>
           )}
-        </Pressable>
-      </Animated.View>
+        </Pressable> */}
+      </View>
     </View>
   );
 };

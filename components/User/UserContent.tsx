@@ -1,4 +1,3 @@
-import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { Text } from "@/components/Text/Text";
 import { apidonPink } from "@/constants/Colors";
 import { useAuth } from "@/providers/AuthProvider";
@@ -12,11 +11,9 @@ import firestore, {
   FirebaseFirestoreTypes,
 } from "@react-native-firebase/firestore";
 import { Stack, router } from "expo-router";
-import { useAtom } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Dimensions,
   NativeScrollEvent,
   Platform,
   Pressable,
@@ -43,11 +40,6 @@ const UserContent = ({ username }: Props) => {
 
   const { authStatus } = useAuth();
 
-  const [screenParameters, setScreenParameters] = useAtom(screenParametersAtom);
-  const collectedNFTPostDocPath = screenParameters.find(
-    (q) => q.queryId === "collectedNFTPostDocPath"
-  )?.value as string;
-
   const [userData, setUserData] = useState<UserInServer | null | "not-found">(
     null
   );
@@ -55,8 +47,6 @@ const UserContent = ({ username }: Props) => {
   const [toggleValue, setToggleValue] = useState<"posts" | "nfts">("nfts");
 
   const scrollViewRef = useRef<ScrollView>(null);
-
-  const { width } = Dimensions.get("screen");
 
   const [isOwnPage, setIsOwnPage] = useState(false);
 
@@ -143,32 +133,6 @@ const UserContent = ({ username }: Props) => {
 
     return () => unsubscribe();
   }, [username, authStatus]);
-
-  // Go to newly collected element
-  useEffect(() => {
-    if (!collectedNFTPostDocPath) return;
-
-    setToggleValue("nfts");
-    setCollectibleContentTypeValue("collected");
-
-    setTimeout(() => {
-      const diff = 430 - width;
-      const dest = 290 + diff;
-
-      scrollViewRef.current?.scrollTo({ x: 0, y: dest, animated: true });
-
-      setScreenParameters([
-        {
-          queryId: "collectedNFTPostDocPath",
-          value: undefined,
-        },
-      ]);
-    }, 1000);
-
-    setTimeout(() => {
-      askUserForRating();
-    }, 2000);
-  }, [collectedNFTPostDocPath]);
 
   useEffect(() => {
     if (authStatus !== "authenticated") return setIsOwnPage(false);

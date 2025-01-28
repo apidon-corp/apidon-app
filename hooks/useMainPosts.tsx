@@ -12,6 +12,7 @@ const POSTS_QUERY_LIMIT = 5;
 export function useMainPosts() {
   const isGettingPostDocs = useRef(false);
   const isGettingMainPosts = useRef(false);
+  const lastDocRef = useRef<FirestoreDocType | undefined>(undefined);
 
   const [postDocs, setPostDocs] = useState<FirestoreDocType[]>([]);
 
@@ -38,6 +39,10 @@ export function useMainPosts() {
       const snapshot = await postsQuery.get();
 
       isGettingPostDocs.current = false;
+      lastDocRef.current =
+        snapshot.docs.length > 0
+          ? snapshot.docs[snapshot.docs.length - 1]
+          : undefined;
 
       return snapshot.docs;
     } catch (error) {
@@ -54,11 +59,7 @@ export function useMainPosts() {
     if (isGettingMainPosts.current) return false;
     isGettingMainPosts.current = true;
 
-    let lastDoc: FirestoreDocType | undefined = undefined;
-
-    if (postDocs.length > 0) lastDoc = postDocs[postDocs.length - 1];
-
-    const newPostDocs = await getPostDocs(lastDoc);
+    const newPostDocs = await getPostDocs(lastDocRef.current);
     if (!newPostDocs) {
       console.error("Error on fetching new posts. See other logs.");
       isGettingMainPosts.current = false;
@@ -73,6 +74,7 @@ export function useMainPosts() {
   }
 
   async function refreshMainPosts() {
+    lastDocRef.current = undefined;
     const newPostDocs = await getPostDocs(undefined);
     if (!newPostDocs) {
       console.error("Error on fetching new posts to refresh. See other logs.");
