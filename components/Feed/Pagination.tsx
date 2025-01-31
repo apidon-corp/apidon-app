@@ -1,12 +1,6 @@
-import {
-  View,
-  Animated,
-  Pressable,
-  Text as NativeText,
-  ViewProps,
-  ViewStyle,
-} from "react-native";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
+import { Pressable, View, ViewStyle } from "react-native";
+import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import Text from "../Text/Text";
 
 const buttonWidth = 95;
@@ -21,13 +15,12 @@ type Props = {
 };
 
 const Pagination = ({ panelName, setPanelName, style }: Props) => {
-  const animatedTranslateXValue = useRef(new Animated.Value(0)).current;
+  const animatedTranslateXValue = useSharedValue(0);
 
   useEffect(() => {
-    Animated.spring(animatedTranslateXValue, {
-      toValue: buttonWidth * (panelName === "colls" ? 0 : 1),
-      useNativeDriver: true,
-    }).start();
+    animatedTranslateXValue.value = withTiming(
+      buttonWidth * (panelName === "colls" ? 0 : 1)
+    );
   }, [panelName]);
 
   return (
