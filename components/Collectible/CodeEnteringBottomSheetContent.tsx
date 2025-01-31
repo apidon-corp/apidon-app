@@ -22,17 +22,18 @@ const CodeEnteringBottomSheetContent = ({
   bottomSheetModalRef,
   collectibleCodeParamter,
 }: Props) => {
-  const [code, setCode] = useState("");
+  const setCollectibleCodeAtom = useSetAtom(collectCollectibleAtom);
 
+  const [code, setCode] = useState("");
   const [error, setError] = useState("");
 
   const setScreenParameters = useSetAtom(screenParametersAtom);
 
   const animatedErrorHeightValue = useSharedValue(0);
-
-  const setCollectibleCodeAtom = useSetAtom(collectCollectibleAtom);
-
   const [buttonWidth, setButtonWidth] = useState(0);
+
+  const [isCollectButtonActive, setIsCollectButtonActive] = useState(false);
+  const buttonOpacityValue = useSharedValue(0.5);
 
   const handleCodeChange = (text: string) => {
     setError("");
@@ -96,16 +97,28 @@ const CodeEnteringBottomSheetContent = ({
     }
   };
 
-  useEffect(() => {
-    animatedErrorHeightValue.value = withTiming(error ? 25 : 0);
-  }, [error]);
-
+  // Initial state definings
   useEffect(() => {
     if (collectibleCodeParamter) {
       setCode(collectibleCodeParamter);
       setCollectibleCodeAtom(undefined);
     }
   }, [collectibleCodeParamter]);
+
+  // Updating opacity of "error" text.
+  useEffect(() => {
+    animatedErrorHeightValue.value = withTiming(error ? 25 : 0);
+  }, [error]);
+
+  // Updating isCollectButtonActive value
+  useEffect(() => {
+    setIsCollectButtonActive(code.length > 0 && error.length === 0);
+  }, [code, error]);
+
+  // Updating opacity value of "collect" button
+  useEffect(() => {
+    buttonOpacityValue.value = withTiming(isCollectButtonActive ? 1 : 0.5);
+  }, [isCollectButtonActive]);
 
   return (
     <View
@@ -125,6 +138,7 @@ const CodeEnteringBottomSheetContent = ({
         Please enter the code provided by the event organizer to collect the
         event based collectible.
       </Text>
+
       <BottomSheetTextInput
         onChangeText={handleCodeChange}
         value={code}
@@ -141,6 +155,7 @@ const CodeEnteringBottomSheetContent = ({
           marginTop: 5,
         }}
       />
+
       <Animated.View
         style={{
           height: animatedErrorHeightValue,
@@ -158,7 +173,7 @@ const CodeEnteringBottomSheetContent = ({
         </Text>
       </Animated.View>
 
-      <View
+      <Animated.View
         id="button-root"
         onLayout={(event) => {
           const { width } = event.nativeEvent.layout;
@@ -168,13 +183,12 @@ const CodeEnteringBottomSheetContent = ({
           width: "40%",
           alignItems: "center",
           justifyContent: "center",
-          opacity: code && error.length === 0 ? 1 : 0.5,
+          opacity: buttonOpacityValue,
           borderRadius: 20,
+          pointerEvents: isCollectButtonActive ? "auto" : "none",
         }}
       >
         <ThemedButton
-          disabled={!code || error.length > 0}
-          borderColor="transparent"
           progress
           onPress={async (next) => {
             await handlePressCollect();
@@ -192,7 +206,7 @@ const CodeEnteringBottomSheetContent = ({
         >
           <Text bold>Collect</Text>
         </ThemedButton>
-      </View>
+      </Animated.View>
     </View>
   );
 };
