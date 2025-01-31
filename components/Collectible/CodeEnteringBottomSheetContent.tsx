@@ -192,31 +192,6 @@ const CodeEnteringBottomSheetContent = ({
         >
           <Text bold>Collect</Text>
         </ThemedButton>
-        {/* <Pressable
-          onPress={handlePressCollect}
-          style={{
-            width: "100%",
-            backgroundColor: "white",
-            padding: 10,
-            borderRadius: 12,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {loading ? (
-            <ActivityIndicator color="black" />
-          ) : (
-            <Text
-              fontSize={14}
-              bold
-              style={{
-                color: "black",
-              }}
-            >
-              Collect
-            </Text>
-          )}
-        </Pressable> */}
       </View>
     </View>
   );
