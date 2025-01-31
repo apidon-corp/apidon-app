@@ -24,6 +24,8 @@ import * as Linking from "expo-linking";
 import { v4 as uuid } from "uuid";
 
 import { appleAuthAndroid } from "@invertase/react-native-apple-authentication";
+import { storeData } from "@/helpers/Storage";
+import resetNavigationHistoryWithNewPath from "@/helpers/Router";
 
 const welcome = () => {
   const { setAuthStatus } = useAuth();
@@ -94,6 +96,16 @@ const welcome = () => {
         setLoading(false);
         return router.push("/auth/additionalInfo");
       }
+
+      const displayName = user.displayName;
+      if (!displayName) {
+        console.error(
+          "No display name found in auth object even if there is a vlaid auth object (from firebase)."
+        );
+        return resetNavigationHistoryWithNewPath("/auth/welcome");
+      }
+
+      await setHasValidObjectBeforeDevice(displayName);
 
       // We are setting this manually due to dontMess state...
       setAuthStatus("authenticated");
@@ -178,6 +190,16 @@ const welcome = () => {
         return router.push("/auth/additionalInfo");
       }
 
+      const displayName = user.displayName;
+      if (!displayName) {
+        console.error(
+          "No display name found in auth object even if there is a vlaid auth object (from firebase)."
+        );
+        return resetNavigationHistoryWithNewPath("/auth/welcome");
+      }
+
+      await setHasValidObjectBeforeDevice(displayName);
+
       setAuthStatus("authenticated");
 
       router.replace("/home");
@@ -241,6 +263,16 @@ const welcome = () => {
         return setLoading(false);
       }
 
+      const displayName = user.displayName;
+      if (!displayName) {
+        console.error(
+          "No display name found in auth object even if there is a vlaid auth object (from firebase)."
+        );
+        return resetNavigationHistoryWithNewPath("/auth/welcome");
+      }
+
+      await setHasValidObjectBeforeDevice(displayName);
+
       // We are setting this manually due to dontMess state...
       setAuthStatus("authenticated");
 
@@ -270,6 +302,11 @@ const welcome = () => {
     if (loading) return;
     router.push("/auth/emailPasswordSignUp");
   }
+
+  const setHasValidObjectBeforeDevice = async (displayName: string) => {
+    await storeData(displayName, "true");
+    return true;
+  };
 
   const startBounceAnimation = () => {
     const amplitude = 25;

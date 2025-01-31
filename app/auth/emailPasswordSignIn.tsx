@@ -18,6 +18,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/providers/AuthProvider";
 import auth from "@react-native-firebase/auth";
 import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
+import resetNavigationHistoryWithNewPath from "@/helpers/Router";
+import { storeData } from "@/helpers/Storage";
 
 const emailPasswordSignIn = () => {
   const { setAuthStatus } = useAuth();
@@ -152,6 +154,17 @@ const emailPasswordSignIn = () => {
         return setLoading(false);
       }
 
+
+      const displayName = user.displayName;
+      if (!displayName) {
+        console.error(
+          "No display name found in auth object even if there is a vlaid auth object (from firebase)."
+        );
+        return resetNavigationHistoryWithNewPath("/auth/welcome");
+      }
+
+      await setHasValidObjectBeforeDevice(displayName);
+
       // We are setting this manually due to dontMess state...
       setAuthStatus("authenticated");
 
@@ -182,6 +195,11 @@ const emailPasswordSignIn = () => {
 
   const handleForgotPassword = () => {
     router.replace("/auth/forgotPassword");
+  };
+
+  const setHasValidObjectBeforeDevice = async (displayName: string) => {
+    await storeData(displayName, "true");
+    return true;
   };
 
   return (

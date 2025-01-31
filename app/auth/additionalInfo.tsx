@@ -29,6 +29,7 @@ import { v4 as uuid } from "uuid";
 import "react-native-get-random-values";
 
 import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
+import { storeData } from "@/helpers/Storage";
 
 const additionalInfo = () => {
   const { setAuthStatus } = useAuth();
@@ -323,7 +324,9 @@ const additionalInfo = () => {
 
       setAuthStatus("authenticated");
 
-      return router.replace("/home");
+      await setHasValidObjectBeforeDevice(username);
+
+      return router.replace("/home/feed");
 
       // Good to go...
     } catch (error) {
@@ -506,6 +509,11 @@ const additionalInfo = () => {
       console.error("Error on deleting account: ", error);
       setDeleteAccountLoading(false);
     }
+  };
+
+  const setHasValidObjectBeforeDevice = async (displayName: string) => {
+    await storeData(displayName, "true");
+    return true;
   };
 
   return (

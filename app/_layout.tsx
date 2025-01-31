@@ -24,12 +24,10 @@ import useAppCheck from "@/hooks/useAppCheck";
 import useCheckUpdate from "@/hooks/useCheckUpdate";
 import { Image } from "expo-image";
 
+import { authStatusAtom } from "@/atoms/authStatusAtom";
 import * as NavigationBar from "expo-navigation-bar";
-import Animated, {
-  useSharedValue,
-  withDelay,
-  withTiming,
-} from "react-native-reanimated";
+import { useAtomValue } from "jotai";
+import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
@@ -150,6 +148,8 @@ function RootLayout() {
 
   const { width, height } = Dimensions.get("screen");
 
+  const authStatusValue = useAtomValue(authStatusAtom);
+
   SplashScreen.preventAutoHideAsync();
 
   // Linking
@@ -212,13 +212,10 @@ function RootLayout() {
 
   // Handle animation...
   useEffect(() => {
-    const status = animationReady && appReady;
+    const status = animationReady && appReady && authStatusValue !== "loading";
 
-    opacity.value = withDelay(
-      1000 * 2,
-      withTiming(status ? 0 : 1, { duration: 500 })
-    );
-  }, [animationReady, appReady]);
+    opacity.value = withTiming(status ? 0 : 1, { duration: 500 });
+  }, [animationReady, appReady, authStatusValue]);
 
   // Fires animation signal after image loading.
   const onImageLoaded = useCallback(async () => {
