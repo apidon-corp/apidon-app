@@ -30,6 +30,8 @@ import "react-native-get-random-values";
 
 import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import { storeData } from "@/helpers/Storage";
+import { apidonPink } from "@/constants/Colors";
+import { ThemedButton } from "react-native-really-awesome-button";
 
 const additionalInfo = () => {
   const { setAuthStatus } = useAuth();
@@ -58,7 +60,7 @@ const additionalInfo = () => {
 
   const translateValue = useSharedValue(0);
   const errorOpacity = useSharedValue(0);
-  const buttonOpactiy = useSharedValue(1);
+  const buttonOpacity = useSharedValue(1);
 
   const timeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -156,7 +158,7 @@ const additionalInfo = () => {
   };
 
   const changeButtonOpacity = (toValue: number) => {
-    buttonOpactiy.value = withTiming(toValue, { duration: 400 });
+    buttonOpacity.value = withTiming(toValue, { duration: 400 });
   };
 
   const handleUsernameChange = async (input: string) => {
@@ -682,36 +684,35 @@ const additionalInfo = () => {
           </View>
 
           <Animated.View
+            id="button-root"
             style={{
               width: "100%",
               alignItems: "center",
-              opacity: buttonOpactiy,
+              justifyContent: "center",
+              opacity: buttonOpacity,
+              borderRadius: 20,
+              marginTop: 10,
             }}
+            pointerEvents={buttonActiveStatus ? "auto" : "none"}
           >
-            <Pressable
-              disabled={!buttonActiveStatus}
-              id="continue-button"
-              style={{
-                backgroundColor: "white",
-                borderRadius: 10,
-                padding: 10,
-                width: "50%",
-                alignItems: "center",
+            <ThemedButton
+              progress
+              onPress={async (next) => {
+                await handleContinueButton();
+                if (next) next();
               }}
-              onPress={handleContinueButton}
+              backgroundProgress="rgb(50, 50, 50)"
+              name="rick"
+              width={200}
+              height={200 * 0.22}
+              paddingBottom={0}
+              paddingHorizontal={0}
+              paddingTop={0}
+              backgroundColor={apidonPink}
+              backgroundDarker="rgba(213, 63, 140, 0.5)"
             >
-              {loading ? (
-                <ActivityIndicator color="black" />
-              ) : (
-                <Text
-                  style={{
-                    color: "black",
-                  }}
-                >
-                  Continue
-                </Text>
-              )}
-            </Pressable>
+              <Text bold>Continue</Text>
+            </ThemedButton>
           </Animated.View>
 
           <Animated.View

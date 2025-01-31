@@ -3,7 +3,6 @@ import { apidonPink } from "@/constants/Colors";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Dimensions,
   Keyboard,
   Platform,
@@ -425,39 +424,6 @@ const editProfile = () => {
               <Text bold>Save</Text>
             </ThemedButton>
           </Animated.View>
-
-          {/* <Animated.View
-            style={{
-              opacity: animatedOpacityValue,
-              width: "100%",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Pressable
-              onPress={handleSaveButton}
-              style={{
-                padding: 10,
-                backgroundColor: apidonPink,
-                borderRadius: 10,
-                width: "30%",
-              }}
-            >
-              {loading ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text
-                  style={{
-                    color: "white",
-                    fontSize: 14,
-                    textAlign: "center",
-                  }}
-                >
-                  Save
-                </Text>
-              )}
-            </Pressable>
-          </Animated.View> */}
         </Animated.View>
       </ScrollView>
     </SafeAreaView>
