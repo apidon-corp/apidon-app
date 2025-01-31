@@ -1,14 +1,9 @@
 import { router } from "expo-router";
 
-export default function resetNavigationHistory() {
-  // Wait for the next frame to ensure root layout is mounted
-  setTimeout(() => {
-    try {
-      if (router.canGoBack()) {
-        router.replace("/");
-      }
-    } catch (error) {
-      console.warn("Navigation error:", error);
-    }
-  }, 0);
+export default function resetNavigationHistoryWithNewPath(newPath: string) {
+  while (router.canGoBack()) {
+    // Pop from stack until one element is left
+    router.back();
+  }
+  router.replace(newPath); // Replace the last remaining stack element
 }

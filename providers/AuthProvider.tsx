@@ -1,9 +1,11 @@
-import resetNavigationHistory from "@/helpers/Router";
 import { AuthStatus } from "@/types/AuthType";
 import { router, usePathname } from "expo-router";
 
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
+import { collectCollectibleAtom } from "@/atoms/collectCollectibleAtom";
+import resetNavigationHistoryWithNewPath from "@/helpers/Router";
+import { useSetAtom } from "jotai";
 import {
   ReactNode,
   SetStateAction,
@@ -13,8 +15,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { useSetAtom } from "jotai";
-import { collectCollectibleAtom } from "@/atoms/collectCollectibleAtom";
 
 type LinkingValue = {
   isInitial: boolean;
@@ -57,12 +57,9 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
   ) => {
     if (authStatusRefParam.current === "dontMess") return;
 
-    resetNavigationHistory();
-
     if (!user) {
       setAuthStatus("unauthenticated");
-      resetNavigationHistory();
-      return router.replace("/auth/welcome");
+      return resetNavigationHistoryWithNewPath("/auth/welcome");
     }
 
     setAuthStatus("loading");
@@ -75,8 +72,7 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
       );
       setAuthStatus("unauthenticated");
 
-      resetNavigationHistory();
-      return router.replace("/auth/welcome");
+      return resetNavigationHistoryWithNewPath("/auth/welcome");
     }
 
     try {
@@ -89,16 +85,13 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
       if (!isValidAuthObject) {
         setAuthStatus("unauthenticated");
 
-        resetNavigationHistory();
-        router.replace("/auth/welcome");
+        resetNavigationHistoryWithNewPath("/auth/welcome");
         return router.navigate("/auth/additionalInfo");
       }
     } catch (error) {
       setAuthStatus("unauthenticated");
       console.error("Error on making auth test...: ", error);
-
-      resetNavigationHistory();
-      return router.replace("/auth/welcome");
+      return resetNavigationHistoryWithNewPath("/auth/welcome");
     }
 
     setAuthStatus("authenticated");
