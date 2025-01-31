@@ -262,7 +262,7 @@ const CollectibleItem = React.memo(({ collectedCollectibleDocData }: Props) => {
               borderRadius: 100,
             }}
           >
-            <Text bold fontSize={18}>
+            <Text bold fontSize={16}>
               #{collectedCollectibleDocData.rank}
             </Text>
           </View>
