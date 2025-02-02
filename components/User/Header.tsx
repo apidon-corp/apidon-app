@@ -32,6 +32,7 @@ const Header = ({ userData, collsCount }: Props) => {
 
   const handleEditProfileButton = () => {
     if (!userData) return;
+    if (!userOwnsPage) return;
 
     const subScreens = pathname.split("/");
 
@@ -112,15 +113,58 @@ const Header = ({ userData, collsCount }: Props) => {
           </View>
         </View>
 
+        <Pressable
+          onPress={handleEditProfileButton}
+          id="image-part"
+          style={{
+            width: 150,
+            aspectRatio: 1,
+            display: "flex",
+            position: "relative",
+          }}
+        >
+          <Image
+            source={
+              userData.profilePhoto || require("@/assets/images/user.jpg")
+            }
+            style={{
+              height: 150,
+              width: 150,
+              borderRadius: 75,
+            }}
+            transition={100}
+          />
+
+          <View
+            id="edit-button"
+            style={{
+              display: userOwnsPage ? "flex" : "none",
+              position: "absolute",
+              width: 25,
+              aspectRatio: 1,
+              backgroundColor: "white",
+              borderRadius: 50,
+              bottom: 10,
+              left: 10,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <MaterialIcons name="edit" size={17} color="black" />
+          </View>
+        </Pressable>
+
         <Image
           source={userData.profilePhoto || require("@/assets/images/user.jpg")}
           style={{
+            display: "none",
             height: 150,
             width: 150,
             borderRadius: 75,
           }}
           transition={100}
         />
+
         <View
           id="fullname-verified"
           style={{
@@ -264,9 +308,9 @@ const Header = ({ userData, collsCount }: Props) => {
           >
             <Text
               style={{
-                fontSize: 14,
                 textAlign: "center",
               }}
+              fontSize={12}
               bold
             >
               Edit Profile

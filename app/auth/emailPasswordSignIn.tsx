@@ -2,7 +2,6 @@ import { Text } from "@/components/Text/Text";
 import { Image } from "expo-image";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Dimensions,
   Keyboard,
   Platform,
@@ -15,8 +14,12 @@ import {
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { apidonPink } from "@/constants/Colors";
+import resetNavigationHistoryWithNewPath from "@/helpers/Router";
+import { storeData } from "@/helpers/Storage";
 import { useAuth } from "@/providers/AuthProvider";
 import auth from "@react-native-firebase/auth";
+import { ThemedButton } from "react-native-really-awesome-button";
 import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 
 const emailPasswordSignIn = () => {
@@ -152,6 +155,16 @@ const emailPasswordSignIn = () => {
         return setLoading(false);
       }
 
+      const displayName = user.displayName;
+      if (!displayName) {
+        console.error(
+          "No display name found in auth object even if there is a vlaid auth object (from firebase)."
+        );
+        return resetNavigationHistoryWithNewPath("/auth/welcome");
+      }
+
+      await setHasValidObjectBeforeDevice(displayName);
+
       // We are setting this manually due to dontMess state...
       setAuthStatus("authenticated");
 
@@ -182,6 +195,11 @@ const emailPasswordSignIn = () => {
 
   const handleForgotPassword = () => {
     router.replace("/auth/forgotPassword");
+  };
+
+  const setHasValidObjectBeforeDevice = async (displayName: string) => {
+    await storeData(displayName, "true");
+    return true;
   };
 
   return (
@@ -308,36 +326,35 @@ const emailPasswordSignIn = () => {
             </View>
 
             <Animated.View
+              id="button-root"
               style={{
                 width: "100%",
                 alignItems: "center",
+                justifyContent: "center",
                 opacity: buttonOpactiy,
+                borderRadius: 20,
+                marginTop: 10,
               }}
+              pointerEvents={buttonActiveStatus ? "auto" : "none"}
             >
-              <Pressable
-                disabled={!buttonActiveStatus}
-                id="continue-button"
-                style={{
-                  backgroundColor: "white",
-                  borderRadius: 10,
-                  padding: 10,
-                  width: "50%",
-                  alignItems: "center",
+              <ThemedButton
+                progress
+                onPress={async (next) => {
+                  await handleContinueButton();
+                  if (next) next();
                 }}
-                onPress={handleContinueButton}
+                backgroundProgress="rgb(50, 50, 50)"
+                name="rick"
+                width={200}
+                height={200 * 0.22}
+                paddingBottom={0}
+                paddingHorizontal={0}
+                paddingTop={0}
+                backgroundColor={apidonPink}
+                backgroundDarker="rgba(213, 63, 140, 0.5)"
               >
-                {loading ? (
-                  <ActivityIndicator color="black" />
-                ) : (
-                  <Text
-                    style={{
-                      color: "black",
-                    }}
-                  >
-                    Continue
-                  </Text>
-                )}
-              </Pressable>
+                <Text bold>Continue</Text>
+              </ThemedButton>
             </Animated.View>
 
             <Animated.View

@@ -25,8 +25,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withTiming
+  withTiming,
 } from "react-native-reanimated";
+import { apidonPink } from "@/constants/Colors";
+import { ThemedButton } from "react-native-really-awesome-button";
 
 const emailPasswordSignUp = () => {
   const [isEmailValid, setIsEmailValid] = useState(false);
@@ -429,38 +431,35 @@ const emailPasswordSignUp = () => {
             </View>
 
             <Animated.View
-              style={[
-                {
-                  width: "100%",
-                  alignItems: "center",
-                },
-                buttonAnimatedStyle,
-              ]}
+              id="button-root"
+              style={{
+                width: "100%",
+                alignItems: "center",
+                justifyContent: "center",
+                opacity: buttonOpacity,
+                borderRadius: 20,
+                marginTop : 10
+              }}
+              pointerEvents={buttonActiveStatus ? "auto" : "none"}
             >
-              <Pressable
-                disabled={!buttonActiveStatus}
-                id="continue-button"
-                style={{
-                  backgroundColor: "white",
-                  borderRadius: 10,
-                  padding: 10,
-                  width: "50%",
-                  alignItems: "center",
+              <ThemedButton
+                progress
+                onPress={async (next) => {
+                  await handleContinueButton();
+                  if (next) next();
                 }}
-                onPress={handleContinueButton}
+                backgroundProgress="rgb(50, 50, 50)"
+                name="rick"
+                width={200}
+                height={200 * 0.22}
+                paddingBottom={0}
+                paddingHorizontal={0}
+                paddingTop={0}
+                backgroundColor={apidonPink}
+                backgroundDarker="rgba(213, 63, 140, 0.5)"
               >
-                {loading ? (
-                  <ActivityIndicator color="black" />
-                ) : (
-                  <Text
-                    style={{
-                      color: "black",
-                    }}
-                  >
-                    Continue
-                  </Text>
-                )}
-              </Pressable>
+                <Text bold>Continue</Text>
+              </ThemedButton>
             </Animated.View>
 
             <Animated.View

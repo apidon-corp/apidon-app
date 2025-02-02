@@ -1,5 +1,6 @@
 import { screenParametersAtom } from "@/atoms/screenParamatersAtom";
 import { Text } from "@/components/Text/Text";
+import { apidonPink } from "@/constants/Colors";
 import apiRoutes from "@/helpers/ApiRoutes";
 import { useAuth } from "@/providers/AuthProvider";
 import { Entypo, Ionicons } from "@expo/vector-icons";
@@ -17,6 +18,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { ThemedButton } from "react-native-really-awesome-button";
 
 import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 
@@ -257,36 +259,35 @@ const verifyEmail = () => {
         </View>
 
         <Animated.View
+          id="button-root"
           style={{
             width: "100%",
             alignItems: "center",
+            justifyContent: "center",
             opacity: animatedButtonOpacity,
+            borderRadius: 20,
+            marginTop: 10,
           }}
+          pointerEvents={buttonActiveStatus ? "auto" : "none"}
         >
-          <Pressable
-            disabled={!buttonActiveStatus}
-            id="continue-button"
-            style={{
-              backgroundColor: "white",
-              borderRadius: 10,
-              padding: 10,
-              width: "50%",
-              alignItems: "center",
+          <ThemedButton
+            progress
+            onPress={async (next) => {
+              await handleContinueButton();
+              if (next) next();
             }}
-            onPress={handleContinueButton}
+            backgroundProgress="rgb(50, 50, 50)"
+            name="rick"
+            width={200}
+            height={200 * 0.22}
+            paddingBottom={0}
+            paddingHorizontal={0}
+            paddingTop={0}
+            backgroundColor={apidonPink}
+            backgroundDarker="rgba(213, 63, 140, 0.5)"
           >
-            {loading ? (
-              <ActivityIndicator color="black" />
-            ) : (
-              <Text
-                style={{
-                  color: "black",
-                }}
-              >
-                Continue
-              </Text>
-            )}
-          </Pressable>
+            <Text bold>Continue</Text>
+          </ThemedButton>
         </Animated.View>
 
         <Animated.View

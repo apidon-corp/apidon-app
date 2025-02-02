@@ -3,7 +3,6 @@ import { apidonPink } from "@/constants/Colors";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Dimensions,
   Keyboard,
   Platform,
@@ -28,6 +27,7 @@ import auth from "@react-native-firebase/auth";
 import appCheck from "@react-native-firebase/app-check";
 
 import { Buffer } from "buffer";
+import { ThemedButton } from "react-native-really-awesome-button";
 
 const editProfile = () => {
   let { fullname, image } = useLocalSearchParams() as {
@@ -44,6 +44,8 @@ const editProfile = () => {
   const [isFullnameChanged, setIsFullnameChanged] = useState(false);
 
   const [imageEdited, setImageEdited] = useState("");
+
+  const [isSaveButtonActive, setIsSaveButtonActive] = useState(false);
 
   const containerRef = useRef<null | View>(null);
   const screenHeight = Dimensions.get("window").height;
@@ -100,20 +102,25 @@ const editProfile = () => {
     };
   }, [containerRef]);
 
+  // Updating isFullnameChanged value
+  useEffect(() => {
+    setIsFullnameChanged(fullnameEdited !== fullname);
+  }, [fullnameEdited, fullname]);
+
+  // Updating isSaveButtonActive value
   useEffect(() => {
     const editStatus = isFullnameChanged || imageEdited.length > 0;
     const forwardStatus = isFullnameValid && editStatus;
 
-    if (forwardStatus) {
-      animatedOpacityValue.value = withTiming(1, { duration: 250 });
-    } else {
-      animatedOpacityValue.value = withTiming(0.5, { duration: 250 });
-    }
+    setIsSaveButtonActive(forwardStatus);
   }, [isFullnameValid, isFullnameChanged, imageEdited]);
 
+  // Updating opactiy of "save" button
   useEffect(() => {
-    setIsFullnameChanged(fullnameEdited !== fullname);
-  }, [fullnameEdited, fullname]);
+    animatedOpacityValue.value = withTiming(isSaveButtonActive ? 1 : 0.5, {
+      duration: 250,
+    });
+  }, [isSaveButtonActive]);
 
   const handleFullnameChange = (input: string) => {
     setError("");
@@ -347,15 +354,16 @@ const editProfile = () => {
             >
               <Text
                 style={{
-                  fontSize: 14,
                   textAlign: "center",
                 }}
+                fontSize={12}
                 bold
               >
                 {imageEdited ? "Cancel" : "Change Image"}
               </Text>
             </Pressable>
           </View>
+
           <View
             style={{
               width: "100%",
@@ -387,35 +395,34 @@ const editProfile = () => {
           </View>
 
           <Animated.View
+            id="button-root"
             style={{
-              opacity: animatedOpacityValue,
-              width: "100%",
+              width: "40%",
               alignItems: "center",
+              justifyContent: "center",
+              opacity: animatedOpacityValue,
+              borderRadius: 20,
             }}
+            pointerEvents={isSaveButtonActive ? "auto" : "none"}
           >
-            <Pressable
-              onPress={handleSaveButton}
-              style={{
-                padding: 10,
-                backgroundColor: apidonPink,
-                borderRadius: 10,
-                width: "30%",
+            <ThemedButton
+              progress
+              onPress={async (next) => {
+                await handleSaveButton();
+                if (next) next();
               }}
+              backgroundProgress="rgb(50, 50, 50)"
+              name="rick"
+              width={100}
+              height={100 * 0.35}
+              paddingBottom={0}
+              paddingHorizontal={0}
+              paddingTop={0}
+              backgroundColor={apidonPink}
+              backgroundDarker="rgba(213, 63, 140, 0.5)"
             >
-              {loading ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text
-                  style={{
-                    color: "white",
-                    fontSize: 14,
-                    textAlign: "center",
-                  }}
-                >
-                  Save
-                </Text>
-              )}
-            </Pressable>
+              <Text bold>Save</Text>
+            </ThemedButton>
           </Animated.View>
         </Animated.View>
       </ScrollView>

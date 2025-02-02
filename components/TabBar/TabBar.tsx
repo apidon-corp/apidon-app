@@ -1,6 +1,6 @@
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { useEffect, useRef, useState } from "react";
-import { Animated, Platform, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Platform, View } from "react-native";
 import TabBarButton from "./TabBarButton";
 
 import { homeScreeenParametersAtom } from "@/atoms/homeScreenAtom";
@@ -10,6 +10,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BlurView } from "expo-blur";
 import { usePathname } from "expo-router";
+import Animated, {
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 
 const delay = (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -21,9 +26,9 @@ export default function MyTabBar({ state, navigation }: BottomTabBarProps) {
   const buttonWidth = 65;
   const buttonHeight = 55;
 
-  const animatedTranslateXValue = useRef(new Animated.Value(0)).current;
+  const animatedTranslateXValue = useSharedValue(0);
 
-  const animatedOpacityValue = useRef(new Animated.Value(1)).current;
+  const animatedOpacityValue = useSharedValue(1);
 
   const setHomeScreenParameters = useSetAtom(homeScreeenParametersAtom);
 
@@ -37,10 +42,7 @@ export default function MyTabBar({ state, navigation }: BottomTabBarProps) {
   const isIOS = Platform.OS === "ios";
 
   useEffect(() => {
-    Animated.spring(animatedTranslateXValue, {
-      toValue: buttonWidth * state.index,
-      useNativeDriver: true,
-    }).start();
+    animatedTranslateXValue.value = withSpring(buttonWidth * state.index);
   }, [state]);
 
   useEffect(() => {
@@ -52,12 +54,10 @@ export default function MyTabBar({ state, navigation }: BottomTabBarProps) {
       setHideTabBar(false);
     }
 
-    Animated.timing(animatedOpacityValue, {
-      toValue:
-        currentScreen === "comments" ? 0 : subScreens.length > 3 ? 0.5 : 1,
-      duration: 250,
-      useNativeDriver: true,
-    }).start();
+    const toValue =
+      currentScreen === "comments" ? 0 : subScreens.length > 3 ? 0.5 : 1;
+
+    animatedOpacityValue.value = withTiming(toValue);
 
     if (currentScreen === "comments") {
       delay(500).then(() => {

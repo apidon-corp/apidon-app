@@ -1,9 +1,11 @@
-import resetNavigationHistory from "@/helpers/Router";
 import { AuthStatus } from "@/types/AuthType";
 import { router, usePathname } from "expo-router";
 
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
+import { collectCollectibleAtom } from "@/atoms/collectCollectibleAtom";
+import resetNavigationHistoryWithNewPath from "@/helpers/Router";
+import { useSetAtom } from "jotai";
 import {
   ReactNode,
   SetStateAction,
@@ -13,8 +15,8 @@ import {
   useRef,
   useState,
 } from "react";
-import { useSetAtom } from "jotai";
-import { collectCollectibleAtom } from "@/atoms/collectCollectibleAtom";
+import { getData, storeData } from "@/helpers/Storage";
+import { authStatusAtom } from "@/atoms/authStatusAtom";
 
 type LinkingValue = {
   isInitial: boolean;
@@ -40,6 +42,8 @@ const AuthContext = createContext<AuthContextType>({
 export default function AuthProvider({ children, linking, setLinking }: Props) {
   const [authStatus, setAuthStatus] = useState<AuthStatus>("loading");
 
+  const setAuthStatusAtom = useSetAtom(authStatusAtom);
+
   const authStatusRef = useRef<AuthStatus>("loading");
 
   const linkingRef = useRef<LinkingValue>(linking);
@@ -48,66 +52,6 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
   const pathname = usePathname();
 
   const setCollectCollectible = useSetAtom(collectCollectibleAtom);
-
-  const handleAuthentication = async (
-    user: FirebaseAuthTypes.User | null,
-    authStatusRefParam: React.MutableRefObject<AuthStatus>,
-    linkingRefParam: React.MutableRefObject<LinkingValue>,
-    pathnameRefParam: React.MutableRefObject<string>
-  ) => {
-    if (authStatusRefParam.current === "dontMess") return;
-
-    resetNavigationHistory();
-
-    if (!user) {
-      setAuthStatus("unauthenticated");
-      resetNavigationHistory();
-      return router.replace("/auth/welcome");
-    }
-
-    setAuthStatus("loading");
-
-    const currentUserAuthObject = auth().currentUser;
-    if (!currentUserAuthObject) {
-      console.error("There is no current user object.");
-      console.error(
-        "This is a weird situation because there was before.(Upper comments)"
-      );
-      setAuthStatus("unauthenticated");
-
-      resetNavigationHistory();
-      return router.replace("/auth/welcome");
-    }
-
-    try {
-      await currentUserAuthObject.reload();
-
-      const idTokenResult = await currentUserAuthObject.getIdTokenResult(true);
-
-      const isValidAuthObject = idTokenResult.claims.isValidAuthObject;
-
-      if (!isValidAuthObject) {
-        setAuthStatus("unauthenticated");
-
-        resetNavigationHistory();
-        router.replace("/auth/welcome");
-        return router.navigate("/auth/additionalInfo");
-      }
-    } catch (error) {
-      setAuthStatus("unauthenticated");
-      console.error("Error on making auth test...: ", error);
-
-      resetNavigationHistory();
-      return router.replace("/auth/welcome");
-    }
-
-    setAuthStatus("authenticated");
-
-    if (!linkingRefParam.current.url) {
-      if (pathnameRefParam.current !== "/home/feed")
-        return router.replace("/home/feed");
-    }
-  };
 
   useEffect(() => {
     const unsubscribe = auth().onAuthStateChanged((user) => {
@@ -119,6 +63,9 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
 
   useEffect(() => {
     authStatusRef.current = authStatus;
+
+    // This line enables outer parts of App can read auth status. (for example, general layout);
+    setAuthStatusAtom(authStatus);
   }, [authStatus]);
 
   useEffect(() => {
@@ -137,9 +84,79 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
     pathnameRef.current = pathname;
   }, [pathname]);
 
-  function delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
+  const handleAuthentication = async (
+    user: FirebaseAuthTypes.User | null,
+    authStatusRefParam: React.MutableRefObject<AuthStatus>,
+    linkingRefParam: React.MutableRefObject<LinkingValue>,
+    pathnameRefParam: React.MutableRefObject<string>
+  ) => {
+    if (authStatusRefParam.current === "dontMess") return;
+
+    setAuthStatus("loading");
+
+    resetNavigationHistoryWithNewPath("/");
+
+    if (!user) {
+      setAuthStatus("unauthenticated");
+      return resetNavigationHistoryWithNewPath("/auth/welcome");
+    }
+
+    const currentUserAuthObject = auth().currentUser;
+    if (!currentUserAuthObject) {
+      console.error("There is no current user object.");
+      console.error(
+        "This is a weird situation because there was before.(Upper comments)"
+      );
+      setAuthStatus("unauthenticated");
+
+      return resetNavigationHistoryWithNewPath("/auth/welcome");
+    }
+
+    const isThereValidAuthObjectBeforeOnThisDevice =
+      await hasValidAuthObjectBeforeDevice(
+        currentUserAuthObject.displayName || ""
+      );
+
+    if (!isThereValidAuthObjectBeforeOnThisDevice) {
+      try {
+        await currentUserAuthObject.reload();
+
+        const idTokenResult = await currentUserAuthObject.getIdTokenResult(
+          true
+        );
+
+        const isValidAuthObject = idTokenResult.claims.isValidAuthObject;
+
+        if (!isValidAuthObject) {
+          setAuthStatus("unauthenticated");
+
+          resetNavigationHistoryWithNewPath("/auth/welcome");
+          return router.navigate("/auth/additionalInfo");
+        }
+
+        const displayName = currentUserAuthObject.displayName || "";
+        if (!displayName) {
+          console.error(
+            "No display name found on user object. Even there is valid auth object (from firebase)"
+          );
+          return resetNavigationHistoryWithNewPath("/auth/welcome");
+        }
+
+        setHasValidObjectBeforeDevice(displayName);
+      } catch (error) {
+        setAuthStatus("unauthenticated");
+        console.error("Error on making auth test...: ", error);
+        return resetNavigationHistoryWithNewPath("/auth/welcome");
+      }
+    }
+
+    setAuthStatus("authenticated");
+
+    if (!linkingRefParam.current.url) {
+      if (pathnameRefParam.current !== "/home/feed")
+        return router.replace("/home/feed");
+    }
+  };
 
   const handleLinking = async (linking: string, isInitial: boolean) => {
     if (!linking) return;
@@ -216,6 +233,23 @@ export default function AuthProvider({ children, linking, setLinking }: Props) {
 
       return setLinking({ isInitial: false, url: "" });
     }
+  };
+
+  function delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  const hasValidAuthObjectBeforeDevice = async (displayName: string) => {
+    if (!displayName) return false;
+
+    const result = await getData(displayName);
+
+    return result !== null;
+  };
+
+  const setHasValidObjectBeforeDevice = async (displayName: string) => {
+    await storeData(displayName, "true");
+    return true;
   };
 
   return (

@@ -1,12 +1,5 @@
-import {
-  View,
-  Animated,
-  Pressable,
-  Text as NativeText,
-  ViewProps,
-  ViewStyle,
-} from "react-native";
 import React, { useEffect, useRef } from "react";
+import { Animated, Pressable, View, ViewStyle } from "react-native";
 import Text from "../Text/Text";
 
 const buttonWidth = 95;
